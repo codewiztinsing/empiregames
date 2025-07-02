@@ -12,6 +12,7 @@ const Selections = () => {
   const [pickedNumbers, setPickedNumbers] = useState([]);
   const { playersLength, setPlayersLength } = useContext(BingoContext);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentCall,setCurrentCall] = useState(null);
 
 
   // Generate numbers 1-100 (memoized since it's static)
@@ -30,6 +31,8 @@ const Selections = () => {
       setPickedNumbers(state.pickedNumbers);
       setPlayersLength(state.total_players);
       setCountDown(state.count_down);
+
+      
     };
     // socket.on('pickedNumbers', handlePickedNumbers);
     socket.on('gameState', handleGameState);
@@ -96,6 +99,7 @@ const Selections = () => {
     setPickedNumbers(state.pickedNumbers);
     setPlayersLength(state.total_players);
     setCountDown(state.count_down);
+    setCurrentCall(state.currentCall)
   });
 
   return (

@@ -9,6 +9,7 @@ const PlayingBoard = () => {
   const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
   const [currentCall, setCurrentCall] = useState(null);
+  const [lastBall,setLastBall] = useState(0);
   const [winAmount, setWinAmount] = useState(0);
   const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
@@ -28,6 +29,18 @@ const PlayingBoard = () => {
     // Add bingo validation logic here
     socket.emit('bingo');
   };
+
+  function handleGameState(data) {
+    // console.log("data in game")
+    if (data.lastBall && data.lastBall.length > 0) {
+      setLastBall(data.lastBall[data.lastBall.length - 1]);
+    }
+    setLastBall(data.lastBall)
+   
+  }
+
+  
+  socket.on('gameState', handleGameState);
 
   const handleRefresh = () => {
     // Refresh board logic
@@ -110,17 +123,26 @@ const PlayingBoard = () => {
 
         <div> 
         <div className="current-call">
+          {lastBall ? (
+            <div className="ball-display">
+              <div className="ball">
+                {lastBall.combined}
+              </div>
+            </div>
+          ) : (
+            <div className="waiting-state">
+              {countDown > 0 ? (
+                <div>
+                  <p>Game starting in:</p>
+                  <div className="countdown">{countDown}</div>
+                </div>
+              ) : (
+                <p>Game to start...</p>
+              )}
+            </div>
+          )}
 
-          {countDown > 0 && (
-            <div className="countdown">
-              Game starts in: {countDown}
-            </div>
-          )}
-          {currentCall && (
-            <div className="current-number">
-              Current Number: {currentCall}
-            </div>
-          )}
+        
         </div>
         </div>
 
