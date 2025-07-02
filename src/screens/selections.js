@@ -10,6 +10,9 @@ const Selections = () => {
   const navigate = useNavigate();
   const [playerId, setPlayerId] = useState(null);
   const [pickedNumbers, setPickedNumbers] = useState([]);
+  const { playersLength, setPlayersLength } = useContext(BingoContext);
+ 
+
   const [isLoading, setIsLoading] = useState(false);
 
   // Generate numbers 1-100 (memoized since it's static)
@@ -23,18 +26,18 @@ const Selections = () => {
 
   // Socket listeners with cleanup
   useEffect(() => {
-    const handlePickedNumbers = (numbers) => {
-      console.log('Received updated picked numbers:', numbers);
-      setPickedNumbers(numbers);
+  
+    const handleGameState = (state) => {
+      console.log('Received updated game state:', state);
+      setPickedNumbers(state.pickedNumbers);
+      setPlayersLength(state.total_players);
     };
 
-    socket.on('pickedNumbers', handlePickedNumbers);
-
-    // Request initial picked numbers when component mounts
-    socket.emit('requestPickedNumbers', { gameId });
-
+    // socket.on('pickedNumbers', handlePickedNumbers);
+    socket.on('gameState', handleGameState);
     return () => {
-      socket.off('pickedNumbers', handlePickedNumbers);
+      // socket.off('pickedNumbers', handlePickedNumbers);
+      socket.off('gameState', handleGameState);
     };
   }, [socket, gameId]);
 
@@ -69,17 +72,10 @@ const Selections = () => {
   }, []);
 
   const handleStartGame = async () => {
-    console.log("selectedNumber", selectedNumber);
-    console.log("playerId", playerId);
-    console.log("gameId", gameId);
     if (!selectedNumber || !playerId || !gameId) return;
-    
-    // setIsLoading(true);
+    setIsLoading(true);
     try {
-      await Promise.all([
-        socket.emitWithAck('joinGame', { playerId, gameId }),
-        socket.emitWithAck('selectedNumber', { number: selectedNumber, gameId })
-      ]);
+      socket.emit('joinGame', { playerId, gameId,selectedNumber })
       navigate('/play');
     } catch (error) {
       console.error('Error starting game:', error);

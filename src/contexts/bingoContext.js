@@ -14,6 +14,7 @@ export const BingoProvider = ({ children }) => {
 
   const [selectedNumber, setSelectedNumber] = useState(null);
   const [selectBoard, setSelectBoard] = useState([]);
+  const [playersLength, setPlayersLength] = useState(0);
   const [gameId, setGameId] = useState("1");
 
 
@@ -37,7 +38,16 @@ export const BingoProvider = ({ children }) => {
 
   return (
 
-    <BingoContext.Provider value={{ ...state, login, logout, selectedNumber, setSelectedNumber, selectBoard, setSelectBoard, gameId, setGameId }}>
+    <BingoContext.Provider value={{ ...state, login,
+     logout,
+      selectedNumber,
+       setSelectedNumber,
+        selectBoard, 
+        setSelectBoard, 
+        gameId, 
+        setGameId,
+         playersLength, 
+         setPlayersLength }}>
       {children}
     </BingoContext.Provider>
   );

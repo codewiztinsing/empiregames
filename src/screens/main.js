@@ -4,12 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import './main.css';
 import { BingoContext } from '../contexts/bingoContext';
 const PlayingBoard = () => {
-  const { selectBoard } = useContext(BingoContext);
-  console.log("selectBoard", selectBoard);
+  const { selectBoard, playersLength } = useContext(BingoContext);
+
   const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
   const [currentCall, setCurrentCall] = useState(null);
-  const [players, setPlayers] = useState(0);
   const [winAmount, setWinAmount] = useState(0);
   const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
@@ -48,7 +47,7 @@ const PlayingBoard = () => {
         </div>
         <div className="stat-item">
           <span>Players</span>
-          <span>{players}</span>
+          <span>{playersLength}</span>
         </div>
         <div className="stat-item">
           <span>Bet</span>
