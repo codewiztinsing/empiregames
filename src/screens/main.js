@@ -189,7 +189,9 @@ const PlayingBoard = () => {
         {selectBoard.map((row, rowIndex) => (
           <div key={rowIndex} className="board-row">
             {row.map((cell, colIndex) => (
-              <div key={colIndex} className="board-cell">
+              <div key={colIndex} className="board-cell"
+                id={`${cell <= 15 && cell > 0 ? 'b' : cell <= 30 && cell > 15 ? 'i' : cell <= 45 && cell > 30 ? 'n' : cell <= 60 && cell > 45 ? 'g' : cell <= 75 && cell > 60 ? 'o' : ''}${cell}`}
+              >
                 {cell}
               </div>
             ))}
