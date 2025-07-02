@@ -107,6 +107,20 @@ const PlayingBoard = () => {
 
         <div className="playing-section">
 
+        <div> 
+        <div className="current-call">
+          <p>Current Call:</p>
+          <div className="call-display">
+  
+                <span className="call-letter">
+                 B
+                </span>
+                <span className="call-number">1</span>
+             
+          </div>
+        </div>
+        </div>
+
 
         <div className="bingo-header">
         <div className="bingo-letters">

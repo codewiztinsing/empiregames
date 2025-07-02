@@ -62,7 +62,7 @@
   font-size: 24px;
   font-weight: bold;
   color: #333;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .number {
@@ -83,15 +83,45 @@
 
 .bingo-header {
   background-color: rgba(255, 255, 255, 0.9);
-  padding: 10px;
+  padding: 5px;
   border-radius: 10px;
-  width: 100%;
-  max-width: 400px;
+  width: 90%;
+  max-width: 300px;
 }
 
 .bingo-letters {
   display: flex;
   justify-content: space-around;
+}
+
+
+.current-call {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 5px;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 200px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.call-display {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.call-letter {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.call-number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
 }
 
 .bingo-letters span {
@@ -158,5 +188,16 @@
   flex: 1;
   cursor: pointer;
 }
+
+.leave-button {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+
 
 
