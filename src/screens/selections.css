@@ -1,0 +1,117 @@
+/* Ensure full viewport height and prevent overflow */
+body, #root {
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Make selections container fill available space */
+.selections-container {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Scale numbers grid to fit viewport */
+.numbers-grid {
+  max-height: 45vh;
+  max-width: 90vw;
+  margin: 0 auto;
+}
+
+/* Adjust number cells for better fit */
+.number-cell {
+  min-width: 20px;
+  min-height: 20px;
+  font-size: calc(8px + 1vmin);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Make combination board responsive */
+.combination-board {
+  max-height: 45vh;
+  max-width: 90vw;
+  margin: 10px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border: 2px solid #333;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.board-grid {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+
+.selections-container {
+    background-color: blueviolet;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.numbers-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 5px;
+  margin-bottom: 20px;
+}
+
+.number-cell {
+  padding: 5px;
+  border: 1px solid #ccc;
+  text-align: center;
+  cursor: pointer;
+  background: white;
+}
+
+.number-cell:hover {
+  background: #f0f0f0;
+}
+
+.number-cell.selected {
+  background: #e0e0ff;
+  border-color: #0000ff;
+}
+
+.combination-board {
+  margin-top: 20px;
+}
+
+.board-grid {
+  display: inline-block;
+  border: 2px solid #333;
+  padding: 10px;
+  background: white;
+}
+
+.board-row {
+  display: flex;
+}
+
+.board-cell {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px;
+}
