@@ -11,8 +11,6 @@ const Selections = () => {
   const [playerId, setPlayerId] = useState(null);
   const [pickedNumbers, setPickedNumbers] = useState([]);
   const { playersLength, setPlayersLength } = useContext(BingoContext);
- 
-
   const [isLoading, setIsLoading] = useState(false);
 
   // Generate numbers 1-100 (memoized since it's static)
@@ -26,13 +24,11 @@ const Selections = () => {
 
   // Socket listeners with cleanup
   useEffect(() => {
-  
     const handleGameState = (state) => {
       console.log('Received updated game state:', state);
       setPickedNumbers(state.pickedNumbers);
       setPlayersLength(state.total_players);
     };
-
     // socket.on('pickedNumbers', handlePickedNumbers);
     socket.on('gameState', handleGameState);
     return () => {
@@ -91,6 +87,13 @@ const Selections = () => {
     setSelectedNumber(number);
     setSelectBoard(newBoard);
   };
+
+
+  socket.on('gameState', (state) => {
+    console.log('Received updated game state:', state);
+    setPickedNumbers(state.pickedNumbers);
+    setPlayersLength(state.total_players);
+  });
 
   return (
     <div className="selections-container">
