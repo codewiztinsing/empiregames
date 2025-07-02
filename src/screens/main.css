@@ -72,6 +72,11 @@
   gap: 20px;
 }
 
+.called {
+  background-color: #4CAF50;
+  color: white;
+}
+
 .playing-section {
   display: flex;
   flex-direction: column;

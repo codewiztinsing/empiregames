@@ -19,11 +19,17 @@ const PlayingBoard = () => {
     socket.on('numberSelected', (number) => {
       setCurrentCall(number);
     });
+    const element = document.getElementById(`${lastBall.letter}${lastBall.number}`);
+    console.log("element",element,lastBall);
+    if (element) {
+      element.classList.add('called');
+    }
+
 
     return () => {
       socket.off('numberSelected');
     };
-  }, [socket]);
+  }, [socket,lastBall]);
 
   const handleBingo = () => {
     // Add bingo validation logic here
@@ -36,6 +42,8 @@ const PlayingBoard = () => {
       setLastBall(data.lastBall[data.lastBall.length - 1]);
     }
     setLastBall(data.lastBall)
+
+    
    
   }
 
@@ -79,7 +87,10 @@ const PlayingBoard = () => {
             <div className="column">
               <div className="column-header">B</div>
               {Array.from({length: 15}, (_, i) => (
-                <div key={i} className={`number ${calledNumbers?.includes(i + 1) ? 'called' : ''}`}>
+                <div key={i} className={`number ${calledNumbers?.includes(i + 1) ? 'called' : ''}`}
+                id={`B${i + 1}`}
+                
+                >
                   {i + 1}
                 </div>
               ))}
@@ -87,7 +98,10 @@ const PlayingBoard = () => {
             <div className="column">
               <div className="column-header">I</div>
               {Array.from({length: 15}, (_, i) => (
-                <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'called' : ''}`}>
+                <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'called' : ''}`}
+                id={`I${i + 16}`}
+                
+                >
                   {i + 16}
                 </div>
               ))}
@@ -95,7 +109,10 @@ const PlayingBoard = () => {
             <div className="column">
               <div className="column-header">N</div>
               {Array.from({length: 15}, (_, i) => (
-                <div key={i} className={`number ${calledNumbers?.includes(i + 31) ? 'called' : ''}`}>
+                <div key={i} className={`number ${calledNumbers?.includes(i + 31) ? 'called' : ''}`}
+                id={`N${i + 31}`}
+                
+                >
                   {i + 31}
                 </div>
               ))}
@@ -103,7 +120,10 @@ const PlayingBoard = () => {
             <div className="column">
               <div className="column-header">G</div>
               {Array.from({length: 15}, (_, i) => (
-                <div key={i} className={`number ${calledNumbers?.includes(i + 46) ? 'called' : ''}`}>
+                <div key={i} className={`number ${calledNumbers?.includes(i + 46) ? 'called' : ''}`}
+                id={`G${i + 46}`}
+                
+                >
                   {i + 46}
                 </div>
               ))}
@@ -111,7 +131,9 @@ const PlayingBoard = () => {
             <div className="column">
               <div className="column-header">O</div>
               {Array.from({length: 15}, (_, i) => (
-                <div key={i} className={`number ${calledNumbers?.includes(i + 61) ? 'called' : ''}`}>
+                <div key={i} className={`number ${calledNumbers?.includes(i + 61) ? 'called' : ''}`}
+
+                >
                   {i + 61}
                 </div>
               ))}
