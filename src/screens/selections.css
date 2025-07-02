@@ -11,6 +11,13 @@ body, #root {
   justify-content: center;
 }
 
+.picked-numbers {
+  background-color: #ffa600;
+}
+
+.selected-number {
+  background-color: #3cff00;
+}
 /* Make selections container fill available space */
 .selections-container {
   height: 100vh;
@@ -42,7 +49,7 @@ body, #root {
 .combination-board {
   max-height: 45vh;
   max-width: 90vw;
-  margin: 10px auto;
+  margin: 5px auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -117,10 +124,52 @@ body, #root {
 }
 
 .start-game-button {
-  margin-top: 10px;
+  margin-top: 5px;
   background-color: #0000ff;
   color: white;
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
+}
+
+
+/* Add these to your existing CSS */
+.number-cell.picked {
+  background-color: #ffcccc;
+  color: #999;
+  position: relative;
+}
+
+.picked-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 0.6em;
+  background: #ff0000;
+  color: white;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+.number-cell.selected {
+  border: 3px solid #4CAF50;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+.board-cell.picked-on-board {
+  background-color: #ffe6e6;
+  position: relative;
+}
+
+.picked-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  color: green;
+  font-weight: bold;
+}
+
+.start-game-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }

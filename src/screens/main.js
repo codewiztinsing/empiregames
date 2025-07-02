@@ -2,8 +2,10 @@ import React, { useState, useContext, useEffect } from 'react';
 import { SocketContext } from '../contexts/socket';
 import { useNavigate } from 'react-router-dom';
 import './main.css';
-
+import { BingoContext } from '../contexts/bingoContext';
 const PlayingBoard = () => {
+  const { selectBoard } = useContext(BingoContext);
+  console.log("selectBoard", selectBoard);
   const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
   const [currentCall, setCurrentCall] = useState(null);
@@ -133,7 +135,7 @@ const PlayingBoard = () => {
       </div>
 
       <div className="bingo-board">
-        {board.map((row, rowIndex) => (
+        {selectBoard.map((row, rowIndex) => (
           <div key={rowIndex} className="board-row">
             {row.map((cell, colIndex) => (
               <div key={colIndex} className="board-cell">
