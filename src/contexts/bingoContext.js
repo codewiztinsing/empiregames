@@ -16,6 +16,7 @@ export const BingoProvider = ({ children }) => {
   const [selectBoard, setSelectBoard] = useState([]);
   const [playersLength, setPlayersLength] = useState(0);
   const [gameId, setGameId] = useState("1");
+  const [countDown, setCountDown] = useState(0);
 
 
   // Any functions you want to expose
@@ -47,7 +48,9 @@ export const BingoProvider = ({ children }) => {
         gameId, 
         setGameId,
          playersLength, 
-         setPlayersLength }}>
+         setPlayersLength,
+         countDown,
+         setCountDown }}>
       {children}
     </BingoContext.Provider>
   );

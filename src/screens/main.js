@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import './main.css';
 import { BingoContext } from '../contexts/bingoContext';
 const PlayingBoard = () => {
-  const { selectBoard, playersLength } = useContext(BingoContext);
+  const { selectBoard, playersLength, countDown } = useContext(BingoContext);
 
   const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
@@ -110,15 +110,17 @@ const PlayingBoard = () => {
 
         <div> 
         <div className="current-call">
-          <p>Current Call:</p>
-          <div className="call-display">
-  
-                <span className="call-letter">
-                 B
-                </span>
-                <span className="call-number">1</span>
-             
-          </div>
+
+          {countDown > 0 && (
+            <div className="countdown">
+              Game starts in: {countDown}
+            </div>
+          )}
+          {currentCall && (
+            <div className="current-number">
+              Current Number: {currentCall}
+            </div>
+          )}
         </div>
         </div>
 

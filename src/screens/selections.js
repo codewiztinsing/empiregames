@@ -5,13 +5,14 @@ import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
 
 const Selections = () => {
-  const { selectedNumber, setSelectedNumber, setSelectBoard, gameId } = useContext(BingoContext);
+  const { selectedNumber, setSelectedNumber, setSelectBoard, gameId, countDown, setCountDown } = useContext(BingoContext);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
   const [playerId, setPlayerId] = useState(null);
   const [pickedNumbers, setPickedNumbers] = useState([]);
   const { playersLength, setPlayersLength } = useContext(BingoContext);
   const [isLoading, setIsLoading] = useState(false);
+
 
   // Generate numbers 1-100 (memoized since it's static)
   const numbers = Array.from({ length: 100 }, (_, i) => i + 1);
@@ -28,6 +29,7 @@ const Selections = () => {
       console.log('Received updated game state:', state);
       setPickedNumbers(state.pickedNumbers);
       setPlayersLength(state.total_players);
+      setCountDown(state.count_down);
     };
     // socket.on('pickedNumbers', handlePickedNumbers);
     socket.on('gameState', handleGameState);
@@ -93,6 +95,7 @@ const Selections = () => {
     console.log('Received updated game state:', state);
     setPickedNumbers(state.pickedNumbers);
     setPlayersLength(state.total_players);
+    setCountDown(state.count_down);
   });
 
   return (
