@@ -4,14 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import './main.css';
 import { BingoContext } from '../contexts/bingoContext';
 const PlayingBoard = () => {
-  const { selectBoard, playersLength, countDown } = useContext(BingoContext);
+  const { selectBoard, playersLength, countDown, roomId } = useContext(BingoContext);
 
   const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
   const [currentCall, setCurrentCall] = useState(null);
   const [lastBall,setLastBall] = useState(0);
   const [winAmount, setWinAmount] = useState(0);
-  const [betAmount, setBetAmount] = useState(0);
+  const [totalCalledNumbers, setTotalCalledNumbers] = useState(0);
+  // const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
 
@@ -45,6 +46,10 @@ const PlayingBoard = () => {
       setLastBall(data.lastBall[data.lastBall.length - 1]);
     }
     setLastBall(data.lastBall)
+    if(data.total_called_numbers){
+      setTotalCalledNumbers(data.total_called_numbers)
+    }
+  
   }
 
   
@@ -64,7 +69,7 @@ const PlayingBoard = () => {
       <div className="stats-bar">
         <div className="stat-item">
           <span>Win</span>
-          <span>{winAmount}</span>
+          <span>{roomId * playersLength * 0.8}</span>
         </div>
         <div className="stat-item">
           <span>Players</span>
@@ -72,11 +77,11 @@ const PlayingBoard = () => {
         </div>
         <div className="stat-item">
           <span>Bet</span>
-          <span>{betAmount}</span>
+          <span>{roomId}</span>
         </div>
         <div className="stat-item">
           <span>Call</span>
-          <span>{currentCall}</span>
+          <span>{totalCalledNumbers}</span>
         </div>
       </div>
 
