@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
 
 const Selections = () => {
-  const { selectedNumber, setSelectedNumber, setSelectBoard, gameId, countDown, setCountDown } = useContext(BingoContext);
+  const { selectedNumber, setSelectedNumber, setSelectBoard, gameId, countDown, setCountDown, roomId, setRoomId } = useContext(BingoContext);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
   const [playerId, setPlayerId] = useState(null);
@@ -22,13 +22,14 @@ const Selections = () => {
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     setPlayerId(queryParams.get('playerId'));
+    setRoomId(queryParams.get('betAmount'));
   }, []);
 
   // Socket listeners with cleanup
   useEffect(() => {
     const handleGameState = (state) => {
       console.log('Received updated game state:', state);
-      setPickedNumbers(state.pickedNumbers);
+      setPickedNumbers(state.pickedNumbers.numbers);
       setPlayersLength(state.total_players);
       setCountDown(state.count_down);
 
@@ -76,7 +77,7 @@ const Selections = () => {
     if (!selectedNumber || !playerId || !gameId) return;
     setIsLoading(true);
     try {
-      socket.emit('joinGame', { playerId, gameId,selectedNumber })
+      socket.emit('joinGame', { playerId, gameId,selectedNumber, roomId })
       navigate('/play');
     } catch (error) {
       console.error('Error starting game:', error);

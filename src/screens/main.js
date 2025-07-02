@@ -19,10 +19,13 @@ const PlayingBoard = () => {
     socket.on('numberSelected', (number) => {
       setCurrentCall(number);
     });
-    const element = document.getElementById(`${lastBall.letter}${lastBall.number}`);
-    console.log("element",element,lastBall);
-    if (element) {
-      element.classList.add('called');
+
+    if (lastBall) { 
+      const element = document.getElementById(`${lastBall.letter}${lastBall.number}`);
+      console.log("element",element,lastBall);
+      if (element) {
+        element.classList.add('called');
+      }
     }
 
 
@@ -42,9 +45,6 @@ const PlayingBoard = () => {
       setLastBall(data.lastBall[data.lastBall.length - 1]);
     }
     setLastBall(data.lastBall)
-
-    
-   
   }
 
   
@@ -132,6 +132,7 @@ const PlayingBoard = () => {
               <div className="column-header">O</div>
               {Array.from({length: 15}, (_, i) => (
                 <div key={i} className={`number ${calledNumbers?.includes(i + 61) ? 'called' : ''}`}
+                id={`O${i + 61}`}
 
                 >
                   {i + 61}
