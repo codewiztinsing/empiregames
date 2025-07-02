@@ -6,7 +6,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* <Route path="/" element={<PlayingBoard />} /> */}
+        <Route path="/play" element={<PlayingBoard />} />
         <Route path="/" element={<SelectionScreen />} />
       </Routes>
     </Router>

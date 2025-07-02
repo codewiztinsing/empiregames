@@ -3,11 +3,12 @@ import { SocketContext } from '../contexts/socket';
 import { useContext } from 'react';
 import './selections.css';
 import { useEffect } from 'react';
-
+import { useNavigate } from 'react-router-dom';
 
 const Selections = () => {
   const [selectedNumber, setSelectedNumber] = useState(null);
   const socket = useContext(SocketContext);
+  const navigate = useNavigate();
   console.log("socket", socket);
 
   
@@ -35,7 +36,9 @@ const Selections = () => {
   };
 
   const handleStartGame = () => {
-    socket.emit('startGame');
+    // socket.emit('startGame');
+    socket.emit('selectNumber', selectedNumber);
+    navigate('/play');
   };
 
   const handleNumberClick = (number) => {

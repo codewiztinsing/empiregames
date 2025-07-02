@@ -1,95 +1,161 @@
-import React, { useState, useEffect } from 'react';
-import BingoCard from '../components/BingoCard';
-import Caller from '../components/Caller';
-import io from 'socket.io-client';
+import React, { useState, useContext, useEffect } from 'react';
 import { SocketContext } from '../contexts/socket';
-import { useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './main.css';
 
-function PlayingBoard() {
-  const socket = useContext(SocketContext);
-  const [players, setPlayers] = useState([]);
-  const [currentPlayer, setCurrentPlayer] = useState(null);
+const PlayingBoard = () => {
+  const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
-  const [gameStatus, setGameStatus] = useState('waiting'); // waiting, playing, ended
-  const [winner, setWinner] = useState(null);
+  const [currentCall, setCurrentCall] = useState(null);
+  const [players, setPlayers] = useState(0);
+  const [winAmount, setWinAmount] = useState(0);
+  const [betAmount, setBetAmount] = useState(0);
+  const socket = useContext(SocketContext);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Socket event listeners
-    socket.on('playerRegistered', (player) => {
-      setCurrentPlayer(player);
+    socket.on('numberSelected', (number) => {
+      setCurrentCall(number);
     });
-
-    socket.on('gameUpdate', (gameState) => {
-      setPlayers(gameState.players);
-      setCalledNumbers(gameState.calledNumbers);
-      setGameStatus(gameState.status);
-    });
-
-    socket.on('gameWon', (winningPlayer) => {
-      setWinner(winningPlayer);
-      setGameStatus('ended');
-    });
-
-    // Register player on load
-    const playerName = prompt('Enter your name') || `Player ${Math.floor(Math.random() * 1000)}`;
-    socket.emit('registerPlayer', playerName);
 
     return () => {
-      socket.off('playerRegistered');
-      socket.off('gameUpdate');
-      socket.off('gameWon');
+      socket.off('numberSelected');
     };
-  }, []);
+  }, [socket]);
 
-  const startGame = () => {
-    socket.emit('startGame');
+  const handleBingo = () => {
+    // Add bingo validation logic here
+    socket.emit('bingo');
   };
 
-  const callNumber = () => {
-    socket.emit('callNumber');
+  const handleRefresh = () => {
+    // Refresh board logic
+    window.location.reload();
+  };
+
+  const handleLeave = () => {
+    navigate('/');
   };
 
   return (
-    <div className="app">
-      <h1>Multiplayer Bingo</h1>
-      
-      {gameStatus === 'waiting' && (
-        <div>
-          <p>Waiting for players... {players.length} joined</p>
-       
-            <button onClick={startGame}>Start Game</button>
-          
+    <div className="game-container">
+      <div className="stats-bar">
+        <div className="stat-item">
+          <span>Win</span>
+          <span>{winAmount}</span>
         </div>
-      )}
+        <div className="stat-item">
+          <span>Players</span>
+          <span>{players}</span>
+        </div>
+        <div className="stat-item">
+          <span>Bet</span>
+          <span>{betAmount}</span>
+        </div>
+        <div className="stat-item">
+          <span>Call</span>
+          <span>{currentCall}</span>
+        </div>
+      </div>
 
-      {gameStatus === 'playing' && (
-        <div>
-          <Caller calledNumbers={calledNumbers} onCallNumber={callNumber} />
-          <div className="players-container">
-            {players.map(player => (
-              <div key={player.id} className={`player-card ${currentPlayer && player.id === currentPlayer.id ? 'current-player' : ''}`}>
-                <h3>{player.name} {player.hasBingo ? '(BINGO!)' : ''}</h3>
-                <BingoCard 
-                  card={player.card} 
-                  calledNumbers={calledNumbers} 
-                  onBingo={() => socket.emit('declareBingo')}
-                />
+      <div className="bingo-content">
+
+        <div className="called-numbers">
+          <div className="called-numbers-grid">
+            <div className="column">
+              <div className="column-header">B</div>
+              {Array.from({length: 15}, (_, i) => (
+                <div key={i} className={`number ${calledNumbers?.includes(i + 1) ? 'called' : ''}`}>
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+            <div className="column">
+              <div className="column-header">I</div>
+              {Array.from({length: 15}, (_, i) => (
+                <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'called' : ''}`}>
+                  {i + 16}
+                </div>
+              ))}
+            </div>
+            <div className="column">
+              <div className="column-header">N</div>
+              {Array.from({length: 15}, (_, i) => (
+                <div key={i} className={`number ${calledNumbers?.includes(i + 31) ? 'called' : ''}`}>
+                  {i + 31}
+                </div>
+              ))}
+            </div>
+            <div className="column">
+              <div className="column-header">G</div>
+              {Array.from({length: 15}, (_, i) => (
+                <div key={i} className={`number ${calledNumbers?.includes(i + 46) ? 'called' : ''}`}>
+                  {i + 46}
+                </div>
+              ))}
+            </div>
+            <div className="column">
+              <div className="column-header">O</div>
+              {Array.from({length: 15}, (_, i) => (
+                <div key={i} className={`number ${calledNumbers?.includes(i + 61) ? 'called' : ''}`}>
+                  {i + 61}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="playing-section">
+
+
+        <div className="bingo-header">
+        <div className="bingo-letters">
+          <span>B</span>
+          <span>I</span>
+          <span>N</span>
+          <span>G</span>
+          <span>O</span>
+        </div>
+      </div>
+
+      <div className="bingo-board">
+        {board.map((row, rowIndex) => (
+          <div key={rowIndex} className="board-row">
+            {row.map((cell, colIndex) => (
+              <div key={colIndex} className="board-cell">
+                {cell}
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ))}
+      </div>
 
-      {gameStatus === 'ended' && (
-        <div>
-          <h2>Game Over!</h2>
-          {winner && <p>Winner: {winner.name}</p>}
-          <button onClick={startGame}>Play Again</button>
+      <div className="game-controls">
+        <button className="bingo-button" onClick={handleBingo}>
+          BINGO!
+        </button>
+        <div className="action-buttons">
+          <button className="refresh-button" onClick={handleRefresh}>
+            Refresh
+          </button>
+          <button className="leave-button" onClick={handleLeave}>
+            Leave
+          </button>
         </div>
-      )}
+      </div>
+
+        </div>
+
+
+
+
+    
+
+      </div>
+
+     
     </div>
   );
-}
+};
 
 export default PlayingBoard;
