@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
+import { SocketContext } from '../contexts/socket';
+import { useContext } from 'react';
 import './selections.css';
 import { useEffect } from 'react';
 
 
 const Selections = () => {
   const [selectedNumber, setSelectedNumber] = useState(null);
+  const socket = useContext(SocketContext);
+  console.log("socket", socket);
+
   
   // Generate numbers 1-100
   const numbers = Array.from({length: 100}, (_, i) => i + 1);
@@ -27,6 +32,10 @@ const Selections = () => {
       combination.push(row);
     }
     return combination;
+  };
+
+  const handleStartGame = () => {
+    socket.emit('startGame');
   };
 
   const handleNumberClick = (number) => {
@@ -61,6 +70,7 @@ const Selections = () => {
               </div>
             ))}
           </div>
+          <button className="start-game-button" onClick={() => handleStartGame()}>Start Game</button>
         </div>
       )}
 

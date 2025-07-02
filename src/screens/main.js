@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import BingoCard from '../components/BingoCard';
 import Caller from '../components/Caller';
 import io from 'socket.io-client';
+import { SocketContext } from '../contexts/socket';
+import { useContext } from 'react';
 import './main.css';
 
-const socket = io('http://localhost:3002'); // Adjust to your server URL
-
 function PlayingBoard() {
+  const socket = useContext(SocketContext);
   const [players, setPlayers] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState(null);
   const [calledNumbers, setCalledNumbers] = useState([]);
