@@ -5,7 +5,20 @@ import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
 
 const Selections = () => {
-  const { selectedNumber, setSelectedNumber, selectBoard,setSelectBoard, gameId, countDown, setCountDown, roomId, setRoomId, playerId, setPlayerId } = useContext(BingoContext);
+  const { selectedNumber,
+            setSelectedNumber, 
+            selectBoard,
+            setSelectBoard,
+          gameId,
+          countDown,
+            setCountDown, 
+            roomId, 
+            setRoomId,
+            playerId, 
+            setPlayerId,
+            playerCard,
+            setPlayerCard
+         } = useContext(BingoContext);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
   const [pickedNumbers, setPickedNumbers] = useState([]);
@@ -87,7 +100,6 @@ const Selections = () => {
 
   const handleNumberClick = (number) => {
     if (pickedNumbers.includes(number)) return;
-    
     const newBoard = generateCombination();
     setSelectedNumber(number);
     setSelectBoard(newBoard);
@@ -132,7 +144,7 @@ const Selections = () => {
         <div className="combination-board">
          
           <div className="board-grid">
-            {generateCombination().map((row, rowIndex) => (
+            {selectBoard.map((row, rowIndex) => (
               <div key={rowIndex} className="board-row">
                 {row.map((num, colIndex) => (
                   <div 
