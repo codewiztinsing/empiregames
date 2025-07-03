@@ -36,9 +36,10 @@ const PlayingBoard = () => {
     return () => {
       socket.off('numberSelected');
     };
-  }, [socket,lastBall,selectedCell]);
+  }, [socket,lastBall,selectedCell,isBingo]);
 
   const handleBingo = () => {
+   
     socket.emit('bingo',{
       gameId: gameId,
       roomId: roomId,
@@ -70,8 +71,9 @@ const PlayingBoard = () => {
     console.log("data in winBingo 2",data);
     if(data.winningCard){
       setWinningCard(data.markedCells)
-      setIsBingo(data.isBingo)
+   
     }
+    setIsBingo(data.isBingo)
   })
 
   const handleLeave = () => {
