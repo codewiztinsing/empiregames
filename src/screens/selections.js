@@ -40,7 +40,6 @@ const Selections = () => {
   // Socket listeners with cleanup
   useEffect(() => {
     const handleGameState = (state) => {
-      console.log('Received updated game state:', state);
       setPickedNumbers(state.pickedNumbers.numbers);
       setPlayersLength(state.total_players);
       setCountDown(state.count_down);
@@ -107,7 +106,6 @@ const Selections = () => {
 
 
   socket.on('gameState', (state) => {
-    console.log('Received updated game state:', state);
     setPickedNumbers(state.pickedNumbers);
     setPlayersLength(state.total_players);
     setCountDown(state.count_down);

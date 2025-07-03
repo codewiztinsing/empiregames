@@ -66,45 +66,52 @@ function turnCalledNumbersToCard(calledNumbers){
 
 function checkBingo(playerCard,calledNumbers){
     let isBingo = false;
-    const marked = [];
-    for(let i = 0; i < playerCard.length; i++) {
-        const row = [];
-        for(let j = 0; j < playerCard[i].length; j++) {
-            if(calledNumbers.includes(playerCard[i][j])) {
-                row.push(true);
-            } else {
-                row.push(false);
-            }
-        }
-        marked.push(row);
-    }
-
-    // Check rows
-    for(let i = 0; i < marked.length; i++) {
-        const row = marked[i];
-        if(row.every(cell => cell === true)) {
+    const markedCard = markPlayerCard(playerCard,calledNumbers);
+    // Check rows for bingo
+    for (let row = 0; row < 5; row++) {
+        if (markedCard[row].every(cell => cell.marked)) {
             isBingo = true;
-            break;
+            return isBingo;
         }
     }
 
-    // Check columns
-    for(let i = 0; i < marked.length; i++) {
-        const column = marked.map(row => row[i]);
-        if(column.every(cell => cell === true)) {
+    // Check columns for bingo
+    for (let col = 0; col < 5; col++) {
+        if (markedCard.every(row => row[col].marked)) {
             isBingo = true;
-            break;
+            return isBingo;
         }
     }
 
-    // Check diagonals
-    const diagonal1 = marked.map((row, index) => row[index]);
-    const diagonal2 = marked.map((row, index) => row[4 - index]);
-    
-    if(diagonal1.every(cell => cell === true) || diagonal2.every(cell => cell === true)) {
+    // Check diagonal from top-left to bottom-right
+    if (markedCard[0][0].marked && 
+        markedCard[1][1].marked && 
+        markedCard[2][2].marked && 
+        markedCard[3][3].marked && 
+        markedCard[4][4].marked) {
         isBingo = true;
+        return isBingo;
     }
-    
+
+    // Check diagonal from top-right to bottom-left
+    if (markedCard[0][4].marked && 
+        markedCard[1][3].marked && 
+        markedCard[2][2].marked && 
+        markedCard[3][1].marked && 
+        markedCard[4][0].marked) {
+        isBingo = true;
+        return isBingo;
+    }
+
+    // Check four corners
+    if (markedCard[0][0].marked && 
+        markedCard[0][4].marked &&
+        markedCard[4][0].marked && 
+        markedCard[4][4].marked) {
+        isBingo = true;
+        return isBingo;
+    }
+   
     return isBingo;
 }
     

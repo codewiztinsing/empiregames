@@ -15,43 +15,7 @@ const PlayingBoard = () => {
   const [totalCalledNumbers, setTotalCalledNumbers] = useState(0);
   const [selectedCell, setSelectedCell] = useState(new Set());
   const [isBingo, setIsBingo] = useState(false);
-  const [winningCard, setWinningCard] = useState([
-    [
-      { number: 1, marked: false },
-      { number: 2, marked: false },
-      { number: 3, marked: false },
-      { number: 4, marked: false },
-      { number: 5, marked: false }
-    ],
-    [
-      { number: 6, marked: false },
-      { number: 7, marked: false },
-      { number: 8, marked: false },
-      { number: 9, marked: false },
-      { number: 10, marked: false }
-    ],
-    [
-      { number: 11, marked: false },
-      { number: 12, marked: false },
-      { number: 13, marked: false },
-      { number: 14, marked: false },
-      { number: 15, marked: false }
-    ],
-    [
-      { number: 16, marked: false },
-      { number: 17, marked: false },
-      { number: 18, marked: false },
-      { number: 19, marked: false },
-      { number: 20, marked: false }
-    ],
-    [
-      { number: 21, marked: false },
-      { number: 22, marked: false },
-      { number: 23, marked: false },
-      { number: 24, marked: false },
-      { number: 25, marked: false }
-    ]
-  ]);
+  const [winningCard, setWinningCard] = useState([]);
   // const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -63,7 +27,6 @@ const PlayingBoard = () => {
 
     if (lastBall) { 
       const element = document.getElementById(`${lastBall.letter}${lastBall.number}`);
-      console.log("element",element,lastBall);
       if (element) {
         element.classList.add('called');
       }
@@ -104,10 +67,10 @@ const PlayingBoard = () => {
   };
 
   socket.on('winBingo', (data) => {
-    console.log("data in winBingo",data);
+    console.log("data in winBingo 2",data);
     if(data.winningCard){
-      setWinningCard(data.playerCard)
-      setIsBingo(true)
+      setWinningCard(data.markedCells)
+      setIsBingo(data.isBingo)
     }
   })
 
