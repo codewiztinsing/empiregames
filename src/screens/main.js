@@ -14,7 +14,7 @@ const PlayingBoard = () => {
   const [winAmount, setWinAmount] = useState(0);
   const [totalCalledNumbers, setTotalCalledNumbers] = useState(0);
   const [selectedCell, setSelectedCell] = useState(new Set());
-  const [isBingo, setIsBingo] = useState(true);
+  const [isBingo, setIsBingo] = useState(false);
   const [winningCard, setWinningCard] = useState([
     [
       { number: 1, marked: false },
@@ -102,6 +102,14 @@ const PlayingBoard = () => {
     // Refresh board logic
     window.location.reload();
   };
+
+  socket.on('winBingo', (data) => {
+    console.log("data in winBingo",data);
+    if(data.winningCard){
+      setWinningCard(data.playerCard)
+      setIsBingo(true)
+    }
+  })
 
   const handleLeave = () => {
     navigate('/');
