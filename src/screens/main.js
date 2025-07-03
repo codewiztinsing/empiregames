@@ -66,9 +66,8 @@ const PlayingBoard = () => {
   };
 
   const handleCellClick = (cell) => {
-    console.log("cell",cell);
-    
     setSelectedCell([...selectedCell, cell]);
+   
   };
 
   return (
@@ -199,7 +198,8 @@ const PlayingBoard = () => {
           <div key={rowIndex} className="board-row">
             {row.map((cell, colIndex) => (
               <div key={colIndex} 
-                className={`board-cell ${selectedCell.includes(cell) ? 'selected' : ''}`}
+                className={`board-cell`}
+                style={{ backgroundColor: selectedCell.includes(cell) ? '#4CAF50' : 'white' }}
                 id={`${cell <= 15 && cell > 0 ? 'b' : cell <= 30 && cell > 15 ? 'i' : cell <= 45 && cell > 30 ? 'n' : cell <= 60 && cell > 45 ? 'g' : cell <= 75 && cell > 60 ? 'o' : ''}${cell}`}
                 onClick={() => {
                   handleCellClick(cell);
@@ -228,12 +228,6 @@ const PlayingBoard = () => {
       </div>
 
         </div>
-
-
-
-
-    
-
       </div>
 
      
