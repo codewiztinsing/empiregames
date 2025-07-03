@@ -116,8 +116,15 @@ const Selections = () => {
     <div className="selections-container">
       
       <div className="numbers-grid">
+
+        
         {numbers.map(number => {
-          const isPicked = pickedNumbers.includes(number);
+          // const isPicked = pickedNumbers && pickedNumbers.includes(number) || false;
+          let isPicked = false;
+          if(pickedNumbers && pickedNumbers.length > 0){
+            isPicked = pickedNumbers.includes(number);
+          }
+
           const isSelected = selectedNumber === number;
           
           return (

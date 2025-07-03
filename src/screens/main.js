@@ -71,9 +71,19 @@ const PlayingBoard = () => {
     console.log("data in winBingo 2",data);
     if(data.winningCard){
       setWinningCard(data.markedCells)
+      setIsBingo(data.isBingo)
    
     }
-    setIsBingo(data.isBingo)
+  })
+
+  socket.on('falseBingo', (data) => {
+    if (data.isBingo === false) {
+      
+      if (data.playerId === playerId) {
+        navigate('/');
+      }
+    }
+   
   })
 
   const handleLeave = () => {
