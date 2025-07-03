@@ -12,6 +12,7 @@ const PlayingBoard = () => {
   const [lastBall,setLastBall] = useState(0);
   const [winAmount, setWinAmount] = useState(0);
   const [totalCalledNumbers, setTotalCalledNumbers] = useState(0);
+  const [selectedCell, setSelectedCell] = useState([]);
   // const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ const PlayingBoard = () => {
     return () => {
       socket.off('numberSelected');
     };
-  }, [socket,lastBall]);
+  }, [socket,lastBall,selectedCell]);
 
   const handleBingo = () => {
     // Add bingo validation logic here
@@ -62,6 +63,12 @@ const PlayingBoard = () => {
 
   const handleLeave = () => {
     navigate('/');
+  };
+
+  const handleCellClick = (cell) => {
+    console.log("cell",cell);
+    
+    setSelectedCell([...selectedCell, cell]);
   };
 
   return (
@@ -125,8 +132,10 @@ const PlayingBoard = () => {
             <div className="column">
               <div className="column-header">G</div>
               {Array.from({length: 15}, (_, i) => (
-                <div key={i} className={`number ${calledNumbers?.includes(i + 46) ? 'called' : ''}`}
-                id={`G${i + 46}`}
+                <div key={i} 
+                  className={`number ${calledNumbers?.includes(i + 46) ? 'called' : ''}`}
+                  id={`G${i + 46}`}
+
                 
                 >
                   {i + 46}
@@ -189,8 +198,13 @@ const PlayingBoard = () => {
         {selectBoard.map((row, rowIndex) => (
           <div key={rowIndex} className="board-row">
             {row.map((cell, colIndex) => (
-              <div key={colIndex} className="board-cell"
+              <div key={colIndex} 
+                className={`board-cell ${selectedCell.includes(cell) ? 'selected' : ''}`}
                 id={`${cell <= 15 && cell > 0 ? 'b' : cell <= 30 && cell > 15 ? 'i' : cell <= 45 && cell > 30 ? 'n' : cell <= 60 && cell > 45 ? 'g' : cell <= 75 && cell > 60 ? 'o' : ''}${cell}`}
+                onClick={() => {
+                  handleCellClick(cell);
+                  setSelectedCell([...selectedCell, cell]);
+                }}
               >
                 {cell}
               </div>
