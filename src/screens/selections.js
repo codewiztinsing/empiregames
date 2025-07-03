@@ -98,7 +98,9 @@ const Selections = () => {
   };
 
   const handleNumberClick = (number) => {
-    if (pickedNumbers.includes(number)) return;
+
+
+    if (pickedNumbers && pickedNumbers.length > 0 &&pickedNumbers.includes(number)) return;
     const newBoard = generateCombination();
     setSelectedNumber(number);
     setSelectBoard(newBoard);
@@ -155,11 +157,11 @@ const Selections = () => {
                   <div 
                     key={colIndex} 
                     className={`board-cell ${
-                      pickedNumbers.includes(num) ? 'picked-on-board' : ''
+                      pickedNumbers && pickedNumbers.length > 1 && pickedNumbers.includes(num) ? 'picked-on-board' : ''
                     }`}
                   >
                     {num}
-                    {pickedNumbers.includes(num) && (
+                    {  pickedNumbers && pickedNumbers.length > 1 && pickedNumbers.includes(num) && (
                       <span className="picked-indicator">✓</span>
                     )}
                   </div>
