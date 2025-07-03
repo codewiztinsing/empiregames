@@ -5,10 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
 
 const Selections = () => {
-  const { selectedNumber, setSelectedNumber, setSelectBoard, gameId, countDown, setCountDown, roomId, setRoomId } = useContext(BingoContext);
+  const { selectedNumber, setSelectedNumber, setSelectBoard, gameId, countDown, setCountDown, roomId, setRoomId, playerId, setPlayerId } = useContext(BingoContext);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
-  const [playerId, setPlayerId] = useState(null);
   const [pickedNumbers, setPickedNumbers] = useState([]);
   const { playersLength, setPlayersLength } = useContext(BingoContext);
   const [isLoading, setIsLoading] = useState(false);

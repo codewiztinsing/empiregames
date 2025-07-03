@@ -18,7 +18,7 @@ export const BingoProvider = ({ children }) => {
   const [gameId, setGameId] = useState("1");
   const [countDown, setCountDown] = useState(0);
   const [roomId, setRoomId] = useState(null);
-
+  const [playerId, setPlayerId] = useState(null);
 
   // Any functions you want to expose
   const login = (userData) => {
@@ -53,7 +53,9 @@ export const BingoProvider = ({ children }) => {
          countDown,
          setCountDown,
          roomId,
-         setRoomId }}>
+         setRoomId,
+         playerId,
+         setPlayerId }}>
       {children}
     </BingoContext.Provider>
   );

@@ -3,16 +3,55 @@ import { SocketContext } from '../contexts/socket';
 import { useNavigate } from 'react-router-dom';
 import './main.css';
 import { BingoContext } from '../contexts/bingoContext';
+import BingoWinner from '../components/BingoWinner';  
 const PlayingBoard = () => {
-  const { selectBoard, playersLength, countDown, roomId } = useContext(BingoContext);
+  const { selectBoard, playersLength, countDown, roomId ,playerId,gameId} = useContext(BingoContext);
 
   const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
   const [currentCall, setCurrentCall] = useState(null);
-  const [lastBall,setLastBall] = useState(0);
+  const [lastBall, setLastBall] = useState(0);
   const [winAmount, setWinAmount] = useState(0);
   const [totalCalledNumbers, setTotalCalledNumbers] = useState(0);
-  const [selectedCell, setSelectedCell] = useState([]);
+  const [selectedCell, setSelectedCell] = useState(new Set());
+  const [isBingo, setIsBingo] = useState(true);
+  const [winningCard, setWinningCard] = useState([
+    [
+      { number: 1, marked: false },
+      { number: 2, marked: false },
+      { number: 3, marked: false },
+      { number: 4, marked: false },
+      { number: 5, marked: false }
+    ],
+    [
+      { number: 6, marked: false },
+      { number: 7, marked: false },
+      { number: 8, marked: false },
+      { number: 9, marked: false },
+      { number: 10, marked: false }
+    ],
+    [
+      { number: 11, marked: false },
+      { number: 12, marked: false },
+      { number: 13, marked: false },
+      { number: 14, marked: false },
+      { number: 15, marked: false }
+    ],
+    [
+      { number: 16, marked: false },
+      { number: 17, marked: false },
+      { number: 18, marked: false },
+      { number: 19, marked: false },
+      { number: 20, marked: false }
+    ],
+    [
+      { number: 21, marked: false },
+      { number: 22, marked: false },
+      { number: 23, marked: false },
+      { number: 24, marked: false },
+      { number: 25, marked: false }
+    ]
+  ]);
   // const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -37,8 +76,13 @@ const PlayingBoard = () => {
   }, [socket,lastBall,selectedCell]);
 
   const handleBingo = () => {
-    // Add bingo validation logic here
-    socket.emit('bingo');
+    socket.emit('bingo',{
+      gameId: gameId,
+      roomId: roomId,
+      playerId: playerId,
+      markedCells: Array.from(selectedCell)
+    });
+   
   };
 
   function handleGameState(data) {
@@ -53,9 +97,7 @@ const PlayingBoard = () => {
   
   }
 
-  
   socket.on('gameState', handleGameState);
-
   const handleRefresh = () => {
     // Refresh board logic
     window.location.reload();
@@ -67,11 +109,41 @@ const PlayingBoard = () => {
 
   const handleCellClick = (cell) => {
     setSelectedCell([...selectedCell, cell]);
+    console.log("selectedCell",selectedCell);
    
   };
 
   return (
     <div className="game-container">
+
+{isBingo && (
+        <div className="bingo-winner-overlay">
+          <div className="bingo-winner-card">
+            <h2>BINGO!</h2>
+            <div className="winning-card">
+              {winningCard.map((row, rowIndex) => (
+                <div key={rowIndex} className="winning-card-row">
+                  {row.map((cell, cellIndex) => (
+                    <div 
+                      key={cellIndex} 
+                      className={`winning-card-cell ${cell.marked ? 'marked' : ''}`}
+                    >
+                      {cell.number}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <button 
+              className="close-winner-button" 
+              onClick={() => setIsBingo(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    
       <div className="stats-bar">
         <div className="stat-item">
           <span>Win</span>
@@ -199,11 +271,11 @@ const PlayingBoard = () => {
             {row.map((cell, colIndex) => (
               <div key={colIndex} 
                 className={`board-cell`}
-                style={{ backgroundColor: selectedCell.includes(cell) ? '#4CAF50' : 'white' }}
+                style={{ backgroundColor: selectedCell.has(cell) ? '#4CAF50' : 'white' }}
                 id={`${cell <= 15 && cell > 0 ? 'b' : cell <= 30 && cell > 15 ? 'i' : cell <= 45 && cell > 30 ? 'n' : cell <= 60 && cell > 45 ? 'g' : cell <= 75 && cell > 60 ? 'o' : ''}${cell}`}
                 onClick={() => {
                   handleCellClick(cell);
-                  setSelectedCell([...selectedCell, cell]);
+                  setSelectedCell(new Set(selectedCell).add(cell));
                 }}
               >
                 {cell}
@@ -229,8 +301,6 @@ const PlayingBoard = () => {
 
         </div>
       </div>
-
-     
     </div>
   );
 };
