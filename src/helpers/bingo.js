@@ -51,7 +51,7 @@ function checkBingo(markedCells,calledNumbers,currentCall){
     if (currentCall) {
         calledNumbers.push(currentCall.number);
     }
-    const isBingo = false;
+    let isBingo = false;
     const markedCard = turnMarkedCellsToCard(markedCells);
     const calledCard = turnCalledNumbersToCard(calledNumbers);
     // check if any row is complete

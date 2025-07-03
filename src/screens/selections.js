@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
 
 const Selections = () => {
-  const { selectedNumber, setSelectedNumber, setSelectBoard, gameId, countDown, setCountDown, roomId, setRoomId, playerId, setPlayerId } = useContext(BingoContext);
+  const { selectedNumber, setSelectedNumber, selectBoard,setSelectBoard, gameId, countDown, setCountDown, roomId, setRoomId, playerId, setPlayerId } = useContext(BingoContext);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
   const [pickedNumbers, setPickedNumbers] = useState([]);
@@ -76,7 +76,7 @@ const Selections = () => {
     if (!selectedNumber || !playerId || !gameId) return;
     setIsLoading(true);
     try {
-      socket.emit('joinGame', { playerId, gameId,selectedNumber, roomId })
+      socket.emit('joinGame', { playerId, gameId,selectedNumber, roomId,selectBoard })
       navigate('/play');
     } catch (error) {
       console.error('Error starting game:', error);
