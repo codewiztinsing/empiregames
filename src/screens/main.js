@@ -67,6 +67,13 @@ const PlayingBoard = () => {
     window.location.reload();
   };
 
+  socket.on('gameOver', (data) => {
+    console.log("data in gameOver",data);
+    if(data.roomId == roomId){
+      navigate(`/?playerId=${playerId}&betAmount=${roomId}`);
+    }
+  })
+
   socket.on('winBingo', (data) => {
     console.log("data in winBingo 2",data);
     if(data.winningCard){
@@ -80,7 +87,7 @@ const PlayingBoard = () => {
     if (data.isBingo === false) {
       
       if (data.playerId === playerId) {
-        navigate('/');
+        navigate(`/?playerId=${playerId}&betAmount=${roomId}`);
       }
     }
    

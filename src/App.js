@@ -3,7 +3,7 @@ import { BingoProvider } from './contexts/bingoContext';
 
 import PlayingBoard from './screens/main';
 import SelectionScreen from './screens/selections';
-
+import Landing from './screens/landing';
 function App() {
   return (
     <BingoProvider>
@@ -11,6 +11,7 @@ function App() {
         <Routes>
           <Route path="/play" element={<PlayingBoard />} />
           <Route path="/" element={<SelectionScreen />} />
+          <Route path="/landing" element={<Landing />} />
         </Routes>
       </Router>
     </BingoProvider>
