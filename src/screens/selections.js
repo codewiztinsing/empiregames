@@ -31,14 +31,17 @@ const Selections = () => {
   const numbers = Array.from({ length: 100 }, (_, i) => i + 1);
 
   // Get playerId from URL once on mount
+  // useEffect(() => {
+  //   const queryParams = new URLSearchParams(window.location.search);
+  //   setPlayerId(queryParams.get('playerId'));
+  //   setRoomId(queryParams.get('betAmount'));
+  // }, []);
+
+  // Socket listeners with cleanup
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     setPlayerId(queryParams.get('playerId'));
     setRoomId(queryParams.get('betAmount'));
-  }, []);
-
-  // Socket listeners with cleanup
-  useEffect(() => {
     const handleGameState = (state) => {
       setPickedNumbers(state.pickedNumbers.numbers);
       setPlayersLength(state.total_players);
@@ -48,11 +51,21 @@ const Selections = () => {
     };
     // socket.on('pickedNumbers', handlePickedNumbers);
     socket.on('gameState', handleGameState);
+    socket.on('pickedNumbers', handlePickedNumbers);
     return () => {
       // socket.off('pickedNumbers', handlePickedNumbers);
       socket.off('gameState', handleGameState);
     };
   }, [socket, gameId]);
+
+
+
+  socket.on('gameState', (state) => {
+    setPickedNumbers(state.pickedNumbers.numbers);
+    setPlayersLength(state.total_players);
+    setCountDown(state.count_down);
+  });
+
 
   // Memoized board generation
   const generateCombination = useCallback(() => {
@@ -84,6 +97,17 @@ const Selections = () => {
     return card;
   }, []);
 
+
+  const handlePickedNumbers = (state) => {
+    console.log("state room id",state.roomId,"current room id ",roomId)
+    console.log(roomId == state.roomId)
+    if(state.roomId == roomId) {
+      setPickedNumbers(state.numbers);
+    }
+    
+ 
+  }
+
   const handleStartGame = async () => {
     if (!selectedNumber || !playerId || !gameId) return;
     setIsLoading(true);
@@ -98,8 +122,6 @@ const Selections = () => {
   };
 
   const handleNumberClick = (number) => {
-
-
     if (pickedNumbers && pickedNumbers.length > 0 &&pickedNumbers.includes(number)) return;
     const newBoard = generateCombination();
     setSelectedNumber(number);
@@ -107,12 +129,10 @@ const Selections = () => {
   };
 
 
-  socket.on('gameState', (state) => {
-    setPickedNumbers(state.pickedNumbers);
-    setPlayersLength(state.total_players);
-    setCountDown(state.count_down);
-    setCurrentCall(state.currentCall)
-  });
+  socket.on('pickedNumbers', handlePickedNumbers);
+
+
+
 
   return (
     <div className="selections-container">
