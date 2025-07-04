@@ -96,6 +96,13 @@ const PlayingBoard = () => {
    
   };
 
+  const handleCloseWinner = () => {
+
+    setIsBingo(false);
+    const queryParams = 
+    navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
+  };
+
   return (
     <div className="game-container">
 
@@ -119,7 +126,7 @@ const PlayingBoard = () => {
             </div>
             <button 
               className="close-winner-button" 
-              onClick={() => setIsBingo(false)}
+              onClick={handleCloseWinner}
             >
               Close
             </button>
