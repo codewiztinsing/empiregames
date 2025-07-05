@@ -10,8 +10,8 @@ function App() {
       <Router>
         <Routes>
           <Route path="/play" element={<PlayingBoard />} />
-          <Route path="/" element={<SelectionScreen />} />
-          <Route path="/landing" element={<Landing />} />
+          <Route path="/selection" element={<SelectionScreen />} />
+          <Route path="/" element={<Landing />} />
         </Routes>
       </Router>
     </BingoProvider>

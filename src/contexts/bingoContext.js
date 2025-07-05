@@ -12,6 +12,8 @@ export const BingoProvider = ({ children }) => {
     isAuthenticated: false
   });
 
+  // setSelectedNumber
+
   const [selectedNumber, setSelectedNumber] = useState(null);
   const [selectBoard, setSelectBoard] = useState([]);
   const [playersLength, setPlayersLength] = useState(0);

@@ -6,19 +6,20 @@ import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
 
 const Selections = () => {
-  const { selectedNumber,
-            setSelectedNumber, 
-            selectBoard,
-            setSelectBoard,
+  const { 
+          selectedNumber,
+          setSelectedNumber, 
+          selectBoard,
+          setSelectBoard,
           gameId,
           countDown,
-            setCountDown, 
-            roomId, 
-            setRoomId,
-            playerId, 
-            setPlayerId,
-            playerCard,
-            setPlayerCard
+          setCountDown, 
+          roomId, 
+          setRoomId,
+          playerId, 
+          setPlayerId,
+          playerCard,
+          setPlayerCard
          } = useContext(BingoContext);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -44,7 +45,6 @@ const Selections = () => {
       setPlayersLength(state.total_players);
       setCountDown(state.count_down);
 
-      
     };
     // socket.on('pickedNumbers', handlePickedNumbers);
     socket.on('gameState', handleGameState);
@@ -128,6 +128,7 @@ const Selections = () => {
   const handleNumberClick = (number) => {
     if (pickedNumbers && pickedNumbers.length > 0 &&pickedNumbers.includes(number)) return;
     const newBoard = generateCombination();
+    console.log("number = ",number)
     setSelectedNumber(number);
     setSelectBoard(newBoard);
   };

@@ -5,7 +5,7 @@ import './main.css';
 import { BingoContext } from '../contexts/bingoContext';
 import BingoWinner from '../components/BingoWinner';  
 const PlayingBoard = () => {
-  const { selectBoard, playersLength, countDown, roomId ,playerId,gameId} = useContext(BingoContext);
+  const { selectedNumber,selectBoard, playersLength, countDown, roomId ,playerId,gameId} = useContext(BingoContext);
 
   const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
@@ -19,6 +19,8 @@ const PlayingBoard = () => {
   // const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
+
+  console.log("selectedNumber = ",selectedNumber)
 
   useEffect(() => {
     socket.on('numberSelected', (number) => {
@@ -238,7 +240,7 @@ const PlayingBoard = () => {
             <div className="waiting-state">
               {countDown > 0 ? (
                 <div>
-                  <p>Game starting in:</p>
+                  <p>Game starting</p>
                   <div className="countdown">{countDown}</div>
                 </div>
               ) : (
@@ -280,7 +282,10 @@ const PlayingBoard = () => {
             ))}
           </div>
         ))}
+        <p className="selected-number">Your Selected Number: {selectedNumber}</p>
       </div>
+
+
 
       <div className="game-controls">
         <button className="bingo-button" onClick={handleBingo}>
