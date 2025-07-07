@@ -40,15 +40,24 @@ const Selections = () => {
     const queryParams = new URLSearchParams(window.location.search);
     setPlayerId(queryParams.get('playerId'));
     setRoomId(queryParams.get('betAmount'));
+    socket.on("games",(data) => {
+      console.log("data = ",data)
+    })
+  
+
     const handleGameState = (state) => {
-      setPickedNumbers(state.pickedNumbers.numbers);
-      setPlayersLength(state.total_players);
-      setCountDown(state.count_down);
+      const gameRoom = state.roomId
+      if(roomId == gameRoom){
+        setPickedNumbers(state.pickedNumbers.numbers);
+        setPlayersLength(state.total_players);
+        setCountDown(state.count_down);
+      }
 
     };
     // socket.on('pickedNumbers', handlePickedNumbers);
     socket.on('gameState', handleGameState);
     socket.on('pickedNumbers', handlePickedNumbers);
+    socket.on("gameStatus",handleGameStatus)
     return () => {
       // socket.off('pickedNumbers', handlePickedNumbers);
       socket.off('gameState', handleGameState);
@@ -56,6 +65,19 @@ const Selections = () => {
   }, [socket, gameId,gameStatus]);
 
 
+
+  socket.on('activeGames', (state) => {
+    if(state?.activeGames?.length > 0){
+      const activeGameId = state.activeGames[0].id
+      console.log("active game id", activeGameId)
+      if(activeGameId == roomId){
+        setGameStatus("in-progress");
+      }
+    }
+  
+    
+  
+  });
 
   socket.on('gameState', (state) => {
     setPickedNumbers(state.pickedNumbers.numbers);
@@ -134,7 +156,17 @@ const Selections = () => {
   };
 
   const handleGameStatus = (state) => {
+    console.log("state",state)
+    const gameRoom = state.roomId
+    if(roomId == gameRoom){
+      setGameStatus(state.status);
+    }
+
     setGameStatus(state.status);
+    
+  
+  
+  
   }
 
 

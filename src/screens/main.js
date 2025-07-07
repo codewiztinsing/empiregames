@@ -1,11 +1,11 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, use } from 'react';
 import { SocketContext } from '../contexts/socket';
 import { useNavigate } from 'react-router-dom';
 import './main.css';
 import { BingoContext } from '../contexts/bingoContext';
 import BingoWinner from '../components/BingoWinner';  
 const PlayingBoard = () => {
-  const { selectedNumber,selectBoard, playersLength, countDown, roomId ,playerId,gameId} = useContext(BingoContext);
+  const { selectedNumber,selectBoard, playersLength, countDown, roomId ,playerId,gameId,setGameId} = useContext(BingoContext);
 
   const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
@@ -16,6 +16,7 @@ const PlayingBoard = () => {
   const [selectedCell, setSelectedCell] = useState(new Set());
   const [isBingo, setIsBingo] = useState(false);
   const [winningCard, setWinningCard] = useState([]);
+  const [winner,setWinner] = useState("skdfn9123u42139")
   // const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const PlayingBoard = () => {
   }, [socket,lastBall,selectedCell,isBingo]);
 
   const handleBingo = () => {
+    console.log("bingo clicked")
    
     socket.emit('bingo',{
       gameId: gameId,
@@ -56,10 +58,14 @@ const PlayingBoard = () => {
     if (data.lastBall && data.lastBall.length > 0) {
       setLastBall(data.lastBall[data.lastBall.length - 1]);
     }
+
+    
     setLastBall(data.lastBall)
     if(data.total_called_numbers){
       setTotalCalledNumbers(data.total_called_numbers)
     }
+
+    setGameId(data.gameId)
   
   }
 
@@ -72,7 +78,7 @@ const PlayingBoard = () => {
   socket.on('gameOver', (data) => {
     console.log("data in gameOver",data);
     if(data.roomId == roomId){
-      navigate(`/?playerId=${playerId}&betAmount=${roomId}`);
+      navigate(`/selection?playerId=${playerId}&betAmount=${roomId}`);
     }
   })
 
@@ -81,6 +87,7 @@ const PlayingBoard = () => {
     if(data.winningCard){
       setWinningCard(data.markedCells)
       setIsBingo(data.isBingo)
+      setWinner(data.playerId)
    
     }
   })
@@ -89,7 +96,7 @@ const PlayingBoard = () => {
     if (data.isBingo === false) {
       
       if (data.playerId === playerId) {
-        navigate(`/?playerId=${playerId}&betAmount=${roomId}`);
+        navigate(`/selections?playerId=${playerId}&betAmount=${roomId}`);
       }
     }
    
@@ -109,7 +116,7 @@ const PlayingBoard = () => {
 
     setIsBingo(false);
     const queryParams = 
-    navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
+    navigate(`/selection?playerId=${playerId}&&betAmount=${roomId}`);
   };
 
   return (
@@ -118,7 +125,9 @@ const PlayingBoard = () => {
 {isBingo && (
         <div className="bingo-winner-overlay">
           <div className="bingo-winner-card">
-            <h2>BINGO!</h2>
+
+    
+            <h2>{playerId === winner ? "You Won!" : `Player ${winner} Won!`}</h2>
             <div className="winning-card">
               {winningCard.map((row, rowIndex) => (
                 <div key={rowIndex} className="winning-card-row">
