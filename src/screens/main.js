@@ -5,7 +5,7 @@ import './main.css';
 import { BingoContext } from '../contexts/bingoContext';
 import BingoWinner from '../components/BingoWinner';  
 const PlayingBoard = () => {
-  const { selectedNumber,selectBoard, playersLength, countDown, roomId ,playerId,gameId,setGameId} = useContext(BingoContext);
+  const { selectedNumber,selectBoard, playersLength, countDown, roomId ,playerId,gameId,setGameId,setToast,setIsToast} = useContext(BingoContext);
 
   const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
@@ -103,6 +103,16 @@ const PlayingBoard = () => {
    
   })
 
+  socket.on('joinError', (data) => {
+    if(data.roomId == roomId){
+      setToast(data.message);
+      setIsToast(true);
+      navigate(`/selection?playerId=${playerId}&betAmount=${roomId}`);
+    }
+    
+  })
+
+ 
   const handleLeave = () => {
     navigate(`/selection?playerId=${playerId}&&betAmount=${roomId}`);
     window.location.reload();

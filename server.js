@@ -248,6 +248,15 @@ io.on('connection', (socket) => {
       return;
     }
 
+
+      if(game.players.has(data.playerId)){
+        console.log("player already in game")
+        io.emit('joinError', {
+          roomId:data.roomId,
+          message: 'You are already in a game. Please finish or leave current game before joining another.'
+        });
+        return;
+      }
     
     if(data.playerId){
       socket.join(data.roomId);

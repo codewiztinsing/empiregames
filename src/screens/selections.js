@@ -5,6 +5,7 @@ import './selections.css';
 import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
 
+
 const Selections = () => {
   const { 
           selectedNumber,
@@ -19,7 +20,11 @@ const Selections = () => {
           playerId, 
           setPlayerId,
           playerCard,
-          setPlayerCard
+          setPlayerCard,
+          toast,
+          setToast,
+          isToast,
+          setIsToast
          } = useContext(BingoContext);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -28,8 +33,8 @@ const Selections = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentCall,setCurrentCall] = useState(null);
   const [gameStatus,setGameStatus] = useState("waiting");
-  const [toast,setToast] = useState(null);
-  const [isToast,setIsToast] = useState(false)
+ 
+  const [joinError,setJoinError] = useState(false);
 
 
   // Generate numbers 1-100 (memoized since it's static)
@@ -46,7 +51,8 @@ const Selections = () => {
     socket.on("games",(data) => {
       console.log("data = ",data)
     })
-  
+
+   
 
     const handleGameState = (state) => {
       const gameRoom = state.roomId
@@ -87,6 +93,7 @@ const Selections = () => {
     setPlayersLength(state.total_players);
     setCountDown(state.count_down);
   });
+
 
 
   // Memoized board generation
@@ -131,22 +138,37 @@ const Selections = () => {
 
   const handleStartGame = async () => {
     if (!selectedNumber || !playerId || !gameId) return;
-    setIsLoading(true);
+    // setIsLoading(true);
     if(gameStatus == "in-progress"){
       setToast("Game is already in progress");
       setIsToast(true);
       return;
     }
+   
 
+    
     try {
-      socket.emit('joinGame', { playerId, gameId,selectedNumber, roomId,selectBoard })
+
+     
+        socket.emit('joinGame', { playerId, gameId, selectedNumber, roomId, selectBoard });
+    
+
+    
       navigate('/play');
     } catch (error) {
       console.error('Error starting game:', error);
     } finally {
-      setIsLoading(false);
+      // setIsLoading(false);
     }
   };
+
+  socket.on('joinError', (error) => {
+    console.log("error",error)
+    setToast(error.message);
+    setIsToast(true);
+    setJoinError(true);
+    return;
+  })
 
   const handleNumberClick = (number) => {
     if (pickedNumbers && pickedNumbers.length > 0 &&pickedNumbers.includes(number)) return;
@@ -242,7 +264,6 @@ const Selections = () => {
           <button
             className="start-game-button"
             onClick={handleStartGame}
-            disabled={!selectedNumber || isLoading}
           >
             {isLoading ? 'Starting...' : 'Start Game'}
           </button>
