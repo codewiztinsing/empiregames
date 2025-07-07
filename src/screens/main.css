@@ -11,6 +11,20 @@
 
 }
 
+.game-starting{
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.game-starting-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+
 .bingo-modal{
   position: fixed;
   top: 50%;
@@ -162,7 +176,7 @@
 .current-call {
   background-color: #b1a7a7;
   width: 100px;
-  height: auto;
+  height: 100px;
   border-radius: 50%;
   object-fit: contain;
   display: flex;
@@ -376,9 +390,7 @@
     width: 100%;
   }
 
-  .current-call {
-    margin: 0.5rem 0;
-  }
+
 
   .ball {
     width: 40px;
@@ -431,9 +443,7 @@
 
   }
 
-  .countdown {
-    font-size: 1.5rem;
-  }
+  
 }
 
 

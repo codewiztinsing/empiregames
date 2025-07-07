@@ -97,13 +97,15 @@ const PlayingBoard = () => {
       
       if (data.playerId === playerId) {
         navigate(`/selection?playerId=${playerId}&betAmount=${roomId}`);
+        window.location.reload();
       }
     }
    
   })
 
   const handleLeave = () => {
-    navigate('/');
+    navigate(`/selection?playerId=${playerId}&&betAmount=${roomId}`);
+    window.location.reload();
   };
 
   const handleCellClick = (cell) => {
@@ -249,11 +251,13 @@ const PlayingBoard = () => {
             <div className="waiting-state">
               {countDown > 0 ? (
                 <div>
-                  <p>Game starting</p>
-                  <div className="countdown">{countDown}</div>
+
+          <p style={{display: 'flex', justifyContent: 'center', alignItems: 'center',textAlign: 'center', color: 'white', width: '100%', height: '100%',fontWeight: 'bold'}}>Game starting</p>
+          <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center',textAlign: 'center',color: 'white', width: '100%', height: '100%',fontWeight: 'bold'}}>{countDown}</div>
+                        
                 </div>
               ) : (
-                <p>Game to start...</p>
+                <p style={{display: 'flex', justifyContent: 'center', alignItems: 'center',textAlign: 'center', color: 'white', width: '100%', height: '100%',fontWeight: 'bold'}}>Game to start...</p>
               )}
             </div>
           )}
