@@ -37,6 +37,7 @@ const Selections = () => {
 
   // Socket listeners with cleanup
   useEffect(() => {
+    console.log("on mount ")
     const queryParams = new URLSearchParams(window.location.search);
     setPlayerId(queryParams.get('playerId'));
     setRoomId(queryParams.get('betAmount'));
@@ -118,8 +119,6 @@ const Selections = () => {
 
 
   const handlePickedNumbers = (state) => {
-    console.log("state room id",state.roomId,"current room id ",roomId)
-    console.log(roomId == state.roomId)
     if(state.roomId == roomId) {
       setPickedNumbers(state.numbers);
     }

@@ -96,7 +96,7 @@ const PlayingBoard = () => {
     if (data.isBingo === false) {
       
       if (data.playerId === playerId) {
-        navigate(`/selections?playerId=${playerId}&betAmount=${roomId}`);
+        navigate(`/selection?playerId=${playerId}&betAmount=${roomId}`);
       }
     }
    
