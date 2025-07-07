@@ -37,10 +37,12 @@ const Selections = () => {
 
   // Socket listeners with cleanup
   useEffect(() => {
-    console.log("on mount ")
     const queryParams = new URLSearchParams(window.location.search);
     setPlayerId(queryParams.get('playerId'));
     setRoomId(queryParams.get('betAmount'));
+
+    // socket.emit("joinGame",{playerId,gameId,selectedNumber,roomId,selectBoard})
+
     socket.on("games",(data) => {
       console.log("data = ",data)
     })
