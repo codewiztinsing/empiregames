@@ -34,6 +34,12 @@ const PlayingBoard = () => {
       }
     }
 
+    socket.emit("leave",{
+      playerId,
+      roomId,
+      selectedNumber
+    })
+
 
     return () => {
       socket.off('numberSelected');
@@ -63,9 +69,7 @@ const PlayingBoard = () => {
     if(data.total_called_numbers){
       setTotalCalledNumbers(data.total_called_numbers)
     }
-
     setGameId(data.gameId)
-  
   }
 
   socket.on('gameState', handleGameState);
