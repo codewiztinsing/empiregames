@@ -10,7 +10,24 @@ body, #root {
   align-items: center;
   justify-content: center;
 }
+.balance-container{
+  display: flex;
+  width: 100%;
 
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+
+
+}
+.balance-text{
+  font-size: 1em;
+  font-weight: bold;
+  color: white;
+  padding: 5px;
+  border: 1px solid white;
+  border-radius: 10px;
+}
 
 /* Make selections container fill available space */
 .selections-container {

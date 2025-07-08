@@ -4,7 +4,7 @@ import Toaster from '../components/Toaster';
 import './selections.css';
 import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
-import checkBalance from '../api';
+import checkPlayerBalance from '../api';
 
 const Selections = () => {
   const { 
@@ -44,10 +44,23 @@ const Selections = () => {
     const queryParams = new URLSearchParams(window.location.search);
     setPlayerId(queryParams.get('playerId'));
     setRoomId(queryParams.get('betAmount'));
-  
     socket.emit("playerJoined",{playerId:queryParams.get('playerId'),roomId:queryParams.get('betAmount')})
+
+    const fetchBalance = async () => {
+      try {
+        const response = await fetch(`${process.env.API_URL}/balance/?user_id=${queryParams.get('playerId')}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setBalance(data.balance);
+      } catch (error) {
+        console.error('Error fetching balance:', error);
+      }
+    };
+
+    fetchBalance();
   
-    // socket.on('pickedNumbers', handlePickedNumbers);
     socket.on('gameState', handleGameState);
     socket.on('pickedNumbers', handlePickedNumbers);
     socket.on("gameStatus",handleGameStatus)
@@ -196,8 +209,20 @@ const Selections = () => {
 
   return (
     <>
+
+   
+
     {isToast && <Toaster message={toast} />}
     <div className="selections-container">
+
+    <div className="balance-container">
+      <div className="balance-text">
+        Balance: {balance}
+      </div>
+      <div className="balance-text">
+        Stake {roomId}
+      </div>
+    </div>
       <div className="game-status">
         <div className={`status-badge ${gameStatus}`}>
           {gameStatus}

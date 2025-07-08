@@ -121,6 +121,14 @@ function startGame(game) {
     game.currentCall = ball;
     game.calledNumbers.push(ball);
     game.selectedNumbers = [];
+    io.emit("pickedNumbers",game.selectedNumbers)
+    io.emit("gameStatus",{
+      roomId: game.roomId,
+      game_status: "in-progress"
+    })
+
+
+    
     io.to(game.roomId).emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
