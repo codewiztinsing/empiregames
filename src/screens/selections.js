@@ -125,11 +125,11 @@ const Selections = () => {
 
 
   const handlePickedNumbers = (state) => {
+    console.log("state = ", state)
     if(state.roomId == roomId) {
       setPickedNumbers(state.numbers);
     }
-    
- 
+
   }
   
 

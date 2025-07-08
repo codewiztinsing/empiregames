@@ -120,12 +120,12 @@ function startGame(game) {
     }
     game.currentCall = ball;
     game.calledNumbers.push(ball);
-
+    game.selectedNumbers = [];
     io.to(game.roomId).emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
-      pickedNumbers: game.calledNumbers,
       total_players: game.players.size,
+      pickedNumbers: game.selectedNumbers,
       game_status: game.status,
       count_down: game.countDown,
       win_amount: game.roomId * game.players.size * 0.8,
@@ -133,35 +133,35 @@ function startGame(game) {
       called_numbers: game.calledNumbers,
       total_called_numbers: game.calledNumbers.length
     });
+   
 
     if (game.calledNumbers.length >= 75) {
-      io.to(game.roomId).emit("gameOver", {
-        gameId: game.id,
+      io.emit("gameStatus", {
         roomId: game.roomId,
-        message: "Max number of balls reached. No winner this round."
-      });
+        game_status: "waiting"
+      })
       endGame(game);
     }
-  }, 2000);
+  }, 3000);
 
   gameIntervals.set(game.id, [gameInterval]);
 }
 
 io.on('connection', (socket) => {
   socket.on("playerJoined", (data) => {
+  
     let game = activeGames.get(data.roomId) || createGame(data.roomId);
     const inProgressGames = [...activeGames.values()].filter(g => g.status === 'in-progress');
     socket.emit("activeGames", { activeGames: inProgressGames });
-    console.log("game = ", game)
     socket.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
-
- 
   });
 
   socket.on("joinGame", (data) => {
 
+   
+
     const game = activeGames.get(data.roomId);
-    game.selectedNumbers.push(data.selectedNumber)
+  
     if (!data.playerId || !game) return;
 
     if (game.status === 'in-progress') {
@@ -180,6 +180,10 @@ io.on('connection', (socket) => {
       return;
     }
 
+    game.selectedNumbers.push(data.selectedNumber)
+    io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
+  
+ 
     if (game.players.size >= 100) {
       socket.emit('joinError', {
         message: 'Room is full (max 100 players).'
@@ -189,6 +193,7 @@ io.on('connection', (socket) => {
 
     socket.join(data.roomId);
     game.players.set(data.playerId, data.selectBoard);
+    
 
     const playersList = [...game.players.keys()];
     io.to(game.roomId).emit("gameState", {

@@ -21,7 +21,6 @@ const PlayingBoard = () => {
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
 
-  console.log("selectedNumber = ",selectedNumber)
 
   useEffect(() => {
     socket.on('numberSelected', (number) => {
@@ -119,9 +118,10 @@ const PlayingBoard = () => {
   };
 
   const handleCellClick = (cell) => {
-    setSelectedCell([...selectedCell, cell]);
-    console.log("selectedCell",selectedCell);
-   
+    console.log("cell",cell)
+    
+    // setSelectedCell([...selectedCell, cell]);
+  
   };
 
   const handleCloseWinner = () => {
