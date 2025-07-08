@@ -35,6 +35,33 @@ const checkBalance = async (playerId) => {
   }
 };
 
+const chargePlayers = async (game) => {
+  try {
+    const response = await fetch(`https://api.bilenbingo.com/payments/charge-players`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        game:game       
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to charge players');
+    }
+
+    const data = await response.json();
+    return data;
+
+  } catch (error) {
+    console.error('Error charging players:', error);
+    throw error;
+  }
+};
+
+
+
   
   
   module.exports = {

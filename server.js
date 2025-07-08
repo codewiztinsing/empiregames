@@ -108,7 +108,7 @@ function startCountDown(game) {
   gameIntervals.set(game.id, [countdownInterval]);
 }
 
-function startGame(game) {
+async function startGame(game) {
   game.status = "in-progress";
   clearGameIntervals(game.id);
 
@@ -116,8 +116,7 @@ function startGame(game) {
     roomId: game.roomId,
     game_status: "in-progress"
   })
-
-
+  await chargePlayers(game);
 
   const gameInterval = setInterval(() => {
     const calledSet = new Set(game.calledNumbers.map(b => b.number));
@@ -158,7 +157,6 @@ function startGame(game) {
 
 io.on('connection', (socket) => {
   socket.on("playerJoined", (data) => {
-  
     let game = activeGames.get(data.roomId) || createGame(data.roomId);
     const inProgressGames = [...activeGames.values()].filter(g => g.status === 'in-progress');
     socket.emit("activeGames", { activeGames: inProgressGames });
@@ -166,9 +164,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on("joinGame", (data) => {
-
-   
-
     const game = activeGames.get(data.roomId);
   
     if (!data.playerId || !game) return;
@@ -191,7 +186,7 @@ io.on('connection', (socket) => {
 
     game.selectedNumbers.push(data.selectedNumber)
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
-  
+   
  
     if (game.players.size >= 100) {
       socket.emit('joinError', {
@@ -267,6 +262,17 @@ io.on('connection', (socket) => {
       });
     }
   });
+
+  socket.on("leave",(data) => {
+    const game = activeGames.get(data.roomId);
+    const selectedCard = data.selectedNumber
+    if (!game) return;
+    if (selectedCard && game.selectedNumbers.includes(selectedCard)) {
+      game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedCard);
+    }
+    io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
+    
+  })
 
   socket.on("getWinners", () => {
     socket.emit("winners", winners);

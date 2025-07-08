@@ -113,7 +113,14 @@ const PlayingBoard = () => {
 
  
   const handleLeave = () => {
+    socket.emit("leave",{
+      playerId,
+      roomId,
+      selectedNumber
+
+    })
     navigate(`/selection?playerId=${playerId}&&betAmount=${roomId}`);
+
     window.location.reload();
   };
 
