@@ -112,6 +112,13 @@ function startGame(game) {
   game.status = "in-progress";
   clearGameIntervals(game.id);
 
+  io.emit("gameStatus",{
+    roomId: game.roomId,
+    game_status: "in-progress"
+  })
+
+
+
   const gameInterval = setInterval(() => {
     const calledSet = new Set(game.calledNumbers.map(b => b.number));
     let ball = generateBalls();
@@ -122,13 +129,7 @@ function startGame(game) {
     game.calledNumbers.push(ball);
     game.selectedNumbers = [];
     io.emit("pickedNumbers",game.selectedNumbers)
-    io.emit("gameStatus",{
-      roomId: game.roomId,
-      game_status: "in-progress"
-    })
-
-
-    
+  
     io.to(game.roomId).emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
