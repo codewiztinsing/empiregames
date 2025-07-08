@@ -4,7 +4,7 @@ import Toaster from '../components/Toaster';
 import './selections.css';
 import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
-
+import checkBalance from '../api';
 
 const Selections = () => {
   const { 
@@ -33,9 +33,8 @@ const Selections = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentCall,setCurrentCall] = useState(null);
   const [gameStatus,setGameStatus] = useState("waiting");
- 
   const [joinError,setJoinError] = useState(false);
-
+  const [balance,setBalance] = useState(0);
 
   // Generate numbers 1-100 (memoized since it's static)
   const numbers = Array.from({ length: 100 }, (_, i) => i + 1);
@@ -45,24 +44,9 @@ const Selections = () => {
     const queryParams = new URLSearchParams(window.location.search);
     setPlayerId(queryParams.get('playerId'));
     setRoomId(queryParams.get('betAmount'));
-
-    // socket.emit("joinGame",{playerId,gameId,selectedNumber,roomId,selectBoard})
-
-    socket.on("games",(data) => {
-      console.log("data = ",data)
-    })
-
-   
-
-    const handleGameState = (state) => {
-      const gameRoom = state.roomId
-      if(roomId == gameRoom){
-        setPickedNumbers(state.pickedNumbers.numbers);
-        setPlayersLength(state.total_players);
-        setCountDown(state.count_down);
-      }
-
-    };
+  
+    socket.emit("playerJoined",{playerId:queryParams.get('playerId'),roomId:queryParams.get('betAmount')})
+  
     // socket.on('pickedNumbers', handlePickedNumbers);
     socket.on('gameState', handleGameState);
     socket.on('pickedNumbers', handlePickedNumbers);
@@ -74,6 +58,17 @@ const Selections = () => {
   }, [socket, gameId,gameStatus]);
 
 
+
+
+  const handleGameState = (state) => {
+    const gameRoom = state.roomId
+    if(roomId == gameRoom){
+      setPickedNumbers(state.pickedNumbers.numbers);
+      setPlayersLength(state.total_players);
+      setCountDown(state.count_down);
+    }
+
+  };
 
   socket.on('activeGames', (state) => {
     if(state?.activeGames?.length > 0){
@@ -89,9 +84,11 @@ const Selections = () => {
   });
 
   socket.on('gameState', (state) => {
+    if(state.roomId == roomId){
     setPickedNumbers(state.pickedNumbers.numbers);
     setPlayersLength(state.total_players);
     setCountDown(state.count_down);
+    }
   });
 
 
@@ -144,6 +141,9 @@ const Selections = () => {
       setIsToast(true);
       return;
     }
+
+
+
    
 
     
@@ -185,11 +185,6 @@ const Selections = () => {
       setGameStatus(state.status);
     }
 
-    setGameStatus(state.status);
-    
-  
-  
-  
   }
 
 

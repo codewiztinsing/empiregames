@@ -55,7 +55,7 @@ const PlayingBoard = () => {
 
   function handleGameState(data) {
     // console.log("data in game")
-    if (data.lastBall && data.lastBall.length > 0) {
+    if (data.lastBall && data.lastBall.length > 0 && data.roomId == roomId) {
       setLastBall(data.lastBall[data.lastBall.length - 1]);
     }
 
@@ -71,7 +71,7 @@ const PlayingBoard = () => {
 
   socket.on('gameState', handleGameState);
   const handleRefresh = () => {
-    // Refresh board logic
+
     window.location.reload();
   };
 
