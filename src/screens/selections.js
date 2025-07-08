@@ -157,17 +157,19 @@ const Selections = () => {
       return;
     }
 
+    if(balance < roomId || balance == 0){
+      setToast("Insufficient balance");
+      setIsToast(true);
+      return;
+    }
+
 
 
    
 
     
     try {
-
-     
-        socket.emit('joinGame', { playerId, gameId, selectedNumber, roomId, selectBoard });
-    
-
+        socket.emit('joinGame', { playerId, gameId, selectedNumber, roomId, selectBoard })
     
       navigate('/play');
     } catch (error) {
