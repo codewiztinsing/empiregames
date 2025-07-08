@@ -48,11 +48,13 @@ const Selections = () => {
 
     const fetchBalance = async () => {
       try {
-        const response = await fetch(`${process.env.API_URL}/balance/?user_id=${queryParams.get('playerId')}`);
+        const response = await fetch(`https://api.bilenbingo.com/payments/balance/?user_id=${queryParams.get('playerId')}`);
+      
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
+        console.log("data",data)
         setBalance(data.balance);
       } catch (error) {
         console.error('Error fetching balance:', error);
