@@ -81,8 +81,8 @@ const Landing = () => {
 
       <div className='rooms-container'>
         {rooms.map(room => (
-          <div key={room.id} className='room-card' 
-          onClick={() => handleRoomSelect(room.id)}>
+          <div key={room.betAmount} className='room-card' 
+          onClick={() => handleRoomSelect(room.betAmount)}>
             
             <p className='room-card-bonus'>
               <span className='bonus'>Bonus</span>

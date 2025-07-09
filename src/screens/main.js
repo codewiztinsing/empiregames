@@ -238,9 +238,7 @@ const PlayingBoard = () => {
               {Array.from({length: 15}, (_, i) => (
                 <div key={i} 
                   className={`number ${calledNumbers?.includes(i + 46) ? 'called' : ''}`}
-                  id={`G${i + 46}`}
-
-                
+                  id={`G${i + 46}`}                
                 >
                   {i + 46}
                 </div>

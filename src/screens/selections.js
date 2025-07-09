@@ -163,11 +163,6 @@ const Selections = () => {
       return;
     }
 
-
-
-   
-
-    
     try {
         socket.emit('joinGame', { playerId, gameId, selectedNumber, roomId, selectBoard })
     
