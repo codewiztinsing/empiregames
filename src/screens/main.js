@@ -34,12 +34,7 @@ const PlayingBoard = () => {
       }
     }
 
-    socket.emit("leave",{
-      playerId,
-      roomId,
-      selectedNumber
-    })
-
+ 
   
     return () => {
       socket.off('numberSelected');
@@ -315,7 +310,7 @@ const PlayingBoard = () => {
                 id={`${cell <= 15 && cell > 0 ? 'b' : cell <= 30 && cell > 15 ? 'i' : cell <= 45 && cell > 30 ? 'n' : cell <= 60 && cell > 45 ? 'g' : cell <= 75 && cell > 60 ? 'o' : ''}${cell}`}
                 onClick={() => {
                   handleCellClick(cell);
-                  // setSelectedCell(new Set(selectedCell).add(cell));
+                 
                 }}
               >
                 {cell}

@@ -10,15 +10,16 @@ const gameWinWallet = async (playerId,amount,gameId)=>{
   
   try{
       const winUrl = 'https://api.bilenbingo.com/payments/win/'
+      
     
      const res=  await axios.post(winUrl,data)
               .then(res=>{
-                  console.log(res)
+                  console.log("gameWinWallet res",res.data)
                   return res.data
               })
      
   }catch(e){
-      
+    console.log("gameWinWallet error",e)
   }
   
 } 
@@ -59,7 +60,7 @@ const gameLossWallet = async (players,betAmount,gameId)=>{
       const lossUrl = 'https://api.bilenbingo.com/payments/loss/'
       await axios.post(lossUrl,data)
       .then(res=>{
-          console.log("gameLossWallet res")
+          console.log("gameLossWallet res",res.data)
       })
   }catch(e){
     console.log("gameLossWallet error")

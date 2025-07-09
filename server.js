@@ -87,7 +87,7 @@ function startCountDown(game) {
     io.to(game.roomId).emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
-      pickedNumbers: game.calledNumbers,
+      pickedNumbers: game.selectedNumbers,
       total_players: game.players.size,
       game_status: game.status,
       count_down: game.countDown
