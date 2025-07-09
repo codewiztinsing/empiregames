@@ -52,14 +52,20 @@ const Landing = () => {
     return () => {
       socket.off('waitingGames');
     }
-  }, [socket]);
+  }, [socket,rooms]);
   
 
   const handleWaitingGames = (data) => {
-    console.log("data in waiting games", data);
+   
     if (data.length > 0) {
-      const updatedRooms = rooms.map(existingRoom => {
-        const matchingRoom = data.find(newRoom => newRoom.id === existingRoom.id);
+      console.log("data in waiting games", data);
+      const updatedRooms = rooms.map(
+        
+        existingRoom => {
+        const matchingRoom = data.find(newRoom => {
+          return newRoom.betAmount.toString() === existingRoom.betAmount.toString()
+        });
+        
         if (matchingRoom) {
           return {
             ...existingRoom,
@@ -69,6 +75,7 @@ const Landing = () => {
         }
         return existingRoom;
       });
+      
       setRooms(updatedRooms);
      
     
@@ -80,9 +87,7 @@ const Landing = () => {
   };
 
 
-  socket.on("activeGames", (data) => {
-    setRooms(data);
-  });
+  socket.on("waitingGames", handleWaitingGames);
 
   return (
     <div className='landing-container'>

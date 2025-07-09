@@ -196,7 +196,6 @@ io.on('connection', (socket) => {
 
   socket.on("joinGame", (data) => {
     const game = activeGames.get(data.roomId);
-  
     if (!data.playerId || !game) return;
 
     if (game.status === 'in-progress') {
@@ -250,10 +249,11 @@ io.on('connection', (socket) => {
       roomId: data.roomId,
       gameId: data.roomId
     });
-  });
-  console.log("waiting games in join game", getWaitingGames(activeGames));
 
-  io.emit("waitingGames",   getWaitingGames(activeGames));
+    io.emit("waitingGames",   getWaitingGames(activeGames));
+    console.log("waiting game s",getWaitingGames(activeGames))
+  });
+  
 
   socket.on("bingo", async (data) => {
     const game = activeGames.get(data.gameId);
