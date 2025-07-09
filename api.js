@@ -1,3 +1,5 @@
+const axios = require('axios');
+
 const submitWinner = async (game) => {
     try {
      
@@ -35,30 +37,26 @@ const checkBalance = async (playerId) => {
   }
 };
 
-const chargePlayers = async (game) => {
-  try {
-    const response = await fetch(`https://api.bilenbingo.com/payments/charge-players`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        game:game       
+const gameLossWallet = async (players,betAmount,gameId)=>{
+    
+  const data = {
+      players: players,
+      betAmount: betAmount,
+      gameId:gameId
+  };
+  try{
+      if(!data.players) return null;
+    console.log("data = ",data)
+      const lossUrl = 'https://api.bilenbingo.com/payments/loss/'
+      await axios.post(lossUrl,data)
+      .then(res=>{
+          console.log("gameLossWallet res")
       })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to charge players');
-    }
-
-    const data = await response.json();
-    return data;
-
-  } catch (error) {
-    console.error('Error charging players:', error);
-    throw error;
+  }catch(e){
+    console.log("gameLossWallet error")
   }
-};
+  
+}
 
 
 
@@ -66,6 +64,7 @@ const chargePlayers = async (game) => {
   
   module.exports = {
     submitWinner,
-    checkBalance
+    checkBalance,
+    gameLossWallet
   };
   

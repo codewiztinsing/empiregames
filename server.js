@@ -6,7 +6,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const { generateBalls } = require('./src/helpers/ball');
 const { checkBingo, markPlayerCard } = require('./src/helpers/bingo');
-const { submitWinner } = require('./api');
+const { submitWinner,gameLossWallet } = require('./api');
 
 const app = express();
 app.use(cors());
@@ -116,7 +116,15 @@ async function startGame(game) {
     roomId: game.roomId,
     game_status: "in-progress"
   })
-  await chargePlayers(game);
+
+  const players = Array.from(game.players.keys()).map(playerId => ({
+    playerId: playerId
+  }));
+  try {
+    await gameLossWallet(players, game.roomId, game.id);
+  } catch (error) {
+    console.error('Error charging players:', error);
+  }
 
   const gameInterval = setInterval(() => {
     const calledSet = new Set(game.calledNumbers.map(b => b.number));
