@@ -251,8 +251,9 @@ io.on('connection', (socket) => {
       gameId: data.roomId
     });
   });
+  console.log("waiting games in join game", getWaitingGames(activeGames));
 
-  socket.emit("waitingGames",   getWaitingGames(activeGames));
+  io.emit("waitingGames",   getWaitingGames(activeGames));
 
   socket.on("bingo", async (data) => {
     const game = activeGames.get(data.gameId);
@@ -305,7 +306,7 @@ io.on('connection', (socket) => {
     }
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
-    socket.emit("waitingGames",   getWaitingGames(activeGames));
+    io.emit("waitingGames",   getWaitingGames(activeGames));
     
   })
 

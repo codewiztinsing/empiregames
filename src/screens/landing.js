@@ -56,6 +56,7 @@ const Landing = () => {
   
 
   const handleWaitingGames = (data) => {
+    console.log("data in waiting games", data);
     if (data.length > 0) {
       const updatedRooms = rooms.map(existingRoom => {
         const matchingRoom = data.find(newRoom => newRoom.id === existingRoom.id);
