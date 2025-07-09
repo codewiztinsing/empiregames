@@ -4,7 +4,15 @@ import { SocketContext } from '../contexts/socket';
 import './landing.css';
 
 const Landing = () => {
-  const [rooms, setRooms] = useState([])
+  const [rooms, setRooms] = useState([{
+    id: 1,
+    betAmount: 100,
+    status: 'active',
+    players: 10,
+    bonus: 1000
+  },
+  
+  ])
   const [playerId, setPlayerId] = useState(0);  
  
 
@@ -43,16 +51,22 @@ const Landing = () => {
         <p>Active</p>
         <p>Players</p>
         <p>Derash</p>
+        <p>Play</p>
       </div>
 
       <div className='rooms-container'>
         {rooms.map(room => (
           <div key={room.id} className='room-card' 
           onClick={() => handleRoomSelect(room.id)}>
-            <p>{room.betAmount}</p>
+            
+            <p className='room-card-bonus'>
+              <span className='bonus'>Bonus</span>
+              <span className='bet-amount'>{room.betAmount}</span>
+              
+            </p>
             <p>{room.status}</p>
             <p>{room.players}</p>
-            <p>{room.betAmount * room.players * 0.8}</p>
+            <p>{room.betAmount * room.players * 0.8} ETB</p>
             <p onClick={() => handleRoomSelect(room.id)} className='play-button'>Play</p>
           </div>
         ))}
