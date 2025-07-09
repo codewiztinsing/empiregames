@@ -37,6 +37,7 @@ const Landing = () => {
   }
   ])
   const [playerId, setPlayerId] = useState(0);  
+  const [roomId, setRoomId] = useState(0);
  
 
   const socket = useContext(SocketContext);
@@ -44,6 +45,9 @@ const Landing = () => {
 
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
+    const roomId = queryParams.get('roomId');
+    setRoomId(roomId);
+    
     const playerId = queryParams.get('playerId');
     setPlayerId(playerId);
 
@@ -69,7 +73,7 @@ const Landing = () => {
         if (matchingRoom) {
           return {
             ...existingRoom,
-            status: matchingRoom.status,
+            status: existingRoom.betAmount < roomId ? 'Low balance' : matchingRoom.status,
             players: matchingRoom.players
           };
         }
@@ -109,7 +113,15 @@ const Landing = () => {
               <span className='bet-amount'>{room.betAmount}</span>
               
             </p>
-            <p>{room.status}</p>
+            <p className='room-card-status-container'>
+              {room.status === 'in-progress' && (
+                <span className='room-card-active-game'>Active Game</span>
+              )}
+            
+              {room.status === 'waiting' && (
+                <span className='room-card-active-game'>Waiting</span>
+              )}
+            </p>
             <p>{room.players}</p>
             <p>{room.betAmount * room.players * 0.8} ETB</p>
             <p onClick={() => handleRoomSelect(room.id)} 
