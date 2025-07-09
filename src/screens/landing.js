@@ -25,8 +25,10 @@ const Landing = () => {
     setPlayerId(playerId);
 
     socket.on("waitingGames", (data) => {
-      setRooms(data);
-      console.log("rooms", rooms);
+      if (data.length > 0) {
+        setRooms(data);
+        console.log("rooms", rooms);
+      }
     });
    
     return () => {
