@@ -171,6 +171,23 @@ io.on('connection', (socket) => {
     socket.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   });
 
+  const waitingGames = [];
+  for (const game of activeGames.values()) {
+    if (game.status === 'waiting') {
+      // Check if this game is already in waitingGames
+      const isDuplicate = waitingGames.some(existingGame => existingGame.id === game.id);
+      if (isDuplicate) continue;
+      waitingGames.push({
+        id: game.id,
+        betAmount: game.roomId,
+        players: game.players.size,
+        status: game.status
+      });
+    }
+  }
+
+  socket.emit("waitingGames", waitingGames);
+
   socket.on("joinGame", (data) => {
     const game = activeGames.get(data.roomId);
   
