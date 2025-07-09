@@ -255,7 +255,7 @@ io.on('connection', (socket) => {
       });
 
       winners.push({ roomId: game.roomId, winner: data.playerId, time: new Date() });
-      await gameWinWallet(data.playerId,game.roomId,game.id);
+      await gameWinWallet(data.playerId,game.roomId * game.players.size * 0.8,game.id);
       endGame(game);
     } else {
       io.to(game.roomId).emit("falseBingo", {
