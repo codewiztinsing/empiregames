@@ -246,6 +246,8 @@ io.on('connection', (socket) => {
     });
   });
 
+  socket.emit("waitingGames", waitingGames);
+
   socket.on("bingo", async (data) => {
     const game = activeGames.get(data.gameId);
     if (!game || game.status !== 'in-progress') return;
@@ -296,6 +298,7 @@ io.on('connection', (socket) => {
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedCard);
     }
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
+    socket.emit("waitingGames", waitingGames);
     
   })
 
