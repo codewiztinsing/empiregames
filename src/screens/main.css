@@ -8,6 +8,7 @@
   display: flex;
   flex-direction: column;
   background-color: #9c27b0;
+ 
 
 }
 
@@ -38,12 +39,16 @@
 
 
 .selected-number {
+  max-height: 50px;
+  min-width: 50px;
+  margin-right: 10px;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(224, 192, 7, 0.9);
+  border-radius: 10px;
 }
 
 .selected-number-value {
@@ -58,6 +63,8 @@
   padding: 10px;
   border-radius: 20px;
   margin-bottom: 20px;
+  margin-right: 70px;
+ 
 }
 
 .stat-item {
@@ -121,11 +128,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  
+  gap: 8px;
 }
 .called-numbers {
   background-color: rgba(255, 255, 255, 0.9);
-  padding: 15px;
+  padding: 13px;
+  margin-left: -12px;
   border-radius: 10px;
   width: 100%;
   max-width: 600px;
@@ -151,14 +160,15 @@
 }
 
 .number {
-  width: 25px;
-  height: 25px;
+  
+  padding: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid #ccc;
   border-radius: 50%;
   background-color: white;
+  font-size: 0.7rem;
 }
 
 .number.called {
@@ -216,8 +226,9 @@
 }
 
 .bingo-board {
+  margin-left: -6px;
   background-color: rgba(255, 255, 255, 0.9);
-  padding: 20px;
+  padding: 15px;
   border-radius: 10px;
 }
 
@@ -231,10 +242,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  padding: 5px;
   font-size: 13px;
-  width: 40px;
-  height: 40px;
+ 
   border-radius: 50%;
   background-color: #f0f0f0;
   border: 1px solid #ccc;
@@ -245,16 +255,18 @@
 .game-controls {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 20px;
   width: 100%;
   max-width: 400px;
+  margin-left: -15px;
 }
 
 .bingo-button {
+  max-width: 180px;
   background-color: #FF9800;
   color: white;
   border: none;
-  padding: 15px;
+  padding: 10px;
   border-radius: 25px;
   font-size: 20px;
   font-weight: bold;
@@ -262,21 +274,24 @@
 }
 
 .action-buttons {
+
   display: flex;
-  gap: 10px;
+  gap: 5px;
 }
 
 .refresh-button {
+  max-width: 130px;
   background-color: #2196F3;
   color: white;
   border: none;
-  padding: 10px 20px;
+
   border-radius: 20px;
   flex: 1;
   cursor: pointer;
 }
 
 .leave-button {
+  max-width: 150px;
   background-color: #f44336;
   color: white;
   border: none;
@@ -365,6 +380,8 @@
   .bingo-content {
     height: fit-content;
     width: fit-content;
+  
+    
  
   }
   .playing-board {
@@ -395,9 +412,7 @@
     /* padding: 0.25rem; */
   }
 
-  .playing-section {
-    width: 100%;
-  }
+ 
 
 
 
@@ -421,18 +436,8 @@
 
 
 
-  .selected-number {
-    background-color: rgba(219, 188, 13, 0.9);
-    font-size: 0.9rem;
-    margin: 0.5rem 0;
-    width: 100px;
-    height: 100px;
-  }
-
-  .selected-number-label {
-    font-size: 0.9rem;
-    margin: 0.5rem 0;
-  }
+ 
+  
   
   .selected-number-value {
     font-size: 1.5rem;
@@ -440,9 +445,7 @@
   }
 
 
-  .game-controls {
-    gap: 0.5rem;
-  }
+ 
 
   .bingo-button,
   .refresh-button,
@@ -451,9 +454,7 @@
     font-size: 0.9rem;
   }
 
-  .action-buttons {
-    gap: 0.5rem;
-  }
+  
 
   .waiting-state {
    background-color: red;

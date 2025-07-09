@@ -35,25 +35,11 @@ body, #root {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  /* justify-content: space-between; */
+
 }
 
-/* Scale numbers grid to fit viewport */
-.numbers-grid {
-  /* max-height: 45vh;
-  max-width: 90vw;
-  margin: 0 auto; */
-}
 
-/* Adjust number cells for better fit */
-.number-cell {
-  /* min-width: 20px;
-  min-height: 20px;
-  font-size: calc(8px + 1vmin);
-  display: flex;
-  align-items: center;
-  justify-content: center; */
-}
+
 
 /* Make combination board responsive */
 .combination-board {
@@ -88,7 +74,7 @@ body, #root {
 }
 
 .number-cell {
-  padding: 5px;
+  padding: 2px;
   border: 1px solid #ccc;
   text-align: center;
   cursor: pointer;
