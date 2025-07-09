@@ -6,12 +6,35 @@ import './landing.css';
 const Landing = () => {
   const [rooms, setRooms] = useState([{
     id: 1,
-    betAmount: 100,
-    status: 'active',
-    players: 10,
-    bonus: 1000
+    betAmount: 10,
+    status: 'waiting',
+    players: 0,
+    bonus: 1
   },
-  
+
+  {
+    id: 2,
+    betAmount: 20,
+    status: 'waiting',
+    players: 0,
+    bonus: 1
+  },
+
+  {
+    id: 3,
+    betAmount: 50,
+    status: 'waiting',
+    players: 0,
+    bonus: 1
+  },
+
+  {
+    id: 4,
+    betAmount: 100,
+    status: 'waiting',
+    players: 0,
+    bonus: 1
+  }
   ])
   const [playerId, setPlayerId] = useState(0);  
  
