@@ -76,7 +76,7 @@ const PlayingBoard = () => {
   socket.on('gameOver', (data) => {
     console.log("data in gameOver",data);
     if(data.roomId == roomId){
-      navigate(`/selection?playerId=${playerId}&betAmount=${roomId}`);
+      navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
     }
   })
 
@@ -94,7 +94,7 @@ const PlayingBoard = () => {
     if (data.isBingo === false) {
       
       if (data.playerId === playerId) {
-        navigate(`/selection?playerId=${playerId}&betAmount=${roomId}`);
+        navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
         window.location.reload();
       }
     }
@@ -118,7 +118,7 @@ const PlayingBoard = () => {
       selectedNumber
 
     })
-    navigate(`/selection?playerId=${playerId}&&betAmount=${roomId}`);
+    navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
 
     window.location.reload();
   };
@@ -141,7 +141,7 @@ const PlayingBoard = () => {
 
     setIsBingo(false);
     const queryParams = 
-    navigate(`/selection?playerId=${playerId}&&betAmount=${roomId}`);
+    navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
   };
 
   return (

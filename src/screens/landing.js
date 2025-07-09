@@ -112,7 +112,14 @@ const Landing = () => {
             <p>{room.status}</p>
             <p>{room.players}</p>
             <p>{room.betAmount * room.players * 0.8} ETB</p>
-            <p onClick={() => handleRoomSelect(room.id)} className='play-button'>Play</p>
+            <p onClick={() => handleRoomSelect(room.id)} 
+                className='play-button'
+                disabled={room.status === 'in-progress' ? true : false}
+                style={{
+                  backgroundColor: room.status === 'in-progress' ? 'gray' : 'blue',
+                  cursor: room.status === 'in-progress' ? 'not-allowed' : 'pointer'
+                }}
+            >Play</p>
           </div>
         ))}
        
