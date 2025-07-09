@@ -77,6 +77,24 @@ function endGame(game) {
   startCountDown(game);
 }
 
+function getWaitingGames(activeGames) {
+  const waitingGames = [];
+  for (const game of activeGames.values()) {
+    if (game.status === 'waiting') {
+      // Check if this game is already in waitingGames
+      const isDuplicate = waitingGames.some(existingGame => existingGame.id === game.id);
+      if (isDuplicate) continue;
+      waitingGames.push({
+        id: game.id,
+        betAmount: game.roomId,
+        players: game.players.size,
+        status: game.status
+      });
+    }
+  }
+  return waitingGames;
+}
+
 function startCountDown(game) {
   if (game.isCountStart || game.players.size < 2) return;
   clearGameIntervals(game.id);
@@ -171,20 +189,8 @@ io.on('connection', (socket) => {
     socket.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   });
 
-  const waitingGames = [];
-  for (const game of activeGames.values()) {
-    if (game.status === 'waiting') {
-      // Check if this game is already in waitingGames
-      const isDuplicate = waitingGames.some(existingGame => existingGame.id === game.id);
-      if (isDuplicate) continue;
-      waitingGames.push({
-        id: game.id,
-        betAmount: game.roomId,
-        players: game.players.size,
-        status: game.status
-      });
-    }
-  }
+  const waitingGames = getWaitingGames(activeGames);
+
 
   socket.emit("waitingGames", waitingGames);
 
@@ -246,7 +252,7 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.emit("waitingGames", waitingGames);
+  socket.emit("waitingGames",   getWaitingGames(activeGames));
 
   socket.on("bingo", async (data) => {
     const game = activeGames.get(data.gameId);
@@ -298,7 +304,8 @@ io.on('connection', (socket) => {
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedCard);
     }
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
-    socket.emit("waitingGames", waitingGames);
+  
+    socket.emit("waitingGames",   getWaitingGames(activeGames));
     
   })
 

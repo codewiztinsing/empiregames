@@ -47,18 +47,27 @@ const Landing = () => {
     const playerId = queryParams.get('playerId');
     setPlayerId(playerId);
 
-    socket.on("waitingGames", (data) => {
-      if (data.length > 0) {
-        setRooms(data);
-        console.log("rooms", rooms);
-      }
-    });
+    socket.on("waitingGames", handleWaitingGames);
    
     return () => {
       socket.off('waitingGames');
     }
   }, [socket]);
   
+
+  const handleWaitingGames = (data) => {
+    if (data.length > 0) {
+      for (const room of data) {
+        const existingRoom = rooms.find(r => r.id === room.id);
+        if (existingRoom) {
+          existingRoom.status = room.status;
+          existingRoom.players = room.players;
+        }
+        setRooms([...rooms, room]);
+      }
+    
+    }
+  }
 
   const handleRoomSelect = (roomId) => {
     navigate(`/selection?betAmount=${roomId}&playerId=${playerId}`);
