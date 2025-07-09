@@ -213,9 +213,6 @@ const Selections = () => {
 
   return (
     <>
-
-   
-
     {isToast && <Toaster message={toast} />}
     <div className="selections-container">
 
