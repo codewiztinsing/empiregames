@@ -5,7 +5,7 @@ import './landing.css';
 
 const Landing = () => {
   const [rooms, setRooms] = useState([{
-    id: 1,
+    id: 10,
     betAmount: 10,
     status: 'waiting',
     players: 0,
@@ -13,7 +13,7 @@ const Landing = () => {
   },
 
   {
-    id: 2,
+    id: 20,
     betAmount: 20,
     status: 'waiting',
     players: 0,
@@ -21,7 +21,7 @@ const Landing = () => {
   },
 
   {
-    id: 3,
+    id: 50,
     betAmount: 50,
     status: 'waiting',
     players: 0,
@@ -29,7 +29,7 @@ const Landing = () => {
   },
 
   {
-    id: 4,
+    id: 100,
     betAmount: 100,
     status: 'waiting',
     players: 0,
