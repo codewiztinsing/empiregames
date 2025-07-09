@@ -40,14 +40,14 @@ const PlayingBoard = () => {
       selectedNumber
     })
 
-
+  
     return () => {
       socket.off('numberSelected');
     };
   }, [socket,lastBall,selectedCell,isBingo]);
 
   const handleBingo = () => {
-    console.log("bingo clicked")
+
    
     socket.emit('bingo',{
       gameId: gameId,
@@ -129,11 +129,18 @@ const PlayingBoard = () => {
   };
 
   const handleCellClick = (cell) => {
-    console.log("cell",cell)
-    
-    // setSelectedCell([...selectedCell, cell]);
+    console.log("cell", selectedCell.has(cell));
+    const updatedSet = new Set(selectedCell);
   
+    if (updatedSet.has(cell)) {
+      updatedSet.delete(cell);
+    } else {
+      updatedSet.add(cell);
+    }
+  
+    setSelectedCell(updatedSet);
   };
+  
 
   const handleCloseWinner = () => {
 
@@ -308,7 +315,7 @@ const PlayingBoard = () => {
                 id={`${cell <= 15 && cell > 0 ? 'b' : cell <= 30 && cell > 15 ? 'i' : cell <= 45 && cell > 30 ? 'n' : cell <= 60 && cell > 45 ? 'g' : cell <= 75 && cell > 60 ? 'o' : ''}${cell}`}
                 onClick={() => {
                   handleCellClick(cell);
-                  setSelectedCell(new Set(selectedCell).add(cell));
+                  // setSelectedCell(new Set(selectedCell).add(cell));
                 }}
               >
                 {cell}
