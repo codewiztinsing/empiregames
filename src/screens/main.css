@@ -38,11 +38,18 @@
 
 
 .selected-number {
-  font-size: 14px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.selected-number-value {
+  font-size: 24px;
   font-weight: bold;
   text-align: center;
-  margin: 10px 0;
-  color: rgb(32, 199, 17);
 }
 .stats-bar {
   display: flex;
@@ -210,21 +217,28 @@
 
 .bingo-board {
   background-color: rgba(255, 255, 255, 0.9);
-  padding: 10px;
+  padding: 20px;
   border-radius: 10px;
 }
 
 .board-row {
   display: flex;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .board-cell {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 6px;
   font-size: 13px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  
   
 }
 
@@ -405,16 +419,26 @@
 
 
 
-  .board-cell {
-    width: 20px;
-    height: 20px;
-    font-size: 0.8rem;
-  }
+
 
   .selected-number {
+    background-color: rgba(219, 188, 13, 0.9);
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+    width: 100px;
+    height: 100px;
+  }
+
+  .selected-number-label {
     font-size: 0.9rem;
     margin: 0.5rem 0;
   }
+  
+  .selected-number-value {
+    font-size: 1.5rem;
+    margin: 0.5rem 0;
+  }
+
 
   .game-controls {
     gap: 0.5rem;

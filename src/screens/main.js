@@ -98,6 +98,13 @@ const PlayingBoard = () => {
         window.location.reload();
       }
     }
+    if (data.playerId === playerId) {
+      setToast("Invalid Bingo Call!");
+      setIsToast(true);
+      setTimeout(() => {
+        setIsToast(false);
+      }, 3000);
+    }
    
   })
 
@@ -316,7 +323,12 @@ const PlayingBoard = () => {
             ))}
           </div>
         ))}
-        <p className="selected-number">Your Selected Number: {selectedNumber}</p>
+
+        <div className='selected-number'>
+          <p className='selected-number-label'>Board Number</p>
+          <p className='selected-number-value'>{selectedNumber}</p>
+        </div>
+      
       </div>
 
 
