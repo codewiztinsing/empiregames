@@ -1,18 +1,27 @@
 const axios = require('axios');
 
-const submitWinner = async (game) => {
-    try {
-     
-      console.log("game = ",game)
-  
-  
-  
-  
-    } catch (error) {
-      console.error('Error submitting winner:', error);
-     
-    }
+const gameWinWallet = async (playerId,amount,gameId)=>{
+  const data = {
+      playerId,
+      amount ,
+      gameId
   };
+  if(!data.playerId || !data.amount || !data.gameId) return null;
+  
+  try{
+      const winUrl = 'https://api.bilenbingo.com/payments/win/'
+    
+     const res=  await axios.post(winUrl,data)
+              .then(res=>{
+                  console.log(res)
+                  return res.data
+              })
+     
+  }catch(e){
+      
+  }
+  
+} 
 
 
 const checkBalance = async (playerId) => {
@@ -63,7 +72,7 @@ const gameLossWallet = async (players,betAmount,gameId)=>{
   
   
   module.exports = {
-    submitWinner,
+    gameWinWallet,
     checkBalance,
     gameLossWallet
   };

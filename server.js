@@ -6,7 +6,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const { generateBalls } = require('./src/helpers/ball');
 const { checkBingo, markPlayerCard } = require('./src/helpers/bingo');
-const { submitWinner,gameLossWallet } = require('./api');
+const { gameWinWallet,gameLossWallet } = require('./api');
 
 const app = express();
 app.use(cors());
@@ -255,7 +255,7 @@ io.on('connection', (socket) => {
       });
 
       winners.push({ roomId: game.roomId, winner: data.playerId, time: new Date() });
-      await submitWinner({ game });
+      await gameWinWallet(data.playerId,game.roomId,game.id);
       endGame(game);
     } else {
       io.to(game.roomId).emit("falseBingo", {
