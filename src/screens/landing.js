@@ -57,14 +57,19 @@ const Landing = () => {
 
   const handleWaitingGames = (data) => {
     if (data.length > 0) {
-      for (const room of data) {
-        const existingRoom = rooms.find(r => r.id === room.id);
-        if (existingRoom) {
-          existingRoom.status = room.status;
-          existingRoom.players = room.players;
+      const updatedRooms = rooms.map(existingRoom => {
+        const matchingRoom = data.find(newRoom => newRoom.id === existingRoom.id);
+        if (matchingRoom) {
+          return {
+            ...existingRoom,
+            status: matchingRoom.status,
+            players: matchingRoom.players
+          };
         }
-        setRooms([...rooms, room]);
-      }
+        return existingRoom;
+      });
+      setRooms(updatedRooms);
+     
     
     }
   }
