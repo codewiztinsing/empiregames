@@ -188,6 +188,27 @@ async function startGame(game) {
   gameIntervals.set(game.id, [gameInterval]);
 }
 
+
+function handleRefresh(data){
+  console.log("handleRefresh", data)
+  const game = activeGames.get(data.gameId);
+  if (!game) return;
+  io.to(game.roomId).emit("gameState", {
+    gameId: game.id,
+    roomId: game.roomId,
+    total_players: game.players.size,
+    pickedNumbers: game.selectedNumbers,
+    game_status: game.status,
+    count_down: game.countDown,
+    win_amount: game.roomId * game.players.size * 0.8,
+    lastBall: game.currentCall,
+    called_numbers: game.calledNumbers,
+    total_called_numbers: game.calledNumbers.length
+  });
+
+}
+
+
 io.on('connection', (socket) => {
   socket.on("playerJoined", (data) => {
     let game = activeGames.get(data.roomId) || createGame(data.roomId);
@@ -200,6 +221,8 @@ io.on('connection', (socket) => {
   const waitingGames = getWaitingGames(activeGames, "waiting");
   const inProgressGames = getWaitingGames(activeGames, "in-progress");
   socket.emit("waitingGames", [...waitingGames, ...inProgressGames]);
+
+  socket.on("handleRefresh",handleRefresh)
   
 
 
@@ -337,8 +360,6 @@ io.on('connection', (socket) => {
       const game = activeGames.get(user.gameId);
       console.log("user diconnect from game ",game.roomId,game.status)
       if (game?.players.has(user.playerId)) {
-      
-
         if(game.status === "waiting") {
           game.players.delete(user.playerId);
           io.to(game.roomId).emit("gameState", {

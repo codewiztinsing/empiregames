@@ -54,7 +54,7 @@ const PlayingBoard = () => {
   };
 
   function handleGameState(data) {
-    // console.log("data in game")
+    console.log("data in gameState", data)
     if (data.lastBall && data.lastBall.length > 0 && data.roomId == roomId) {
       setLastBall(data.lastBall[data.lastBall.length - 1]);
     }
@@ -68,10 +68,20 @@ const PlayingBoard = () => {
   }
 
   socket.on('gameState', handleGameState);
-  const handleRefresh = () => {
 
-    window.location.reload();
+
+  const handleRefresh = () => { 
+    console.log("refresh for ", gameId, roomId, playerId)
+    socket.emit('handleRefresh', {
+      gameId: gameId,
+      roomId: roomId,
+      playerId: playerId
+    });
+   
   };
+
+
+  
 
   socket.on('gameOver', (data) => {
     console.log("data in gameOver",data);
