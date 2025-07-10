@@ -47,6 +47,9 @@ function createGame(roomId) {
   return game;
 }
 
+
+
+
 function clearGameIntervals(gameId) {
   if (gameIntervals.has(gameId)) {
     gameIntervals.get(gameId).forEach(clearInterval);
@@ -78,10 +81,11 @@ function endGame(game) {
   startCountDown(game);
 }
 
-function getWaitingGames(activeGames) {
+function getWaitingGames(activeGames,status="in-progress") {
+  console.log("acive games = ",activeGames)
   const waitingGames = [];
   for (const game of activeGames.values()) {
-    if (game.status === 'in-progress') {
+    if (game.status === status) {
       // Check if this game is already in waitingGames
       const isDuplicate = waitingGames.some(existingGame => existingGame.id === game.id);
       if (isDuplicate) continue;
@@ -129,7 +133,7 @@ function startCountDown(game) {
 
 async function startGame(game) {
   game.status = "in-progress";
-  io.emit("waitingGames",   getWaitingGames(activeGames));
+  io.emit("waitingGames",   getWaitingGames(activeGames,"in-progress"));
   clearGameIntervals(game.id);
 
   io.emit("gameStatus",{
@@ -191,12 +195,22 @@ io.on('connection', (socket) => {
     socket.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   });
 
-  const waitingGames = getWaitingGames(activeGames);
+  
+  const waitingGames = getWaitingGames(activeGames, "waiting");
+  const inProgressGames = getWaitingGames(activeGames, "in-progress");
+  socket.emit("waitingGames", [...waitingGames, ...inProgressGames]);
+  
 
 
   socket.emit("waitingGames", waitingGames);
 
   socket.on("joinGame", (data) => {
+
+    const waitingGames = getWaitingGames(activeGames,"waiting");
+    io.emit("waitingGames",waitingGames)
+    
+
+
     const game = activeGames.get(data.roomId);
     if (!data.playerId || !game) return;
 
