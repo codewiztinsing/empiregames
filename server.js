@@ -230,8 +230,6 @@ io.on('connection', (socket) => {
 
   socket.on("joinGame", (data) => {
 
-    const waitingGames = getWaitingGames(activeGames,"waiting");
-    io.emit("waitingGames",waitingGames)
     
 
 
@@ -289,6 +287,10 @@ io.on('connection', (socket) => {
       roomId: data.roomId,
       gameId: data.roomId
     });
+
+
+    const waitingGames = getWaitingGames(activeGames,"waiting");
+    io.emit("waitingGames",waitingGames)
 
 
   });
