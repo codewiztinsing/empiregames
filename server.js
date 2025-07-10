@@ -116,6 +116,11 @@ function startCountDown(game) {
       count_down: game.countDown
     });
 
+    // io.emit("countDown",{
+    //   roomId:game.roomId,
+    //   count_down: game.countDown
+    // })
+
     if (game.countDown === 0) {
       clearInterval(countdownInterval);
       game.isCountStart = false;

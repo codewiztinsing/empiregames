@@ -15,6 +15,7 @@ const Landing = () => {
   const [rooms, setRooms] = useState(initialRooms);
   const [playerId, setPlayerId] = useState('');
   const [roomId, setRoomId] = useState('');
+  const [countDown, setCountDown] = useState(30);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
 
@@ -41,6 +42,14 @@ const Landing = () => {
     }
   }, [roomId]);
 
+
+  const handleCountDown = useCallback((data) => {
+    if (data?.roomId && data?.count_down >= 0) {
+      setCountDown(data.count_down);
+    }
+  }, []);
+
+
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const roomIdParam = queryParams.get('roomId');
@@ -50,6 +59,7 @@ const Landing = () => {
     if (playerIdParam) setPlayerId(playerIdParam);
 
     socket.on("waitingGames", handleWaitingGames);
+    socket.on("countDown",handleCountDown)
     
     return () => {
       socket.off('waitingGames', handleWaitingGames);
