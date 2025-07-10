@@ -82,7 +82,6 @@ function endGame(game) {
 }
 
 function getWaitingGames(activeGames,status="in-progress") {
-  console.log("acive games = ",activeGames)
   const waitingGames = [];
   for (const game of activeGames.values()) {
     if (game.status === status) {
@@ -116,10 +115,7 @@ function startCountDown(game) {
       count_down: game.countDown
     });
 
-    // io.emit("countDown",{
-    //   roomId:game.roomId,
-    //   count_down: game.countDown
-    // })
+  
 
     if (game.countDown === 0) {
       clearInterval(countdownInterval);
@@ -326,7 +322,7 @@ io.on('connection', (socket) => {
     }
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
-    io.emit("waitingGames",   getWaitingGames(activeGames));
+    io.emit("waitingGames",   [...getWaitingGames(activeGames),...getWaitingGames(activeGames,"waiting")]);
     
   })
 
@@ -336,21 +332,28 @@ io.on('connection', (socket) => {
 
   socket.on("disconnect", () => {
     const user = users.get(socket.id);
+  
     if (user) {
       const game = activeGames.get(user.gameId);
+      console.log("user diconnect from game ",game.roomId,game.status)
       if (game?.players.has(user.playerId)) {
-        game.players.delete(user.playerId);
-        io.to(game.roomId).emit("gameState", {
-          message: `User ${user.playerId} disconnected`,
-          gameId: game.id,
-          roomId: game.roomId,
-          pickedNumbers: game.selectedNumbers,
-          total_players: game.players.size,
-          game_status: game.status,
-          count_down: game.countDown
-        });
-      }
-      users.delete(socket.id);
+      
+
+        if(game.status === "waiting") {
+          game.players.delete(user.playerId);
+          io.to(game.roomId).emit("gameState", {
+            message: `User ${user.playerId} disconnected`,
+            gameId: game.id,
+            roomId: game.roomId,
+            pickedNumbers: game.selectedNumbers,
+            total_players: game.players.size,
+            game_status: game.status,
+            count_down: game.countDown
+          });
+          users.delete(socket.id);
+        }
+       
+    }
     }
   });
 });
