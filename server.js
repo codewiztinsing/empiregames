@@ -343,7 +343,9 @@ io.on('connection', (socket) => {
     const playerId = data.playerId;
     console.log("playerId",playerId)
     // remove this playerId from game
-    game.players.delete(playerId);
+    if (game?.players.has(playerId)) {
+      game.players.delete(playerId);
+    }
   
     
     const selectedCard = data.selectedNumber

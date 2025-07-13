@@ -30,6 +30,12 @@ const PlayingBoard = () => {
 
     if (lastBall) {
       const element = document.getElementById(`${lastBall.letter}${lastBall.number}`);
+      const recentBall = `${lastBall.letter}${lastBall.number}`
+      setRecentCalledNumbers(prev => [...prev,recentBall])
+      if (recentCalledNumbers.length > 5) {
+        setRecentCalledNumbers(prev => prev.slice(1));
+      }
+    
       if (element) {
         element.classList.add('called');
       }
@@ -219,9 +225,11 @@ const PlayingBoard = () => {
       <div className="bingo-content">
 
         <div className="called-numbers">
-          <div className="called-numbers-grid">
+          <div className="called-numbers-grid" style={{
+            gap:"2px"
+          }}>
             <div className="column">
-              <div className="column-header">B</div>
+              <div className="column-header" style={{backgroundColor: "orange",color:"white",width:"25px",height:"30px",borderRadius:"50%",display:"flex",justifyContent:"center",alignItems:"center"}}>B</div>
               {Array.from({ length: 15 }, (_, i) => (
                 <div key={i} className={`number ${calledNumbers?.includes(i + 1) ? 'called' : ''}`}
                   id={`B${i + 1}`}
@@ -232,7 +240,7 @@ const PlayingBoard = () => {
               ))}
             </div>
             <div className="column">
-              <div className="column-header">I</div>
+              <div className="column-header" style={{backgroundColor: "green",color:"white",width:"25px",height:"30px",borderRadius:"50%",display:"flex",justifyContent:"center",alignItems:"center"}}>I</div>
               {Array.from({ length: 15 }, (_, i) => (
                 <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'called' : ''}`}
                   id={`I${i + 16}`}
@@ -243,7 +251,7 @@ const PlayingBoard = () => {
               ))}
             </div>
             <div className="column">
-              <div className="column-header">N</div>
+              <div className="column-header" style={{backgroundColor: "blue",color:"white",width:"25px",height:"30px",borderRadius:"50%",display:"flex",justifyContent:"center",alignItems:"center"}}>N</div>
               {Array.from({ length: 15 }, (_, i) => (
                 <div key={i} className={`number ${calledNumbers?.includes(i + 31) ? 'called' : ''}`}
                   id={`N${i + 31}`}
@@ -254,7 +262,7 @@ const PlayingBoard = () => {
               ))}
             </div>
             <div className="column">
-              <div className="column-header">G</div>
+              <div className="column-header" style={{backgroundColor: "red",color:"white",width:"25px",height:"30px",borderRadius:"50%",display:"flex",justifyContent:"center",alignItems:"center"}}>G</div>
               {Array.from({ length: 15 }, (_, i) => (
                 <div key={i}
                   className={`number ${calledNumbers?.includes(i + 46) ? 'called' : ''}`}
@@ -265,7 +273,7 @@ const PlayingBoard = () => {
               ))}
             </div>
             <div className="column">
-              <div className="column-header">O</div>
+              <div className="column-header" style={{backgroundColor: "purple",color:"white",width:"25px",height:"30px",borderRadius:"50%",display:"flex",justifyContent:"center",alignItems:"center"}} >O</div>
               {Array.from({ length: 15 }, (_, i) => (
                 <div key={i} className={`number ${calledNumbers?.includes(i + 61) ? 'called' : ''}`}
                   id={`O${i + 61}`}
