@@ -283,6 +283,9 @@ const PlayingBoard = () => {
        
               {lastBall ? (
                 <div className="ball-display">
+               
+                    <p className='current-call-text'>Current Call</p>
+                  
                   <div className="ball">
                     {lastBall.combined}
                   </div>
@@ -290,14 +293,14 @@ const PlayingBoard = () => {
               ) : (
                 <div className="waiting-state">
                   {countDown > 0 ? (
-                    <div>
+                    <div className='waiting-container'>
 
-                      <p style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', color: 'white', width: '100%', height: '100%', fontWeight: 'bold' }}>Game starting</p>
-                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', color: 'white', width: '100%', height: '100%', fontWeight: 'bold' }}>{countDown}</div>
+                      <p className='game-starting'>Game starting</p>
+                      <div className='game-starting-container'>{countDown}</div>
 
                     </div>
                   ) : (
-                    <p style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', color: 'white', width: '100%', height: '100%', fontWeight: 'bold' }}>Game to start...</p>
+                    <p className='game-starting'>Game to start...</p>
                   )}
                 </div>
               )}
