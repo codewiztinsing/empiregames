@@ -1,9 +1,13 @@
 import React, { useState, useContext, useEffect, use } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 import { SocketContext } from '../contexts/socket';
 import { useNavigate } from 'react-router-dom';
 import './main.css';
 import { BingoContext } from '../contexts/bingoContext';
 import BingoWinner from '../components/BingoWinner';
+
+
+
 const PlayingBoard = () => {
   const { selectedNumber, selectBoard, playersLength, countDown, roomId, playerId, gameId, setGameId, setToast, setIsToast } = useContext(BingoContext);
 
@@ -18,6 +22,7 @@ const PlayingBoard = () => {
   const [winningCard, setWinningCard] = useState([]);
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(["*","*","*","*","*"]);
   const [winner, setWinner] = useState("skdfn9123u42139")
+  const [hasToasted, setHasToasted] = useState(false);
   // const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -112,19 +117,19 @@ const PlayingBoard = () => {
 
   socket.on('falseBingo', (data) => {
     if (data.isBingo === false) {
-
       if (data.playerId === playerId) {
-        navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
-        window.location.reload();
-      }
+        console.log("false bingo");
+        if (hasToasted) return;
+        setHasToasted(true);
+        toast.error("Invalid Bingo claim!");
+        setTimeout(() => {
+          navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
+          window.location.reload();
+        }, 3000);
+          
+        }
     }
-    if (data.playerId === playerId) {
-      setToast("Invalid Bingo Call!");
-      setIsToast(true);
-      setTimeout(() => {
-        setIsToast(false);
-      }, 3000);
-    }
+   
 
   })
 
@@ -172,6 +177,7 @@ const PlayingBoard = () => {
 
   return (
     <div className="game-container">
+      <Toaster />
 
       {isBingo && (
         <div className="bingo-winner-overlay">
