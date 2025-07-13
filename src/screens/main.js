@@ -16,7 +16,7 @@ const PlayingBoard = () => {
   const [selectedCell, setSelectedCell] = useState(new Set());
   const [isBingo, setIsBingo] = useState(false);
   const [winningCard, setWinningCard] = useState([]);
-  const [recentCalledNumbers, setRecentCalledNumbers] = useState([1,2,3,4,5]);
+  const [recentCalledNumbers, setRecentCalledNumbers] = useState(["*","*","*","*","*"]);
   const [winner, setWinner] = useState("skdfn9123u42139")
   // const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
@@ -55,13 +55,19 @@ const PlayingBoard = () => {
   };
 
   function handleGameState(data) {
-    console.log("data in gameState", data)
+ 
+
     if (data.lastBall && data.lastBall.length > 0 && data.roomId == roomId) {
-      setLastBall(data.lastBall[data.lastBall.length - 1]);
+      setLastBall(data.lastBall[data.lastBall.length - 1]);   
+      setRecentCalledNumbers(prev => [...prev, data.lastBall[data.lastBall.length - 1]]);
+      if (recentCalledNumbers.length > 5) {
+        setRecentCalledNumbers(prev => prev.slice(1));
+      }
     }
 
 
     setLastBall(data.lastBall)
+   
     if (data.total_called_numbers) {
       setTotalCalledNumbers(data.total_called_numbers)
     }
@@ -72,7 +78,6 @@ const PlayingBoard = () => {
 
 
   const handleRefresh = () => {
-    console.log("refresh for ", gameId, roomId, playerId)
     socket.emit('handleRefresh', {
       gameId: gameId,
       roomId: roomId,
@@ -85,14 +90,12 @@ const PlayingBoard = () => {
 
 
   socket.on('gameOver', (data) => {
-    console.log("data in gameOver", data);
     if (data.roomId == roomId) {
       navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
     }
   })
 
   socket.on('winBingo', (data) => {
-    console.log("data in winBingo 2", data);
     if (data.winningCard) {
       setWinningCard(data.markedCells)
       setIsBingo(data.isBingo)
@@ -142,7 +145,6 @@ const PlayingBoard = () => {
   };
 
   const handleCellClick = (cell) => {
-    console.log("cell", selectedCell.has(cell));
     const updatedSet = new Set(selectedCell);
 
     if (updatedSet.has(cell)) {
@@ -333,7 +335,9 @@ const PlayingBoard = () => {
                 {row.map((cell, colIndex) => (
                   <div key={colIndex}
                     className={`board-cell`}
-                    style={{ backgroundColor: selectedCell.has(cell) ? '#4CAF50' : 'white' }}
+
+                    // if cell is * it should always be green
+                    style={{ backgroundColor: cell === '*' ? '#4CAF50' : selectedCell.has(cell) ? '#4CAF50' : 'white' }}
                     id={`${cell <= 15 && cell > 0 ? 'b' : cell <= 30 && cell > 15 ? 'i' : cell <= 45 && cell > 30 ? 'n' : cell <= 60 && cell > 45 ? 'g' : cell <= 75 && cell > 60 ? 'o' : ''}${cell}`}
                     onClick={() => {
                       handleCellClick(cell);
