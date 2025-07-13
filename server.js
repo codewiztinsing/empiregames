@@ -340,6 +340,12 @@ io.on('connection', (socket) => {
 
   socket.on("leave",(data) => {
     const game = activeGames.get(data.roomId);
+    const playerId = data.playerId;
+    console.log("playerId",playerId)
+    // remove this playerId from game
+    game.players.delete(playerId);
+  
+    
     const selectedCard = data.selectedNumber
     if (!game) return;
     if (selectedCard && game.selectedNumbers.includes(selectedCard)) {
