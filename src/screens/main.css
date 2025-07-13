@@ -1,7 +1,6 @@
 .game-container {
   padding: 20px;
   min-height: 100vh;
-  /* width: 100%; */
   max-width: 1200px;
   margin: 0 auto;
   overflow: hidden;
@@ -24,6 +23,31 @@
   align-items: center;
   height: 100vh;
 }
+
+.recent-called-numbers{
+  background-color: #440c5e;
+  padding: 10px;
+  border-radius: 15px;
+  margin-top: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
+ 
+}
+
+.recent-called-numbers-grid{
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.recent-called-number{
+  background-color: #626e63;
+  color: white;
+  padding: 10px;
+  border-radius: 50%;
+}
+
+
 
 
 .bingo-modal{
@@ -128,7 +152,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  
   gap: 8px;
 }
 .called-numbers {
@@ -258,11 +281,12 @@
   gap: 20px;
   width: 100%;
   max-width: 400px;
-  margin-left: -15px;
+
 }
 
 .bingo-button {
   max-width: 180px;
+  margin-left: 10px;
   background-color: #FF9800;
   color: white;
   border: none;
@@ -447,12 +471,12 @@
 
  
 
-  .bingo-button,
+  /* .bingo-button,
   .refresh-button,
   .leave-button {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
-  }
+  } */
 
   
 
