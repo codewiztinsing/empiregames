@@ -54,7 +54,10 @@ const PlayingBoard = () => {
   }, [socket, lastBall, selectedCell, isBingo]);
 
   const handleBingo = () => {
-
+    if(selectedCell.size === 0){
+      toast.error("Game is not started yet");
+      return;
+    }
 
     socket.emit('bingo', {
       gameId: gameId,
