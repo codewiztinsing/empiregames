@@ -42,7 +42,29 @@ const PlayingBoard = () => {
       }
     
       if (element) {
-        element.classList.add('called');
+        let color;
+        switch(lastBall.letter) {
+          case 'B':
+            color = 'orange'; // Blue
+            break;
+          case 'I':
+            color = 'green'; // Red
+            break;
+          case 'N':
+            color = 'blue'; // Green
+            break;
+          case 'G':
+            color = 'red'; // Yellow
+            break;
+          case 'O':
+            color = 'purple'; // Purple
+            break;
+          default:
+            color = 'gray'; // Gray
+        }
+        element.style.backgroundColor = color;
+        element.style.color = 'white';
+        // element.classList.add('called');
       }
     }
 
@@ -54,10 +76,11 @@ const PlayingBoard = () => {
   }, [socket, lastBall, selectedCell, isBingo]);
 
   const handleBingo = () => {
-    if(selectedCell.size === 0){
+    if(totalCalledNumbers === 0){
       toast.error("Game is not started yet");
       return;
     }
+   
 
     socket.emit('bingo', {
       gameId: gameId,
