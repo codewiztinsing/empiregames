@@ -35,6 +35,7 @@ const Selections = () => {
   const [gameStatus,setGameStatus] = useState("waiting");
   const [joinError,setJoinError] = useState(false);
   const [balance,setBalance] = useState(0);
+  const [loading,setLoading] = useState(true);
 
   // Generate numbers 1-100 (memoized since it's static)
   const numbers = Array.from({ length: 100 }, (_, i) => i + 1);
@@ -54,8 +55,8 @@ const Selections = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log("data",data)
         setBalance(data.balance);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching balance:', error);
       }
@@ -208,84 +209,98 @@ const Selections = () => {
 
   return (
     <>
+   
     {isToast && <Toaster message={toast} />}
-    <div className="selections-container">
-
-    <div className="balance-container">
-      <div className="balance-text">
-        Balance: {balance}
-      </div>
-      <div className="balance-text">
-        Stake {roomId}
-      </div>
+    {loading && <div className="loading-container">
+      <div className="loading-spinner"></div>
+      <div className="loading-text">Loading...</div>
     </div>
-      <div className="game-status">
-        <div className={`status-badge ${gameStatus}`}>
-          {gameStatus}
+    
+    }
+
+    {!loading && (
+      <div className="selections-container">
+      <div className="balance-container">
+        <div className="balance-text">
+          Balance: {balance}
+        </div>
+        <div className="balance-text">
+          Stake {roomId}
         </div>
       </div>
-
-      <div className="numbers-grid">
-
-        
-        {numbers.map(number => {
-          // const isPicked = pickedNumbers && pickedNumbers.includes(number) || false;
-          let isPicked = false;
-          if(pickedNumbers && pickedNumbers.length > 0){
-            isPicked = pickedNumbers.includes(number);
-          }
-
-          const isSelected = selectedNumber === number;
-          
-          return (
-            <button
-              key={number}
-              className={`number-cell 
-                ${isPicked ? 'picked' : ''}
-                ${isSelected ? 'selected' : ''}
-              `}
-              onClick={() => handleNumberClick(number)}
-              disabled={isPicked}
-              aria-label={isPicked ? `Number ${number} already picked` : `Select number ${number}`}
-            >
-              {number}
-              {isPicked && <span className="picked-badge">Picked</span>}
-            </button>
-          );
-        })}
-      </div>
-
-      {selectedNumber && (
-        <div className="combination-board">
-         
-          <div className="board-grid">
-            {selectBoard.map((row, rowIndex) => (
-              <div key={rowIndex} className="board-row">
-                {row.map((num, colIndex) => (
-                  <div 
-                    key={colIndex} 
-                    className={`board-cell ${
-                      pickedNumbers && pickedNumbers.length > 1 && pickedNumbers.includes(num) ? 'picked-on-board' : ''
-                    }`}
-                  >
-                    {num}
-                    {  pickedNumbers && pickedNumbers.length > 1 && pickedNumbers.includes(num) && (
-                      <span className="picked-indicator">✓</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ))}
+        <div className="game-status">
+          <div className={`status-badge ${gameStatus}`}>
+            {gameStatus}
           </div>
-          <button
-            className="start-game-button"
-            onClick={handleStartGame}
-          >
-            {isLoading ? 'Starting...' : 'Start Game'}
-          </button>
         </div>
-      )}
-    </div>
+  
+        <div className="numbers-grid">
+  
+          
+          {numbers.map(number => {
+            // const isPicked = pickedNumbers && pickedNumbers.includes(number) || false;
+            let isPicked = false;
+            if(pickedNumbers && pickedNumbers.length > 0){
+              isPicked = pickedNumbers.includes(number);
+            }
+  
+            const isSelected = selectedNumber === number;
+            
+            return (
+              <button
+                key={number}
+                className={`number-cell 
+                  ${isPicked ? 'picked' : ''}
+                  ${isSelected ? 'selected' : ''}
+                `}
+                onClick={() => handleNumberClick(number)}
+                disabled={isPicked}
+                aria-label={isPicked ? `Number ${number} already picked` : `Select number ${number}`}
+              >
+                {number}
+                {isPicked && <span className="picked-badge">Picked</span>}
+              </button>
+            );
+          })}
+        </div>
+  
+        {selectedNumber && (
+          <div className="combination-board">
+           
+            <div className="board-grid">
+              {selectBoard.map((row, rowIndex) => (
+                <div key={rowIndex} className="board-row">
+                  {row.map((num, colIndex) => (
+                    <div 
+                      key={colIndex} 
+                      className={`board-cell ${
+                        pickedNumbers && pickedNumbers.length > 1 && pickedNumbers.includes(num) ? 'picked-on-board' : ''
+                      }`}
+                    >
+                      {num}
+                      {  pickedNumbers && pickedNumbers.length > 1 && pickedNumbers.includes(num) && (
+                        <span className="picked-indicator">✓</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <button
+              className="start-game-button"
+              onClick={handleStartGame}
+            >
+              {isLoading ? 'Starting...' : 'Start Game'}
+            </button>
+          </div>
+        )}
+      </div>
+    )}
+
+   
+
+  
+   
     </>
   );
 };
