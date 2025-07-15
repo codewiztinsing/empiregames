@@ -55,15 +55,6 @@ body, #root {
   border-radius: 10px;
 }
 
-/* Make selections container fill available space */
-.selections-container {
-  height: 100vh;
-  /* width: 100vw; */
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-
-}
 
 
 
@@ -90,7 +81,8 @@ body, #root {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 10px;
+  /* width: 100%; */
 }
 
 .numbers-grid {
