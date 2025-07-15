@@ -18,7 +18,7 @@ body, #root {
   justify-content: center;
   width: 100%;
   height: 100%;
-  background-color: #9c27b0;
+  background-color:#cfade0;
   
 }
 .loading-spinner{
@@ -58,6 +58,7 @@ body, #root {
 /* Make selections container fill available space */
 .selections-container {
   height: 100vh;
+  width: 100vw;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -85,7 +86,7 @@ body, #root {
 
 
 .selections-container {
-  background-color: #9c27b0;
+  background-color:#cfade0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -100,11 +101,35 @@ body, #root {
 }
 
 .number-cell {
-  padding: 2px;
+  width: 40px;
+  height: 25px;
+
   border: 1px solid #ccc;
   text-align: center;
   cursor: pointer;
-  background: white;
+  background-color:#dad8e0;
+  border-radius: 5px;
+
+}
+.combination-board-header {
+  /* background-color: #5428d8; */
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+.combination-number-cell{
+  width: 40px;
+  height: 25px;
+  margin-left: 2px;
+  border: 1px solid #ccc;
+  text-align: center;
+  cursor: pointer;
+}
+.number-cell-text{
+  color:rgb(49, 47, 47);
+ 
 }
 
 .number-cell:hover {
@@ -125,9 +150,23 @@ body, #root {
   background: white;
 }
 
-.board-row {
+.board-grid-selections{
+  width: 40vh;
   display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  
 }
+
+.board-cell-selections{
+  width: 20px;
+  height: 20px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+}
+
+
 
 .board-cell {
   width: 20px;
@@ -216,3 +255,24 @@ body, #root {
   background-color: #f44336;
   color: white;
 }
+
+
+
+.combination-bingo-letters-text {
+  background-color: #dad8e0;
+  width: 42px;
+  height: 25px;
+  display: flex;
+  margin: 6px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+}
+
+.combination-bingo-letters{
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+

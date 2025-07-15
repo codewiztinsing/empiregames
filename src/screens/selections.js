@@ -257,7 +257,7 @@ const Selections = () => {
                 disabled={isPicked}
                 aria-label={isPicked ? `Number ${number} already picked` : `Select number ${number}`}
               >
-                {number}
+              <span className='number-cell-text'>{number}</span>
                 {isPicked && <span className="picked-badge">Picked</span>}
               </button>
             );
@@ -266,14 +266,23 @@ const Selections = () => {
   
         {selectedNumber && (
           <div className="combination-board">
+            <div className="combination-board-header">
+                <div className="combination-bingo-letters">
+                  <span className="combination-bingo-letters-text" style={{backgroundColor: "orange"}}>B</span>
+                  <span className="combination-bingo-letters-text" style={{backgroundColor: "green"}}>I</span>
+                  <span className="combination-bingo-letters-text" style={{backgroundColor: "skyblue"}}>N</span>
+                  <span className="combination-bingo-letters-text" style={{backgroundColor: "#ff0000"}}>G</span>
+                  <span className="combination-bingo-letters-text" style={{backgroundColor: "#800080"}}>O</span>
+              </div>
+            </div>
            
-            <div className="board-grid">
+            <div className="board-grid-selections">
               {selectBoard.map((row, rowIndex) => (
-                <div key={rowIndex} className="board-row">
+                <div key={rowIndex} className="board-row-selections">
                   {row.map((num, colIndex) => (
                     <div 
                       key={colIndex} 
-                      className={`board-cell ${
+                      className={`combination-number-cell ${
                         pickedNumbers && pickedNumbers.length > 1 && pickedNumbers.includes(num) ? 'picked-on-board' : ''
                       }`}
                     >
