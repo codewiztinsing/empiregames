@@ -182,14 +182,14 @@
 }
 
 .playing-section {
-
+  margin-left: -20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
 }
 .called-numbers {
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color:#cfade0;
   padding: 13px;
   margin-left: -12px;
   border-radius: 10px;
@@ -223,10 +223,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #ccc;
-  border-radius: 50%;
-  background-color: white;
+  border-radius: 5px;
+  background-color: #ccc;
   font-size: 0.7rem;
+  color:white
 }
 
 .number.called {
@@ -285,7 +285,6 @@
 
 .bingo-board {
   margin-left: -6px;
-  background-color: rgba(255, 255, 255, 0.9);
   padding: 15px;
   border-radius: 10px;
 }
@@ -302,11 +301,8 @@
   justify-content: center;
   padding: 4px;
   font-size: 13px;
- font-weight: 600;
-  border-radius: 50%;
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
-  
+ /* font-weight: 600; */
+  border-radius: 5px;
   
 }
 
@@ -320,7 +316,8 @@
 }
 
 .bingo-button {
-  max-width: 180px;
+  /* max-width: 180px; */
+  margin-top: 20px;
   margin-left: 10px;
   background-color: #FF9800;
   color: white;
@@ -350,7 +347,8 @@
 }
 
 .leave-button {
-  max-width: 150px;
+  /* max-width: 150px; */
+  width: 100px;
   background-color: #f44336;
   color: white;
   border: none;
@@ -449,10 +447,6 @@
   }
  
 
-  .playing-section {
-    margin-left: -15px;
-    gap: 2px;
-  }
 
   .refresh-button {
     margin-left: 20px;
