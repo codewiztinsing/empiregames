@@ -5,8 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import './main.css';
 import { BingoContext } from '../contexts/bingoContext';
 import BingoWinner from '../components/BingoWinner';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 
 
@@ -189,17 +187,7 @@ const PlayingBoard = () => {
   };
 
 
-  const handleBack = () => {
-    socket.emit("leave", {
-      playerId,
-      roomId,
-      selectedNumber
 
-    })
-    navigate(`/selection?playerId=${playerId}&&betAmount=${roomId}`);
-
-    window.location.reload();
-  };
 
   const handleCellClick = (cell) => {
     const updatedSet = new Set(selectedCell);
@@ -279,12 +267,7 @@ const PlayingBoard = () => {
       
 
         <div className="called-numbers">
-          <div className='back-container'>
-                <button className="back-button" onClick={handleBack}>
-                <FontAwesomeIcon icon={faArrowLeft} style={{ marginRight: '8px' }} />
-                Back
-                </button>
-          </div>
+        
           <div className="called-numbers-grid" style={{
             gap:"2px"
           }}>

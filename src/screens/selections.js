@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback, use } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { SocketContext } from '../contexts/socket';
 import Toaster from '../components/Toaster';
 import './selections.css';
@@ -148,6 +150,12 @@ const Selections = () => {
 
   }
   
+  const handleBack = () => {
+   
+    navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
+
+    window.location.reload();
+  };
 
   const handleStartGame = async () => {
     if (!selectedNumber || !playerId || !gameId) return;
@@ -228,11 +236,22 @@ const Selections = () => {
           Stake {roomId}
         </div>
       </div>
+
+      <div className='backcontainer'>
+      <div className='back-container'>
+                <button className="back-button" onClick={handleBack}>
+                <FontAwesomeIcon icon={faArrowLeft} style={{ marginRight: '8px' }} />
+                Back
+                </button>
+          </div>
         <div className="game-status">
           <div className={`status-badge ${gameStatus}`}>
             {gameStatus}
           </div>
         </div>
+      </div>
+
+      
   
         <div className="numbers-grid">
   
