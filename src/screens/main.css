@@ -361,6 +361,29 @@
   cursor: pointer;
 }
 
+/* Back Container and Button Styles */
+.back-container {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+}
+
+.back-button {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 5px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+  background-color: #5a6268;
+}
+
 
 /* Bingo Winner Overlay Styles */
 .bingo-winner-overlay {

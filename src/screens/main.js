@@ -5,6 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import './main.css';
 import { BingoContext } from '../contexts/bingoContext';
 import BingoWinner from '../components/BingoWinner';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+
+
 
 
 
@@ -29,6 +33,9 @@ const PlayingBoard = () => {
 
 
   useEffect(() => {
+    console.log("selectBoard = ",selectBoard)
+
+  
     socket.on('numberSelected', (number) => {
       setCurrentCall(number);
     });
@@ -181,6 +188,19 @@ const PlayingBoard = () => {
     window.location.reload();
   };
 
+
+  const handleBack = () => {
+    socket.emit("leave", {
+      playerId,
+      roomId,
+      selectedNumber
+
+    })
+    navigate(`/selection?playerId=${playerId}&&betAmount=${roomId}`);
+
+    window.location.reload();
+  };
+
   const handleCellClick = (cell) => {
     const updatedSet = new Set(selectedCell);
 
@@ -256,10 +276,19 @@ const PlayingBoard = () => {
 
       <div className="bingo-content">
 
+      
+
         <div className="called-numbers">
+          <div className='back-container'>
+                <button className="back-button" onClick={handleBack}>
+                <FontAwesomeIcon icon={faArrowLeft} style={{ marginRight: '8px' }} />
+                Back
+                </button>
+          </div>
           <div className="called-numbers-grid" style={{
             gap:"2px"
           }}>
+            
             <div className="column">
               <div className="column-header" style={{backgroundColor: "orange",color:"white",width:"25px",height:"30px",borderRadius:"50%",display:"flex",justifyContent:"center",alignItems:"center"}}>B</div>
               {Array.from({ length: 15 }, (_, i) => (
@@ -411,6 +440,8 @@ const PlayingBoard = () => {
                 Leave
               </button>
             </div>
+
+            
           </div>
 
         </div>
