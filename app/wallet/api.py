@@ -40,15 +40,18 @@ def create_chapa_session(request, data: ChapaSessionSchema):
 @router.get("/webhook/chapa/callback/")
 def chapa_callback(request):
     print("data = ",request.GET.get("trx_ref"))
+    print("status = ",request.GET.get("status"))
     chapa_session = ChapaSession.objects.filter(trx_ref=request.GET.get("trx_ref")).first()
     if chapa_session:
         chapa_session.status = request.GET.get("status")
-        chapa_session.save()
         if request.GET.get("status") == "success":
             transaction = Transaction.objects.get(reference=request.GET.get("trx_ref"))
             transaction.type = "DEPOSIT"
             transaction.status = "success"
             transaction.save()
+
+        chapa_session.save()
+
             
 
     return JsonResponse({"message": "Callback received"}, status=200)
