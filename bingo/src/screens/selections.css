@@ -1,0 +1,279 @@
+/* Ensure full viewport height and prevent overflow */
+body, #root {
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.backcontainer{
+  margin-top: 10px;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color:#cfade0;
+  
+}
+.loading-spinner{
+  border: 16px solid #f3f3f3; /* Light grey */
+  border-top: 16px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+}
+.loading-text{
+  font-size: 1em;
+  font-weight: bold;
+  color: white;
+  padding: 5px;
+}
+
+
+.balance-container{
+  display: flex;
+  width: 100%;
+
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+
+
+}
+.balance-text{
+  font-size: 1em;
+  font-weight: bold;
+  color: white;
+  padding: 5px;
+  border: 1px solid white;
+  border-radius: 10px;
+}
+
+
+
+
+
+/* Make combination board responsive */
+.combination-board {
+  max-height: 45vh;
+  max-width: 90vw;
+  /* margin: 1px auto; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+ 
+}
+
+.board-grid {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+
+.selections-container {
+  width: 100%;
+  height: 100%;
+  background-color:#cfade0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+ 
+}
+
+.numbers-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 3px;
+  margin-bottom: 20px;
+}
+
+.number-cell {
+  width: 35px;
+  height: 25px;
+
+  border: 1px solid #ccc;
+  text-align: center;
+  cursor: pointer;
+  background-color:#dad8e0;
+  border-radius: 5px;
+
+}
+.combination-board-header {
+  /* background-color: #5428d8; */
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+.combination-number-cell{
+  width: 40px;
+  height: 25px;
+  margin-left: 2px;
+  border: 1px solid #ccc;
+  text-align: center;
+  cursor: pointer;
+}
+.number-cell-text{
+  color:rgb(49, 47, 47);
+ 
+}
+
+.number-cell:hover {
+  background: #f0f0f0;
+}
+
+.number-cell.selected {
+  background: #e0e0ff;
+  border-color: #0000ff;
+}
+
+
+
+.board-grid {
+  display: inline-block;
+  border: 2px solid #333;
+  padding: 10px;
+  background: white;
+}
+
+.board-grid-selections{
+  width: 40vh;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  
+}
+
+.board-cell-selections{
+  width: 20px;
+  height: 20px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+}
+
+
+
+.board-cell {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #333;
+  display: flex;
+ 
+}
+
+.start-game-button {
+  margin-top: 5px;
+  background-color: #0000ff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+}
+
+
+/* Add these to your existing CSS */
+.number-cell.picked {
+  background-color: #ffcccc;
+  color: #999;
+  position: relative;
+}
+
+.picked-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 0.6em;
+  background: #ff0000;
+  color: white;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+.number-cell.selected {
+  border: 3px solid #4CAF50;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+.board-cell.picked-on-board {
+  background-color: #ffe6e6;
+  position: relative;
+}
+
+.picked-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  color: green;
+  font-weight: bold;
+}
+
+.start-game-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.game-status {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.status-badge.in-progress {
+  background-color: #4CAF50;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.status-badge.waiting {
+  background-color: #FFA500;
+  color: white;
+}
+
+.status-badge.finished {
+  background-color: #f44336;
+  color: white;
+}
+
+
+
+.combination-bingo-letters-text {
+  background-color: #dad8e0;
+  width: 42px;
+  height: 25px;
+  display: flex;
+  margin: 6px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+}
+
+.combination-bingo-letters{
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
