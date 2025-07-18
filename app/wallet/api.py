@@ -37,7 +37,7 @@ def create_chapa_session(request, data: ChapaSessionSchema):
         return JsonResponse({"error": str(e)}, status=400)
 
 # /api/v1/webhook/chapa/callback/??
-@router.post("/webhook/chapa/callback/")
+@router.get("/webhook/chapa/callback/")
 def chapa_callback(request, data: ChapaCallbackSchema):
     chapa_session = ChapaSession.objects.get(trx_ref=data.trx_ref)
     if chapa_session:
