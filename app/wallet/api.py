@@ -4,6 +4,8 @@ from .models import ChapaSession, Wallet,Transaction
 from django.http import JsonResponse
 from utils import generate_reference
 from users.models import User
+import sys
+import json
 router = Router()
 
 @router.get("/")
@@ -21,7 +23,7 @@ def create_chapa_session(request, data: ChapaSessionSchema):
         first_name=data.first_name,
         last_name=data.last_name,
         phone_number=data.phone_number,
-        trx_ref=data.trx_ref,
+        tx_ref=data.tx_ref,
         callback_url=data.callback_url,
         return_url=data.return_url,
         customization=data.customization
@@ -38,14 +40,16 @@ def create_chapa_session(request, data: ChapaSessionSchema):
 
 # /api/v1/webhook/chapa/callback/??
 @router.get("/webhook/chapa/callback/")
+
 def chapa_callback(request):
-    print("data = ",request.GET.get("trx_ref"))
-    print("status = ",request.GET.get("status"))
-    chapa_session = ChapaSession.objects.filter(trx_ref=request.GET.get("trx_ref")).first()
+    data = json.loads(request.body.decode('utf-8'))
+    print("data = ",data.get())
+  
+    chapa_session = ChapaSession.objects.filter(tx_ref=data.get("tx_ref")).first()
     if chapa_session:
-        chapa_session.status = request.GET.get("success")
-        if request.GET.get("status") == "success":
-            transaction = Transaction.objects.get(reference=request.GET.get("trx_ref"))
+        chapa_session.status = data.get("status")
+        if  data.get("status") == "success":
+            transaction = Transaction.objects.get(reference=data.get("tx_ref"))
             transaction.type = "DEPOSIT"
             transaction.status = "success"
             transaction.save()

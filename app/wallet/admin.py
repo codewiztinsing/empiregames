@@ -17,7 +17,7 @@ class TransactionAdmin(admin.ModelAdmin):
 
 
 class ChapaSessionAdmin(admin.ModelAdmin):
-    list_display = ( 'amount', 'currency', 'email', 'first_name', 'last_name', 'phone_number', 'trx_ref', 'ref_id', 'callback_url', 'return_url', 'customization', 'status', 'created_at')
+    list_display = ( 'amount', 'currency', 'email', 'first_name', 'last_name', 'phone_number', 'tx_ref', 'ref_id', 'callback_url', 'return_url', 'customization', 'status', 'created_at')
     list_filter = ('status',)
     list_per_page = 10
 

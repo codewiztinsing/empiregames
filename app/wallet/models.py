@@ -19,7 +19,7 @@ class ChapaSession(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=100)
-    trx_ref = models.CharField(max_length=100)
+    tx_ref = models.CharField(max_length=100)
     ref_id = models.CharField(max_length=100)
     callback_url = models.URLField()
     return_url = models.URLField()
@@ -28,7 +28,7 @@ class ChapaSession(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
     def __str__(self):
-        return f"{self.trx_ref} - {self.status}"
+        return f"{self.tx_ref} - {self.status}"
 
 
 

@@ -7,7 +7,7 @@ class ChapaSessionSchema(Schema):
     first_name: str
     last_name: str
     phone_number: str
-    trx_ref: str
+    tx_ref: str
     callback_url: str
     return_url: str
     customization: dict
@@ -21,7 +21,7 @@ class ChapaSessionResponseSchema(Schema):
 class ChapaCallbackSchema(Schema):
     status: str=None
     ref_id: str=None
-    trx_ref: str=None
+    tx_ref: str=None
     
 
 class WalletSchema(Schema):

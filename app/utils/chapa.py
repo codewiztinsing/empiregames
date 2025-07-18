@@ -6,16 +6,16 @@ API_KEY = config("PROD_SECRET_KEY")
 ENCRYPTION_KEY = config("PROD_ENCRYPTION_KEY")
 url = "https://api.chapa.co/v1/transaction/initialize"
 
-def initialize_payment(amount, currency, email, first_name, last_name, phone_number, trx_ref, callback_url, return_url, customization):
-    print("trx_ref = ",trx_ref)
+def initialize_payment(amount, currency, email, first_name, last_name, phone_number, tx_ref, callback_url, return_url, customization):
+    print("tx_ref = ",tx_ref)
     payload = {
         "amount": amount,
         "currency": currency,
         "email": email,
-        "first_name": "Alako",
-        "last_name": "Abiyo",
+        "first_name": first_name,
+        "last_name": last_name,
         "phone_number": phone_number,
-        "trx_ref": trx_ref,
+        "tx_ref": tx_ref,
         "callback_url": callback_url,
         "return_url": return_url,
         "customization": customization

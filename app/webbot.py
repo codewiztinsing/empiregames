@@ -447,13 +447,14 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 "last_name": query.from_user.last_name or query.from_user.username,
                 "email": f"{query.from_user.first_name}@gmail.com",
                 "phone_number": phone_number,
-                "trx_ref":generate_tx_ref(),
+                "tx_ref":generate_tx_ref(),
                 "return_url":f"https://t.me/wowbingobotbotbot",
                 "customization":{
                     "title": "Wow Bingo",
                     "description": "Deposit to Wow Bingo",
                     "logo": "https://wowliyubingo.com/static/media/logo.png"
                 },
+                # "callback_url": "https://webhook.site/6bca0770-2235-4096-b8f6-41b861ec40e9"
                 "callback_url": f"{BACK_URL}/api/v1/wallet/webhook/chapa/callback/"
             }
 
