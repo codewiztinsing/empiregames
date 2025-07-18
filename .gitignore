@@ -37,3 +37,15 @@ wheels/
 # OS
 .DS_Store
 Thumbs.db
+
+
+# Cache directories
+*/__pycache__/
+*/.pytest_cache/
+*/.DS_Store
+*/.vscode/
+*/.idea/
+*/.swp
+*/.swo
+
+db.sqlite3
