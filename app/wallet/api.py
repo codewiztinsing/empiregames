@@ -43,22 +43,20 @@ def create_chapa_session(request, data: ChapaSessionSchema):
 
 def chapa_callback(request):
     data = json.loads(request.body.decode('utf-8'))
-    print("data = ",data.get())
-  
-    chapa_session = ChapaSession.objects.filter(tx_ref=data.get("tx_ref")).first()
-    if chapa_session:
+    chapa_session = ChapaSession.objects.filter(tx_ref=data.get("trx_ref")).first()
+    phone_number = chapa_session.phone_number
+    user = User.objects.filter(phone=phone_number).first()
+    if chapa_session and user:
         chapa_session.status = data.get("status")
         if  data.get("status") == "success":
-            transaction = Transaction.objects.get(reference=data.get("tx_ref"))
-            transaction.type = "DEPOSIT"
-            transaction.status = "success"
-            transaction.save()
+            wallet = Wallet.objects.get(user=user)
+            wallet.balance += float(chapa_session.amount)
+            wallet.save()
+      
 
-        chapa_session.save()
-
-            
-
-    return JsonResponse({"message": "Callback received"}, status=200)
+        return JsonResponse({"message": "Callback received"}, status=200)
+    else:
+        return JsonResponse({"message": "Session not found"}, status=404)
 
 
 
