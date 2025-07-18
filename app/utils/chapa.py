@@ -12,8 +12,8 @@ def initialize_payment(amount, currency, email, first_name, last_name, phone_num
         "amount": amount,
         "currency": currency,
         "email": email,
-        "first_name": first_name,
-        "last_name": last_name,
+        "first_name": "Alako",
+        "last_name": "Abiyo",
         "phone_number": phone_number,
         "trx_ref": trx_ref,
         "callback_url": callback_url,
@@ -24,6 +24,8 @@ def initialize_payment(amount, currency, email, first_name, last_name, phone_num
         'Authorization': f'Bearer {API_KEY}',
         'Content-Type': 'application/json'
     }
+    print("payload = ",payload)
+    print("headers = ",headers)
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
 
