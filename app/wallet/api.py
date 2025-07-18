@@ -43,7 +43,7 @@ def chapa_callback(request):
     print("status = ",request.GET.get("status"))
     chapa_session = ChapaSession.objects.filter(trx_ref=request.GET.get("trx_ref")).first()
     if chapa_session:
-        chapa_session.status = request.GET.get("status")
+        chapa_session.status = request.GET.get("success")
         if request.GET.get("status") == "success":
             transaction = Transaction.objects.get(reference=request.GET.get("trx_ref"))
             transaction.type = "DEPOSIT"
