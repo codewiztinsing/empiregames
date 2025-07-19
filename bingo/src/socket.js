@@ -1,7 +1,8 @@
 import { io } from 'socket.io-client';
 
-const URL = process.env.SERVER_URL; // Change to your backend URL
-// const URL = "http://localhost:5000";
+// Use wss:// for secure WebSocket connection
+const URL = "wss://server.wowliyubingo.com";
+// const URL = "http://server.wowliyubingo.com";
 const socket = io(URL, {
   autoConnect: false, // we'll manually connect to control timing
   transports: ['websocket'],
