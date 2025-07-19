@@ -16,6 +16,7 @@ export const BingoProvider = ({ children }) => {
 
   const [selectedNumber, setSelectedNumber] = useState(null);
   const [selectBoard, setSelectBoard] = useState([]);
+  const [selectBoard2, setSelectBoard2] = useState([]);
   const [playersLength, setPlayersLength] = useState(0);
   const [gameId, setGameId] = useState("1");
   const [countDown, setCountDown] = useState(0);
@@ -23,6 +24,8 @@ export const BingoProvider = ({ children }) => {
   const [playerId, setPlayerId] = useState(null);
   const [toast,setToast] = useState(null);
   const [isToast,setIsToast] = useState(false)
+  const [choosenNumbers,setChoosenNumbers] = useState([])
+  const [choosenBoards,setChooseBoards] = useState([])
 
   // Any functions you want to expose
   const login = (userData) => {
@@ -50,6 +53,8 @@ export const BingoProvider = ({ children }) => {
        setSelectedNumber,
         selectBoard, 
         setSelectBoard, 
+        selectBoard2,
+        setSelectBoard2,
         gameId, 
         setGameId,
          playersLength, 
@@ -63,7 +68,11 @@ export const BingoProvider = ({ children }) => {
          toast,
          setToast,
          isToast,
-         setIsToast }}>
+         setIsToast,
+         choosenNumbers,
+         setChoosenNumbers,
+         choosenBoards,
+         setChooseBoards}}>
       {children}
     </BingoContext.Provider>
   );

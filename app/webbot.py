@@ -317,7 +317,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 return
 
             player_id = query.from_user.id
-            web_app_url = f"https://www.bilenbingo.com/selection?playerId={player_id}&betAmount={bet_amount}"
+            web_app_url = f"https://www.wowbingo.com/selection?playerId={player_id}&betAmount={bet_amount}"
             
             await query.edit_message_text(
                 text=f"Starting game with {bet_amount} ETB bet...",
@@ -670,10 +670,10 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     wallet_response = requests.get(f'{BACK_URL}/payments/wallet/{user_id}/').json()
     balance = wallet_response.get('balance', 0)
 
-    invite_link = f"https://t.me/bilanbingobot?start={user_id}"
+    invite_link = f"https://t.me/wowbingobot?start={user_id}"
     
     message = (
-        f"🎮 Invite your friends to Bilen Bingo!\n\n"
+        f"🎮 Invite your friends to Wow Bingo!\n\n"
         f"Share this link with your friends:\n{invite_link}\n\n"
         f"Your current balance: {balance} ETB\n\n"
         f"Invite friends and enjoy playing together! 🎲"
