@@ -58,7 +58,7 @@ const Selections = () => {
     console.log("selectBoard2", selectBoard2)
     const fetchBalance = async () => {
       try {
-        const response = await fetch(`https://api.bilenbingo.com/payments/balance/?user_id=${queryParams.get('playerId')}`);
+        const response = await fetch(`https://wowliyubingo.com/api/v1/wallet/player/${playerId}`);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

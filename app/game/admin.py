@@ -7,8 +7,8 @@ admin.site.index_title = "Welcome to Wow Bingo Administration"
 
 
 class GameAdmin(admin.ModelAdmin):
-    list_display = ('id', 'created_at', 'started', 'ended')
-    list_filter = ('started', 'ended')
+    list_display = ('id', 'created_at', 'started', 'ended','telegram_id')
+    list_filter = ('started', 'ended','telegram_id')
     search_fields = ('id',)
     list_per_page = 10
 
