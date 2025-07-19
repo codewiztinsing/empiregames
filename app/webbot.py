@@ -222,8 +222,16 @@ async def play_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     username = update.effective_user.username
     try:
-        balance = requests.get(f'{BACK_URL}/payments/balance?username={username}').json().get('results',[]).get("results",[])
-        balance = balance['results'][0]['totalTransactionAmount']
+        BACK_URL = get_bot_seetings().get("bot_url")
+        logger.info(f"Back url {BACK_URL}")
+        res = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
+        logger.info(f"Res {res}")
+        if res.status_code == 200:
+            balance = res.json().get('balance', 0)
+            logger.info(f"User {username} balance: {balance}")
+        else:
+            balance = 0
+            logger.error(f"Failed to get balance for user {username}")
     except Exception as e:
         print(f"Error getting wallet balance: {e}")
   
@@ -273,6 +281,7 @@ async def instruction_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
+    BACK_URL = get_bot_seetings().get("bot_url")
     username = query.from_user.username
     await query.answer()
   
@@ -282,10 +291,11 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             user_id = query.from_user.id
             
             # Check if user is registered
-            response = requests.get(f'https://wowliyubingo.com/users/{user_id}/')
-         
+            response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
+            logger.info(f"Response {response}")
             data = response.json()
-            if data.get('status') != 'success':
+            logger.info(f"Data {data}")
+            if data.get('phone') is None:
                 await query.edit_message_text(
                     text="You need to register first before playing. Use the /register command.",
                     reply_markup=instructions_options_keyboard()
@@ -293,10 +303,11 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 return
 
             # Check user's balance
-            balance = data.get('user').get('balance')
             bet_amount = int(query.data)
-            print("balance = ",balance)
-            print("bet_amount = ",bet_amount)
+            wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
+            wallet_data = wallet_response.json()
+            balance = wallet_data.get('balance', 0)
+           
           
             if balance < bet_amount:
                 await query.edit_message_text(
@@ -306,17 +317,21 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 return
 
             player_id = query.from_user.id
-            web_app_url = (
-                f"https://wowliyubingo.com/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={balance}"
-            )
-            print("web_app_url = ",web_app_url)
+            web_app_url = f"https://www.bilenbingo.com/selection?playerId={player_id}&betAmount={bet_amount}"
+            
             await query.edit_message_text(
-                text=f"Starting game...",
+                text=f"Starting game with {bet_amount} ETB bet...",
                 reply_markup=InlineKeyboardMarkup([[
                     InlineKeyboardButton("Play Game", web_app=WebAppInfo(url=web_app_url))
                 ]])
             )
+            
+           
             return ConversationHandler.END
+            
+           
+
+        
         if query.data == 'play_demo':
             player_id = query.from_user.id
             username = query.from_user.username

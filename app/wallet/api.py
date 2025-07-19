@@ -67,10 +67,10 @@ def player_wallet(request,telegram_id:int):
         user = User.objects.get(telegram_id=telegram_id)
         print("user = ",user)
         wallet = Wallet.objects.get(user=user)
-        return JsonResponse({"balance": wallet.balance}, status=200)
+        return 200,{"balance": wallet.balance}
     except Exception as e:
         print("error = ",e)
-        return JsonResponse({"error": str(e)}, status=400)
+        return 400,{"error": str(e)}
     
 
   
@@ -88,6 +88,6 @@ def update_player_wallet(request,telegram_id:int, data: WalletSchema):
             wallet_balance += float(data.amount)
         wallet.balance = wallet_balance
         wallet.save()
-        return JsonResponse({"message": "Wallet updated successfully"}, status=200)
+        return 200,{"message": "Wallet updated successfully"}
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=400)
+        return 400,{"error": str(e)}
