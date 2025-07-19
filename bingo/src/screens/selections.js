@@ -54,11 +54,10 @@ const Selections = () => {
     setPlayerId(queryParams.get('playerId'));
     setRoomId(queryParams.get('betAmount'));
     socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
-    console.log("selectBoard", selectBoard)
-    console.log("selectBoard2", selectBoard2)
+    console.log("playerId ",queryParams.get('playerId'))
     const fetchBalance = async () => {
       try {
-        const response = await fetch(`https://wowliyubingo.com/api/v1/wallet/player/${playerId}`);
+        const response = await fetch(`https://wowliyubingo.com/api/v1/wallet/player/${queryParams.get('playerId')}`);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
