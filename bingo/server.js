@@ -231,8 +231,6 @@ io.on('connection', (socket) => {
 
   socket.on("joinGame", (data) => {
 
-    
-
 
     const game = activeGames.get(data.roomId);
     if (!data.playerId || !game) return;
@@ -254,8 +252,10 @@ io.on('connection', (socket) => {
     }
 
     game.selectedNumbers.push(data.selectedNumber)
+    game.selectedNumbers.push(data.selectedNumber2)
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
-   
+    console.log("ata.selectedNumber",game.selectedNumbers)
+
  
     if (game.players.size >= 100) {
       socket.emit('joinError', {

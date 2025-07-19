@@ -11,7 +11,9 @@ import checkPlayerBalance from '../api';
 const Selections = () => {
   const {
     selectedNumber,
+    selectedNumber2,
     setSelectedNumber,
+    setSelectedNumber2,
     selectBoard,
     setSelectBoard,
     selectBoard2,
@@ -178,7 +180,7 @@ const Selections = () => {
     }
 
     try {
-      socket.emit('joinGame', { playerId, gameId, selectedNumber, roomId, selectBoard, selectBoard2 })
+      socket.emit('joinGame', { playerId, gameId, selectedNumber,selectedNumber2, roomId, selectBoard, selectBoard2 })
 
       navigate('/play');
     } catch (error) {
@@ -212,7 +214,10 @@ const Selections = () => {
   
     setChoosenNumbers(newNumbers);
     setChooseBoards(newBoards);
-    setSelectedNumber(number);
+    const firstchoosennumber = choosenNumbers[0]
+    const secondchoosennumber = choosenNumbers[1]
+    setSelectedNumber(firstchoosennumber);
+    setSelectedNumber2(secondchoosennumber)
   
     // Use the updated newBoards to set selected boards
     if (newBoards.length >= 2) {
