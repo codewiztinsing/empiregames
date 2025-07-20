@@ -11,6 +11,12 @@ class GameSchema(Schema):
     bet_amount: int
 
 
+class WinGameSchema(Schema):
+    player: int
+    game_id: int
+    win_amount: float
+
+
 class NextGameSchema(Schema):
     bet_amount: int
 
