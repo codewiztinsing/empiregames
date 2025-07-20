@@ -56,8 +56,8 @@ const gameLossWallet = async (players,betAmount,gameId)=>{
   };
   try{
       if(!data.players) return null;
-    console.log("data = ",data)
-      const lossUrl = 'https://api.bilenbingo.com/payments/loss/'
+      const lossUrl = process.env.REACT_APP_API_URL + 'game/bet/'
+      console.log("lossUrl",lossUrl)
       await axios.post(lossUrl,data)
       .then(res=>{
           console.log("gameLossWallet res",res.data)

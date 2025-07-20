@@ -7,11 +7,16 @@ class Game(models.Model):
     ended = models.BooleanField(default=False)
     entry_fee = models.DecimalField(max_digits=10, decimal_places=2)
 
+    def __str__(self):
+        return f"{self.entry_fee}"
+
 class PlayerGame(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    card = models.JSONField()  # stores card numbers
     has_bingo = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.game.entry_fee}"
 
 class Winner(models.Model):
     player = models.ForeignKey(PlayerGame, on_delete=models.CASCADE)
