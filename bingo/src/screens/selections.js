@@ -7,7 +7,7 @@ import './selections.css';
 import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
 import checkPlayerBalance from '../api';
-
+import axios from 'axios';
 const Selections = () => {
   const {
     selectedNumber,
@@ -56,14 +56,20 @@ const Selections = () => {
     socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
     console.log("playerId ",queryParams.get('playerId'))
     const fetchBalance = async () => {
-      try {
-        const response = await fetch(`https://wowliyubingo.com/api/v1/wallet/player/${queryParams.get('playerId')}`);
+      console.log("fetching balance")
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setBalance(data.balance);
+      const apiUrl = process.env.REACT_APP_API_URL;
+      console.log("apiUrl", apiUrl)
+
+      try {
+        const headers = {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json'
+        };
+        const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
+      
+      
+        setBalance(response.data.balance);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching balance:', error);
@@ -257,26 +263,16 @@ const Selections = () => {
             <div className="balance-text">
               Balance: {balance}
             </div>
-            <div className="balance-text">
-              Stake {roomId}
-            </div>
-          </div>
-
-          <div className='backcontainer'>
-            <div className='back-container'>
-              <button className="back-button" onClick={handleBack}>
-                <FontAwesomeIcon icon={faArrowLeft} style={{ marginRight: '8px' }} />
-                Back
-              </button>
-            </div>
             <div className="game-status">
               <div className={`status-badge ${gameStatus}`}>
                 {gameStatus}
               </div>
             </div>
+          
+            <div className="balance-text">
+              Stake {roomId}
+            </div>
           </div>
-
-
 
           <div className="numbers-grid">
 
