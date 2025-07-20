@@ -40,13 +40,13 @@ def win_game(request, data: WinGameSchema):
     return GameSchema(bet_amount=game.entry_fee,game_id=game.id)    
 
 @game_router.get("/next-game/",response=GameSchema)
-def next_game(request,data:NextGameSchema):
-    logger.info(f"Next game: {data}")
-    game = Game.objects.filter(entry_fee=data.bet_amount,started=False).last()
+def next_game(request):
+    logger.info(f"Next game: {request}")
+    bet_amount = request.GET.get("bet_amount")
+    game = Game.objects.filter(entry_fee=bet_amount,ended=False).first()
     logger.info(f"Game: {game}")
     if not game:
-        Game.objects.create(entry_fee=data.bet_amount)
-        game = Game.objects.filter(entry_fee=data.bet_amount).last()
+        game = Game.objects.create(entry_fee=bet_amount)
     logger.info(f"Game: {game}")
   
     return GameSchema(bet_amount=game.entry_fee,game_id=game.id)

@@ -1,16 +1,21 @@
 const axios = require('axios');
+const dotenv = require('dotenv');
+dotenv.config();
 
-const gameWinWallet = async (playerId,amount,gameId)=>{
+const gameWinWallet = async (player,bet_amount,win_amount)=>{
+  const current_game = await getCurrentGame(bet_amount)
+  console.log("current_game = ",current_game)
+  const game_id = current_game.game_id
   const data = {
-      playerId,
-      amount ,
-      gameId
+      player,
+      win_amount ,
+      game_id
   };
-  if(!data.playerId || !data.amount || !data.gameId) return null;
+  if(!data.player || !data.win_amount || !data.game_id) return null;
   
   try{
-      const winUrl = 'https://api.bilenbingo.com/payments/win/'
-      
+    const backUrl = process.env.BACK_URL
+    const winUrl = backUrl + 'game/win-game/'
     
      const res=  await axios.post(winUrl,data)
               .then(res=>{
@@ -27,7 +32,9 @@ const gameWinWallet = async (playerId,amount,gameId)=>{
 
 const checkBalance = async (playerId) => {
   try {
-    const response = await fetch(`${process.env.API_URL}/balance/?user_id=${playerId}`, {
+    const backUrl = process.env.BACK_URL
+    const balanceUrl = backUrl + 'balance/?user_id=' + playerId
+    const response = await fetch(balanceUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -47,16 +54,37 @@ const checkBalance = async (playerId) => {
   }
 };
 
-const gameLossWallet = async (players,betAmount,gameId)=>{
+
+const getCurrentGame = async (betAmount)=>{
+  const backUrl = process.env.BACK_URL
+  const currentGameUrl = backUrl + 'game/next-game'
+  const params = {
+    params: {
+      bet_amount: `${betAmount}`
+    }
+  }
+  const response = await axios.get(currentGameUrl, params)
+  const data = response.data;
+  return data;
+}
+
+
+const gameLossWallet = async (players,betAmount)=>{
+  const current_game = await getCurrentGame(betAmount)
+  console.log("current_game = ",current_game)
+  const game_id = current_game.game_id
+  players = players.map(player => parseInt(player.playerId));
+  console.log("players = ",players)
     
   const data = {
       players: players,
-      betAmount: betAmount,
-      gameId:gameId
+      bet_amount: betAmount,
+      game_id:game_id
   };
   try{
       if(!data.players) return null;
-      const lossUrl = process.env.REACT_APP_API_URL + 'game/bet/'
+      const backUrl = process.env.BACK_URL
+      const lossUrl = backUrl + 'game/join-game/'
       console.log("lossUrl",lossUrl)
       await axios.post(lossUrl,data)
       .then(res=>{

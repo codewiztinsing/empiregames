@@ -8,7 +8,8 @@ const { generateBalls } = require('./src/helpers/ball');
 const { checkBingo, markPlayerCard } = require('./src/helpers/bingo');
 const { gameWinWallet,gameLossWallet } = require('./api');
 const ip = require('ip');
-
+const dotenv = require('dotenv');
+dotenv.config();
 const app = express();
 app.use(cors());
 const server = http.createServer(app);
@@ -147,7 +148,7 @@ async function startGame(game) {
     playerId: playerId
   }));
   try {
-    await gameLossWallet(players, game.roomId, game.id);
+    await gameLossWallet(players, game.roomId);
   } catch (error) {
     console.error('Error charging players:', error);
   }
@@ -323,7 +324,7 @@ io.on('connection', (socket) => {
       });
 
       winners.push({ roomId: game.roomId, winner: data.playerId, time: new Date() });
-      await gameWinWallet(data.playerId,game.roomId * game.players.size * 0.8,game.id);
+      await gameWinWallet(data.playerId,game.roomId,game.roomId * game.players.size * 0.8);
       endGame(game);
     } else {
       io.to(game.roomId).emit("falseBingo", {
@@ -395,7 +396,7 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, './build', 'index.html'));
 });
 
-const PORT = process.env.SERVER_PORT || 5000;
+const PORT = process.env.SERVER_PORT
 const IP = ip.address();
 server.listen(PORT, () => console.log(`Server running on port ${PORT} and IP ${IP}`));
 
