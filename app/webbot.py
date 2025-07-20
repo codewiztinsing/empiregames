@@ -384,6 +384,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             first_name = query.from_user.first_name
             last_name = query.from_user.last_name
             telegram_id = query.from_user.id
+            print("BACK_URL = ",f"{BACK_URL}/api/v1/wallet/player/{telegram_id}")
             response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
             print("response = ",response)
             balance = response.json().get('balance',0)

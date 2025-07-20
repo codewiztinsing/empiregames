@@ -64,10 +64,11 @@ def chapa_callback(request):
 @router.get("/player/{telegram_id}")
 def player_wallet(request,telegram_id:int):
     try:
-        user = User.objects.get(telegram_id=telegram_id)
+        user = User.objects.filter(telegram_id=telegram_id).first()
         print("user = ",user)
-        wallet = Wallet.objects.get(user=user)
-        return 200,{"balance": wallet.balance}
+        wallet = Wallet.objects.filter(user=user).first()
+        print("wallet = ",wallet)
+        return 200,{"balance": wallet.balance if wallet else 0}
     except Exception as e:
         print("error = ",e)
         return 400,{"error": str(e)}
@@ -77,7 +78,7 @@ def player_wallet(request,telegram_id:int):
 @router.put("/player/{telegram_id}/")
 def update_player_wallet(request,telegram_id:int, data: WalletSchema):
     try:
-        user = User.objects.get(telegram_id=telegram_id)
+        user = User.objects.filter(telegram_id=telegram_id).first()
         wallet = Wallet.objects.get(user=user)
         wallet_balance = wallet.balance
         if data.action == "withdraw":
