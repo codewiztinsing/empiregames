@@ -202,33 +202,110 @@ const Selections = () => {
     setJoinError(true);
     return;
   })
+  
 
   const handleNumberClick = (number) => {
-    if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) return;
-  
-    let newNumbers = [...choosenNumbers];
-    let newBoards = [...choosenBoards];
-  
-    if (choosenNumbers.length === 3) {
-      newNumbers.shift();
-      newBoards.shift();
+    // Prevent selecting if already picked in the game
+    if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) {
+      return;
     }
-  
-    newNumbers.push(number);
-    newBoards.push(generateCombination());
-  
+
+    // If number is already chosen, remove it
+    if (choosenNumbers.includes(number)) {
+      const index = choosenNumbers.indexOf(number);
+      if (index > -1) {
+        const newNumbers = [...choosenNumbers];
+        const newBoards = [...choosenBoards];
+        newNumbers.splice(index, 1);
+        newBoards.splice(index, 1);
+        setChoosenNumbers(newNumbers);
+        setChooseBoards(newBoards);
+        
+        // Update the appropriate selected number and board
+        if (index === 0) {
+          setSelectedNumber(null);
+          setSelectBoard([]);
+        } else {
+          setSelectedNumber2(null); 
+          setSelectBoard2([]);
+        }
+      }
+      return;
+    }
+
+    // Only allow selecting up to 2 numbers
+    if (choosenNumbers.length >= 2) {
+      return;
+    }
+
+    // Add new number and generate new board
+    const newNumbers = [...choosenNumbers, number];
+    const newBoard = generateCombination();
+
     setChoosenNumbers(newNumbers);
-    setChooseBoards(newBoards);
-    const firstchoosennumber = choosenNumbers[0]
-    const secondchoosennumber = choosenNumbers[1]
-    setSelectedNumber(firstchoosennumber);
-    setSelectedNumber2(secondchoosennumber)
-  
-    // Use the updated newBoards to set selected boards
-    if (newBoards.length >= 2) {
-      setSelectBoard(newBoards[0]);
-      setSelectBoard2(newBoards[1]);
+    
+    // Set appropriate selected number and board based on position
+    if (newNumbers.length === 1) {
+      setSelectedNumber(number);
+      setSelectBoard(newBoard);
+      setChooseBoards([newBoard]);
+    } else {
+      setSelectedNumber2(number);
+      setSelectBoard2(newBoard);
+      setChooseBoards([...choosenBoards, newBoard]);
     }
+
+    
+    
+    // if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) return;
+
+    // if(choosenNumbers.includes(number)){
+    //   const index = choosenNumbers.indexOf(number);
+    //   if (index > -1) {
+    //     const newNumbers = [...choosenNumbers];
+    //     const newBoards = [...choosenBoards];
+    //     newNumbers.splice(index, 1);
+    //     newBoards.splice(index, 1);
+    //     setChoosenNumbers(newNumbers);
+    //     setChooseBoards(newBoards);
+    //     if (index === 0) {
+    //       setSelectedNumber(newNumbers[0] || null);
+    //       setSelectBoard(newBoards[0] || []);
+    //     } else {
+    //       setSelectedNumber2(null);
+    //       setSelectBoard2([]);
+    //     }
+    //   }
+    //   return;
+    // }
+  
+    // let newNumbers = [...choosenNumbers];
+
+
+    // console.log("newNumbers", newNumbers)
+    // let newBoards = [...choosenBoards];
+    // console.log("newBoards", newBoards)
+  
+    // if (choosenNumbers.length === 2) {
+    //   newNumbers.shift();
+    //   newBoards.shift();
+    // }
+  
+    // newNumbers.push(number);
+    // newBoards.push(generateCombination());
+  
+    // setChoosenNumbers(newNumbers);
+    // setChooseBoards(newBoards);
+    // const firstchoosennumber = choosenNumbers[0]
+    // const secondchoosennumber = choosenNumbers[1]
+    // setSelectedNumber(firstchoosennumber);
+    // setSelectedNumber2(secondchoosennumber)
+  
+    // // Use the updated newBoards to set selected boards
+    // if (newBoards.length >= 2) {
+    //   setSelectBoard(newBoards[0]);
+    //   setSelectBoard2(newBoards[1]);
+    // }
   };
   
   const handleGameStatus = (state) => {
@@ -290,7 +367,7 @@ const Selections = () => {
               return (
                 <button
                   key={number}
-                  className={`number-cell 
+                  className={`number-cell
                   ${isPicked ? 'picked' : ''}
                   ${isSelected ? 'selected' : ''}
                   ${isChoosen ? 'choosen' : ''}
@@ -300,7 +377,7 @@ const Selections = () => {
                   aria-label={isPicked ? `Number ${number} already picked` : `Select number ${number}`}
                 >
                   <span className='number-cell-text'>{number}</span>
-                  {isPicked && <span className="picked-badge">Picked</span>}
+                  {isPicked && <span className="picked-badge"></span>}
                 </button>
               );
             })}
@@ -308,29 +385,36 @@ const Selections = () => {
 
           {selectedNumber && (
             <div className='combination-boards-container-parent'>
+           
             <div className="combination-board-container">
-
+        
               <div className="combination-board">  
                 
+
+              
+             <div className='card-number-container'>
+             <div className='card-number'># Card {selectedNumber}</div>
                 
-              <div className="combination-bingo-header">
-                  <div className="combination-bingo-header-text">
-                    B
-                  </div>
-                  <div className="combination-bingo-header-text">
-                    I
-                  </div>
-                  <div className="combination-bingo-header-text">
-                    N
-                  </div>
-                  <div className="combination-bingo-header-text">
-                    G
-                  </div>
-                  <div className="combination-bingo-header-text">
-                    O
-                  </div>
-                  
+                <div className="combination-bingo-header">
+           
+                    <div className="combination-bingo-header-text">
+                      B
+                    </div>
+                    <div className="combination-bingo-header-text">
+                      I
+                    </div>
+                    <div className="combination-bingo-header-text">
+                      N
+                    </div>
+                    <div className="combination-bingo-header-text">
+                      G
+                    </div>
+                    <div className="combination-bingo-header-text">
+                      O
+                    </div>
+                    
                 </div>
+              </div>
 
                 <div className="board-grid-selections">
                   {selectBoard.map((row, rowIndex) => (
@@ -356,27 +440,33 @@ const Selections = () => {
 
 
               <div className="combination-board">  
-                
+                <div className='card-number-container'>
+                <div className='card-number'># Card {selectedNumber2}</div>
                 
                 <div className="combination-bingo-header">
-                    <div className="combination-bingo-header-text">
-                      B
-                    </div>
-                    <div className="combination-bingo-header-text">
-                      I
-                    </div>
-                    <div className="combination-bingo-header-text">
-                      N
-                    </div>
-                    <div className="combination-bingo-header-text">
-                      G
-                    </div>
-                    <div className="combination-bingo-header-text">
-                      O
-                    </div>
-                    
-                  </div>
-  
+              
+              <div className="combination-bingo-header-text">
+                B
+              </div>
+              <div className="combination-bingo-header-text">
+                I
+              </div>
+              <div className="combination-bingo-header-text">
+                N
+              </div>
+              <div className="combination-bingo-header-text">
+                G
+              </div>
+              <div className="combination-bingo-header-text">
+                O
+              </div>
+              
+            </div>
+
+                </div>
+                
+                
+              
                   <div className="board-grid-selections">
                     {selectBoard2.map((row, rowIndex) => (
                       

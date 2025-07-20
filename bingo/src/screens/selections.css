@@ -105,7 +105,7 @@ body, #root {
 .number-cell {
   width: 35px;
   height: 25px;
-
+  font-weight: 900;
   border: 1px solid #383559;
   text-align: center;
   cursor: pointer;
@@ -168,7 +168,7 @@ body, #root {
   font-size: 0.8em;
 }
 .number-cell-text{
-  color:rgb(49, 47, 47);
+  color:white;
  
 }
 
@@ -230,19 +230,21 @@ body, #root {
 
 /* Add these to your existing CSS */
 .number-cell.picked {
-  background-color: #ffcccc;
+  background-color: #df1212;
+  width: 30px;
+  height: 20px;
   color: #999;
   position: relative;
 }
 
 .picked-badge {
   position: absolute;
+  font-size: 0.4em;
   bottom: 2px;
   right: 2px;
-  font-size: 0.6em;
   background: #ff0000;
   color: white;
-  padding: 1px 3px;
+  padding: 2px 3px;
   border-radius: 3px;
 }
 
@@ -266,7 +268,25 @@ body, #root {
 
 
 .choosen{
-  background-color: #0000ff;
+  background-color: #377424;
+  width: 30px;
+  height: 20px;
+  color: white;
+  font-weight: 900; 
+  font-size: 0.8em;
+}
+
+.card-number-container{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-number{
+  color: white;
+  font-weight: 900; 
+  font-size: 0.8em;
+  margin-bottom: 10px;
 }
 
 
