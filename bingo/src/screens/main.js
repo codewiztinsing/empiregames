@@ -11,7 +11,7 @@ import BingoWinner from '../components/BingoWinner';
 
 
 const PlayingBoard = () => {
-  const { selectedNumber, selectBoard,selectBoard2, playersLength, countDown, roomId, playerId, gameId, setGameId, setToast, setIsToast } = useContext(BingoContext);
+  const { selectedNumber,selectedNumber2, selectBoard,selectBoard2, playersLength, countDown, roomId, playerId, gameId, setGameId, setToast, setIsToast } = useContext(BingoContext);
 
   const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
@@ -176,7 +176,8 @@ const PlayingBoard = () => {
     socket.emit("leave", {
       playerId,
       roomId,
-      selectedNumber
+      selectedNumber,
+      selectedNumber2
 
     })
     navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
@@ -372,6 +373,10 @@ const PlayingBoard = () => {
 
           <div className='boards-container'>
           <div className="bingo-header">
+            <div className='selected-number'>
+              <p className='selected-number-label'>#Card</p>
+              <p className='selected-number-value'>{selectedNumber}</p>
+            </div>
             <div className="bingo-letters">
               <span className='bingo-letter-text'>B</span>
               <span className='bingo-letter-text'>I</span>
@@ -402,10 +407,7 @@ const PlayingBoard = () => {
               </div>
             ))}
 
-            {/* <div className='selected-number'>
-              <p className='selected-number-label'>Board Number</p>
-              <p className='selected-number-value'>{selectedNumber}</p>
-            </div> */}
+          
 
           </div>
 
@@ -416,6 +418,10 @@ const PlayingBoard = () => {
          
 
           <div className="bingo-header">
+            <div className='selected-number'>
+              <p className='selected-number-label'>#Card</p>
+              <p className='selected-number-value'>{selectedNumber2}</p>
+            </div>
             <div className="bingo-letters">
               <span className='bingo-letter-text'>B</span>
               <span className='bingo-letter-text'>I</span>
@@ -446,10 +452,7 @@ const PlayingBoard = () => {
               </div>
             ))}
 
-            {/* <div className='selected-number'>
-              <p className='selected-number-label'>Board Number</p>
-              <p className='selected-number-value'>{selectedNumber}</p>
-            </div> */}
+          
 
           </div>
 

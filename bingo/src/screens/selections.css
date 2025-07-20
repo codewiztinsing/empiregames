@@ -172,16 +172,6 @@ body, #root {
  
 }
 
-.number-cell:hover {
-  background: #f0f0f0;
-}
-
-.number-cell.selected {
-  background: #e0e0ff;
-  border-color: #0000ff;
-}
-
-
 
 .board-grid {
   display: inline-block;
@@ -271,10 +261,11 @@ body, #root {
   background-color: #377424;
   width: 30px;
   height: 20px;
-  color: white;
+  /* color: white; */
   font-weight: 900; 
   font-size: 0.8em;
 }
+
 
 .card-number-container{
   display: flex;

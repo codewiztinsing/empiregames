@@ -255,57 +255,7 @@ const Selections = () => {
       setChooseBoards([...choosenBoards, newBoard]);
     }
 
-    
-    
-    // if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) return;
-
-    // if(choosenNumbers.includes(number)){
-    //   const index = choosenNumbers.indexOf(number);
-    //   if (index > -1) {
-    //     const newNumbers = [...choosenNumbers];
-    //     const newBoards = [...choosenBoards];
-    //     newNumbers.splice(index, 1);
-    //     newBoards.splice(index, 1);
-    //     setChoosenNumbers(newNumbers);
-    //     setChooseBoards(newBoards);
-    //     if (index === 0) {
-    //       setSelectedNumber(newNumbers[0] || null);
-    //       setSelectBoard(newBoards[0] || []);
-    //     } else {
-    //       setSelectedNumber2(null);
-    //       setSelectBoard2([]);
-    //     }
-    //   }
-    //   return;
-    // }
   
-    // let newNumbers = [...choosenNumbers];
-
-
-    // console.log("newNumbers", newNumbers)
-    // let newBoards = [...choosenBoards];
-    // console.log("newBoards", newBoards)
-  
-    // if (choosenNumbers.length === 2) {
-    //   newNumbers.shift();
-    //   newBoards.shift();
-    // }
-  
-    // newNumbers.push(number);
-    // newBoards.push(generateCombination());
-  
-    // setChoosenNumbers(newNumbers);
-    // setChooseBoards(newBoards);
-    // const firstchoosennumber = choosenNumbers[0]
-    // const secondchoosennumber = choosenNumbers[1]
-    // setSelectedNumber(firstchoosennumber);
-    // setSelectedNumber2(secondchoosennumber)
-  
-    // // Use the updated newBoards to set selected boards
-    // if (newBoards.length >= 2) {
-    //   setSelectBoard(newBoards[0]);
-    //   setSelectBoard2(newBoards[1]);
-    // }
   };
   
   const handleGameStatus = (state) => {

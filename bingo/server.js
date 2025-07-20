@@ -112,7 +112,7 @@ function startCountDown(game) {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers,
-      total_players: game.players.size,
+      total_players: game.selectedNumbers.length,
       game_status: game.status,
       count_down: game.countDown
     });
@@ -167,7 +167,7 @@ async function startGame(game) {
     io.to(game.roomId).emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
-      total_players: game.players.size,
+      total_players: game.selectedNumbers.length,
       pickedNumbers: game.selectedNumbers,
       game_status: game.status,
       count_down: game.countDown,
@@ -198,7 +198,7 @@ function handleRefresh(data){
   io.to(game.roomId).emit("gameState", {
     gameId: game.id,
     roomId: game.roomId,
-    total_players: game.players.size,
+    total_players: game.selectedNumbers.length,
     pickedNumbers: game.selectedNumbers,
     game_status: game.status,
     count_down: game.countDown,
@@ -267,18 +267,22 @@ io.on('connection', (socket) => {
 
     socket.join(data.roomId);
     game.players.set(data.playerId, data.selectBoard);
+    game.players.set(data.playerId, data.selectBoard2);
     
-
+    
+  
     const playersList = [...game.players.keys()];
     io.to(game.roomId).emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers,
-      total_players: game.players.size,
+      total_players: game.selectedNumbers.length,
       game_status: game.status,
       count_down: game.countDown,
       players: playersList
     });
+
+    console.log("selected numbers size ",game.selectedNumbers.size)
 
     if (!game.isCountStart && game.players.size >= 2) {
       startCountDown(game);
@@ -351,9 +355,13 @@ io.on('connection', (socket) => {
   
     
     const selectedCard = data.selectedNumber
+    const selectedCard2 = data.selectedNumber2
     if (!game) return;
     if (selectedCard && game.selectedNumbers.includes(selectedCard)) {
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedCard);
+    }
+    if (selectedCard2 && game.selectedNumbers.includes(selectedCard2)) {
+      game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedCard2);
     }
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
@@ -379,7 +387,7 @@ io.on('connection', (socket) => {
             gameId: game.id,
             roomId: game.roomId,
             pickedNumbers: game.selectedNumbers,
-            total_players: game.players.size,
+            total_players: game.selectedNumbers.length,
             game_status: game.status,
             count_down: game.countDown
           });
