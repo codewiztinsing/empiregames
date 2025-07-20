@@ -31,9 +31,9 @@ def charge_player(players, entry_fee, game_id):
     charged_players = []
     for player in players:
         player = get_object_or_404(User,telegram_id=player)
-        logger.info("Player ",player)
+        logger.info("Player ",player.id)
         wallet = get_object_or_404(Wallet,user = player)
-        existing_transaction = Transaction.objects.filter(reference=game_id,type="BET").first()
+        existing_transaction = Transaction.objects.filter(reference=game_id,type="BET",user = player).first()
         if existing_transaction:
             logger.info("Transaction already exists")
             continue
@@ -57,7 +57,7 @@ def update_player_balance(player_id,win_amount,game_id):
     logger.info("Wallet ",wallet)
     game = get_object_or_404(Game,id=game_id)
     logger.info("Game ",game)
-    existing_transaction = Transaction.objects.filter(reference=game_id,type="WIN").first()
+    existing_transaction = Transaction.objects.filter(reference=game_id,type="WIN",user = player).first()
     if existing_transaction:
         logger.info("Transaction already exists")
         return False,wallet.balance
