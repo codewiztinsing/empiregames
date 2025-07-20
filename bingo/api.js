@@ -98,11 +98,29 @@ const gameLossWallet = async (players,betAmount)=>{
 
 
 
+const updateLastGame = async (roomId)=>{
+  const backUrl = process.env.BACK_URL
+  const updateLastGameUrl = backUrl + 'game/update-last-game/'
+  const params = {
+    params: {
+      bet_amount: `${roomId}`
+    }
+  }
+  const response = await axios.get(updateLastGameUrl, params)
+  const data = response.data;
+  return data;  
+}
+
+
+
+
+
   
   
   module.exports = {
     gameWinWallet,
     checkBalance,
-    gameLossWallet
+    gameLossWallet,
+    updateLastGame
   };
   

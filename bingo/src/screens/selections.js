@@ -94,7 +94,23 @@ const Selections = () => {
     const gameRoom = state.roomId
     if (roomId == gameRoom) {
       setPickedNumbers(state.pickedNumbers.numbers);
-      setPlayersLength(state.total_players);
+
+      if(state.game_status == "in-progress"){
+        setGameStatus("in-progress");
+      }
+      if(state.game_status == "waiting"){
+        setGameStatus("waiting");
+      }
+      if(state.game_status == "ended"){
+        setGameStatus("ended");
+      }
+
+      if(state.game_status != "in-progress"){
+        setPlayersLength(state.total_players);
+
+      }
+
+
       setCountDown(state.count_down);
     }
 
@@ -116,7 +132,13 @@ const Selections = () => {
   socket.on('gameState', (state) => {
     if (state.roomId == roomId) {
       setPickedNumbers(state.pickedNumbers.numbers);
-      setPlayersLength(state.total_players);
+
+      if(state.game_status != "in-progress"){
+              setPlayersLength(state.total_players);
+
+      }
+      
+      
       setCountDown(state.count_down);
     }
   });

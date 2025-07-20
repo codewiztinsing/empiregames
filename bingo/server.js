@@ -6,7 +6,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const { generateBalls } = require('./src/helpers/ball');
 const { checkBingo, markPlayerCard } = require('./src/helpers/bingo');
-const { gameWinWallet,gameLossWallet } = require('./api');
+const { gameWinWallet,gameLossWallet,updateLastGame } = require('./api');
 const ip = require('ip');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -59,7 +59,7 @@ function clearGameIntervals(gameId) {
   }
 }
 
-function endGame(game) {
+async  function endGame(game) {
   io.emit("waitingGames",   getWaitingGames(activeGames));
   clearGameIntervals(game.id);
   game.players.clear();
@@ -75,11 +75,10 @@ function endGame(game) {
     if (user.gameId === game.id) users.delete(socketId);
   }
 
-  io.to(game.roomId).emit("gameReset", {
-    message: "Game ended. Preparing for next round.",
-    gameId: game.id,
-    roomId: game.roomId
-  });
+  const data = await updateLastGame(game.roomId);
+  console.log("updateLastGame data",data)
+
+ 
   startCountDown(game);
 }
 
@@ -186,6 +185,7 @@ async function startGame(game) {
       endGame(game);
     }
   }, 3000);
+  console.log("game ",game)
 
   gameIntervals.set(game.id, [gameInterval]);
 }

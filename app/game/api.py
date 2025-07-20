@@ -50,4 +50,18 @@ def next_game(request):
     logger.info(f"Game: {game}")
   
     return GameSchema(bet_amount=game.entry_fee,game_id=game.id)
+
+
+
+@game_router.get("/update-last-game/",response=GameSchema)
+def update_last_game(request):
+    bet_amount = request.GET.get("bet_amount")
+    game = Game.objects.filter(entry_fee=bet_amount).last()
+    logger.info(f"Game: {game.id}")
+   
+    game.ended = True
+    game.started = False
+    game.save()
+  
+    return GameSchema(bet_amount=game.entry_fee,game_id=game.id)
    
