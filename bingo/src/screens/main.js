@@ -11,7 +11,7 @@ import BingoWinner from '../components/BingoWinner';
 
 
 const PlayingBoard = () => {
-  const { selectedNumber,selectedNumber2, selectBoard,selectBoard2, playersLength, countDown, roomId, playerId, gameId, setGameId, setToast, setIsToast } = useContext(BingoContext);
+  const { selectedNumber,selectedNumber2, selectBoard,selectBoard2, playersLength, countDown,setCountDown, roomId, playerId, gameId, setGameId, setToast, setIsToast } = useContext(BingoContext);
 
   const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
@@ -40,35 +40,12 @@ const PlayingBoard = () => {
       const element = document.getElementById(`${lastBall.letter}${lastBall.number}`);
       const recentBall = `${lastBall.letter}${lastBall.number}`
       setRecentCalledNumbers(prev => [...prev,recentBall])
-      if (recentCalledNumbers.length > 5) {
+      if (recentCalledNumbers.length > 3) {
         setRecentCalledNumbers(prev => prev.slice(1));
       }
+      element.classList.add("last-called")
     
-      if (element) {
-        let color;
-        switch(lastBall.letter) {
-          case 'B':
-            color = 'orange'; // Blue
-            break;
-          case 'I':
-            color = 'green'; // Red
-            break;
-          case 'N':
-            color = 'blue'; // Green
-            break;
-          case 'G':
-            color = 'red'; // Yellow
-            break;
-          case 'O':
-            color = 'purple'; // Purple
-            break;
-          default:
-            color = 'gray'; // Gray
-        }
-        element.style.backgroundColor = color;
-        element.style.color = 'white';
-        // element.classList.add('called');
-      }
+      
     }
 
 
@@ -95,12 +72,13 @@ const PlayingBoard = () => {
   };
 
   function handleGameState(data) {
+    console.log(data);
  
 
     if (data.lastBall && data.lastBall.length > 0 && data.roomId == roomId) {
       setLastBall(data.lastBall[data.lastBall.length - 1]);   
       setRecentCalledNumbers(prev => [...prev, data.lastBall[data.lastBall.length - 1]]);
-      if (recentCalledNumbers.length > 5) {
+      if (recentCalledNumbers.length > 3) {
         setRecentCalledNumbers(prev => prev.slice(1));
       }
     }
@@ -111,6 +89,11 @@ const PlayingBoard = () => {
     if (data.total_called_numbers) {
       setTotalCalledNumbers(data.total_called_numbers)
     }
+    if (data.count_down) {
+      setCountDown(data.count_down)
+    }
+
+    
     setGameId(data.gameId)
   }
 
@@ -269,7 +252,7 @@ const PlayingBoard = () => {
         }}>
           
           <div className="column">
-            <div className="column-header" style={{backgroundColor: "orange",color:"white",width:"25px",height:"30px",borderRadius:"50%",display:"flex",justifyContent:"center",alignItems:"center"}}>B</div>
+            <div className="column-header called-number-col">B</div>
             {Array.from({ length: 15 }, (_, i) => (
               <div key={i} className={`number ${calledNumbers?.includes(i + 1) ? 'called' : ''}`}
                 id={`B${i + 1}`}
@@ -280,7 +263,7 @@ const PlayingBoard = () => {
             ))}
           </div>
           <div className="column">
-            <div className="column-header" style={{backgroundColor: "green",color:"white",width:"25px",height:"30px",borderRadius:"50%",display:"flex",justifyContent:"center",alignItems:"center"}}>I</div>
+            <div className="column-header called-number-col">I</div>
             {Array.from({ length: 15 }, (_, i) => (
               <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'called' : ''}`}
                 id={`I${i + 16}`}
@@ -291,7 +274,7 @@ const PlayingBoard = () => {
             ))}
           </div>
           <div className="column">
-            <div className="column-header" style={{backgroundColor: "blue",color:"white",width:"25px",height:"30px",borderRadius:"50%",display:"flex",justifyContent:"center",alignItems:"center"}}>N</div>
+            <div className="column-header called-number-col">N</div>
             {Array.from({ length: 15 }, (_, i) => (
               <div key={i} className={`number ${calledNumbers?.includes(i + 31) ? 'called' : ''}`}
                 id={`N${i + 31}`}
@@ -302,7 +285,7 @@ const PlayingBoard = () => {
             ))}
           </div>
           <div className="column">
-            <div className="column-header" style={{backgroundColor: "red",color:"white",width:"25px",height:"30px",borderRadius:"50%",display:"flex",justifyContent:"center",alignItems:"center"}}>G</div>
+            <div className="column-header called-number-col">G</div>
             {Array.from({ length: 15 }, (_, i) => (
               <div key={i}
                 className={`number ${calledNumbers?.includes(i + 46) ? 'called' : ''}`}
@@ -313,7 +296,7 @@ const PlayingBoard = () => {
             ))}
           </div>
           <div className="column">
-            <div className="column-header" style={{backgroundColor: "purple",color:"white",width:"25px",height:"30px",borderRadius:"50%",display:"flex",justifyContent:"center",alignItems:"center"}} >O</div>
+            <div className="column-header called-number-col">O</div>
             {Array.from({ length: 15 }, (_, i) => (
               <div key={i} className={`number ${calledNumbers?.includes(i + 61) ? 'called' : ''}`}
                 id={`O${i + 61}`}
@@ -353,16 +336,7 @@ const PlayingBoard = () => {
                 </div>
               ) : (
                 <div className="waiting-state">
-                  {countDown > 0 ? (
-                    <div className='waiting-container'>
-
-                      <p className='game-starting'>Game starting</p>
-                      <div className='game-starting-container'>{countDown}</div>
-
-                    </div>
-                  ) : (
-                    <p className='game-starting'>Game to start...</p>
-                  )}
+               
                 </div>
               )}
             </div>
@@ -370,15 +344,32 @@ const PlayingBoard = () => {
 
           
 
-    
-          <div className="recent-called-numbers">
-            <div className="recent-called-numbers-grid">
-              {recentCalledNumbers.map((number, index) => (
-                <div key={index} className="recent-called-number">{number}</div>
-              ))}
+          <div className="recent-called-numbers-container">
+              {countDown > 0  && countDown != 29 ? (
+                // Show countdown when greater than 0
+                <div className='game-starting-container'>
+                  <p className='game-starting'>00</p>
+                  <p className='game-starting'>:</p>
+                  <p className='game-countdown'>{countDown}</p>
+                </div>
+              ) : countDown === 0 ? (
+                <div className="recent-called-numbers">
+                  <div className="recent-called-numbers-grid">
+                    {recentCalledNumbers.map((number, index) => (
+                      <div key={index} className="recent-called-number">{number}</div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="recent-called-numbers">
+                  <div className="recent-called-numbers-grid">
+                    {recentCalledNumbers.map((number, index) => (
+                      <div key={index} className="recent-called-number">{number}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-
 
           <div className='boards-container'>
           <div className="bingo-header">

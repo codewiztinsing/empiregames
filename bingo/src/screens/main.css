@@ -28,22 +28,36 @@
 }
 
 .game-starting-container {
-
+  width: 80px;
+  height: 30px;
+  background: linear-gradient(135deg, #5d637c, #1a3ba3);
+  display: flex;
+  justify-content: space-around;
   align-items: center;
-  align-self: center;
+  margin-left: -90px;
+
+}
+
+.game-countdown {
   color:white;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.game-starting-text {
+  color:white;
+  font-size: 10px;
+  font-weight: bold;
 }
 
 
 
 
+
+
 .recent-called-numbers{
+  min-width: 180px;
   background-color: #440c5e;
-  padding: 5px;
-  border-radius: 15px;
-  margin-top: 10px;
-  margin-left: 10px;
-  margin-right: 10px;
  
 }
 
@@ -52,21 +66,18 @@
   display: flex;
   flex-direction: row;
   gap: 5px;
-  justify-content: space-between;
+  justify-content: space-around;
   
 }
 
 .recent-called-number{
   background-color: #626e63;
-  color: white;
-  padding: 4px;
-  
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
 }
 
 
@@ -114,22 +125,43 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-around;
-  width: 70px;
+  width: 50px;
   height: 30px;
-  background-color: rebeccapurple;
   border-radius: 10px;
   padding: 5px;
   margin: 5px;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
   color: white;
 
 }
 
-.stat-item span:first-child {
-  font-weight: bold;
-  color: #333;
-}
+  .stat-item:first-child {
+    background-color: #2ba7f7;
+  }
+
+  .stat-item:nth-child(2) {
+    background-color: #2bd587;
+  }
+
+  .stat-item:nth-child(3) {
+    background-color: #f7a2bc;
+  }
+
+ 
+
+  .stat-item:nth-child(3) {
+    background-color:  #efefef;
+  }
+
+
+  .stat-item:nth-child(4) {
+    background-color:  #5c4be7;
+  }
+
+  /* # */
+
+
 
 .ball-display {
   width: 100%;
@@ -191,7 +223,7 @@
 }
 
 .playing-section {
-  margin-left: -20px;
+  /* margin-left: -20px; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -217,8 +249,9 @@
   flex-direction: column;
   align-items: center;
   gap: 5px;
-  box-shadow: 0 6px 8px rgba(190, 1, 1, 0.2);
-  transition: transform 0.2s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  border-radius: 10px;
+ 
 }
 
 .column-header {
@@ -240,7 +273,8 @@
   background-color:#41414b;
   font-size: 0.8rem;
   font-weight: 600;
-  color:white
+  color:white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .number.called {
@@ -310,13 +344,14 @@
 
 
 .bingo-letters {
+  margin-left: 10px;
   display: flex;
   justify-content: space-around;
 }
 
 
 .current-call {
-  background-color: #1d2f45;
+  background-color: #246483;
 
   width: 150px;
   height: 60px;
@@ -329,8 +364,8 @@
 }
 
 .outer-circle {
-  width: 80px;
-  height: 80px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -367,13 +402,48 @@
 }
 
 .bingo-board {
-  margin-left: -6px;
+  /* margin-left: -6px; */
   padding: 3px;
   border-radius: 2px;
   border: 2px solid #ccc;
 
 }
 
+.called-number-col {
+  background-color: orange;
+  color: white;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 2px;
+}
+
+.last-called {
+  animation: blink 5s;
+}
+
+@keyframes blink {
+  0% {
+    box-shadow: 0 0 5px #fff,
+                0 0 10px #fff,
+                0 0 15px #fff;
+    color: white;
+  }
+  50% {
+    box-shadow: 0 0 20px #fff,
+                0 0 35px #fff,
+                0 0 50px #fff;
+    color: #fff;
+  }
+  100% {
+    box-shadow: 0 0 5px #fff,
+                0 0 10px #fff,
+                0 0 15px #fff;
+    color: white;
+  }
+}
 .board-row {
   display: flex;
   gap: 2px;
