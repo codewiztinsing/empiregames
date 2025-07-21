@@ -74,9 +74,7 @@ const gameLossWallet = async (players,betAmount)=>{
   console.log("players = ",players)
   console.log("current_game = ",current_game)
   const game_id = current_game.game_id
-  players = players.map(player => parseInt(player.playerId));
-  
-    
+ 
   const data = {
       players: players,
       bet_amount: betAmount,
