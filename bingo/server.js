@@ -35,6 +35,7 @@ function createGame(roomId) {
   const game = {
     id: roomId,
     players: new Map(), // Map<playerId, Board[]>
+    numberOfBoardsToPlayer: new Map(),
     total_players: 0,
     total_winAmount: 0, 
     calledNumbers: [],
@@ -146,7 +147,8 @@ async function startGame(game) {
   })
 
   const players = Array.from(game.players.keys()).map(playerId => ({
-    playerId: playerId
+    playerId: playerId,
+    numberOfBoards: game.numberOfBoardsToPlayer.get(playerId)
   }));
 
   game.total_players = game.selectedNumbers.length
@@ -260,6 +262,7 @@ io.on('connection', (socket) => {
 
     game.selectedNumbers.push(data.selectedNumber)
     game.selectedNumbers.push(data.selectedNumber2)
+    game.numberOfBoardsToPlayer.set(data.playerId,data.numberOfBoards)
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
     if (game.players.size >= 100) {
       socket.emit('joinError', {
@@ -269,20 +272,21 @@ io.on('connection', (socket) => {
     }
 
     socket.join(data.roomId);
-    // game.players.set(data.playerId, data.selectBoard);
-    // game.players.set(data.playerId, data.selectBoard2);
-    game.players.set(data.playerId, [data.selectBoard, data.selectBoard2]);
-   
-    console.log("game.players",game)
-    
-    
+
+    const boards = [data.selectBoard];
+    if (data.selectBoard2) {
+      boards.push(data.selectBoard2);
+    }
+    game.players.set(data.playerId, boards);
+
+  
   
     const playersList = [...game.players.keys()];
     io.to(game.roomId).emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers,
-      total_players: game.selectedNumbers.length,
+      total_players: game.total_players,
       game_status: game.status,
       count_down: game.countDown,
       players: playersList

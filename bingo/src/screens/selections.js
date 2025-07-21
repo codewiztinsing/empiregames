@@ -57,7 +57,7 @@ const Selections = () => {
     setRoomId(queryParams.get('betAmount'));
     setPlayerName(queryParams.get('playerName'));
     socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
-    console.log("playerId ",queryParams.get('playerId'))
+  
     const fetchBalance = async () => {
       console.log("fetching balance")
 
@@ -110,10 +110,7 @@ const Selections = () => {
 
       if(state.game_status != "in-progress"){
         setPlayersLength(state.total_players);
-
       }
-
-
       setCountDown(state.count_down);
     }
 
@@ -210,7 +207,7 @@ const Selections = () => {
     }
 
     try {
-      socket.emit('joinGame', { playerId, gameId, selectedNumber,selectedNumber2, roomId, selectBoard, selectBoard2 })
+      socket.emit('joinGame', { playerId, gameId, selectedNumber,selectedNumber2, roomId, selectBoard, selectBoard2, numberOfBoards: choosenBoards.length })
 
       navigate('/play');
     } catch (error) {
@@ -230,7 +227,6 @@ const Selections = () => {
   
 
   const handleNumberClick = (number) => {
-    // Prevent selecting if already picked in the game
     if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) {
       return;
     }

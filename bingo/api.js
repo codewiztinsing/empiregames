@@ -71,10 +71,11 @@ const getCurrentGame = async (betAmount)=>{
 
 const gameLossWallet = async (players,betAmount)=>{
   const current_game = await getCurrentGame(betAmount)
+  console.log("players = ",players)
   console.log("current_game = ",current_game)
   const game_id = current_game.game_id
   players = players.map(player => parseInt(player.playerId));
-  console.log("players = ",players)
+  
     
   const data = {
       players: players,
