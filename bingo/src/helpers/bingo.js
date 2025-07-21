@@ -64,10 +64,13 @@ function turnCalledNumbersToCard(calledNumbers){
     return card;
 }
 
-function checkBingo(playerCard,calledNumbers){
+function checkBingo(playerCards,calledNumbers){
     let isBingo = false;
-    const markedCard = markPlayerCard(playerCard,calledNumbers);
-    // Check rows for bingo
+
+    for(let i = 0; i < playerCards.length; i++){
+        const playerCard = playerCards[i];
+        const markedCard = markPlayerCard(playerCard,calledNumbers);
+        // Check rows for bingo
     for (let row = 0; row < 5; row++) {
         if (markedCard[row].every(cell => cell.marked)) {
             isBingo = true;
@@ -112,6 +115,8 @@ function checkBingo(playerCard,calledNumbers){
         return isBingo;
     }
    
+    return isBingo;
+    }
     return isBingo;
 }
     

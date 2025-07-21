@@ -321,44 +321,55 @@ io.on('connection', (socket) => {
   socket.on("bingo", async (data) => {
     const game = activeGames.get(data.gameId);
     if (!game || game.status !== 'in-progress') return;
-    const playerCard = game.players.get(data.playerId);
-    if (!playerCard) return;
+    const playerCards = game.players.get(data.playerId);
+    console.log("playerCards",playerCards)
+    if (!playerCards) return;
 
-    const isBingo = checkBingo(playerCard, game.calledNumbers);
+    const isBingo = checkBingo(playerCards, game.calledNumbers);
     if (isBingo) {
       game.status = 'waiting';
       game.winner = data.playerId;
       game.gameOver = true;
 
-      io.to(game.roomId).emit("winBingo", {
-        isBingo: true,
-        playerId: data.playerId,
-        markedCells: markPlayerCard(playerCard, game.calledNumbers),
-        winningCard: markPlayerCard(playerCard, game.calledNumbers),
-        winner: data.playerId,
-        calledNumbers: game.calledNumbers,
-        playerCard,
-        currentCall: game.currentCall,
-        gameId: data.gameId,
-        total_winAmount: game.total_winAmount,
-        total_players: game.total_players,
-        roomId: data.roomId
-      });
+      for(let i = 0; i < playerCards.length; i++){
+        io.to(game.roomId).emit("winBingo", {
+          isBingo: true,
+          playerId: data.playerId,
+          markedCells: markPlayerCard(playerCards[i], game.calledNumbers),
+          winningCard: markPlayerCard(playerCards[i], game.calledNumbers),
+          winner: data.playerId,
+          calledNumbers: game.calledNumbers,
+          playerCard: playerCards[i],
+          currentCall: game.currentCall,
+          gameId: data.gameId,
+          total_winAmount: game.total_winAmount,
+          total_players: game.total_players,
+          roomId: data.roomId
+        });
+  
+      }
 
+     
       winners.push({ roomId: game.roomId, winner: data.playerId, time: new Date() });
       await gameWinWallet(data.playerId,game.roomId,game.total_winAmount);
       endGame(game);
     } else {
-      io.to(game.roomId).emit("falseBingo", {
-        isBingo: false,
-        playerId: data.playerId,
-        markedCells: markPlayerCard(playerCard, game.calledNumbers),
-        calledNumbers: game.calledNumbers,
-        playerCard,
-        currentCall: game.currentCall,
-        gameId: data.gameId,
-        roomId: data.roomId
-      });
+      for(let i = 0; i < playerCards.length; i++){
+        io.to(game.roomId).emit("falseBingo", {
+          isBingo: false,
+          playerId: data.playerId,
+          markedCells: markPlayerCard(playerCard, game.calledNumbers),
+          calledNumbers: game.calledNumbers,
+          playerCard: playerCards[i],
+          currentCall: game.currentCall,
+          gameId: data.gameId,
+          total_winAmount: game.total_winAmount,
+          total_players: game.total_players,
+          roomId: data.roomId
+        });
+      } 
+    
+    
     }
   });
 
