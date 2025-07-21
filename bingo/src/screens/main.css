@@ -316,15 +316,16 @@
 
 
 .current-call {
-  
-  background: linear-gradient(90deg, #5f5d5d, #457e7a);
-  width: 200px;
-  height: 80px;
+  background-color: #1d2f45;
+
+  width: 150px;
+  height: 60px;
   border-radius: 10px;
   object-fit: contain;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .outer-circle {
