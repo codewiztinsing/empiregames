@@ -358,7 +358,7 @@ io.on('connection', (socket) => {
         io.to(game.roomId).emit("falseBingo", {
           isBingo: false,
           playerId: data.playerId,
-          markedCells: markPlayerCard(playerCard, game.calledNumbers),
+          markedCells: markPlayerCard(playerCards[i], game.calledNumbers),
           calledNumbers: game.calledNumbers,
           playerCard: playerCards[i],
           currentCall: game.currentCall,
