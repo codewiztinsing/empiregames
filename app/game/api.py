@@ -19,10 +19,15 @@ game_router = Router()
 def join_game(request, data: BetSchema):
     logger.info(f"Join game: {data}")
     game = get_object_or_404(Game,id=data.game_id)
+    
     players = data.players
-    logger.info(f"Game: {game}")
-    logger.info(f"Players: {players}")
-    charge_player.delay(players,game.entry_fee,game.id)
+    players_dict = {}
+    for player in players:
+        players_dict[player.playerId] = player.numberOfBoards
+    
+    logger.info(f"Players dict: {players_dict}")
+    
+    charge_player.delay(players_dict,game.entry_fee,game.id)
     return GameSchema(bet_amount=game.entry_fee,game_id=game.id)    
     
    

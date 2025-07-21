@@ -114,7 +114,7 @@ function startCountDown(game) {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers,
-      total_players: game.selectedNumbers.length,
+      total_players: game.total_players,
       game_status: game.status,
       count_down: game.countDown
     });
@@ -151,8 +151,8 @@ async function startGame(game) {
     numberOfBoards: game.numberOfBoardsToPlayer.get(playerId)
   }));
 
-  game.total_players = game.selectedNumbers.length
-  game.total_winAmount = game.selectedNumbers.length * game.roomId * 0.8
+  game.total_players = game.total_players
+  game.total_winAmount = game.total_players * 0.8
 
 
 
@@ -207,11 +207,11 @@ function handleRefresh(data){
   io.to(game.roomId).emit("gameState", {
     gameId: game.id,
     roomId: game.roomId,
-    total_players: game.selectedNumbers.length,
+    total_players: game.total_players,
     pickedNumbers: game.selectedNumbers,
     game_status: game.status,
     count_down: game.countDown,
-    win_amount: game.roomId * game.players.size * 0.8,
+    win_amount: game.total_winAmount,
     lastBall: game.currentCall,
     called_numbers: game.calledNumbers,
     total_called_numbers: game.calledNumbers.length
@@ -271,6 +271,12 @@ io.on('connection', (socket) => {
       return;
     }
 
+    const total_players = game.selectedNumbers.filter(num => num !== null).length
+    const win_amount = total_players * game.roomId * 0.8
+    game.total_winAmount = win_amount
+    game.total_players = total_players
+
+
     socket.join(data.roomId);
 
     const boards = [data.selectBoard];
@@ -307,7 +313,7 @@ io.on('connection', (socket) => {
 
     const waitingGames = getWaitingGames(activeGames,"waiting");
     io.emit("waitingGames",waitingGames)
-
+   
 
   });
   
@@ -399,7 +405,7 @@ io.on('connection', (socket) => {
             gameId: game.id,
             roomId: game.roomId,
             pickedNumbers: game.selectedNumbers,
-            total_players: game.selectedNumbers.length,
+            total_players: game.total_players,
             game_status: game.status,
             count_down: game.countDown
           });

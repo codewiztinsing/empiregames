@@ -22,7 +22,7 @@ const PlayingBoard = () => {
   const [selectedCell, setSelectedCell] = useState(new Set());
   const [isBingo, setIsBingo] = useState(false);
   const [winningCard, setWinningCard] = useState([]);
-  const [recentCalledNumbers, setRecentCalledNumbers] = useState(["*","*","*","*","*"]);
+  const [recentCalledNumbers, setRecentCalledNumbers] = useState(["*","*","*"]);
   const [winner, setWinner] = useState("skdfn9123u42139")
   const [hasToasted, setHasToasted] = useState(false);
   // const [betAmount, setBetAmount] = useState(0);
@@ -248,15 +248,15 @@ const PlayingBoard = () => {
           <span>{roomId * playersLength * 0.8}</span>
         </div>
         <div className="stat-item">
-          <span>Players</span>
+          <span>ብዛት</span>
           <span>{playersLength}</span>
         </div>
         <div className="stat-item">
-          <span>Bet</span>
+          <span>ውርርድ </span>
           <span>{roomId}</span>
         </div>
         <div className="stat-item">
-          <span>Call</span>
+          <span>የጥሪ ቁጥር</span>
           <span>{totalCalledNumbers}</span>
         </div>
       </div>
@@ -337,12 +337,19 @@ const PlayingBoard = () => {
        
               {lastBall ? (
                 <div className="ball-display">
-               
-                    <p className='current-call-text'>Current Call</p>
-                  
-                  <div className="ball">
+                  <div className='outer-circle'>
+
+                    <div  className='inner-circle'>
+
+                    <div className="ball">
                     {lastBall.combined}
                   </div>
+
+                    </div>
+
+                  </div>
+              
+                
                 </div>
               ) : (
                 <div className="waiting-state">
@@ -360,6 +367,8 @@ const PlayingBoard = () => {
               )}
             </div>
           </div>
+
+          
 
     
           <div className="recent-called-numbers">

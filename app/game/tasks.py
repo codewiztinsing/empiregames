@@ -27,22 +27,34 @@ def push_transaction(player_id, entry_fee,amount,type,status,reference):
 @shared_task
 def charge_player(players, entry_fee, game_id):
     logger.info(f"Charge player: {players}, {entry_fee}, {game_id}")
-    logger.info(f"Players = ",players)
+    logger.info(f"Players = {players}")
     charged_players = []
     for player in players:
-        player = get_object_or_404(User,telegram_id=player)
-        logger.info("Player ",player.id)
-        wallet = get_object_or_404(Wallet,user = player)
-        existing_transaction = Transaction.objects.filter(reference=game_id,type="BET",user = player).first()
-        if existing_transaction:
-            logger.info("Transaction already exists")
-            continue
-        else:
-            wallet.balance -= float(entry_fee)
-            push_transaction(player.telegram_id, entry_fee,entry_fee,"BET","success",game_id)
-            charged_players.append(player.id)
-            wallet.save()
-            logger.info("Wallet balance ",wallet.balance)
+        try:
+            player_obj = get_object_or_404(User, telegram_id=player)
+            logger.info(f"Player: {player_obj}")
+            
+            
+            wallet = Wallet.objects.get(user=player_obj)
+            logger.info(f"Wallet balance: {wallet.balance}")
+
+            # check transcation and deduct the amount from the wallet 
+            existing_transaction = Transaction.objects.filter(reference=game_id,type="BET",user = player_obj).first()
+            if existing_transaction:
+                logger.info("Transaction already exists")
+                continue
+            else:
+                wallet.balance -= (float(entry_fee) * players[player])
+                wallet.save()
+                logger.info(f"Wallet balance after deduction: {wallet.balance}")
+                # push transaction
+                push_transaction(player_obj.telegram_id, entry_fee,entry_fee,"BET","success",game_id)
+            charged_players.append(player_obj.id)
+            logger.info(f"Charged players: {charged_players}")
+          
+            
+        except Exception as e:
+            logger.error(f"Error charging player {player}: {e}")
     return charged_players
     
 

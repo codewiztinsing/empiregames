@@ -1,7 +1,11 @@
 from ninja import Schema
 
+class PlayerSchema(Schema):
+    playerId: int
+    numberOfBoards: int
+
 class BetSchema(Schema):
-    players: list[int]
+    players: list[PlayerSchema]
     game_id: int
     bet_amount: float
 

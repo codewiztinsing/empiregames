@@ -71,8 +71,6 @@ const getCurrentGame = async (betAmount)=>{
 
 const gameLossWallet = async (players,betAmount)=>{
   const current_game = await getCurrentGame(betAmount)
-  console.log("players = ",players)
-  console.log("current_game = ",current_game)
   const game_id = current_game.game_id
  
   const data = {
@@ -80,6 +78,7 @@ const gameLossWallet = async (players,betAmount)=>{
       bet_amount: betAmount,
       game_id:game_id
   };
+
   try{
       if(!data.players) return null;
       const backUrl = process.env.BACK_URL
