@@ -27,6 +27,8 @@ const Selections = () => {
     setRoomId,
     playerId,
     setPlayerId,
+    playerName,
+    setPlayerName,
     choosenBoards,
     setChooseBoards,
     toast,
@@ -53,6 +55,7 @@ const Selections = () => {
     const queryParams = new URLSearchParams(window.location.search);
     setPlayerId(queryParams.get('playerId'));
     setRoomId(queryParams.get('betAmount'));
+    setPlayerName(queryParams.get('playerName'));
     socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
     console.log("playerId ",queryParams.get('playerId'))
     const fetchBalance = async () => {

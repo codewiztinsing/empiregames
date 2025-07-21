@@ -12,8 +12,6 @@ export const BingoProvider = ({ children }) => {
     isAuthenticated: false
   });
 
-  // setSelectedNumber
-
   const [selectedNumber, setSelectedNumber] = useState(null);
   const [selectedNumber2, setSelectedNumber2] = useState(null);
   const [selectBoard, setSelectBoard] = useState([]);
@@ -23,6 +21,7 @@ export const BingoProvider = ({ children }) => {
   const [countDown, setCountDown] = useState(0);
   const [roomId, setRoomId] = useState(null);
   const [playerId, setPlayerId] = useState(null);
+  const [playerName,setPlayerName] = useState(null);
   const [toast,setToast] = useState(null);
   const [isToast,setIsToast] = useState(false)
   const [choosenNumbers,setChoosenNumbers] = useState([])
@@ -68,6 +67,8 @@ export const BingoProvider = ({ children }) => {
          setRoomId,
          playerId,
          setPlayerId,
+         playerName,
+         setPlayerName,
          toast,
          setToast,
          isToast,

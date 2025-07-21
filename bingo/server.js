@@ -34,7 +34,9 @@ const winners = [];
 function createGame(roomId) {
   const game = {
     id: roomId,
-    players: new Map(),
+    players: new Map(), // Map<playerId, Board[]>
+    total_players: 0,
+    total_winAmount: 0, 
     calledNumbers: [],
     selectedNumbers: [],
     currentCall: null,
@@ -146,6 +148,12 @@ async function startGame(game) {
   const players = Array.from(game.players.keys()).map(playerId => ({
     playerId: playerId
   }));
+
+  game.total_players = game.selectedNumbers.length
+  game.total_winAmount = game.selectedNumbers.length * game.roomId * 0.8
+
+
+
   try {
     await gameLossWallet(players, game.roomId);
   } catch (error) {
@@ -166,7 +174,6 @@ async function startGame(game) {
     io.to(game.roomId).emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
-      // total_players: game.selectedNumbers.length,
       pickedNumbers: game.selectedNumbers,
       game_status: game.status,
       count_down: game.countDown,
@@ -185,7 +192,7 @@ async function startGame(game) {
       endGame(game);
     }
   }, 3000);
-  console.log("game ",game)
+ 
 
   gameIntervals.set(game.id, [gameInterval]);
 }
@@ -232,7 +239,6 @@ io.on('connection', (socket) => {
 
   socket.on("joinGame", (data) => {
 
-
     const game = activeGames.get(data.roomId);
     if (!data.playerId || !game) return;
 
@@ -255,9 +261,6 @@ io.on('connection', (socket) => {
     game.selectedNumbers.push(data.selectedNumber)
     game.selectedNumbers.push(data.selectedNumber2)
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
-    console.log("ata.selectedNumber",game.selectedNumbers)
-
- 
     if (game.players.size >= 100) {
       socket.emit('joinError', {
         message: 'Room is full (max 100 players).'
@@ -266,8 +269,11 @@ io.on('connection', (socket) => {
     }
 
     socket.join(data.roomId);
-    game.players.set(data.playerId, data.selectBoard);
-    game.players.set(data.playerId, data.selectBoard2);
+    // game.players.set(data.playerId, data.selectBoard);
+    // game.players.set(data.playerId, data.selectBoard2);
+    game.players.set(data.playerId, [data.selectBoard, data.selectBoard2]);
+   
+    console.log("game.players",game)
     
     
   
@@ -324,11 +330,13 @@ io.on('connection', (socket) => {
         playerCard,
         currentCall: game.currentCall,
         gameId: data.gameId,
+        total_winAmount: game.total_winAmount,
+        total_players: game.total_players,
         roomId: data.roomId
       });
 
       winners.push({ roomId: game.roomId, winner: data.playerId, time: new Date() });
-      await gameWinWallet(data.playerId,game.roomId,game.roomId * game.players.size * 0.8);
+      await gameWinWallet(data.playerId,game.roomId,game.total_winAmount);
       endGame(game);
     } else {
       io.to(game.roomId).emit("falseBingo", {
