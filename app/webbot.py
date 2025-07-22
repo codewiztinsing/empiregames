@@ -16,7 +16,7 @@ from telegram import (
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from datetime import datetime, timedelta
 from utils import initialize_payment,get_bot_seetings   
-from utils.chapa import get_available_banks
+from utils.chapa import get_available_banks,transfer_funds
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -160,23 +160,30 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Get user's wallet balance
     telegram_id = update.effective_user.id
     BACK_URL = get_bot_seetings().get("bot_url")
+
+    logger.info(f"Back url {BACK_URL}")
+    logger.info(f"telegram_id {telegram_id}")
+    logger.info(f"amount {amount}")
  
     try:
+        logger.info(f"wallet url {BACK_URL}/api/v1/wallet/player/{telegram_id}")
+
         wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}').json()
         balance = float(wallet_response.get('balance', 0))
+        logger.info(f"balance {balance}")
       
-        if balance < 20:
+        if int(balance) < 20:
             await update.message.reply_text(f"You must leave at least 20 ETB in your wallet. Please enter a smaller amount.")
             return WITHDRAW_AMOUNT_CONFIRM
 
 
-        if float(amount) < 100:
+        if int(amount) < 100:
             await update.message.reply_text(f"Withdrawal amount must be at least 100 ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
         
         # Check if withdrawal amount exceeds balance
-        if float(amount) > float(balance):
+        if int(amount) > int(balance):
 
             await update.message.reply_text(f"Insufficient funds. Your current balance is {balance} ETB")
             return WITHDRAW_AMOUNT_CONFIRM
@@ -184,9 +191,13 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         else:
             # Store amount in context for later use
             context.user_data['withdraw_amount'] = amount
-            
+            logger.info(f"context.user_data['withdraw_amount'] {context.user_data['withdraw_amount']}") 
+            banks_to_bank_id = context.user_data['banks_to_bank_id']
+            logger.info(f"banks_to_bank_id {banks_to_bank_id}")
+            bank_name = banks_to_bank_id.get(context.user_data['bank_id'])
+            logger.info(f"bank_name {bank_name}")
             await update.message.reply_text(
-                f"Please enter your {context.user_data['banks_to_bank_id'][context.user_data['bank_id']]} number  where you want to receive the withdrawal:"
+                f"Please enter your {bank_name} number  where you want to receive the withdrawal:"
             )
             return GET_WITHDRAW_ACCOUNT
 
@@ -205,21 +216,12 @@ async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYP
     account_number = update.message.text
     BACK_URL = get_bot_seetings().get("bot_url")
     try:
-        await context.bot.send_message(
-            chat_id=update.effective_user.id,  # Use the user's actual chat ID
-            text=f"🔔 *New Withdrawal Request*\n\n👤 *User:* {update.effective_user.username}\n💰 *Amount:* {context.user_data['withdraw_amount']} ETB\n🏦 *Account:* {account_number}\n⏳ *Status:* Pending"
-        )
         withdraw_amount = float(context.user_data['withdraw_amount'])
-
         # deduct amount from user's balance
         res = requests.put(f'{BACK_URL}/api/v1/wallet/player/{update.effective_user.id}/', json={'amount': withdraw_amount,"action":"withdraw"})
-        logger.info(f"Withdrawal request sent to admin: {res.json()}")
-        # Send message to admin
-        await context.bot.send_message(
-            chat_id=5772317144,  # Use the user's actual chat ID
-            text=f"🔔 *New Withdrawal Request*\n\n👤 *User:* {update.effective_user.username}\n💰 *Amount:* {context.user_data['withdraw_amount']} ETB\n🏦 *Account:* {account_number}\n⏳ *Status:* Pending"
-        )
+        ###
         await update.message.reply_text("Withdrawal request sent to admin. Please wait for approval.")
+        transfer_funds(f"{update.effective_user.first_name} {update.effective_user.last_name}", account_number, withdraw_amount, "ETB", generate_tx_ref(), context.user_data['bank_id'])
         return ConversationHandler.END
     except Exception as e:
         print(f"Error sending message to user: {e}")
