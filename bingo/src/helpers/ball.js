@@ -28,7 +28,7 @@ const createBall = (number) => {
   return {
     letter: getLetter(number),
     number: number,
-    combined: `${getLetter(number)}${number}`
+    combined: `${getLetter(number)}-${number}`
   };
 };
 

@@ -277,7 +277,7 @@ const PlayingBoard = () => {
 
       <div className="stats-bar">
         <div className="stat-item">
-          <span>Win</span>
+          <span>ደራሽ</span>
           <span>{roomId * playersLength * 0.8}</span>
         </div>
         <div className="stat-item">
@@ -285,11 +285,11 @@ const PlayingBoard = () => {
           <span>{playersLength}</span>
         </div>
         <div className="stat-item">
-          <span>ውርርድ </span>
+          <span>መደብ </span>
           <span>{roomId}</span>
         </div>
         <div className="stat-item">
-          <span>የጥሪ ቁጥር</span>
+          <span>የጥሪ ብዛት </span>
           <span>{totalCalledNumbers}</span>
         </div>
       </div>
@@ -302,7 +302,10 @@ const PlayingBoard = () => {
         }}>
           
           <div className="column">
-            <div className="column-header called-number-col">B</div>
+            <div className="column-header called-number-col" style={{
+              backgroundColor: "rgb(202, 83, 83)",
+              color: "white"
+            }}>B</div>
             {Array.from({ length: 15 }, (_, i) => (
               <div key={i} className={`number ${calledNumbers?.includes(i + 1) ? 'called' : ''}`}
                 id={`B${i + 1}`}
@@ -313,7 +316,10 @@ const PlayingBoard = () => {
             ))}
           </div>
           <div className="column">
-            <div className="column-header called-number-col">I</div>
+            <div className="column-header called-number-col" style={{
+              backgroundColor: "rgb(247, 190, 3)",
+              color: "white"
+            }}>I</div>
             {Array.from({ length: 15 }, (_, i) => (
               <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'called' : ''}`}
                 id={`I${i + 16}`}
@@ -324,7 +330,10 @@ const PlayingBoard = () => {
             ))}
           </div>
           <div className="column">
-            <div className="column-header called-number-col">N</div>
+            <div className="column-header called-number-col" style={{
+              backgroundColor: "rgb(50, 14, 150)",
+              color: "white"
+            }}>N</div>
             {Array.from({ length: 15 }, (_, i) => (
               <div key={i} className={`number ${calledNumbers?.includes(i + 31) ? 'called' : ''}`}
                 id={`N${i + 31}`}
@@ -335,7 +344,10 @@ const PlayingBoard = () => {
             ))}
           </div>
           <div className="column">
-            <div className="column-header called-number-col">G</div>
+            <div className="column-header called-number-col" style={{
+              backgroundColor: "rgb(29, 160, 12)",
+              color: "white"
+            }}>G</div>
             {Array.from({ length: 15 }, (_, i) => (
               <div key={i}
                 className={`number ${calledNumbers?.includes(i + 46) ? 'called' : ''}`}
@@ -346,7 +358,10 @@ const PlayingBoard = () => {
             ))}
           </div>
           <div className="column">
-            <div className="column-header called-number-col">O</div>
+            <div className="column-header called-number-col" style={{
+              backgroundColor: "rgb(148, 17, 137)",
+              color: "white"
+            }}>O</div>
             {Array.from({ length: 15 }, (_, i) => (
               <div key={i} className={`number ${calledNumbers?.includes(i + 61) ? 'called' : ''}`}
                 id={`O${i + 61}`}
@@ -444,7 +459,7 @@ const PlayingBoard = () => {
                     className={`board-cell`}
 
                     // if cell is * it should always be green
-                    style={{ backgroundColor: cell === '*' ? '#4CAF50' : selectedCell.has(cell) ? '#4CAF50' : '#2c2856' }}
+                    style={{ backgroundColor: cell === '*' ? '#4CAF50' : selectedCell.has(cell) ? '#4CAF50' : '#2c2856',zIndex:1000 }}
                     id={`${cell <= 15 && cell > 0 ? 'b' : cell <= 30 && cell > 15 ? 'i' : cell <= 45 && cell > 30 ? 'n' : cell <= 60 && cell > 45 ? 'g' : cell <= 75 && cell > 60 ? 'o' : ''}${cell}`}
                     onClick={() => {
                       handleCellClick(cell);

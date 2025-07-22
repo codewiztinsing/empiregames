@@ -57,7 +57,10 @@
 
 .recent-called-numbers{
   min-width: 180px;
-  background-color: #440c5e;
+  display: flex;
+  height: 30px;
+  align-items: center;
+  background-color: #262129;
  
 }
 
@@ -72,12 +75,15 @@
 
 .recent-called-number{
   background-color: #626e63;
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
+  width: 30px;
+  height: 20px;
+  border-radius:5px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color:white;
 }
 
 
@@ -152,6 +158,7 @@
 
   .stat-item:nth-child(3) {
     background-color:  #efefef;
+    color:black;
   }
 
 
@@ -294,6 +301,17 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
+
+
+
+
+
+
+
+
+
+
+
 .number.called {
   background-color: #4CAF50;
   color: white;
@@ -333,29 +351,34 @@
 .bingo-letter-text:nth-child(1) {
   margin-left: -10px;
   width: 35px;
-  background-color: orange;
+  background-color: rgb(202, 83, 83);
+  color:white;
 }
 
 .bingo-letter-text:nth-child(2) {
-  background-color: green;
+  background-color: rgb(247, 190, 3);
+  color:white;
 }
 
 .bingo-letter-text:nth-child(3) {
-  background-color: blue;
+  background-color: rgb(50, 14, 150);
+  color:white;
 }
 
 .line {
   height: 2px;
-  background-color: #440c5e;
+  background-color: #2da115;
   margin: 5px 0;
 }
 
 .bingo-letter-text:nth-child(4) {
-  background-color: red;
+  background-color: rgb(29, 160, 12);
+  color:white 
 }
 
 .bingo-letter-text:nth-child(5) {
-  background-color: purple;
+  background-color: rgb(148, 17, 137);
+  color:white;
 }
 
 
