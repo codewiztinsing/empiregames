@@ -341,6 +341,7 @@ io.on('connection', (socket) => {
         winnedCard = playerCards[i]
       }
 
+      console.log("playerName: data.playerName,",data.playerName,)
 
       io.to(game.roomId).emit("winBingo", {
         isBingo: true,

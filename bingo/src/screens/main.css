@@ -478,7 +478,7 @@
 }
 
 .last-called {
-  animation: blink 3s;
+  animation: blink 5s;
   background-color: #33ccf8;
   
 }

@@ -63,6 +63,7 @@ const PlayingBoard = () => {
       return;
     }
    
+    console.log("player name = ",playerName)
 
     socket.emit('bingo', {
       gameId: gameId,
@@ -126,20 +127,14 @@ const PlayingBoard = () => {
   socket.on('winBingo', (data) => {
     if (data.winningCard) {
 
-      if(winnerCardNumber == []) {
+     
         setWinningCard(data.markedCells)
         setIsBingo(data.isBingo)
         setWinner(data.playerId)
         setWinnerCardNumber(data.winner_Number)
         setWinnerPlayerName(data.playerName)
-      }
-      else{
-        setWinningCard(data.markedCells)
-        setIsBingo(data.isBingo)
-        setWinner(data.playerId)
-        setWinnerCardNumber(data.winner_Number)
-        setWinnerPlayerName(data.playerName)
-      }
+      
+     
     }
   })
 
@@ -150,6 +145,7 @@ const PlayingBoard = () => {
         if (hasToasted) return;
         setHasToasted(true);
         toast.error("Invalid Bingo claim!");
+        return 
         setTimeout(() => {
           navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
           window.location.reload();
@@ -219,7 +215,7 @@ const PlayingBoard = () => {
       </div>
 
       <p className='winner-card-header-winner-number'>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
-      <p className='winner-card-header-winner-name'>ስም : {winnerPlayerName},is Winner</p>
+      <p className='winner-card-header-text'>ስም : {winnerPlayerName},is Winner</p>
 
 
       <div className="winning-card">
@@ -248,9 +244,9 @@ const PlayingBoard = () => {
                   className="winning-card-cell"
                   style={{
                     backgroundColor: isRowComplete || isColumnComplete || isDiagonalComplete || isReverseDiagonalComplete || isFourCornersComplete || isFourEdgesComplete
-                      ? 'green'
+                      ? '#ff0000'
                       : cell.marked
-                      ? 'green'
+                      ? '#00ff00'
                       : 'transparent',
                   }}
                 >

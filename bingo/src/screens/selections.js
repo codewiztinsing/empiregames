@@ -55,6 +55,7 @@ const Selections = () => {
     const queryParams = new URLSearchParams(window.location.search);
     setPlayerId(queryParams.get('playerId'));
     setRoomId(queryParams.get('betAmount'));
+    console.log("player name = ",queryParams.get('playerName'))
     setPlayerName(queryParams.get('playerName'));
 
  
