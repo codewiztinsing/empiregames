@@ -48,7 +48,7 @@ const Selections = () => {
   const [loading, setLoading] = useState(true);
 
   // Generate numbers 1-100 (memoized since it's static)
-  const numbers = Array.from({ length: 100 }, (_, i) => i + 1);
+  const numbers = Array.from({ length: 400 }, (_, i) => i + 1);
 
   // Socket listeners with cleanup
   useEffect(() => {
@@ -56,6 +56,8 @@ const Selections = () => {
     setPlayerId(queryParams.get('playerId'));
     setRoomId(queryParams.get('betAmount'));
     setPlayerName(queryParams.get('playerName'));
+
+ 
     socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
   
     const fetchBalance = async () => {

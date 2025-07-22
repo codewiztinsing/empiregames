@@ -282,7 +282,7 @@ async def instruction_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     BACK_URL = get_bot_seetings().get("bot_url")
-    username = query.from_user.username
+    username = query.from_user.username or query.from_user.first_name 
     await query.answer()
   
 
@@ -317,7 +317,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 return
 
             player_id = query.from_user.id
-            web_app_url = f"https://wowliyubingo.com/?playerId={player_id}&betAmount={bet_amount}"
+            web_app_url = f"https://wowliyubingo.com/?playerId={player_id}&betAmount={bet_amount}&playerName={username}"
             
             await query.edit_message_text(
                 text=f"Starting game with {bet_amount} ETB bet...",

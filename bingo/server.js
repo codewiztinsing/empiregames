@@ -336,6 +336,7 @@ io.on('connection', (socket) => {
       game.gameOver = true;
 
       for(let i = 0; i < playerCards.length; i++){
+        console.log("Player Name ",data.playerName)
         io.to(game.roomId).emit("winBingo", {
           isBingo: true,
           playerId: data.playerId,

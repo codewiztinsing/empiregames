@@ -21,7 +21,7 @@ export const BingoProvider = ({ children }) => {
   const [countDown, setCountDown] = useState(0);
   const [roomId, setRoomId] = useState(null);
   const [playerId, setPlayerId] = useState(null);
-  const [playerName,setPlayerName] = useState(null);
+  const [playerName,setPlayerName] = useState("Some Body");
   const [toast,setToast] = useState(null);
   const [isToast,setIsToast] = useState(false)
   const [choosenNumbers,setChoosenNumbers] = useState([])

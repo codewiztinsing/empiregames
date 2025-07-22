@@ -96,10 +96,13 @@ body, #root {
 }
 
 .numbers-grid {
+  max-height: 50%;
+  overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   gap: 5px;
   margin-bottom: 20px;
+
 }
 
 .number-cell {
