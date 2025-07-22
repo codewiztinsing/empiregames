@@ -5,13 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import './main.css';
 import { BingoContext } from '../contexts/bingoContext';
 import BingoWinner from '../components/BingoWinner';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 
 
 
 const PlayingBoard = () => {
-  const { selectedNumber,selectedNumber2, selectBoard,selectBoard2, playersLength, countDown,setCountDown, roomId, playerId, gameId, setGameId, setToast, setIsToast } = useContext(BingoContext);
+  const { selectedNumber,selectedNumber2, selectBoard,selectBoard2, playersLength, countDown,setCountDown, roomId, playerId, gameId, setGameId, setToast, setIsToast, playerName } = useContext(BingoContext);
 
   const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
@@ -24,7 +24,9 @@ const PlayingBoard = () => {
   const [winningCard, setWinningCard] = useState([]);
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(["*","*","*"]);
   const [winner, setWinner] = useState("skdfn9123u42139")
+  const [winnerCardNumber, setWinnerCardNumber] = useState(0);  
   const [hasToasted, setHasToasted] = useState(false);
+  const [winnerPlayerName, setWinnerPlayerName] = useState("");
   // const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -66,7 +68,10 @@ const PlayingBoard = () => {
       gameId: gameId,
       roomId: roomId,
       playerId: playerId,
-      markedCells: Array.from(selectedCell)
+      markedCells: Array.from(selectedCell),
+      selectedNumber: selectedNumber,
+      selectedNumber2: selectedNumber2,
+      playerName: playerName
     });
 
   };
@@ -123,7 +128,8 @@ const PlayingBoard = () => {
       setWinningCard(data.markedCells)
       setIsBingo(data.isBingo)
       setWinner(data.playerId)
-
+      setWinnerCardNumber(data.winner_Number)
+      setWinnerPlayerName(data.playerName)
     }
   })
 
@@ -198,29 +204,73 @@ const PlayingBoard = () => {
       {isBingo && (
         <div className="bingo-winner-overlay">
           <div className="bingo-winner-card">
-
-
-            <h2>{playerId === winner ? "You Won!" : `Player ${winner} Won!`}</h2>
+            <h2>{playerId === winner ? "You Won!" : `Player ${winnerPlayerName} Won!`}</h2>
             <div className="winning-card">
-              {winningCard.map((row, rowIndex) => (
-                <div key={rowIndex} className="winning-card-row">
-                  {row.map((cell, cellIndex) => (
-                    <div
-                      key={cellIndex}
-                      className={`winning-card-cell ${cell.marked ? 'marked' : ''}`}
-                    >
-                      {cell.number}
-                    </div>
-                  ))}
+
+              <div className="winning-card-row">
+                <div className="winning-card-cell">
+                  <span>B</span>
                 </div>
-              ))}
+                <div className="winning-card-cell">
+                  <span>I</span>
+                </div>
+                <div className="winning-card-cell">
+                  <span>N</span>
+                </div>
+                <div className="winning-card-cell">
+                  <span>G</span>
+                </div>
+                <div className="winning-card-cell">
+                  <span>O</span>
+                </div>
+              </div>
+              
+              {winningCard.map((row, rowIndex) => {
+                const isRowComplete = row.every(cell => cell.marked);
+                  return (
+                    <div key={rowIndex} className="winning-card-row">
+                      {row.map((cell, cellIndex) => (
+                        <div
+                          key={cellIndex} 
+                          className={`winning-card-cell ${cell.marked ? 'marked' : ''} ${isRowComplete ? 'bg-orange' : ''}`}
+                        >
+                          {cell.number}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+
+                {/* Check if any column is completely marked */}
+                {[...Array(5)].map((_, colIndex) => {
+                  const isColumnComplete = winningCard.every(row => row[colIndex].marked);
+                  if (isColumnComplete) {
+                    winningCard.forEach(row => {
+                      row[colIndex].columnComplete = true;
+                    });
+                  }
+                })}
+
+              
+                
+                
+
             </div>
-            <button
+            <div className="choosen-numbers">
+              <span className='choosen-number'>#Card: {winnerCardNumber}</span>
+              <button
               className="close-winner-button"
               onClick={handleCloseWinner}
             >
-              Close
+
+              <p>Close</p>
+          
             </button>
+             
+          </div>
+           
+
+      
           </div>
         </div>
       )}

@@ -327,6 +327,8 @@ io.on('connection', (socket) => {
     console.log("playerCards",playerCards)
     if (!playerCards) return;
 
+    console.log("playerCards", playerCards)
+
     const isBingo = checkBingo(playerCards, game.calledNumbers);
     if (isBingo) {
       game.status = 'waiting';
@@ -342,6 +344,8 @@ io.on('connection', (socket) => {
           winner: data.playerId,
           calledNumbers: game.calledNumbers,
           playerCard: playerCards[i],
+          winner_Number: data.selectedNumber,
+          playerName: data.playerName,
           currentCall: game.currentCall,
           gameId: data.gameId,
           total_winAmount: game.total_winAmount,

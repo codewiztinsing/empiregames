@@ -205,9 +205,26 @@
   }
   100% {
     opacity: 1;
+
   }
 }
 
+
+.choosen-numbers {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.choosen-number {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px;
+  border-radius: 10px;
+}
 
 
 .bingo-content {
@@ -598,14 +615,18 @@
 }
 
 .close-winner-button {
-  background-color: #4CAF50;
+  background-color:red;
   color: white;
   border: none;
-  padding: 0.5rem 1.5rem;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 1rem;
   transition: background-color 0.3s;
+  width: 60px;
+  height: 40px;
+}
+
+.bg-orange {
+  background-color: orange;
 }
 
 .close-winner-button:hover {
