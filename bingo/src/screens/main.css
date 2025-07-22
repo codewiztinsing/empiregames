@@ -655,7 +655,7 @@
 }
 
 .winning-card-cell.marked {
-  background-color: #4CAF50;
+  background-color: red;
   color: white;
 }
 

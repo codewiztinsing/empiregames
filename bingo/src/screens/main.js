@@ -248,9 +248,9 @@ const PlayingBoard = () => {
                   className="winning-card-cell"
                   style={{
                     backgroundColor: isRowComplete || isColumnComplete || isDiagonalComplete || isReverseDiagonalComplete || isFourCornersComplete || isFourEdgesComplete
-                      ? '#ff0000'
+                      ? 'green'
                       : cell.marked
-                      ? '#00ff00'
+                      ? 'green'
                       : 'transparent',
                   }}
                 >

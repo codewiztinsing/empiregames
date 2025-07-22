@@ -195,7 +195,7 @@ async function startGame(game) {
       })
       endGame(game);
     }
-  }, 1000);
+  }, 5000);
  
 
   gameIntervals.set(game.id, [gameInterval]);
