@@ -310,18 +310,22 @@ const Selections = () => {
       {!loading && (
         <div className="selections-container">
           <div className="balance-container">
+        
+          <div className="balance-text">
+          ቀሪ ሒሳብ/Balance {balance} ብር
+            </div>
+          
             <div className="balance-text">
-              Balance: {balance}
+            Stake {roomId} ብር
             </div>
             <div className="game-status">
               <div className={`status-badge ${gameStatus}`}>
                 {gameStatus}
               </div>
             </div>
-          
-            <div className="balance-text">
-              Stake {roomId}
-            </div>
+
+           
+        
           </div>
 
           <div className="numbers-grid">

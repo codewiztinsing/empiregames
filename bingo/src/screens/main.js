@@ -228,32 +228,22 @@ const PlayingBoard = () => {
               {winningCard.map((row, rowIndex) => {
                 const isRowComplete = row.every(cell => cell.marked);
                   return (
-                    <div key={rowIndex} className="winning-card-row">
-                      {row.map((cell, cellIndex) => (
-                        <div
-                          key={cellIndex} 
-                          className={`winning-card-cell ${cell.marked ? 'marked' : ''} ${isRowComplete ? 'bg-orange' : ''}`}
-                        >
-                          {cell.number}
-                        </div>
-                      ))}
-                    </div>
-                  );
+                      <div key={rowIndex} className="winning-card-row">
+                        {row.map((cell, cellIndex) => (
+                          <div
+                            key={cellIndex}
+                            className="winning-card-cell"
+                            style={{
+                              backgroundColor: isRowComplete ? '#ff0000' : (cell.marked ? '#00ff00' : 'transparent')
+                            }}
+                          >
+                            <span>{cell.number}</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
                 })}
-
-                {/* Check if any column is completely marked */}
-                {[...Array(5)].map((_, colIndex) => {
-                  const isColumnComplete = winningCard.every(row => row[colIndex].marked);
-                  if (isColumnComplete) {
-                    winningCard.forEach(row => {
-                      row[colIndex].columnComplete = true;
-                    });
-                  }
-                })}
-
-              
-                
-                
+                  
 
             </div>
             <div className="choosen-numbers">
@@ -293,6 +283,16 @@ const PlayingBoard = () => {
         <div className="stat-item">
           <span>ጥሪ </span>
           <span>{totalCalledNumbers}</span>
+        </div>
+
+
+        <div className="stat-item">
+          <span>ድምጽ </span>
+          <select className='language-select'>
+            <option value="1">Amh</option>
+            <option value="3">Oromo</option>
+            <option value="4">Tigrigna</option>
+          </select>
         </div>
       </div>
 

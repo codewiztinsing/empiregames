@@ -166,6 +166,22 @@
     background-color:  #5c4be7;
   }
 
+  .stat-item:nth-child(5) {
+    background-color:  #5c4be7;
+  }
+  .language-select {
+    background-color: #706c8b;
+    color: white;
+    border: none;
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    
+  }
+
+
   /* # */
 
 
