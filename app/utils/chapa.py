@@ -51,5 +51,17 @@ def transfer_funds(account_name, account_number, amount, currency, reference, ba
 
 
 
+
+def get_available_banks():
+    url = "https://api.chapa.co/v1/banks"
+    payload = ''
+    headers = {
+        'Authorization': f'Bearer {API_KEY}'
+    }
+    response = requests.get(url, headers=headers)
+    return response.json()
+
 # if __name__ == "__main__":
-#     print(transfer_funds("Alako Abiyo", "0991221912", 1, "ETB", "3241342142sfdd", 855))
+#     data = get_available_banks().get("data",[])
+#     for d in data:
+#         print(d.get("name"))

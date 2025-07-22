@@ -16,7 +16,7 @@ from telegram import (
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from datetime import datetime, timedelta
 from utils import initialize_payment,get_bot_seetings   
-
+from utils.chapa import get_available_banks
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -131,11 +131,22 @@ def deposit_opitions_keyboard() -> InlineKeyboardMarkup:
 
 
 def withdraw_opitions_keyboard() -> InlineKeyboardMarkup:
-    keyboard = [
-        [InlineKeyboardButton("💳 Chapa", callback_data='withraw_with_chapa'),
-         InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')]
-    ]
+    available_banks = get_available_banks().get("data",[])
+    keyboard = []
+    banks_to_bank_id = {}
+    for bank in available_banks:
+        # Create 4x4 grid of bank buttons
+        bank_id = bank.get("id")
+        bank_name = bank.get("name")
+        banks_to_bank_id[bank_id] = bank_name
+        keyboard.append([InlineKeyboardButton(bank_name, callback_data=f'withraw_with_{bank_id}')]) 
+    keyboard.append([InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')])
+    context.user_data['banks_to_bank_id'] = banks_to_bank_id
+
     return InlineKeyboardMarkup(keyboard)
+
+
+
    
 
 async def withdraw_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -174,7 +185,7 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             context.user_data['withdraw_amount'] = amount
             
             await update.message.reply_text(
-                "Please enter your Telebirr number or bank account number where you want to receive the withdrawal:"
+                f"Please enter your {context.user_data['banks_to_bank_id'][context.user_data['bank_id']]} number  where you want to receive the withdrawal:"
             )
             return GET_WITHDRAW_ACCOUNT
 
@@ -317,7 +328,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 return
 
             player_id = query.from_user.id
-            web_app_url = f"https://wowliyubingo.com/?playerId={player_id}&betAmount={bet_amount}&playerName={username}"
+            web_app_url = f"{BACK_URL}?playerId={player_id}&betAmount={bet_amount}&playerName={username}"
             
             await query.edit_message_text(
                 text=f"Starting game with {bet_amount} ETB bet...",
@@ -339,7 +350,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             bet_amount = 0  # Demo game has no bet amount
             wallet_amount = requests.get(f'{BACK_URL}/payments/wallet/{user_id}/').json().get('balance',0)
             web_app_url = (
-                f"https://wowliyubingo.com/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={wallet_amount}&demo=true"
+                f"{BACK_URL}/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={wallet_amount}&demo=true"
             )
 
             print("web_app_url = ",web_app_url)
@@ -351,6 +362,16 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
 
             return ConversationHandler.END
+
+
+        elif query.data.startswith('withraw_with_'):
+            bank_id = query.data.split('_')[2]
+            context.user_data['bank_id'] = bank_id
+           
+            
+            await query.edit_message_text(
+                text="Please enter your withdraw amount ")
+            return WITHDRAW_AMOUNT_CONFIRM
 
         elif query.data == 'withdraw_confirm':
             return WITHDRAW_AMOUNT_CONFIRM
