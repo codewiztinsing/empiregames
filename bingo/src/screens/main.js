@@ -125,11 +125,21 @@ const PlayingBoard = () => {
 
   socket.on('winBingo', (data) => {
     if (data.winningCard) {
-      setWinningCard(data.markedCells)
-      setIsBingo(data.isBingo)
-      setWinner(data.playerId)
-      setWinnerCardNumber(data.winner_Number)
-      setWinnerPlayerName(data.playerName)
+
+      if(winnerCardNumber == []) {
+        setWinningCard(data.markedCells)
+        setIsBingo(data.isBingo)
+        setWinner(data.playerId)
+        setWinnerCardNumber(data.winner_Number)
+        setWinnerPlayerName(data.playerName)
+      }
+      else{
+        setWinningCard(data.markedCells)
+        setIsBingo(data.isBingo)
+        setWinner(data.playerId)
+        setWinnerCardNumber(data.winner_Number)
+        setWinnerPlayerName(data.playerName)
+      }
     }
   })
 
@@ -201,69 +211,67 @@ const PlayingBoard = () => {
     <div className="game-container">
       <Toaster />
 
-      {isBingo && (
-        <div className="bingo-winner-overlay">
-          <div className="bingo-winner-card">
-            <h2>{playerId === winner ? "You Won!" : `Player ${winnerPlayerName} Won!`}</h2>
-            <div className="winning-card">
+  {isBingo && (
+  <div className="bingo-winner-overlay">
+    <div className="bingo-winner-card">
+      <div className="winner-card-header">
+        <p className='winner-card-header-text'>Bingo Winner!</p>
+      </div>
 
-              <div className="winning-card-row">
-                <div className="winning-card-cell">
-                  <span>B</span>
-                </div>
-                <div className="winning-card-cell">
-                  <span>I</span>
-                </div>
-                <div className="winning-card-cell">
-                  <span>N</span>
-                </div>
-                <div className="winning-card-cell">
-                  <span>G</span>
-                </div>
-                <div className="winning-card-cell">
-                  <span>O</span>
-                </div>
-              </div>
-              
-              {winningCard.map((row, rowIndex) => {
-                const isRowComplete = row.every(cell => cell.marked);
-                  return (
-                      <div key={rowIndex} className="winning-card-row">
-                        {row.map((cell, cellIndex) => (
-                          <div
-                            key={cellIndex}
-                            className="winning-card-cell"
-                            style={{
-                              backgroundColor: isRowComplete ? '#ff0000' : (cell.marked ? '#00ff00' : 'transparent')
-                            }}
-                          >
-                            <span>{cell.number}</span>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                })}
-                  
+      <p className='winner-card-header-winner-number'>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
+      <p className='winner-card-header-winner-name'>ስም : {winnerPlayerName},is Winner</p>
 
+
+      <div className="winning-card">
+        <div className="winning-card-row">
+          {["B", "I", "N", "G", "O"].map((letter, index) => (
+            <div key={index} className="winning-card-cell">
+              <span>{letter}</span>
             </div>
-            <div className="choosen-numbers">
-              <span className='choosen-number'>የካርቴላ ቁጥር :- {winnerCardNumber}</span>
-              <button
-              className="close-winner-button"
-              onClick={handleCloseWinner}
-            >
-
-              <p>Close</p>
-          
-            </button>
-             
-          </div>
-           
-
-      
-          </div>
+          ))}
         </div>
-      )}
+
+        {winningCard.map((row, rowIndex) => {
+          const isRowComplete = row.every(cell => cell.marked);
+          const isColumnComplete = winningCard.every(r => r[rowIndex].marked);
+          const isDiagonalComplete = winningCard.every(r => r[rowIndex].marked);
+          const isReverseDiagonalComplete = winningCard.every(r => r[rowIndex].marked);
+          const isFourCornersComplete = winningCard.every(r => r[rowIndex].marked);
+          const isFourEdgesComplete = winningCard.every(r => r[rowIndex].marked);
+          
+
+          return (
+            <div key={rowIndex} className="winning-card-row">
+              {row.map((cell, cellIndex) => (
+                <div
+                  key={cellIndex}
+                  className="winning-card-cell"
+                  style={{
+                    backgroundColor: isRowComplete || isColumnComplete || isDiagonalComplete || isReverseDiagonalComplete || isFourCornersComplete || isFourEdgesComplete
+                      ? '#ff0000'
+                      : cell.marked
+                      ? '#00ff00'
+                      : 'transparent',
+                  }}
+                >
+                  <span>{cell.number}</span>
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="choosen-numbers">
+        <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
+        <button className="close-winner-button" onClick={handleCloseWinner}>
+          <p>Close</p>
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       <div className="stats-bar">
         <div className="stat-item">
@@ -458,37 +466,39 @@ const PlayingBoard = () => {
 
 }
 
-          <div className="bingo-board">
-            {selectBoard.map((row, rowIndex) => (
-              <div key={rowIndex} className="board-row">
-                {row.map((cell, colIndex) => (
-                  <div key={colIndex}
-                    className={`board-cell`}
+    
+      <div className="bingo-board">
+                  { !isBingo && selectBoard.map((row, rowIndex) => (
+                    <div key={rowIndex} className="board-row">
+                      {row.map((cell, colIndex) => (
+                        <div key={colIndex}
+                          className={`board-cell`}
 
-                    // if cell is * it should always be green
-                    style={{ backgroundColor: cell === '*' ? '#4CAF50' : selectedCell.has(cell) ? '#4CAF50' : '#2c2856',zIndex:1000 }}
-                    id={`${cell <= 15 && cell > 0 ? 'b' : cell <= 30 && cell > 15 ? 'i' : cell <= 45 && cell > 30 ? 'n' : cell <= 60 && cell > 45 ? 'g' : cell <= 75 && cell > 60 ? 'o' : ''}${cell}`}
-                    onClick={() => {
-                      handleCellClick(cell);
+                          // if cell is * it should always be green
+                          style={{ backgroundColor: cell === '*' ? '#4CAF50' : selectedCell.has(cell) ? '#4CAF50' : '#2c2856',zIndex:1000 }}
+                          id={`${cell <= 15 && cell > 0 ? 'b' : cell <= 30 && cell > 15 ? 'i' : cell <= 45 && cell > 30 ? 'n' : cell <= 60 && cell > 45 ? 'g' : cell <= 75 && cell > 60 ? 'o' : ''}${cell}`}
+                          onClick={() => {
+                            handleCellClick(cell);
 
-                    }}
-                  >
-                    {cell}
-                  </div>
-                ))}
-              </div>
-            ))}
+                          }}
+                        >
+                          {cell}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
 
           
 
-          </div>
+                </div>
+            
 
           <div className='line'>
 
           </div>
 
          
-
+        
           {selectBoard2 !== null && (
           <div className="bingo-header">
             <div className='selected-number'>

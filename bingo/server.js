@@ -195,7 +195,7 @@ async function startGame(game) {
       })
       endGame(game);
     }
-  }, 3000);
+  }, 1000);
  
 
   gameIntervals.set(game.id, [gameInterval]);
@@ -335,26 +335,29 @@ io.on('connection', (socket) => {
       game.winner = data.playerId;
       game.gameOver = true;
 
+      let winnedCard = []
+
       for(let i = 0; i < playerCards.length; i++){
-        console.log("Player Name ",data.playerName)
-        io.to(game.roomId).emit("winBingo", {
-          isBingo: true,
-          playerId: data.playerId,
-          markedCells: markPlayerCard(playerCards[i], game.calledNumbers),
-          winningCard: markPlayerCard(playerCards[i], game.calledNumbers),
-          winner: data.playerId,
-          calledNumbers: game.calledNumbers,
-          playerCard: playerCards[i],
-          winner_Number: data.selectedNumber,
-          playerName: data.playerName,
-          currentCall: game.currentCall,
-          gameId: data.gameId,
-          total_winAmount: game.total_winAmount,
-          total_players: game.total_players,
-          roomId: data.roomId
-        });
-  
+        winnedCard = playerCards[i]
       }
+
+
+      io.to(game.roomId).emit("winBingo", {
+        isBingo: true,
+        playerId: data.playerId,
+        markedCells: markPlayerCard(winnedCard, game.calledNumbers),
+        winningCard: markPlayerCard(winnedCard, game.calledNumbers),
+        winner: data.playerId,
+        calledNumbers: game.calledNumbers,
+        playerCard: winnedCard,
+        winner_Number: data.selectedNumber,
+        playerName: data.playerName,
+        currentCall: game.currentCall,
+        gameId: data.gameId,
+        total_winAmount: game.total_winAmount,
+        total_players: game.total_players,
+        roomId: data.roomId
+      });
 
      
       winners.push({ roomId: game.roomId, winner: data.playerId, time: new Date() });

@@ -236,6 +236,7 @@
 .choosen-numbers {
   display: flex;
   flex-direction: row;
+  
   justify-content: center;
   align-items: center;
   gap: 10px;
@@ -243,7 +244,7 @@
 }
 
 .choosen-number {
-  background-color: #4CAF50;
+  background-color:#25253f;
   color: white;
   padding: 10px;
   border-radius: 10px;
@@ -615,7 +616,7 @@
 }
 
 .bingo-winner-card {
-  background-color: white;
+  background-color: #25253f;
   padding: 2rem;
   border-radius: 10px;
   text-align: center;

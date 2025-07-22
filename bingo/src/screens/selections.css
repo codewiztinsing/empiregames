@@ -82,6 +82,48 @@ body, #root {
   justify-content: space-between;
 }
 
+.winner-card-header {
+  width: 215px;
+  height: 50px;
+  display: flex;
+  flex-direction: row;
+  background-color:green;
+  align-items: center;
+  justify-content: center;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  margin-bottom: 10px;
+
+}
+
+
+
+.winner-card-header-text{
+  font-size: 1em;
+  font-weight: bold;
+  color: white;
+  padding: 4px;
+}
+
+
+.winner-card-header-winner-number{
+  font-size: 1em;
+  font-weight: bold;
+  color:green;
+  padding: 4px;
+}
+
+.winner-card-header-winner-name{
+  font-size: 1em;
+  font-weight: bold;
+  color:green;
+  padding: 4px;
+}
+
+
+
+
+
 .board-grid {
   max-width: 100%;
   max-height: 100%;
