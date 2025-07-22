@@ -27,6 +27,7 @@ const PlayingBoard = () => {
   const [winnerCardNumber, setWinnerCardNumber] = useState(0);  
   const [hasToasted, setHasToasted] = useState(false);
   const [winnerPlayerName, setWinnerPlayerName] = useState("");
+  const [isDisabled,setIsDisabled] = useState(false)
   // const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -106,6 +107,14 @@ const PlayingBoard = () => {
   socket.on('gameState', handleGameState);
 
 
+  function handleFalseBingo() {
+    toast.error("You made Faul!,you won't able to play curren game anymore");
+    setIsDisabled(true);
+    return ;
+  
+  }
+
+
   const handleRefresh = () => {
     socket.emit('handleRefresh', {
       gameId: gameId,
@@ -126,32 +135,19 @@ const PlayingBoard = () => {
 
   socket.on('winBingo', (data) => {
     if (data.winningCard) {
-
-     
         setWinningCard(data.markedCells)
         setIsBingo(data.isBingo)
         setWinner(data.playerId)
         setWinnerCardNumber(data.winner_Number)
         setWinnerPlayerName(data.playerName)
       
-     
     }
   })
 
   socket.on('falseBingo', (data) => {
     if (data.isBingo === false) {
-      if (data.playerId === playerId) {
-        console.log("false bingo");
-        if (hasToasted) return;
-        setHasToasted(true);
-        toast.error("Invalid Bingo claim!");
-        return 
-        setTimeout(() => {
-          navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
-          window.location.reload();
-        }, 3000);
-          
-        }
+      handleFalseBingo()
+     
     }
    
 
@@ -544,8 +540,8 @@ const PlayingBoard = () => {
        
 
           <div className="game-controls">
-            <button className="bingo-button" onClick={handleBingo}>
-              BINGO!
+            <button className="bingo-button" onClick={handleBingo} disabled={isDisabled}>
+             {isDisabled ? "You made Faul" : "BINGO!"}
             </button>
             <div className="action-buttons">
               <button className="refresh-button" onClick={handleRefresh}>

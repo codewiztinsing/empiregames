@@ -195,7 +195,7 @@ async function startGame(game) {
       })
       endGame(game);
     }
-  }, 5000);
+  }, 1000);
  
 
   gameIntervals.set(game.id, [gameInterval]);
@@ -365,23 +365,19 @@ io.on('connection', (socket) => {
       await gameWinWallet(data.playerId,game.roomId,game.total_winAmount);
       endGame(game);
     } else {
-      for(let i = 0; i < playerCards.length; i++){
-        io.to(game.roomId).emit("falseBingo", {
-          isBingo: false,
-          playerId: data.playerId,
-          markedCells: markPlayerCard(playerCards[i], game.calledNumbers),
-          calledNumbers: game.calledNumbers,
-          playerCard: playerCards[i],
-          currentCall: game.currentCall,
-          gameId: data.gameId,
-          total_winAmount: game.total_winAmount,
-          total_players: game.total_players,
-          roomId: data.roomId
-        });
-      } 
-    
-    
-    }
+
+      io.to(game.roomId).emit("falseBingo", {
+        isBingo: false,
+        playerId: data.playerId,
+        calledNumbers: game.calledNumbers,
+        currentCall: game.currentCall,
+        gameId: data.gameId,
+        total_winAmount: game.total_winAmount,
+        total_players: game.total_players,
+        roomId: data.roomId
+      });
+    } 
+     
   });
 
   socket.on("leave",(data) => {
