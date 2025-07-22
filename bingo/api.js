@@ -4,13 +4,14 @@ dotenv.config();
 
 const gameWinWallet = async (player,bet_amount,win_amount)=>{
   const current_game = await getCurrentGame(bet_amount)
-  console.log("current_game = ",current_game)
   const game_id = current_game.game_id
   const data = {
       player,
       win_amount ,
       game_id
   };
+
+  console.log("data",data)
   if(!data.player || !data.win_amount || !data.game_id) return null;
   
   try{

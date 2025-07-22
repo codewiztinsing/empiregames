@@ -152,7 +152,9 @@ async function startGame(game) {
   }));
 
   game.total_players = game.total_players
-  game.total_winAmount = game.total_players * 0.8
+  game.total_winAmount = game.selectedNumbers.length * game.roomId * 0.8
+
+  console.log("game.total_winAmount",game.total_winAmount)
 
 
 
