@@ -365,7 +365,6 @@ io.on('connection', (socket) => {
       await gameWinWallet(data.playerId,game.roomId,game.total_winAmount);
       endGame(game);
     } else {
-
       io.to(game.roomId).emit("falseBingo", {
         isBingo: false,
         playerId: data.playerId,

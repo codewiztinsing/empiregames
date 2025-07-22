@@ -147,19 +147,13 @@ const PlayingBoard = () => {
     }
   })
 
+
+
   socket.on('falseBingo', (data) => {
-    if (data.isBingo === false) {
-      if(data.playerId === playerId){
-        handleFalseBingo()
-      }
-
-      
-     
-     
+    if (data.playerId === playerId && data.isBingo === false) {
+      handleFalseBingo();
     }
-   
-
-  })
+  });
 
   socket.on('joinError', (data) => {
     if (data.roomId == roomId) {
