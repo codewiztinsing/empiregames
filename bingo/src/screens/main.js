@@ -282,14 +282,16 @@ const PlayingBoard = () => {
         </div>
         <div className="stat-item">
           <span>ብዛት</span>
+          
           <span>{playersLength}</span>
         </div>
         <div className="stat-item">
           <span>መደብ </span>
+        
           <span>{roomId}</span>
         </div>
         <div className="stat-item">
-          <span>የጥሪ ብዛት </span>
+          <span>ጥሪ </span>
           <span>{totalCalledNumbers}</span>
         </div>
       </div>
@@ -508,7 +510,6 @@ const PlayingBoard = () => {
                     id={`${cell <= 15 && cell > 0 ? 'b' : cell <= 30 && cell > 15 ? 'i' : cell <= 45 && cell > 30 ? 'n' : cell <= 60 && cell > 45 ? 'g' : cell <= 75 && cell > 60 ? 'o' : ''}${cell}`}
                     onClick={() => {
                       handleCellClick(cell);
-
                     }}
                   >
                     {cell}
