@@ -131,7 +131,7 @@ function startCountDown(game) {
       startGame(game);
     }
     game.countDown--;
-  }, 1000);
+  }, 5000);
 
   gameIntervals.set(game.id, [countdownInterval]);
 }
