@@ -130,7 +130,8 @@ def deposit_opitions_keyboard() -> InlineKeyboardMarkup:
     return reply_markup
 
 
-def withdraw_opitions_keyboard() -> InlineKeyboardMarkup:
+def withdraw_opitions_keyboard(context: ContextTypes.DEFAULT_TYPE) -> InlineKeyboardMarkup:
+    
     available_banks = get_available_banks().get("data",[])
     keyboard = []
     banks_to_bank_id = {}
@@ -150,7 +151,7 @@ def withdraw_opitions_keyboard() -> InlineKeyboardMarkup:
    
 
 async def withdraw_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    reply_markup = withdraw_opitions_keyboard() 
+    reply_markup = withdraw_opitions_keyboard(context) 
     await update.message.reply_text("Choose a withdraw method", reply_markup=reply_markup)
 
 
