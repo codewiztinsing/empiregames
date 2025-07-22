@@ -247,7 +247,7 @@ const PlayingBoard = () => {
 
             </div>
             <div className="choosen-numbers">
-              <span className='choosen-number'>#Card: {winnerCardNumber}</span>
+              <span className='choosen-number'>የካርቴላ ቁጥር :- {winnerCardNumber}</span>
               <button
               className="close-winner-button"
               onClick={handleCloseWinner}
@@ -439,9 +439,11 @@ const PlayingBoard = () => {
             </div>
 
           <div className='boards-container'>
+
+          {selectBoard && (
           <div className="bingo-header">
             <div className='selected-number'>
-              <p className='selected-number-label'>#Card</p>
+              <p className='selected-number-label'>የካርቴላ ቁጥር :-</p>
               <p className='selected-number-value'>{selectedNumber}</p>
             </div>
             <div className="bingo-letters">
@@ -452,6 +454,9 @@ const PlayingBoard = () => {
               <span className='bingo-letter-text'>O</span>
             </div>
           </div>
+          )
+
+}
 
           <div className="bingo-board">
             {selectBoard.map((row, rowIndex) => (
@@ -484,9 +489,10 @@ const PlayingBoard = () => {
 
          
 
+          {selectBoard2 !== null && (
           <div className="bingo-header">
             <div className='selected-number'>
-              <p className='selected-number-label'>#Card</p>
+              <p className='selected-number-label'>የካርቴላ ቁጥር :-</p>
               <p className='selected-number-value'>{selectedNumber2}</p>
             </div>
             <div className="bingo-letters">
@@ -497,6 +503,9 @@ const PlayingBoard = () => {
               <span className='bingo-letter-text'>O</span>
             </div>
           </div>
+          )
+
+}
 
           <div className="bingo-board">
             {selectBoard2.map((row, rowIndex) => (

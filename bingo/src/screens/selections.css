@@ -73,9 +73,13 @@ body, #root {
   font-size: 1em;
   font-weight: bold;
   color: white;
-  padding: 5px;
+  padding: 4px;
   border: 1px solid white;
   border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .board-grid {
@@ -143,24 +147,32 @@ body, #root {
   
 
 .combination-bingo-header-text:nth-child(2) {
-  background-color:yellow;
-  color: white;
+  background-color:orange;
+  color:white;
+  font-weight: bold;
+  font-size: 0.8em;
 
 }
 
 .combination-bingo-header-text:nth-child(3) {
-  background-color:yellow;
+  background-color:orange;
   color: white;
+  font-weight: bold;
+  font-size: 0.8em;
 }
 
 .combination-bingo-header-text:nth-child(4) {
   background-color:skyblue;
   color: white;
+  font-weight: bold;
+  font-size: 0.8em;
 }
 
 .combination-bingo-header-text:nth-child(5) {
   background-color:indigo;
   color: white;
+  font-weight: bold;
+  font-size: 0.8em;
 }
 
 
