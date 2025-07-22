@@ -108,8 +108,11 @@ const PlayingBoard = () => {
 
 
   function handleFalseBingo() {
-    toast.error("You made Faul!,you won't able to play curren game anymore");
-    setIsDisabled(true);
+    if (!isDisabled) {
+      toast.error("You made Faul!,you won't able to play curren game anymore");
+      setIsDisabled(true);
+    }
+
     return ;
   
   }
@@ -146,7 +149,12 @@ const PlayingBoard = () => {
 
   socket.on('falseBingo', (data) => {
     if (data.isBingo === false) {
-      handleFalseBingo()
+      if(data.playerId === playerId){
+        handleFalseBingo()
+      }
+
+      
+     
      
     }
    
