@@ -476,6 +476,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             BACK_URL = get_bot_seetings().get("bot_url")
             url = "/api/v1/wallet/chapa/create-session"
             full_url = f"{BACK_URL}{url}"
+            
 
             user_from_api = requests.get(f"{BACK_URL}/api/v1/users/{query.from_user.id}").json()
             phone_number = user_from_api.get("phone")
@@ -485,7 +486,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 "currency": "ETB",
                 "first_name": query.from_user.first_name,
                 "last_name": query.from_user.last_name or query.from_user.username,
-                "email": f"{query.from_user.first_name}@gmail.com",
+                "email": f"{query.from_user.username}@gmail.com",
                 "phone_number": phone_number,
                 "tx_ref":generate_tx_ref(),
                 "return_url":f"https://t.me/wowbingobotbotbot",
@@ -499,8 +500,11 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             }
 
             response = requests.post(full_url, json=data)
+            logger.info(f"response = {response}")
             if response.status_code == 200:
                 chapa_session = initialize_payment(**data)
+                logger.info(f"data = {chapa_session}")
+
                 data = chapa_session.get("data")
             
                 checkout_url = data.get("checkout_url")
@@ -582,10 +586,17 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     amount = update.message.text
 
-    # if float(amount) < 20:
-    #     await update.message.reply_text("Minimum deposit amount is 20 ETB. Please enter a higher amount.")
-    #     return DEPOSIT_AMOUNT
+    if float(amount) < 20:
+        await update.message.reply_text("Minimum deposit amount is 20 ETB. Please enter a higher amount.")
+        return DEPOSIT_AMOUNT
 
+    back_url = get_bot_seetings().get("bot_url")
+   
+    full_url = f"{back_url}/api/v1/users/{update.effective_user.id}"
+    logger.info(f"full_url = {full_url}")
+
+    phone = requests.get(full_url).json().get("phone")
+    print("phone = ",phone)
     context.user_data['deposit_amount'] = amount    
 
     message = """
@@ -594,7 +605,7 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     <b>📞 Phone:</b> {}  
     <b>💰 Amount:</b> {} ETB  
     <b>📅 Date:</b> {}
-    """.format(update.effective_user.username,"251940119495",amount,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    """.format(update.effective_user.username,phone,amount,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     inline_keyboard = [
         [InlineKeyboardButton("Chapa", callback_data='chapa')]
     ]
