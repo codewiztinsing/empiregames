@@ -37,11 +37,10 @@ const PlayingBoard = () => {
 
   useEffect(() => {
    
-    socket.on('numberSelected', (number) => {
-      setCurrentCall(number);
-    });
+    socket.on('numberSelected', (number) => {setCurrentCall(number);});
 
     if (lastBall) {
+      
       const element = document.getElementById(`${lastBall.letter}${lastBall.number}`);
       const recentBall = `${lastBall.letter}${lastBall.number}`
       setRecentCalledNumbers(prev => [...prev,recentBall])
@@ -49,8 +48,6 @@ const PlayingBoard = () => {
         setRecentCalledNumbers(prev => prev.slice(1));
       }
       element.classList.add("last-called")
-    
-      
     }
 
 
@@ -83,13 +80,13 @@ const PlayingBoard = () => {
     console.log(data);
  
 
-    if (data.lastBall && data.lastBall.length > 0 && data.roomId == roomId) {
-      setLastBall(data.lastBall[data.lastBall.length - 1]);   
-      setRecentCalledNumbers(prev => [...prev, data.lastBall[data.lastBall.length - 1]]);
-      if (recentCalledNumbers.length > 3) {
-        setRecentCalledNumbers(prev => prev.slice(1));
-      }
-    }
+    // if (data.lastBall && data.lastBall.length > 0 && data.roomId == roomId) {
+    //   setLastBall(data.lastBall[data.lastBall.length - 1]);   
+    //   setRecentCalledNumbers(prev => [...prev, data.lastBall[data.lastBall.length - 1]]);
+    //   if (recentCalledNumbers.length > 3) {
+    //     setRecentCalledNumbers(prev => prev.slice(1));
+    //   }
+    // }
 
 
     setLastBall(data.lastBall)
@@ -510,7 +507,7 @@ const PlayingBoard = () => {
 
          
         
-          {selectBoard2 !== null && (
+          {selectedNumber2 !== null && (
           <div className="bingo-header">
             <div className='selected-number'>
               <p className='selected-number-label'>የካርቴላ ቁጥር :-</p>
@@ -558,14 +555,13 @@ const PlayingBoard = () => {
         
        
 
+       {selectedNumber2 !== null && (
           <div className="game-controls">
             <button className={`bingo-button-card-${selectedNumber2}`} onClick={() => handleBingo(selectBoard2,selectedNumber2)} disabled={secondBoardLost}>
              {secondBoardLost ? "You made Faul" : "BINGO!"}
             </button>
-            
-
-            
           </div>
+       )}
 
         </div>
       </div>

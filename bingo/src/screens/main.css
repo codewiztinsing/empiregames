@@ -1,3 +1,7 @@
+body {
+  background-color: rgb(44,40,86);
+}
+
 .game-container {
   padding: 8px;
   min-height: 100vh;
@@ -459,10 +463,12 @@
 }
 
 .bingo-board {
-  /* margin-left: -6px; */
   padding: 3px;
   border-radius: 2px;
   border: 2px solid #ccc;
+  height: 100%;
+  width: 168px;
+  
 
 }
 
@@ -479,8 +485,8 @@
 }
 [class^="bingo-button-card"] {
   margin-top: 10px;
-  width: 200px;
-  height: 30px;
+  width: 180px;
+  height: 40px;
   background-color: orange;
   border-radius: 5px;
   font-size: 10px;

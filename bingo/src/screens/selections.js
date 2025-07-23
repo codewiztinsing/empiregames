@@ -417,6 +417,9 @@ const Selections = () => {
               </div>
 
 
+
+           
+            {selectedNumber2 && (
               <div className="combination-board">  
                 <div className='card-number-container'>
                 <div className='card-number'># Card {selectedNumber2}</div>
@@ -438,10 +441,12 @@ const Selections = () => {
               <div className="combination-bingo-header-text">
                 O
               </div>
-              
+            
             </div>
+         
 
-                </div>
+
+            </div>
                 
                 
               
@@ -465,7 +470,8 @@ const Selections = () => {
                     ))}
                   </div>
                  
-                </div>
+              </div>
+            )}
 
 
            
