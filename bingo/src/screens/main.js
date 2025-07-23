@@ -249,7 +249,7 @@ const PlayingBoard = () => {
                       ? '#ff0000'
                       : cell.marked
                       ? '#00ff00'
-                      : 'transparent',
+                      : 'white',
                   }}
                 >
                   <span>{cell.number}</span>
