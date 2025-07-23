@@ -86,7 +86,7 @@ async  function endGame(game) {
   game.status = "waiting";
   game.gameOver = false;
   game.winner = null;
-  game.countDown = getConstant().countDown;
+  game.countDown = 30;
   game.isCountStart = false;
 
   for (const [socketId, user] of users.entries()) {
@@ -464,37 +464,37 @@ io.on('connection', (socket) => {
 // });
 
 // Helper function to check bingo for a single card
-function checkSingleCardBingo(markedCard) {
-    // Check rows
-    for (let row = 0; row < 5; row++) {
-        if (markedCard[row].every(cell => cell.marked || cell === '*')) return true;
-    }
+// function checkSingleCardBingo(markedCard) {
+//     // Check rows
+//     for (let row = 0; row < 5; row++) {
+//         if (markedCard[row].every(cell => cell.marked || cell === '*')) return true;
+//     }
 
-    // Check columns
-    for (let col = 0; col < 5; col++) {
+//     // Check columns
+//     for (let col = 0; col < 5; col++) {
       
-        if (markedCard.every(row => row[col].marked || row[col] === '*')) return true;
+//         if (markedCard.every(row => row[col].marked || row[col] === '*')) return true;
 
-    }
+//     }
 
-    // Check diagonals
-    if (markedCard[0][0].marked && markedCard[1][1].marked && 
-        markedCard[2][2].marked && markedCard[3][3].marked && markedCard[4][4].marked) {
-        return true;
-    }
-    if (markedCard[0][4].marked && markedCard[1][3].marked && 
-        markedCard[2][2].marked && markedCard[3][1].marked && markedCard[4][0].marked) {
-        return true;
-    }
+//     // Check diagonals
+//     if (markedCard[0][0].marked && markedCard[1][1].marked && 
+//         markedCard[2][2].marked && markedCard[3][3].marked && markedCard[4][4].marked) {
+//         return true;
+//     }
+//     if (markedCard[0][4].marked && markedCard[1][3].marked && 
+//         markedCard[2][2].marked && markedCard[3][1].marked && markedCard[4][0].marked) {
+//         return true;
+//     }
 
-    // Check four corners
-    if (markedCard[0][0].marked && markedCard[0][4].marked &&
-        markedCard[4][0].marked && markedCard[4][4].marked) {
-        return true;
-    }
+//     // Check four corners
+//     if (markedCard[0][0].marked && markedCard[0][4].marked &&
+//         markedCard[4][0].marked && markedCard[4][4].marked) {
+//         return true;
+//     }
 
-    return false;
-}
+//     return false;
+// }
   
 
   // socket.on("bingo", async (data) => {
