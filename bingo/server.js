@@ -7,7 +7,7 @@ const cors = require('cors');
 const { generateBalls } = require('./src/helpers/ball');
 const { checkBingo, markPlayerCard } = require('./src/helpers/bingo');
 const { checkSingleCardBingo } = require('./src/helpers/singleBingo');
-const { gameWinWallet,gameLossWallet,updateLastGame } = require('./api');
+const { gameWinWallet,gameLossWallet,updateLastGame,getGameSettings } = require('./api');
 const ip = require('ip');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -16,10 +16,11 @@ app.use(cors());
 const server = http.createServer(app);
 
 
-const getConstant = () => {
+const getConstant = async () => {
+  const gameSettings = await getGameSettings();
   return {
-    gameSpeed: 500,
-    countDown: 3
+    gameSpeed: parseInt(gameSettings.game_speed),
+    countDown: parseInt(gameSettings.count_down_time)
   }
 }
 
@@ -40,7 +41,12 @@ const gameIntervals = new Map();
 const users = new Map();
 const winners = [];
 
-function createGame(roomId) {
+async function createGame(roomId) {
+  const gameSettings = await getConstant();
+  console.log("gameSettings",gameSettings)
+  console.log("countDown",gameSettings.countDown)
+  console.log("gameSpeed",gameSettings.gameSpeed)
+
   const game = {
     id: roomId,
     players: new Map(), // Map<playerId, Board[]>
@@ -53,9 +59,9 @@ function createGame(roomId) {
     status: 'waiting',
     winner: null,
     gameOver: false,
-    countDown: getConstant().countDown,
+    countDown: gameSettings.countDown,
     isCountStart: false,
-    gameSpeed:getConstant().gameSpeed,
+    gameSpeed:gameSettings.gameSpeed,
     roomId
   };
   activeGames.set(roomId, game);

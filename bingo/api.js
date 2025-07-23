@@ -112,6 +112,14 @@ const updateLastGame = async (roomId)=>{
 
 
 
+const getGameSettings = async ()=>{
+  const backUrl = process.env.BACK_URL
+  const gameSettingsUrl = backUrl + 'game/game-settings/'
+  const response = await axios.get(gameSettingsUrl)
+  const data = response.data;
+  return data;
+}
+
 
 
   
@@ -120,6 +128,7 @@ const updateLastGame = async (roomId)=>{
     gameWinWallet,
     checkBalance,
     gameLossWallet,
-    updateLastGame
+    updateLastGame,
+    getGameSettings
   };
   
