@@ -58,14 +58,12 @@ const PlayingBoard = () => {
     };
   }, [socket, lastBall, selectedCell, isBingo]);
 
-  const handleBingo = () => {
+  const handleBingo = (board) => {
     if(totalCalledNumbers === 0){
       toast.error("Game is not started yet");
       return;
     }
    
-    console.log("player name = ",playerName)
-
     socket.emit('bingo', {
       gameId: gameId,
       roomId: roomId,
@@ -73,7 +71,8 @@ const PlayingBoard = () => {
       markedCells: Array.from(selectedCell),
       selectedNumber: selectedNumber,
       selectedNumber2: selectedNumber2,
-      playerName: playerName
+      playerName: playerName,
+      board: board
     });
 
   };
@@ -147,6 +146,14 @@ const PlayingBoard = () => {
     }
   })
 
+  // socket.on('falseBingo', (data) => {
+  //   if (data.isBingo === false) {
+     
+  //     if(data.playerId === playerId){
+  //       handleFalseBingo()
+  //     }
+  //   }
+  // })
 
 
   socket.on('falseBingo', (data) => {
@@ -376,8 +383,18 @@ const PlayingBoard = () => {
             ))}
           </div>
         </div>
+        <div className="action-buttons">
+              <button className="refresh-button" onClick={handleRefresh}>
+                Refresh
+              </button>
+              <button className="leave-button" onClick={handleLeave}>
+                Leave
+              </button>
       </div>
 
+      </div>
+
+      
 
       <div className="bingo-content">
 
@@ -486,6 +503,9 @@ const PlayingBoard = () => {
 
                 </div>
             
+        <button className="bingo-button-card-1" onClick={() => handleBingo(selectBoard)} disabled={isDisabled}>
+             {isDisabled ? "You made Faul" : "BINGO!"}
+          </button>
 
           <div className='line'>
 
@@ -542,17 +562,10 @@ const PlayingBoard = () => {
        
 
           <div className="game-controls">
-            <button className="bingo-button" onClick={handleBingo} disabled={isDisabled}>
+            <button className="bingo-button" onClick={() => handleBingo(selectBoard2)} disabled={isDisabled}>
              {isDisabled ? "You made Faul" : "BINGO!"}
             </button>
-            <div className="action-buttons">
-              <button className="refresh-button" onClick={handleRefresh}>
-                Refresh
-              </button>
-              <button className="leave-button" onClick={handleLeave}>
-                Leave
-              </button>
-            </div>
+            
 
             
           </div>

@@ -318,9 +318,9 @@ io.on('connection', (socket) => {
    
 
   });
-
-
-socket.on("bingo", async (data) => {
+  
+  
+  socket.on("bingo", async (data) => {
     const game = activeGames.get(data.gameId);
     if (!game || game.status !== 'in-progress') return;
 
