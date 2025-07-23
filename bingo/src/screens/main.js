@@ -28,6 +28,8 @@ const PlayingBoard = () => {
   const [hasToasted, setHasToasted] = useState(false);
   const [winnerPlayerName, setWinnerPlayerName] = useState("");
   const [isDisabled,setIsDisabled] = useState(false)
+  const [firstBoardLost,setFirstBoardLost] = useState(false)
+  const [secondBoardLost,setSecondBoardLost] = useState(false)
   // const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -56,9 +58,9 @@ const PlayingBoard = () => {
     return () => {
       socket.off('numberSelected');
     };
-  }, [socket, lastBall, selectedCell, isBingo]);
+  }, [socket, lastBall, selectedCell, isBingo,firstBoardLost,secondBoardLost]);
 
-  const handleBingo = (board) => {
+  const handleBingo = (board,boardNumber) => {
     if(totalCalledNumbers === 0){
       toast.error("Game is not started yet");
       return;
@@ -69,10 +71,9 @@ const PlayingBoard = () => {
       roomId: roomId,
       playerId: playerId,
       markedCells: Array.from(selectedCell),
-      selectedNumber: selectedNumber,
-      selectedNumber2: selectedNumber2,
       playerName: playerName,
-      board: board
+      board: board,
+      boardNumber:boardNumber
     });
 
   };
@@ -106,12 +107,15 @@ const PlayingBoard = () => {
   socket.on('gameState', handleGameState);
 
 
-  function handleFalseBingo() {
-    if (!isDisabled) {
-      toast.error("You made Faul!,you won't able to play curren game anymore");
-      setIsDisabled(true);
+  function handleFalseBingo(data) {
+    const losserBoard = data.losser_board
+    if (losserBoard === selectedNumber){
+      setFirstBoardLost(true)
     }
-
+    if (losserBoard === selectedNumber2){
+      setSecondBoardLost(true)
+    }
+    
     return ;
   
   }
@@ -146,19 +150,11 @@ const PlayingBoard = () => {
     }
   })
 
-  // socket.on('falseBingo', (data) => {
-  //   if (data.isBingo === false) {
-     
-  //     if(data.playerId === playerId){
-  //       handleFalseBingo()
-  //     }
-  //   }
-  // })
-
+ 
 
   socket.on('falseBingo', (data) => {
     if (data.playerId === playerId && data.isBingo === false) {
-      handleFalseBingo();
+      handleFalseBingo(data);
     }
   });
 
@@ -503,8 +499,8 @@ const PlayingBoard = () => {
 
                 </div>
             
-        <button className="bingo-button-card-1" onClick={() => handleBingo(selectBoard)} disabled={isDisabled}>
-             {isDisabled ? "You made Faul" : "BINGO!"}
+        <button className={`bingo-button-card-${selectedNumber}`} onClick={() => handleBingo(selectBoard,selectedNumber)} disabled={firstBoardLost}>
+             {firstBoardLost ? "You made Faul" : "BINGO!"}
           </button>
 
           <div className='line'>
@@ -562,8 +558,8 @@ const PlayingBoard = () => {
        
 
           <div className="game-controls">
-            <button className="bingo-button" onClick={() => handleBingo(selectBoard2)} disabled={isDisabled}>
-             {isDisabled ? "You made Faul" : "BINGO!"}
+            <button className={`bingo-button-card-${selectedNumber2}`} onClick={() => handleBingo(selectBoard2,selectedNumber2)} disabled={secondBoardLost}>
+             {secondBoardLost ? "You made Faul" : "BINGO!"}
             </button>
             
 

@@ -37,7 +37,6 @@ function markPlayerCard(playerCard,calledNumbers){
         });
     });
     
-    console.log("markedCard in markPlayerCard",markedCard)
     return markedCard;
 }
 

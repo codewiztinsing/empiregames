@@ -6,6 +6,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const { generateBalls } = require('./src/helpers/ball');
 const { checkBingo, markPlayerCard } = require('./src/helpers/bingo');
+const { checkSingleCardBingo } = require('./src/helpers/singleBingo');
 const { gameWinWallet,gameLossWallet,updateLastGame } = require('./api');
 const ip = require('ip');
 const dotenv = require('dotenv');
@@ -13,6 +14,14 @@ dotenv.config();
 const app = express();
 app.use(cors());
 const server = http.createServer(app);
+
+
+const getConstant = () => {
+  return {
+    gameSpeed: 500,
+    countDown: 3
+  }
+}
 
 const io = socketIo(server, {
   cors: {
@@ -44,8 +53,9 @@ function createGame(roomId) {
     status: 'waiting',
     winner: null,
     gameOver: false,
-    countDown: 30,
+    countDown: getConstant().countDown,
     isCountStart: false,
+    gameSpeed:getConstant().gameSpeed,
     roomId
   };
   activeGames.set(roomId, game);
@@ -63,7 +73,7 @@ function clearGameIntervals(gameId) {
 }
 
 async  function endGame(game) {
-  io.emit("waitingGames",   getWaitingGames(activeGames));
+
   clearGameIntervals(game.id);
   game.players.clear();
   game.calledNumbers = [];
@@ -71,7 +81,7 @@ async  function endGame(game) {
   game.status = "waiting";
   game.gameOver = false;
   game.winner = null;
-  game.countDown = 30;
+  game.countDown = getConstant().countDown;
   game.isCountStart = false;
 
   for (const [socketId, user] of users.entries()) {
@@ -79,9 +89,7 @@ async  function endGame(game) {
   }
 
   const data = await updateLastGame(game.roomId);
-  console.log("updateLastGame data",data)
-
- 
+  console.log("game updating data ",data)
   startCountDown(game);
 }
 
@@ -104,9 +112,10 @@ function getWaitingGames(activeGames,status="in-progress") {
 }
 
 function startCountDown(game) {
+ 
   if (game.isCountStart || game.players.size < 2) return;
   clearGameIntervals(game.id);
-  game.countDown = 30;
+  game.countDown = game.countDown;
   game.isCountStart = true;
 
   const countdownInterval = setInterval(() => {
@@ -125,7 +134,7 @@ function startCountDown(game) {
       clearInterval(countdownInterval);
       game.isCountStart = false;
       game.status = "waiting";
-      game.countDown = 30;
+      game.countDown = game.countDown;
       game.currentCall = null;
       game.calledNumbers = [];
       startGame(game);
@@ -195,7 +204,7 @@ async function startGame(game) {
       })
       endGame(game);
     }
-  }, 5000);
+  }, game.gameSpeed);
  
 
   gameIntervals.set(game.id, [gameInterval]);
@@ -300,8 +309,6 @@ io.on('connection', (socket) => {
       players: playersList
     });
 
-    console.log("selected numbers size ",game.selectedNumbers.size)
-
     if (!game.isCountStart && game.players.size >= 2) {
       startCountDown(game);
     }
@@ -319,84 +326,130 @@ io.on('connection', (socket) => {
 
   });
   
-  
+
   socket.on("bingo", async (data) => {
     const game = activeGames.get(data.gameId);
     if (!game || game.status !== 'in-progress') return;
 
+
     const playerCards = game.players.get(data.playerId);
     if (!playerCards || !Array.isArray(playerCards)) return;
+    const board = data.board
+    const boardNumber = data.boardNumber
+    console.log("boardNumber ",boardNumber)
+    const markedSingleCard = markPlayerCard(board, game.calledNumbers)
+    const isSingleBingo = checkSingleCardBingo(markedSingleCard)
+    if(isSingleBingo){
 
-    console.log("Checking bingo for player:", data.playerId, "with cards:", playerCards);
-
-    const isBingo = checkBingo(playerCards, game.calledNumbers);
-    
-    if (isBingo) {
-        // Game over logic
-        game.status = 'waiting';
-        game.winner = data.playerId;
-        game.gameOver = true;
-
-        // Find the winning card (the first one that has a bingo)
-        const winningCard = playerCards.find(card => {
-            const markedCard = markPlayerCard(card, game.calledNumbers);
-            return checkSingleCardBingo(markedCard);
-        }) || playerCards[0]; // Fallback to first card if none found (shouldn't happen)
-
-        const markedWinningCard = markPlayerCard(winningCard, game.calledNumbers);
-
-        console.log(`Bingo confirmed for player ${data.playerName} (${data.playerId})`);
-
-        // Emit win event
-        io.to(game.roomId).emit("winBingo", {
+      io.to(game.roomId).emit("winBingo", {
             isBingo: true,
             playerId: data.playerId,
-            markedCells: markedWinningCard,
-            winningCard: markedWinningCard,
+            markedCells: markedSingleCard,
+            winningCard: markedSingleCard,
             winner: data.playerId,
             calledNumbers: game.calledNumbers,
-            playerCard: winningCard,
-            winner_Number: data.selectedNumber,
+            playerCard: boardNumber,
+            winner_Number: boardNumber,
             playerName: data.playerName,
             currentCall: game.currentCall,
             gameId: data.gameId,
             total_winAmount: game.total_winAmount,
             total_players: game.total_players,
             roomId: data.roomId
-        });
-
-        // Record winner and process payout
-        winners.push({ 
-            roomId: game.roomId, 
-            winner: data.playerId, 
-            time: new Date(),
-            winAmount: game.total_winAmount
-        });
-        
-        try {
-            await gameWinWallet(data.playerId, game.roomId, game.total_winAmount);
-        } catch (error) {
-            console.error("Error processing win wallet:", error);
-            // Handle error (maybe notify admin)
-        }
-        
-        endGame(game);
-    } else {
-        console.log(`False bingo called by player ${data.playerName} (${data.playerId})`);
-        
-        io.to(game.roomId).emit("falseBingo", {
-            isBingo: false,
-            playerId: data.playerId,
-            calledNumbers: game.calledNumbers,
-            currentCall: game.currentCall,
-            gameId: data.gameId,
-            total_winAmount: game.total_winAmount,
-            total_players: game.total_players,
-            roomId: data.roomId,
-            playerName: data.playerName  // Added for consistency
-        });
+      })
+      endGame(game);
     }
+
+    else{
+      io.to(game.roomId).emit("falseBingo", {
+        isBingo: false,
+        playerId: data.playerId,
+        losser_board: boardNumber,
+      })
+    }
+      
+
+  
+    
 });
+  
+//   socket.on("bingo", async (data) => {
+//     const game = activeGames.get(data.gameId);
+//     if (!game || game.status !== 'in-progress') return;
+
+//     const playerCards = game.players.get(data.playerId);
+//     if (!playerCards || !Array.isArray(playerCards)) return;
+
+//     console.log("Checking bingo for player:", data.playerId, "with cards:", playerCards);
+
+//     const isBingo = checkBingo(playerCards, game.calledNumbers);
+    
+//     if (isBingo) {
+//         // Game over logic
+//         game.status = 'waiting';
+//         game.winner = data.playerId;
+//         game.gameOver = true;
+
+//         // Find the winning card (the first one that has a bingo)
+//         const winningCard = playerCards.find(card => {
+//             const markedCard = markPlayerCard(card, game.calledNumbers);
+//             return checkSingleCardBingo(markedCard);
+//         }) || playerCards[0]; // Fallback to first card if none found (shouldn't happen)
+
+//         const markedWinningCard = markPlayerCard(winningCard, game.calledNumbers);
+
+//         console.log(`Bingo confirmed for player ${data.playerName} (${data.playerId})`);
+
+//         // Emit win event
+//         io.to(game.roomId).emit("winBingo", {
+//             isBingo: true,
+//             playerId: data.playerId,
+//             markedCells: markedWinningCard,
+//             winningCard: markedWinningCard,
+//             winner: data.playerId,
+//             calledNumbers: game.calledNumbers,
+//             playerCard: winningCard,
+//             winner_Number: data.selectedNumber,
+//             playerName: data.playerName,
+//             currentCall: game.currentCall,
+//             gameId: data.gameId,
+//             total_winAmount: game.total_winAmount,
+//             total_players: game.total_players,
+//             roomId: data.roomId
+//         });
+
+//         // Record winner and process payout
+//         winners.push({ 
+//             roomId: game.roomId, 
+//             winner: data.playerId, 
+//             time: new Date(),
+//             winAmount: game.total_winAmount
+//         });
+        
+//         try {
+//             await gameWinWallet(data.playerId, game.roomId, game.total_winAmount);
+//         } catch (error) {
+//             console.error("Error processing win wallet:", error);
+//             // Handle error (maybe notify admin)
+//         }
+        
+//         endGame(game);
+//     } else {
+//         console.log(`False bingo called by player ${data.playerName} (${data.playerId})`);
+        
+//         io.to(game.roomId).emit("falseBingo", {
+//             isBingo: false,
+//             playerId: data.playerId,
+//             calledNumbers: game.calledNumbers,
+//             currentCall: game.currentCall,
+//             gameId: data.gameId,
+//             total_winAmount: game.total_winAmount,
+//             total_players: game.total_players,
+//             roomId: data.roomId,
+//             playerName: data.playerName  // Added for consistency
+//         });
+//     }
+// });
 
 // Helper function to check bingo for a single card
 function checkSingleCardBingo(markedCard) {

@@ -477,7 +477,7 @@
   border-radius: 2px;
 
 }
-.bingo-button-card-1 {
+[class^="bingo-button-card"] {
   margin-top: 10px;
   width: 200px;
   height: 30px;
