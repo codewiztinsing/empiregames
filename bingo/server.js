@@ -362,6 +362,13 @@ io.on('connection', (socket) => {
             total_players: game.total_players,
             roomId: data.roomId
       })
+
+      try {
+        await gameWinWallet(data.playerId, game.roomId, game.total_winAmount);
+      } catch (error) {
+        console.error("Error processing win wallet:", error);
+      }
+
       endGame(game);
     }
 
