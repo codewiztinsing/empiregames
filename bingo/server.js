@@ -18,8 +18,8 @@ const server = http.createServer(app);
 
 const getConstant = async () => {
   return {
-    gameSpeed: 5000,
-    countDown: 30
+    gameSpeed: 500,
+    countDown: 3
   }
 }
 
@@ -78,7 +78,6 @@ function clearGameIntervals(gameId) {
 }
 
 async  function endGame(game) {
-
   clearGameIntervals(game.id);
   game.players.clear();
   game.calledNumbers = [];

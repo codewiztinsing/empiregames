@@ -296,7 +296,7 @@ async def instruction_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     BACK_URL = get_bot_seetings().get("bot_url")
-    username = query.from_user.username or query.from_user.first_name 
+    username = query.from_user.username 
     await query.answer()
   
 
@@ -331,7 +331,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 return
 
             player_id = query.from_user.id
-            web_app_url = f"{BACK_URL}?playerId={player_id}&betAmount={bet_amount}&playerName={username}"
+            web_app_url = f"{BACK_URL}?playerId={player_id}&betAmount={bet_amount}&playerName={query.from_user.username}"
             
             await query.edit_message_text(
                 text=f"Starting game with {bet_amount} ETB bet...",
@@ -356,7 +356,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 f"{BACK_URL}/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={wallet_amount}&demo=true"
             )
 
-            print("web_app_url = ",web_app_url)
             await query.edit_message_text(
                 text=f"Starting demo game...",
                 reply_markup=InlineKeyboardMarkup([[
