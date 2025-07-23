@@ -61,6 +61,7 @@ const PlayingBoard = () => {
   }, [socket, lastBall, selectedCell, isBingo,firstBoardLost,secondBoardLost]);
 
   const handleBingo = (board,boardNumber) => {
+    console.log("playerName",playerName)
     if(totalCalledNumbers === 0){
       toast.error("Game is not started yet");
       return;
@@ -201,7 +202,7 @@ const PlayingBoard = () => {
 
     setIsBingo(false);
     const queryParams =
-      navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
+      navigate(`/?playerId=${playerId}&&betAmount=${roomId}&&playerName=${playerName}`);
   };
 
   return (
