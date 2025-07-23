@@ -19,8 +19,8 @@ const server = http.createServer(app);
 const getConstant = async () => {
   const gameSettings = await getGameSettings();
   return {
-    gameSpeed: parseInt(gameSettings.game_speed),
-    countDown: parseInt(gameSettings.count_down_time)
+    gameSpeed: 5000,
+    countDown: 30
   }
 }
 
