@@ -25,4 +25,9 @@ class NextGameSchema(Schema):
     bet_amount: int
 
 
+
+
+class GameSettingsSchema(Schema):
+    game_speed: int
+    count_down_time: int
     

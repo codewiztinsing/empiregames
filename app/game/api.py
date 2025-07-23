@@ -5,9 +5,9 @@ from users.models import User
 from wallet.models import Wallet
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from .models import Game, PlayerGame
+from .models import Game, PlayerGame,GameSettings
 from .tasks import charge_player,push_transaction,update_player_balance
-from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema
+from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema
 from ninja.errors import HttpError  # Correct import
 
 
@@ -69,4 +69,13 @@ def update_last_game(request):
     game.save()
   
     return GameSchema(bet_amount=game.entry_fee,game_id=game.id)
+
+
+@game_router.get("/game-settings/",response=GameSettingsSchema)
+def game_settings(request):
+    logger.info(f"Game settings: {request}")
+    game_settings = GameSettings.objects.first()
+    if not game_settings:
+        game_settings = GameSettings.objects.create(game_speed=5000,count_down_time=30)
+    return GameSettingsSchema(game_speed=game_settings.game_speed,count_down_time=game_settings.count_down_time)
    

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Game,PlayerGame
+from .models import Game,PlayerGame,GameSettings
 
 admin.site.site_header = "Wow Bingo Admin"
 admin.site.site_title = "Wow Bingo Admin Portal"
@@ -22,4 +22,13 @@ class PlayerGameAdmin(admin.ModelAdmin):
     search_fields = ('id', 'user__username', 'game__entry_fee')
     list_per_page = 10
 
+
+class GameSettingsAdmin(admin.ModelAdmin):
+    list_display = ('id', 'game_speed', 'count_down_time')
+    list_filter = ('game_speed', 'count_down_time')
+    search_fields = ('id',)
+    list_per_page = 10
+
+
 admin.site.register(PlayerGame, PlayerGameAdmin)
+admin.site.register(GameSettings, GameSettingsAdmin)

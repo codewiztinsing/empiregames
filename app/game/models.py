@@ -25,3 +25,15 @@ class Winner(models.Model):
 
     def __str__(self):
         return f"{self.player.user.username} - {self.prize}"
+
+
+
+class GameSettings(models.Model):
+    game_speed = models.IntegerField()
+    count_down_time = models.IntegerField()
+ 
+   
+
+    def __str__(self):
+        return f"{self.game_speed} - {self.count_down_time}"
+    
