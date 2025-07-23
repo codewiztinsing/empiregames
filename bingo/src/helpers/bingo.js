@@ -23,16 +23,14 @@ function turnMarkedCellsToCard(markedCells){
 
 
 function markPlayerCard(playerCard,calledNumbers){
-   
-    // Create a new marked card based on playerCard structure
-    // Extract just the called numbers into an array
+
     const calledNumbersOnly = calledNumbers.map(num => num.number || num);
     const markedCard = playerCard.map(row => {
      
         return row.map(cell => {
             return {
                 number: cell,
-                marked: calledNumbersOnly.includes(cell)
+                marked: calledNumbersOnly.includes(cell) || cell == "*"
             };
         });
     });
