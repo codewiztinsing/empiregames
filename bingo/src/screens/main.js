@@ -40,7 +40,6 @@ const PlayingBoard = () => {
     socket.on('numberSelected', (number) => {setCurrentCall(number);});
 
     if (lastBall) {
-      
       const element = document.getElementById(`${lastBall.letter}${lastBall.number}`);
       const recentBall = `${lastBall.letter}${lastBall.number}`
       setRecentCalledNumbers(prev => [...prev,recentBall])
@@ -497,7 +496,14 @@ const PlayingBoard = () => {
 
                 </div>
             
-        <button className={`bingo-button-card-${selectedNumber}`} onClick={() => handleBingo(selectBoard,selectedNumber)} disabled={firstBoardLost}>
+        <button className={`bingo-button-card-${selectedNumber}`} 
+              onClick={() => handleBingo(selectBoard,selectedNumber)} 
+              disabled={firstBoardLost}
+              style={{
+                backgroundColor: firstBoardLost ? "red" : "orange"
+              }}
+          
+          >
              {firstBoardLost ? "You made Faul" : "BINGO!"}
           </button>
 
@@ -557,7 +563,13 @@ const PlayingBoard = () => {
 
        {selectedNumber2 !== null && (
           <div className="game-controls">
-            <button className={`bingo-button-card-${selectedNumber2}`} onClick={() => handleBingo(selectBoard2,selectedNumber2)} disabled={secondBoardLost}>
+            <button className={`bingo-button-card-${selectedNumber2}`} 
+                  onClick={() => handleBingo(selectBoard2,selectedNumber2)} 
+                  disabled={secondBoardLost}
+                  style={{
+                    backgroundColor: secondBoardLost ? "red" : "orange"
+                  }}
+            >
              {secondBoardLost ? "You made Faul" : "BINGO!"}
             </button>
           </div>
