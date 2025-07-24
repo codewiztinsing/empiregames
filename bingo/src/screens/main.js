@@ -266,7 +266,7 @@ const PlayingBoard = () => {
                   key={rowIndex}
                   className="winning-card-cell"
                   style={{
-                    backgroundColor: isRowComplete
+                    backgroundColor: isRowComplete || isColumnComplete || isDiagonalComplete
                       ? 'green'
                       : row[colIndex].marked
                       ? 'red'
