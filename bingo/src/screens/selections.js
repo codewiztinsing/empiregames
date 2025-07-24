@@ -175,7 +175,14 @@ const Selections = () => {
         }
       }
     }
-    return card;
+    // return card;
+    // Transpose the card array
+    const transposedCard = card[0].map((_, colIndex) => 
+      card.map(row => row[colIndex])
+    );
+    return transposedCard;
+
+
   }, []);
 
 
