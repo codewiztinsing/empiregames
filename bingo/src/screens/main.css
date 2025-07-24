@@ -668,7 +668,7 @@ body {
 .winner-card-header-winner-number {
   font-size: 1.5rem;
   font-weight: bold;
-  color: green !important;
+  /* color: green !important; */
   animation: fadeIn 0.8s infinite;
 }
 

@@ -257,6 +257,8 @@ const PlayingBoard = () => {
           const isFourEdgesComplete = winningCard[0][2].marked && winningCard[2][0].marked &&
                                     winningCard[2][4].marked && winningCard[4][2].marked;
 
+         
+
           return (
             <div key={colIndex} className="winning-card-row">
               {winningCard.map((row, rowIndex) => (
@@ -264,10 +266,9 @@ const PlayingBoard = () => {
                   key={rowIndex}
                   className="winning-card-cell"
                   style={{
-                    backgroundColor: isRowComplete || isColumnComplete || isDiagonalComplete || isReverseDiagonalComplete || isFourCornersComplete || isFourEdgesComplete
+                    backgroundColor: isRowComplete
                       ? 'green'
                       : row[colIndex].marked
-                    
                       ? 'red'
                       : 'white',
                   }}
