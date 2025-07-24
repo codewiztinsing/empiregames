@@ -7,7 +7,8 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from .models import Game, PlayerGame,GameSettings
 from .tasks import charge_player,push_transaction,update_player_balance
-from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema
+from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema,PlayerGamesCountSchema
+from wallet.models import Transaction
 from ninja.errors import HttpError  # Correct import
 
 
@@ -79,3 +80,14 @@ def game_settings(request):
         game_settings = GameSettings.objects.create(game_speed=5000,count_down_time=30)
     return GameSettingsSchema(game_speed=game_settings.game_speed,count_down_time=game_settings.count_down_time)
    
+
+
+@game_router.get("/player-games-count/",response=PlayerGamesCountSchema)
+def player_games_count(request):
+    logger.info(f"Player games count: {request}")
+    telegram_id = request.GET.get("telegram_id")
+    user = User.objects.filter(telegram_id = telegram_id).first()
+    transaction = Transaction.objects.filter(user=user,type="BET").count()
+    return PlayerGamesCountSchema(player_games_count=transaction)
+    
+

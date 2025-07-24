@@ -3,7 +3,7 @@ from users.models import User
 
 class Wallet(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    balance = models.FloatField(default=0.00)
+    balance = models.FloatField(default=20.00)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -30,4 +30,15 @@ class NextGameSchema(Schema):
 class GameSettingsSchema(Schema):
     game_speed: int
     count_down_time: int
-    
+
+
+class PlayerGamesCountSchema(Schema):
+    player_games_count: int
+
+
+class PlayerGamesCountSchema(Schema):
+    player_games_count: int
+
+
+class PlayerGamesCountSchema(Schema):
+    player_games_count: int

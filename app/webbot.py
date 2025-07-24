@@ -29,6 +29,7 @@ from telegram.ext import (
 from datetime import datetime
 from telegram import BotCommand
 from register import *
+from helpers import get_numbers_of_games_played
 
 
 
@@ -181,6 +182,13 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             await update.message.reply_text(f"Withdrawal amount must be at least 100 ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
+        game_played = get_numbers_of_games_played(telegram_id)
+        logger.info(f"game_played {game_played}")
+
+        if game_played < 5:
+            await update.message.reply_text(f"You must play at least 5 games before withdrawing. Please play more games.")
+            return WITHDRAW_AMOUNT_CONFIRM
+
         
         # Check if withdrawal amount exceeds balance
         if int(amount) > int(balance):
@@ -193,9 +201,10 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             context.user_data['withdraw_amount'] = amount
             logger.info(f"context.user_data['withdraw_amount'] {context.user_data['withdraw_amount']}") 
             banks_to_bank_id = context.user_data['banks_to_bank_id']
-            logger.info(f"banks_to_bank_id {banks_to_bank_id}")
-            bank_name = banks_to_bank_id.get(context.user_data['bank_id'])
+            bank_name = banks_to_bank_id.get(int(context.user_data['bank_id']))
             logger.info(f"bank_name {bank_name}")
+            logger.info(f"banks_to_bank_id {banks_to_bank_id}")
+            logger.info(f"bank id  {context.user_data['bank_id']}")
             await update.message.reply_text(
                 f"Please enter your {bank_name} number  where you want to receive the withdrawal:"
             )
