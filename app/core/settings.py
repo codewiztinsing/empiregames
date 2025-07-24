@@ -15,7 +15,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG')
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
+print("DEBUG = ",DEBUG)
+
+# Custom 404 page settings
+HANDLER404 = 'core.views.custom_404'
+
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "wowliyubingo.com", "server.wowliyubingo.com"]
 CSRF_TRUSTED_ORIGINS = ["https://wowliyubingo.com", "https://*.ngrok.app"]

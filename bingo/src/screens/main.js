@@ -146,7 +146,7 @@ const PlayingBoard = () => {
 
   socket.on('gameOver', (data) => {
     if (data.roomId == roomId) {
-      navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
+      navigate(`/?playerId=${playerId}&&betAmount=${roomId}&playerName=${playerName}`);
     }
   })
 
@@ -187,7 +187,7 @@ const PlayingBoard = () => {
       selectedNumber2
 
     })
-    navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
+    navigate(`/?playerId=${playerId}&&betAmount=${roomId}&playerName=${playerName}`);
 
     window.location.reload();
   };
