@@ -226,8 +226,16 @@ const PlayingBoard = () => {
         <p className='winner-card-header-text'>Bingo Winner!</p>
       </div>
 
-      <p className='winner-card-header-winner-number'>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
-      <p className='winner-card-header-text'>ስም : {winnerPlayerName},is Winner</p>
+      <p className='winner-card-header-winner-number' style={{
+        color: "rgb(75, 146, 165)",
+        fontSize: "1.6rem",
+        fontWeight: "bold"
+      }}>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
+      <p className='winner-card-header-text' style={{
+        color: "rgb(75, 146, 165)",
+        fontSize: "1.6rem",
+        fontWeight: "bold"
+      }}>ስም : {winnerPlayerName},is Winner</p>
 
 
       <div className="winning-card">
@@ -260,8 +268,8 @@ const PlayingBoard = () => {
                       ? 'green'
                       : row[colIndex].marked
                     
-                      ? 'white'
-                      : 'red',
+                      ? 'red'
+                      : 'white',
                   }}
                 >
                   <span>{row[colIndex].number}</span>
