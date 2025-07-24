@@ -486,21 +486,21 @@ const PlayingBoard = () => {
 
     
       <div className="bingo-board">
-                  { !isBingo && selectBoard.map((row, rowIndex) => (
-                    <div key={rowIndex} className="board-row">
-                      {row.map((cell, colIndex) => (
-                        <div key={colIndex}
+                  { selectBoard[0] && !isBingo && selectBoard[0].map((_, colIndex) => (
+                    <div key={colIndex} className="board-row">
+                      {selectBoard.map((row, rowIndex) => (
+                        <div key={rowIndex}
                           className={`board-cell`}
 
                           // if cell is * it should always be green
-                          style={{ backgroundColor: cell === '*' ? '#4CAF50' : selectedCell.has(cell) ? '#4CAF50' : '#2c2856',zIndex:1000 }}
-                          id={`${cell <= 15 && cell > 0 ? 'b' : cell <= 30 && cell > 15 ? 'i' : cell <= 45 && cell > 30 ? 'n' : cell <= 60 && cell > 45 ? 'g' : cell <= 75 && cell > 60 ? 'o' : ''}${cell}`}
+                          style={{ backgroundColor: row[colIndex] === '*' ? '#4CAF50' : selectedCell.has(row[colIndex]) ? '#4CAF50' : '#2c2856',zIndex:1000 }}
+                          id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
                           onClick={() => {
-                            handleCellClick(cell);
+                            handleCellClick(row[colIndex]);
 
                           }}
                         >
-                          {cell}
+                          {row[colIndex]}
                         </div>
                       ))}
                     </div>
@@ -546,20 +546,20 @@ const PlayingBoard = () => {
 }
 
           <div className="bingo-board">
-            {selectBoard2.map((row, rowIndex) => (
-              <div key={rowIndex} className="board-row">
-                {row.map((cell, colIndex) => (
-                  <div key={colIndex}
+            {selectBoard2[0] && !isBingo && selectBoard2[0].map((_, colIndex) => (
+              <div key={colIndex} className="board-row">
+                {selectBoard2.map((row, rowIndex) => (
+                  <div key={rowIndex}
                     className={`board-cell`}
 
                     // if cell is * it should always be green
-                    style={{ backgroundColor: cell === '*' ? '#4CAF50' : selectedCell.has(cell) ? '#4CAF50' : '#2c2856' }}
-                    id={`${cell <= 15 && cell > 0 ? 'b' : cell <= 30 && cell > 15 ? 'i' : cell <= 45 && cell > 30 ? 'n' : cell <= 60 && cell > 45 ? 'g' : cell <= 75 && cell > 60 ? 'o' : ''}${cell}`}
+                    style={{ backgroundColor: row[colIndex] === '*' ? '#4CAF50' : selectedCell.has(row[colIndex]) ? '#4CAF50' : '#2c2856' }}
+                    id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
                     onClick={() => {
-                      handleCellClick(cell);
+                      handleCellClick(row[colIndex]);
                     }}
                   >
-                    {cell}
+                    {row[colIndex]}
                   </div>
                 ))}
               </div>
