@@ -239,30 +239,34 @@ const PlayingBoard = () => {
           ))}
         </div>
 
-        {winningCard.map((row, rowIndex) => {
-          const isRowComplete = row.every(cell => cell.marked);
-          const isColumnComplete = winningCard.every(r => r[rowIndex].marked);
-          const isDiagonalComplete = winningCard.every(r => r[rowIndex].marked);
-          const isReverseDiagonalComplete = winningCard.every(r => r[rowIndex].marked);
-          const isFourCornersComplete = winningCard.every(r => r[rowIndex].marked);
-          const isFourEdgesComplete = winningCard.every(r => r[rowIndex].marked);
-          
+        {winningCard[0].map((_, colIndex) => {
+          const isColumnComplete = winningCard.every(row => row[colIndex].marked);
+          const isRowComplete = winningCard[colIndex].every(cell => cell.marked);
+          const isDiagonalComplete = winningCard.every((row, i) => row[i].marked);
+          const isReverseDiagonalComplete = winningCard.every((row, i) => row[4-i].marked);
+          const isFourCornersComplete = winningCard[0][0].marked && winningCard[0][4].marked && 
+                                      winningCard[4][0].marked && winningCard[4][4].marked;
+          const isFourEdgesComplete = winningCard[0][2].marked && winningCard[2][0].marked &&
+                                    winningCard[2][4].marked && winningCard[4][2].marked;
 
           return (
-            <div key={rowIndex} className="winning-card-row">
-              {row.map((cell, cellIndex) => (
+            <div key={colIndex} className="winning-card-row">
+              {winningCard.map((row, rowIndex) => (
                 <div
-                  key={cellIndex}
+                  key={rowIndex}
                   className="winning-card-cell"
                   style={{
                     backgroundColor: isRowComplete || isColumnComplete || isDiagonalComplete || isReverseDiagonalComplete || isFourCornersComplete || isFourEdgesComplete
-                      ? '#ff0000'
-                      : cell.marked
-                      ? '#00ff00'
+                      ? 'green'
+                      // : row[colIndex].marked
+                      : "red"
+
+                    
+                      ? 'green'
                       : 'white',
                   }}
                 >
-                  <span>{cell.number}</span>
+                  <span>{row[colIndex].number}</span>
                 </div>
               ))}
             </div>
