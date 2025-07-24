@@ -227,12 +227,12 @@ const PlayingBoard = () => {
       </div>
 
       <p className='winner-card-header-winner-number' style={{
-        color: "rgb(75, 146, 165)",
+        color: "green",
         fontSize: "1.6rem",
         fontWeight: "bold"
       }}>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
       <p className='winner-card-header-text' style={{
-        color: "rgb(75, 146, 165)",
+          color: "green",
         fontSize: "1.6rem",
         fontWeight: "bold"
       }}>ስም : {winnerPlayerName},is Winner</p>

@@ -665,6 +665,33 @@ body {
 
 }
 
+.winner-card-header-winner-number {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: green !important;
+  animation: fadeIn 0.8s infinite;
+}
+
+@keyframes fadeIn {
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+
+  25% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
 .winning-card-cell {
   width: 40px;
   height: 40px;
