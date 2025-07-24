@@ -39,6 +39,23 @@ const PlayingBoard = () => {
    
     socket.on('numberSelected', (number) => {setCurrentCall(number);});
 
+    const handleLeave = () => {
+      socket.emit("leave", {
+        playerId,
+        roomId,
+        selectedNumber,
+        selectedNumber2
+  
+      })
+      navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+  
+      window.location.reload();
+    };
+  
+  
+    // When user reloads or closes the tab
+    window.addEventListener("beforeunload", handleLeave);
+
     if (lastBall) {
       const element = document.getElementById(`${lastBall.letter}${lastBall.number}`);
       const recentBall = `${lastBall.letter}${lastBall.number}`
@@ -76,9 +93,6 @@ const PlayingBoard = () => {
   };
 
   function handleGameState(data) {
-    console.log(data);
- 
-
     // if (data.lastBall && data.lastBall.length > 0 && data.roomId == roomId) {
     //   setLastBall(data.lastBall[data.lastBall.length - 1]);   
     //   setRecentCalledNumbers(prev => [...prev, data.lastBall[data.lastBall.length - 1]]);
