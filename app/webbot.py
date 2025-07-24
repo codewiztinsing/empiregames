@@ -29,7 +29,7 @@ from telegram.ext import (
 from datetime import datetime
 from telegram import BotCommand
 from register import *
-from helpers import get_numbers_of_games_played
+from helpers import get_numbers_of_games_played,helper_initialize_payment_chapa
 
 
 
@@ -614,13 +614,19 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     <b>💰 Amount:</b> {} ETB  
     <b>📅 Date:</b> {}
     """.format(update.effective_user.username,phone,amount,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    inline_keyboard = [
-        [InlineKeyboardButton("Chapa", callback_data='chapa')]
-    ]
-    reply_markup = InlineKeyboardMarkup(inline_keyboard)
-    await update.message.reply_text(message,parse_mode=ParseMode.HTML,reply_markup=reply_markup)
+
+    webhook_url=   helper_initialize_payment_chapa(amount,update.effective_user.first_name,update.effective_user.first_name,phone)
+    if webhook_url:
+        logger.info(f"webhook_url  3 = {webhook_url}")
+        inline_keyboard = [
+            [InlineKeyboardButton(f"Chapa {amount} ETB", url=f"{webhook_url}")]
+                # [InlineKeyboardButton("Chapa", url="")]
+
+            ]
+        reply_markup = InlineKeyboardMarkup(inline_keyboard)
+        await update.message.reply_text(message,parse_mode=ParseMode.HTML,reply_markup=reply_markup)
+        
     
-   
   
 
 
@@ -632,9 +638,6 @@ async def get_transcation_details(update: Update, context: ContextTypes.DEFAULT_
     user_id = update.effective_user.id
     username = update.effective_user.username
     transaction_number = parsed_data.get('transaction_details')['id']
-
-    print("transaction_number = ",transaction_number)
-   
     response = requests.get(f'{BACK_URL}/transactions/transactionId/{transaction_number}')
     res = response.json()
     if res.get('status') == 'error':
