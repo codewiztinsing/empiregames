@@ -258,12 +258,10 @@ const PlayingBoard = () => {
                   style={{
                     backgroundColor: isRowComplete || isColumnComplete || isDiagonalComplete || isReverseDiagonalComplete || isFourCornersComplete || isFourEdgesComplete
                       ? 'green'
-                      // : row[colIndex].marked
-                      : "red"
-
+                      : row[colIndex].marked
                     
-                      ? 'green'
-                      : 'white',
+                      ? 'white'
+                      : 'red',
                   }}
                 >
                   <span>{row[colIndex].number}</span>
