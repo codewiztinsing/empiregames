@@ -187,7 +187,7 @@ const Selections = () => {
 
 
   const handlePickedNumbers = (state) => {
-    console.log("state = ", state)
+    // console.log("state = ", state)
     if (state.roomId == roomId) {
       setPickedNumbers(state.numbers);
     }
@@ -202,18 +202,31 @@ const Selections = () => {
   };
 
   const handleStartGame = async () => {
-    if (!selectedNumber || !playerId || !gameId) return;
+    if (!selectedNumber || !playerId || !gameId ) return;
     // setIsLoading(true);
+
     if (gameStatus == "in-progress") {
       setToast("Game is already in progress");
       setIsToast(true);
       return;
     }
 
+ 
+    if(selectedNumber2) {
+      if(balance < roomId * 2) {
+        setToast("Insufficient balance for two cards,please select one card");
+        setIsToast(true);
+        return;
+      }
+    }
+
     if (balance < roomId || balance == 0) {
-      setToast("Insufficient balance");
-      setIsToast(true);
-      return;
+     
+          setToast("Insufficient balance");
+          setIsToast(true);
+          return;
+     
+      
     }
 
     try {
@@ -228,7 +241,7 @@ const Selections = () => {
   };
 
   socket.on('joinError', (error) => {
-    console.log("error", error)
+   
     setToast(error.message);
     setIsToast(true);
     setJoinError(true);
@@ -290,7 +303,7 @@ const Selections = () => {
   };
   
   const handleGameStatus = (state) => {
-    console.log("state", state)
+    // console.log("state", state)
     const gameRoom = state.roomId
     if (roomId == gameRoom) {
       setGameStatus(state.status);
