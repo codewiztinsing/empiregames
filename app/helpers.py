@@ -1,4 +1,5 @@
 from utils import initialize_payment,get_bot_seetings
+
 import requests
 import logging
 import string
@@ -57,5 +58,14 @@ def helper_initialize_payment_chapa(amount,first_name,last_name,phone_number):
         return checkout_url
     logger.info(f"response = {response.json()}")
     return response.json().get("data").get("checkout_url")
+
+
+
+def daily_withdrawal_limit(telegram_id: int) -> int:
+    BACK_URL = get_bot_seetings().get("bot_url")
+    url = f"/api/v1/wallet/daily-withdrawal-limit/{telegram_id}"
+    full_url = f"{BACK_URL}{url}"
+    response = requests.get(full_url)
+    return response.json().get("daily_withdrawal_limit")
 
      

@@ -2,6 +2,8 @@ from ninja import NinjaAPI,Router
 from .schema import ChapaSessionSchema, ChapaSessionResponseSchema, ChapaCallbackSchema,WalletSchema
 from .models import ChapaSession, Wallet,Transaction
 from django.http import JsonResponse
+from datetime import datetime
+
 from utils import generate_reference
 from users.models import User
 import sys
@@ -90,5 +92,19 @@ def update_player_wallet(request,telegram_id:int, data: WalletSchema):
         wallet.balance = wallet_balance
         wallet.save()
         return 200,{"message": "Wallet updated successfully"}
+    except Exception as e:
+        return 400,{"error": str(e)}
+
+
+
+@router.get("/daily-withdrawal-limit/{telegram_id}")
+def daily_withdrawal_limit(request,telegram_id:int):
+    try:
+        today = datetime.now().date()
+        user = User.objects.filter(telegram_id=telegram_id).first()
+        transaction = Transaction.objects.filter(user=user,type="WITHDRAW")
+        
+        return 200,{"daily_withdrawal_limit":transaction.filter(created_at__date=today).count()}
+
     except Exception as e:
         return 400,{"error": str(e)}

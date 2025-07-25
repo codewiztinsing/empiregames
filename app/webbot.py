@@ -29,7 +29,7 @@ from telegram.ext import (
 from datetime import datetime
 from telegram import BotCommand
 from register import *
-from helpers import get_numbers_of_games_played,helper_initialize_payment_chapa
+from helpers import get_numbers_of_games_played,helper_initialize_payment_chapa,daily_withdrawal_limit
 
 
 
@@ -177,6 +177,17 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             await update.message.reply_text(f"You must leave at least 20 ETB in your wallet. Please enter a smaller amount.")
             return WITHDRAW_AMOUNT_CONFIRM
 
+        limit =  daily_withdrawal_limit(telegram_id)
+        
+        logger.info(f"daily_withdrawal_limit {limit}")
+        if limit > 3:
+            await update.message.reply_text(f"You have reached the daily withdrawal limit. Please try again tomorrow.")
+            return WITHDRAW_AMOUNT_CONFIRM
+
+        if int(amount) > 150:
+            await update.message.reply_text(f"Withdrawal amount must be less than 150 ETB")
+            return WITHDRAW_AMOUNT_CONFIRM
+
 
         if int(amount) < 100:
             await update.message.reply_text(f"Withdrawal amount must be at least 100 ETB")
@@ -229,7 +240,7 @@ async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYP
         # deduct amount from user's balance
         res = requests.put(f'{BACK_URL}/api/v1/wallet/player/{update.effective_user.id}/', json={'amount': withdraw_amount,"action":"withdraw"})
         ###
-        await update.message.reply_text("Withdrawal request sent to admin. Please wait for approval.")
+        await update.message.reply_text("Withdraw is sucessfull.please wait message from your bank or telebirr")
         transfer_funds(f"{update.effective_user.first_name} {update.effective_user.last_name}", account_number, withdraw_amount, "ETB", generate_tx_ref(), context.user_data['bank_id'])
         return ConversationHandler.END
     except Exception as e:
@@ -283,7 +294,9 @@ def instructions_options_keyboard() -> InlineKeyboardMarkup:
 # Function to create the play options keyboard
 def support_options_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton("📞 Support",  url='https://t.me/@wowliyu_bingo')],
+        [InlineKeyboardButton("📞 Support 1 👨‍💼 -->  0944424252 📱",  url='https://t.me/@Wowbingosupport1')],
+        [InlineKeyboardButton("📞 Support 2 👩‍💼 -->  0964543434 📱",  url='https://t.me/@Wowbingosupport2')],
+        [InlineKeyboardButton("📞 Support 3 👨‍💼 -->  0952018080 📱",  url='https://t.me/@iToffice1')],
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -619,9 +632,9 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if webhook_url:
         logger.info(f"webhook_url  3 = {webhook_url}")
         inline_keyboard = [
-            [InlineKeyboardButton(f"Chapa {amount} ETB", url=f"{webhook_url}")]
-                # [InlineKeyboardButton("Chapa", url="")]
-
+            # [InlineKeyboardButton(f"Pay {amount} ETB", url=webhook_url)],
+            [InlineKeyboardButton(f"Pay {amount} ETB", url=webhook_url)],
+        
             ]
         reply_markup = InlineKeyboardMarkup(inline_keyboard)
         await update.message.reply_text(message,parse_mode=ParseMode.HTML,reply_markup=reply_markup)
