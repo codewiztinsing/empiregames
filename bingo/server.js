@@ -363,7 +363,9 @@ io.on('connection', (socket) => {
       })
 
       try {
-        await gameWinWallet(data.playerId, game.roomId, game.total_winAmount);
+        const total_players = game.selectedNumbers.filter(num => num !== null).length
+        const win_amount = total_players * game.roomId * 0.8
+        await gameWinWallet(data.playerId, game.roomId, win_amount);
       } catch (error) {
         console.error("Error processing win wallet:", error);
       }
