@@ -126,8 +126,8 @@ function startCountDown(game) {
     io.to(game.roomId).emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
-      pickedNumbers: game.selectedNumbers,
-      total_players: game.total_players,
+      pickedNumbers: game.selectedNumbers.filter(num => num !== null),
+      total_players: game.selectedNumbers.filter(num => num !== null).length,
       game_status: game.status,
       count_down: game.countDown
     });
@@ -383,183 +383,13 @@ io.on('connection', (socket) => {
   
     
 });
-  
-//   socket.on("bingo", async (data) => {
-//     const game = activeGames.get(data.gameId);
-//     if (!game || game.status !== 'in-progress') return;
 
-//     const playerCards = game.players.get(data.playerId);
-//     if (!playerCards || !Array.isArray(playerCards)) return;
 
-//     console.log("Checking bingo for player:", data.playerId, "with cards:", playerCards);
-
-//     const isBingo = checkBingo(playerCards, game.calledNumbers);
-    
-//     if (isBingo) {
-//         // Game over logic
-//         game.status = 'waiting';
-//         game.winner = data.playerId;
-//         game.gameOver = true;
-
-//         // Find the winning card (the first one that has a bingo)
-//         const winningCard = playerCards.find(card => {
-//             const markedCard = markPlayerCard(card, game.calledNumbers);
-//             return checkSingleCardBingo(markedCard);
-//         }) || playerCards[0]; // Fallback to first card if none found (shouldn't happen)
-
-//         const markedWinningCard = markPlayerCard(winningCard, game.calledNumbers);
-
-//         console.log(`Bingo confirmed for player ${data.playerName} (${data.playerId})`);
-
-//         // Emit win event
-//         io.to(game.roomId).emit("winBingo", {
-//             isBingo: true,
-//             playerId: data.playerId,
-//             markedCells: markedWinningCard,
-//             winningCard: markedWinningCard,
-//             winner: data.playerId,
-//             calledNumbers: game.calledNumbers,
-//             playerCard: winningCard,
-//             winner_Number: data.selectedNumber,
-//             playerName: data.playerName,
-//             currentCall: game.currentCall,
-//             gameId: data.gameId,
-//             total_winAmount: game.total_winAmount,
-//             total_players: game.total_players,
-//             roomId: data.roomId
-//         });
-
-//         // Record winner and process payout
-//         winners.push({ 
-//             roomId: game.roomId, 
-//             winner: data.playerId, 
-//             time: new Date(),
-//             winAmount: game.total_winAmount
-//         });
-        
-//         try {
-//             await gameWinWallet(data.playerId, game.roomId, game.total_winAmount);
-//         } catch (error) {
-//             console.error("Error processing win wallet:", error);
-//             // Handle error (maybe notify admin)
-//         }
-        
-//         endGame(game);
-//     } else {
-//         console.log(`False bingo called by player ${data.playerName} (${data.playerId})`);
-        
-//         io.to(game.roomId).emit("falseBingo", {
-//             isBingo: false,
-//             playerId: data.playerId,
-//             calledNumbers: game.calledNumbers,
-//             currentCall: game.currentCall,
-//             gameId: data.gameId,
-//             total_winAmount: game.total_winAmount,
-//             total_players: game.total_players,
-//             roomId: data.roomId,
-//             playerName: data.playerName  // Added for consistency
-//         });
-//     }
-// });
-
-// Helper function to check bingo for a single card
-// function checkSingleCardBingo(markedCard) {
-//     // Check rows
-//     for (let row = 0; row < 5; row++) {
-//         if (markedCard[row].every(cell => cell.marked || cell === '*')) return true;
-//     }
-
-//     // Check columns
-//     for (let col = 0; col < 5; col++) {
-      
-//         if (markedCard.every(row => row[col].marked || row[col] === '*')) return true;
-
-//     }
-
-//     // Check diagonals
-//     if (markedCard[0][0].marked && markedCard[1][1].marked && 
-//         markedCard[2][2].marked && markedCard[3][3].marked && markedCard[4][4].marked) {
-//         return true;
-//     }
-//     if (markedCard[0][4].marked && markedCard[1][3].marked && 
-//         markedCard[2][2].marked && markedCard[3][1].marked && markedCard[4][0].marked) {
-//         return true;
-//     }
-
-//     // Check four corners
-//     if (markedCard[0][0].marked && markedCard[0][4].marked &&
-//         markedCard[4][0].marked && markedCard[4][4].marked) {
-//         return true;
-//     }
-
-//     return false;
-// }
-  
-
-  // socket.on("bingo", async (data) => {
-  //   const game = activeGames.get(data.gameId);
-  //   if (!game || game.status !== 'in-progress') return;
-  //   const playerCards = game.players.get(data.playerId);
-  //   console.log("playerCards",playerCards)
-  //   if (!playerCards) return;
-
-  //   console.log("playerCards", playerCards)
-
-  //   const isBingo = checkBingo(playerCards, game.calledNumbers);
-  //   if (isBingo) {
-  //     game.status = 'waiting';
-  //     game.winner = data.playerId;
-  //     game.gameOver = true;
-
-  //     let winnedCard = []
-
-  //     for(let i = 0; i < playerCards.length; i++){
-  //       winnedCard = playerCards[i]
-  //     }
-
-  //     console.log("playerName: data.playerName,",data.playerName,)
-
-  //     io.to(game.roomId).emit("winBingo", {
-  //       isBingo: true,
-  //       playerId: data.playerId,
-  //       markedCells: markPlayerCard(winnedCard, game.calledNumbers),
-  //       winningCard: markPlayerCard(winnedCard, game.calledNumbers),
-  //       winner: data.playerId,
-  //       calledNumbers: game.calledNumbers,
-  //       playerCard: winnedCard,
-  //       winner_Number: data.selectedNumber,
-  //       playerName: data.playerName,
-  //       currentCall: game.currentCall,
-  //       gameId: data.gameId,
-  //       total_winAmount: game.total_winAmount,
-  //       total_players: game.total_players,
-  //       roomId: data.roomId
-  //     });
-
-     
-  //     winners.push({ roomId: game.roomId, winner: data.playerId, time: new Date() });
-  //     await gameWinWallet(data.playerId,game.roomId,game.total_winAmount);
-  //     endGame(game);
-  //   } else {
-  //     io.to(game.roomId).emit("falseBingo", {
-  //       isBingo: false,
-  //       playerId: data.playerId,
-  //       calledNumbers: game.calledNumbers,
-  //       currentCall: game.currentCall,
-  //       gameId: data.gameId,
-  //       total_winAmount: game.total_winAmount,
-  //       total_players: game.total_players,
-  //       roomId: data.roomId
-  //     });
-  //   } 
-     
-  // });
 
   socket.on("leave",(data) => {
     const game = activeGames.get(data.roomId);
     const playerId = data.playerId;
-    console.log("playerId",playerId)
-    // remove this playerId from game
+
     if (game?.players.has(playerId)) {
       game.players.delete(playerId);
     }
@@ -567,12 +397,15 @@ io.on('connection', (socket) => {
     
     const selectedCard = data.selectedNumber
     const selectedCard2 = data.selectedNumber2
+
+    console.log("selectedCard",selectedCard)
+    console.log("selectedCard2",selectedCard2)
     if (!game) return;
     if (selectedCard && game.selectedNumbers.includes(selectedCard)) {
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedCard);
     }
-    if (selectedCard2 && game.selectedNumbers.includes(selectedCard2)) {
-      game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedCard2);
+    if (selectedCard2 && selectedCard2 !== null && game.selectedNumbers.includes(selectedCard2)) {
+      game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedCard2 && num !== null);
     }
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
