@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const gameWinWallet = async (player,bet_amount,win_amount)=>{
+  console.log("win amount",win_amount)
   const current_game = await getCurrentGame(bet_amount)
   const game_id = current_game.game_id
   const data = {
