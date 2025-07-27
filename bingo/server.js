@@ -6,6 +6,11 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const { generateBalls } = require('./src/helpers/ball');
 const { checkBingo, markPlayerCard } = require('./src/helpers/bingo');
+const { handleJoin } = require('./src/helpers/handleJoin');
+const { getWaitingGames } = require('./src/helpers/getWaitingGames');
+const { clearGameIntervals } = require('./src/helpers/handleClearGameIntervals');
+const { startCountDown } = require('./src/helpers/handleStartCountDown');
+const { endGame } = require('./src/helpers/endGame');
 const { checkSingleCardBingo } = require('./src/helpers/singleBingo');
 const { gameWinWallet,gameLossWallet,updateLastGame,getGameSettings } = require('./api');
 const ip = require('ip');
@@ -42,14 +47,14 @@ const winners = [];
 
 async function createGame(roomId) {
   const gameSettings = await getConstant();
-  console.log("gameSettings",gameSettings)
-  console.log("countDown",gameSettings.countDown)
-  console.log("gameSpeed",gameSettings.gameSpeed)
+
 
   const game = {
     id: roomId,
     players: new Map(), // Map<playerId, Board[]>
     numberOfBoardsToPlayer: new Map(),
+    selectedNumbersToPlayer: new Map(),
+    playersLeftBeforeStart:[],
     total_players: 0,
     total_winAmount: 0, 
     calledNumbers: [],
@@ -70,149 +75,7 @@ async function createGame(roomId) {
 
 
 
-function clearGameIntervals(gameId) {
-  if (gameIntervals.has(gameId)) {
-    gameIntervals.get(gameId).forEach(clearInterval);
-    gameIntervals.delete(gameId);
-  }
-}
 
-async  function endGame(game) {
-  clearGameIntervals(game.id);
-  game.players.clear();
-  game.calledNumbers = [];
-  game.currentCall = null;
-  game.status = "waiting";
-  game.gameOver = false;
-  game.winner = null;
-  game.countDown = 30;
-  game.isCountStart = false;
-
-  for (const [socketId, user] of users.entries()) {
-    if (user.gameId === game.id) users.delete(socketId);
-  }
-
-  const data = await updateLastGame(game.roomId);
-  console.log("game updating data ",data)
-  startCountDown(game);
-}
-
-function getWaitingGames(activeGames,status="in-progress") {
-  const waitingGames = [];
-  for (const game of activeGames.values()) {
-    if (game.status === status) {
-      // Check if this game is already in waitingGames
-      const isDuplicate = waitingGames.some(existingGame => existingGame.id === game.id);
-      if (isDuplicate) continue;
-      waitingGames.push({
-        id: game.id,
-        betAmount: game.roomId,
-        players: game.players.size,
-        status: game.status
-      });
-    }
-  }
-  return waitingGames;
-}
-
-function startCountDown(game) {
- 
-  if (game.isCountStart || game.players.size < 2) return;
-  clearGameIntervals(game.id);
-  game.countDown = game.countDown;
-  game.isCountStart = true;
-
-  const countdownInterval = setInterval(() => {
-    io.to(game.roomId).emit("gameState", {
-      gameId: game.id,
-      roomId: game.roomId,
-      pickedNumbers: game.selectedNumbers.filter(num => num !== null),
-      total_players: game.selectedNumbers.filter(num => num !== null).length,
-      game_status: game.status,
-      count_down: game.countDown
-    });
-
-  
-
-    if (game.countDown === 0) {
-      clearInterval(countdownInterval);
-      game.isCountStart = false;
-      game.status = "waiting";
-      game.countDown = game.countDown;
-      game.currentCall = null;
-      game.calledNumbers = [];
-      startGame(game);
-    }
-    game.countDown--;
-  }, 1000);
-
-  gameIntervals.set(game.id, [countdownInterval]);
-}
-
-async function startGame(game) {
-  game.status = "in-progress";
-  io.emit("waitingGames",   getWaitingGames(activeGames,"in-progress"));
-  clearGameIntervals(game.id);
-
-  io.emit("gameStatus",{
-    roomId: game.roomId,
-    game_status: "in-progress"
-  })
-
-  const players = Array.from(game.players.keys()).map(playerId => ({
-    playerId: playerId,
-    numberOfBoards: game.numberOfBoardsToPlayer.get(playerId)
-  }));
-
-  game.total_players = game.selectedNumbers.filter(num => num !== null).length
-  game.total_winAmount = game.selectedNumbers.filter(num => num !== null).length * game.roomId * 0.8
-
-    console.log("game.total_winAmount",game.total_winAmount)
-
-
-
-  try {
-    await gameLossWallet(players, game.roomId);
-  } catch (error) {
-    console.error('Error charging players:', error);
-  }
-
-  const gameInterval = setInterval(() => {
-    const calledSet = new Set(game.calledNumbers.map(b => b.number));
-    let ball = generateBalls();
-    while (calledSet.has(ball.number)) {
-      ball = generateBalls();
-    }
-    game.currentCall = ball;
-    game.calledNumbers.push(ball);
-    game.selectedNumbers = [];
-    io.emit("pickedNumbers",game.selectedNumbers)
-  
-    io.to(game.roomId).emit("gameState", {
-      gameId: game.id,
-      roomId: game.roomId,
-      pickedNumbers: game.selectedNumbers,
-      game_status: game.status,
-      count_down: game.countDown,
-      win_amount: game.roomId * game.players.size * 0.8,
-      lastBall: ball,
-      called_numbers: game.calledNumbers,
-      total_called_numbers: game.calledNumbers.length
-    });
-   
-
-    if (game.calledNumbers.length >= 75) {
-      io.emit("gameStatus", {
-        roomId: game.roomId,
-        game_status: "waiting"
-      })
-      endGame(game);
-    }
-  }, game.gameSpeed);
- 
-
-  gameIntervals.set(game.id, [gameInterval]);
-}
 
 
 function handleRefresh(data){
@@ -253,84 +116,10 @@ io.on('connection', (socket) => {
 
 
   socket.emit("waitingGames", waitingGames);
-
   socket.on("joinGame", (data) => {
-
-    const game = activeGames.get(data.roomId);
-    if (!data.playerId || !game) return;
-
-    if (game.status === 'in-progress') {
-      socket.emit('joinError', {
-        roomId: data.roomId,
-        message: 'Game is already in progress. Please wait for the next round.'
-      });
-      return;
-    }
-
-    if (game.players.has(data.playerId)) {
-      socket.emit('joinError', {
-        roomId: data.roomId,
-        message: 'Already in game. Finish or leave current game.'
-      });
-      return;
-    }
-
-    game.selectedNumbers.push(data.selectedNumber)
-    game.selectedNumbers.push(data.selectedNumber2)
-    game.numberOfBoardsToPlayer.set(data.playerId,data.numberOfBoards)
-    io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
-    if (game.players.size >= 100) {
-      socket.emit('joinError', {
-        message: 'Room is full (max 100 players).'
-      });
-      return;
-    }
-
-    const total_players = game.selectedNumbers.filter(num => num !== null).length
-    const win_amount = total_players * game.roomId * 0.8
-    game.total_winAmount = win_amount
-    game.total_players = total_players
-
-
-    socket.join(data.roomId);
-
-    const boards = [data.selectBoard];
-    if (data.selectBoard2) {
-      boards.push(data.selectBoard2);
-    }
-    game.players.set(data.playerId, boards);
-
-  
-  
-    const playersList = [...game.players.keys()];
-    io.to(game.roomId).emit("gameState", {
-      gameId: game.id,
-      roomId: game.roomId,
-      pickedNumbers: game.selectedNumbers,
-      total_players: game.total_players,
-      game_status: game.status,
-      count_down: game.countDown,
-      players: playersList
-    });
-
-    if (!game.isCountStart && game.players.size >= 2) {
-      startCountDown(game);
-    }
-
-    users.set(socket.id, {
-      playerId: data.playerId,
-      roomId: data.roomId,
-      gameId: data.roomId
-    });
-
-
-    const waitingGames = getWaitingGames(activeGames,"waiting");
-    io.emit("waitingGames",waitingGames)
-   
-
+    handleJoin(io,socket,data,activeGames,users,gameIntervals)
   });
   
-
   socket.on("bingo", async (data) => {
     const game = activeGames.get(data.gameId);
     if (!game || game.status !== 'in-progress') return;
@@ -391,6 +180,7 @@ io.on('connection', (socket) => {
   socket.on("leave",(data) => {
     const game = activeGames.get(data.roomId);
     const playerId = data.playerId;
+    
 
     if (game?.players.has(playerId)) {
       game.players.delete(playerId);
@@ -424,10 +214,10 @@ io.on('connection', (socket) => {
   
     if (user) {
       const game = activeGames.get(user.gameId);
-      console.log("user diconnect from game ",game.roomId,game.status)
       if (game?.players.has(user.playerId)) {
         if(game.status === "waiting") {
           game.players.delete(user.playerId);
+          game.playersLeftBeforeStart.push(user.playerId)
           io.to(game.roomId).emit("gameState", {
             message: `User ${user.playerId} disconnected`,
             gameId: game.id,
