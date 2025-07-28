@@ -82,7 +82,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on("disconnect", () => {
-    handleDisconnect(socket,activeGames,users,gameIntervals)
+    handleDisconnect(io,socket,activeGames,users,gameIntervals)
    
   });
 });

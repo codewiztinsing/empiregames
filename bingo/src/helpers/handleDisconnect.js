@@ -1,5 +1,5 @@
 
-function handleDisconnect(socket,activeGames,users,gameIntervals){
+function handleDisconnect(io,socket,activeGames,users,gameIntervals){
     const user = users.get(socket.id);
   
     if (user) {

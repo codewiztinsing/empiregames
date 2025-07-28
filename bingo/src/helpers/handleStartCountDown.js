@@ -2,6 +2,8 @@ const { clearGameIntervals } = require('./handleClearGameIntervals');
 const { startGame } = require('./handleStartGame');
 
 function startCountDown(game,io,activeGames,gameIntervals,users) {
+
+  console.log(" startCountDown users",users)
  
     if (game.isCountStart || game.players.size < 2) return;
     clearGameIntervals(gameIntervals,game.id);
