@@ -1,9 +1,10 @@
 const { clearGameIntervals } = require('./handleClearGameIntervals');
 const { getWaitingGames } = require('./getWaitingGames');
+const { gameLossWallet } = require('./api');
+const { endGame } = require('./endGame');
+const { generateBalls } = require('./ball');
 
-const { endGame } = require('./src/helpers/endGame');
-
-async function startGame(game,io,activeGames,gameIntervals) {
+async function startGame(game,io,activeGames,gameIntervals,users) {
     game.status = "in-progress";
     io.emit("waitingGames",   getWaitingGames(activeGames,"in-progress"));
     clearGameIntervals(gameIntervals,game.id);
@@ -54,7 +55,7 @@ async function startGame(game,io,activeGames,gameIntervals) {
           roomId: game.roomId,
           game_status: "waiting"
         })
-        endGame(game);
+        endGame(game,gameIntervals,users,io,activeGames);
       }
     }, game.gameSpeed);
    

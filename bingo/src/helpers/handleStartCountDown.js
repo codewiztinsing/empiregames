@@ -1,7 +1,7 @@
 const { clearGameIntervals } = require('./handleClearGameIntervals');
 const { startGame } = require('./handleStartGame');
 
-function startCountDown(game,io,activeGames,gameIntervals) {
+function startCountDown(game,io,activeGames,gameIntervals,users) {
  
     if (game.isCountStart || game.players.size < 2) return;
     clearGameIntervals(gameIntervals,game.id);
@@ -27,7 +27,7 @@ function startCountDown(game,io,activeGames,gameIntervals) {
         game.countDown = game.countDown;
         game.currentCall = null;
         game.calledNumbers = [];
-        startGame(game,io,activeGames,gameIntervals);
+        startGame(game,io,activeGames,gameIntervals,users);
       }
       game.countDown--;
     }, 1000);
