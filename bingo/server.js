@@ -25,6 +25,12 @@ app.use(cors());
 const server = http.createServer(app);
 
 
+const getConstant = async () => {
+  return {
+    gameSpeed: 5000,
+    countDown: 30
+  }
+}
 
 const io = socketIo(server, {
   cors: {
