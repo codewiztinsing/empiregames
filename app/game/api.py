@@ -4,10 +4,11 @@ from ninja import Router
 from users.models import User
 from wallet.models import Wallet
 from django.shortcuts import get_object_or_404
+from datetime import datetime
 from django.http import JsonResponse
 from .models import Game, PlayerGame,GameSettings
 from .tasks import charge_player,push_transaction,update_player_balance
-from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema,PlayerGamesCountSchema
+from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema,PlayerGamesCountSchema,DashboardDataSchema
 from wallet.models import Transaction
 from ninja.errors import HttpError  # Correct import
 
@@ -15,7 +16,7 @@ from ninja.errors import HttpError  # Correct import
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 game_router = Router()
-
+dashboard_router = Router()
 @game_router.post("/join-game/",response=GameSchema)
 def join_game(request, data: BetSchema):
     logger.info(f"Join game: {data}")
@@ -89,5 +90,30 @@ def player_games_count(request):
     user = User.objects.filter(telegram_id = telegram_id).first()
     transaction = Transaction.objects.filter(user=user,type="BET").count()
     return PlayerGamesCountSchema(player_games_count=transaction)
+
+
+@dashboard_router.get("/",response=DashboardDataSchema)
+def dashboard_data(request):
+    logger.info(f"Dashboard data: {request}")
+    total_players = User.objects.count()
+    total_games = Game.objects.count()
+    wallets = Wallet.objects.all()
+    today_games = Game.objects.filter(created_at__date=datetime.now().date()).count()
+    today_deposits = Transaction.objects.filter(created_at__date=datetime.now().date(),type="DEPOSIT").count()
+    today_withdrawals = Transaction.objects.filter(created_at__date=datetime.now().date(),type="WITHDRAW").count()
+    today_new_players = User.objects.filter(date_joined__date=datetime.now().date()).count()
+  
+    available_balance = sum([wallet.balance for wallet in wallets])
+
+    return DashboardDataSchema(
+        total_players=total_players,
+        total_games=total_games,
+        available_balance=available_balance,
+        today_games=today_games,
+        today_deposits=today_deposits,
+        today_withdrawals=today_withdrawals,
+        today_new_players=today_new_players
+    )
+ 
     
 

@@ -42,3 +42,15 @@ class PlayerGamesCountSchema(Schema):
 
 class PlayerGamesCountSchema(Schema):
     player_games_count: int
+
+
+class DashboardDataSchema(Schema):
+    total_players: int
+    total_games: int
+    available_balance: int
+    today_games: int
+    today_deposits: int
+    today_withdrawals: int
+    today_new_players: int
+ 
+ 

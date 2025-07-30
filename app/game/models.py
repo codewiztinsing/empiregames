@@ -31,6 +31,13 @@ class Winner(models.Model):
 class GameSettings(models.Model):
     game_speed = models.IntegerField()
     count_down_time = models.IntegerField()
+    win_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    number_of_players = models.IntegerField()
+    winner_name = models.CharField(max_length=255)
+    winner_telegram_id = models.CharField(max_length=255)
+    game_end_time = models.DateTimeField()
+    game_start_time = models.DateTimeField(auto_now_add=True)
+
  
    
 
