@@ -20,7 +20,7 @@ def dashboard_view(request):
     total_games = Game.objects.count()
     wallets = Wallet.objects.all()
     today_games = Game.objects.filter(created_at__date=datetime.now().date()).count()
-    today_deposits = Transaction.objects.filter(created_at__date=datetime.now().date(),type="DEPOSIT").count()
+    today_deposits = ChapaSession.objects.filter(created_at__date=datetime.now().date(),status="success").count()
     today_withdrawals = Transaction.objects.filter(created_at__date=datetime.now().date(),type="WITHDRAW").count()
     today_new_players = User.objects.filter(date_joined__date=datetime.now().date()).count()
   
