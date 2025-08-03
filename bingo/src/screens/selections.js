@@ -357,13 +357,7 @@ const Selections = () => {
 
 
           <div className="balance-container">
-          {gameStatus == "active" && (
-            <div className="active-game-info">
-              <div className="active-game-info-text">
-              Current Call:{currentCall}
-              </div>
-            </div>
-          )}
+        
       
           <div className="balance-text">
           Balance {balance} ብር
