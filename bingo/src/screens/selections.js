@@ -2,7 +2,8 @@ import React, { useState, useEffect, useContext, useCallback, use } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { SocketContext } from '../contexts/socket';
-import Toaster from '../components/Toaster';
+import toast, { Toaster } from 'react-hot-toast';
+
 import './selections.css';
 import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
@@ -31,7 +32,6 @@ const Selections = () => {
     setPlayerName,
     choosenBoards,
     setChooseBoards,
-    toast,
     setToast,
     isToast,
     setIsToast
@@ -70,7 +70,6 @@ const Selections = () => {
     };
 
     const handleBackChange = () => {
-      console.log("back button clicked")
       socket.emit("leaveGame", { 
         playerId,
         roomId,
@@ -225,7 +224,7 @@ const Selections = () => {
     // setIsLoading(true);
 
     if (gameStatus == "in-progress") {
-      setToast("Game is already in progress");
+      toast.error("Game is already in progress");
       setIsToast(true);
       return;
     }
