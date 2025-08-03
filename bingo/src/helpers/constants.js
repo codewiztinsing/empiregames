@@ -1,7 +1,7 @@
 const getConstant = async () => {
     return {
       gameSpeed: 5000,
-      countDown: 30
+      countDown: 3
     }
   }
 

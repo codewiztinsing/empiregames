@@ -29,7 +29,6 @@ CSRF_TRUSTED_ORIGINS = ["https://wowliyubingo.com", "https://*.ngrok.app"]
 # Application definition
 
 INSTALLED_APPS = [
-     'admin_tools_stats',  # this must be BEFORE 'admin_tools' and 'django.contrib.admin'
     'django_nvd3',
     'django.contrib.admin',
     'django.contrib.auth',

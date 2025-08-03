@@ -58,8 +58,7 @@ function handleJoin(io, socket, data, activeGames, users, gameIntervals) {
     numbers: game.selectedNumbers
   });
 
-  // Join the player to the room
-  socket.join(data.roomId);
+
 
   // Add boards
   const boards = [data.selectBoard];
@@ -77,9 +76,7 @@ function handleJoin(io, socket, data, activeGames, users, gameIntervals) {
 
   const betAmount = Number(game.betAmount || game.roomId); // fallback if no game.betAmount
   game.total_winAmount = game.total_players * betAmount * 0.8;
-
-  // Emit updated game state
-  io.to(game.roomId).emit("gameState", {
+  const data_for_client = {
     gameId: game.id,
     roomId: game.roomId,
     pickedNumbers: game.selectedNumbers,
@@ -87,7 +84,13 @@ function handleJoin(io, socket, data, activeGames, users, gameIntervals) {
     game_status: game.status,
     count_down: game.countDown,
     players: game.players
-  });
+  }
+
+ 
+  // Emit updated game state
+  io.to(game.roomId).emit("gameState", data_for_client);
+  
+
 
   // Start countdown if enough players and countdown not started
   if (!game.isCountStart && game.players.size >= 2) {

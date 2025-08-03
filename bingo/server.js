@@ -17,6 +17,7 @@ const { createGame } = require('./src/helpers/handleCreateGame');
 const {handleBingo} = require('./src/helpers/handleBingo');
 const { handleRefresh } = require('./src/helpers/handleRefresh');
 const { handleDisconnect } = require('./src/helpers/handleDisconnect');
+const { handlePlayerConnection } = require('./src/helpers/handlePlayerConnection');
 const ip = require('ip');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -45,12 +46,7 @@ const winners = [];
 
 
 io.on('connection', (socket) => {
-  socket.on("playerJoined", (data) => {
-    let game = activeGames.get(data.roomId) || createGame(data.roomId,activeGames);
-    const inProgressGames = [...activeGames.values()].filter(g => g.status === 'in-progress');
-    socket.emit("activeGames", { activeGames: inProgressGames });
-    socket.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
-  });
+  socket.on("playerJoined", (data) => handlePlayerConnection(socket,data,activeGames))
 
   
   const waitingGames = getWaitingGames(activeGames, "waiting");

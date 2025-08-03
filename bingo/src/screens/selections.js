@@ -88,7 +88,7 @@ const Selections = () => {
     socket.on('pickedNumbers', handlePickedNumbers);
     socket.on("gameStatus", handleGameStatus)
     return () => {
-      // socket.off('pickedNumbers', handlePickedNumbers);
+      socket.off('pickedNumbers', handlePickedNumbers);
       socket.off('gameState', handleGameState);
     };
   }, [socket, gameId, gameStatus, choosenNumbers]);
@@ -98,6 +98,7 @@ const Selections = () => {
 
   const handleGameState = (state) => {
     const gameRoom = state.roomId
+
     if (roomId == gameRoom) {
       setPickedNumbers(state.pickedNumbers.numbers);
 
@@ -134,7 +135,8 @@ const Selections = () => {
 
   socket.on('gameState', (state) => {
     if (state.roomId == roomId) {
-      setPickedNumbers(state.pickedNumbers.numbers);
+      console.log("state == ",state)
+      setPickedNumbers(state.pickedNumbers);
 
       if(state.game_status != "in-progress"){
               setPlayersLength(state.total_players);
@@ -187,11 +189,7 @@ const Selections = () => {
 
 
   const handlePickedNumbers = (state) => {
-    // console.log("state = ", state)
-    if (state.roomId == roomId) {
       setPickedNumbers(state.numbers);
-    }
-
   }
 
   const handleBack = () => {
