@@ -14,6 +14,6 @@ def create_user_wallet(sender, instance, created, **kwargs):
     if created:
         try:
             Wallet.objects.create(user=instance, balance=20)
-            logger.info(f"Wallet created for user {instance.username} (ID: {instance.id})")
+            logger.info(f"Wallet created for user test {instance.username} (ID: {instance.id})")
         except Exception as e:
             logger.error(f"Failed to create wallet for user {instance.username}: {str(e)}")
