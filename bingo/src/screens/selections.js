@@ -49,7 +49,6 @@ const Selections = () => {
 
   // Generate numbers 1-100 (memoized since it's static)
   const numbers = Array.from({ length: 400 }, (_, i) => i + 1);
-
   // Socket listeners with cleanup
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
@@ -58,15 +57,29 @@ const Selections = () => {
     console.log("player name = ",queryParams.get('playerName'))
     setPlayerName(queryParams.get('playerName'));
 
- 
     socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
-  
+    // Listen for page visibility changes
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        socket.emit("leaveGame", { 
+          playerId,
+          roomId,
+          selectedNumber,
+          selectedNumber2
+        });
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+   
+
     const fetchBalance = async () => {
       console.log("fetching balance")
-
+    
       const apiUrl = process.env.REACT_APP_API_URL;
       console.log("apiUrl", apiUrl)
-
+    
       try {
         const headers = {
           'Access-Control-Allow-Origin': '*',
@@ -81,7 +94,7 @@ const Selections = () => {
         console.error('Error fetching balance:', error);
       }
     };
-
+  
     fetchBalance();
 
     socket.on('gameState', handleGameState);
@@ -90,6 +103,7 @@ const Selections = () => {
     return () => {
       socket.off('pickedNumbers', handlePickedNumbers);
       socket.off('gameState', handleGameState);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [socket, gameId, gameStatus, choosenNumbers]);
 
@@ -128,9 +142,6 @@ const Selections = () => {
         setGameStatus("in-progress");
       }
     }
-
-
-
   });
 
   socket.on('gameState', (state) => {

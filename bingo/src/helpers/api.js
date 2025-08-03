@@ -122,6 +122,26 @@ const getGameSettings = async ()=>{
 }
 
 
+const fetchBalance = async () => {
+  console.log("fetching balance")
+
+  const apiUrl = process.env.REACT_APP_API_URL;
+  console.log("apiUrl", apiUrl)
+
+  try {
+    const headers = {
+      'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'application/json'
+    };
+    const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
+  
+  
+    setBalance(response.data.balance);
+    setLoading(false);
+  } catch (error) {
+    console.error('Error fetching balance:', error);
+  }
+};
 
   
   
@@ -130,6 +150,6 @@ const getGameSettings = async ()=>{
     checkBalance,
     gameLossWallet,
     updateLastGame,
-    getGameSettings
+    getGameSettings,
   };
   
