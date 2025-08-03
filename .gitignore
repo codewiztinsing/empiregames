@@ -59,3 +59,9 @@ db.sqlite3
 
 .env
 bingo/.env
+
+# Python cache in Django apps
+*/migrations/__pycache__/
+*/*/migrations/__pycache__/
+*/__pycache__/
+*/*/__pycache__/
