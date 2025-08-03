@@ -120,12 +120,15 @@ const Selections = () => {
 
   const handleGameState = (state) => {
     const gameRoom = state.roomId
+    setGameStatus(state.game_status)
+    console.log("current call ", state)
+    setCurrentCall(state.currentCall)
 
     if (roomId == gameRoom) {
       setPickedNumbers(state.pickedNumbers.numbers);
 
-      if(state.game_status == "in-progress"){
-        setGameStatus("in-progress");
+      if(state.game_status == "active"){
+        setGameStatus("active");
       }
       if(state.game_status == "waiting"){
         setGameStatus("waiting");
@@ -134,7 +137,7 @@ const Selections = () => {
         setGameStatus("ended");
       }
 
-      if(state.game_status != "in-progress"){
+      if(state.game_status != "active"){
         setPlayersLength(state.total_players);
       }
       setCountDown(state.count_down);
@@ -147,7 +150,7 @@ const Selections = () => {
       const activeGameId = state.activeGames[0].id
       console.log("active game id", activeGameId)
       if (activeGameId == roomId) {
-        setGameStatus("in-progress");
+        setGameStatus("active");
       }
     }
   });
@@ -156,7 +159,7 @@ const Selections = () => {
     if (state.roomId == roomId) {
       setPickedNumbers(state.pickedNumbers);
 
-      if(state.game_status != "in-progress"){
+      if(state.game_status != "active"){
               setPlayersLength(state.total_players);
 
       }
@@ -223,7 +226,7 @@ const Selections = () => {
     if (!selectedNumber || !playerId || !gameId ) return;
     // setIsLoading(true);
 
-    if (gameStatus == "in-progress") {
+    if (gameStatus == "active") {
       toast.error("Game is already in progress");
       setIsToast(true);
       return;
@@ -321,10 +324,12 @@ const Selections = () => {
   };
   
   const handleGameStatus = (state) => {
-    // console.log("state", state)
+    console.log("state.status", state)
+    setCurrentCall(state.currentCall)
     const gameRoom = state.roomId
     if (roomId == gameRoom) {
-      setGameStatus(state.status);
+      console.log("state.status", state.game_status)
+      setGameStatus(state.game_status);
     }
 
   }
@@ -348,8 +353,18 @@ const Selections = () => {
 
       {!loading && (
         <div className="selections-container">
+
+
+
           <div className="balance-container">
-        
+          {gameStatus == "active" && (
+            <div className="active-game-info">
+              <div className="active-game-info-text">
+              Current Call:{currentCall}
+              </div>
+            </div>
+          )}
+      
           <div className="balance-text">
           Balance {balance} ብር
             </div>
@@ -359,13 +374,15 @@ const Selections = () => {
             </div>
             <div className="game-status">
               <div className={`status-badge ${gameStatus}`}>
-                {gameStatus}
+                {gameStatus === 'active' ? '🟢' : '⏳'}
               </div>
             </div>
 
            
         
           </div>
+
+        
 
           <div className="numbers-grid">
 

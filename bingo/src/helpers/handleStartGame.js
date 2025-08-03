@@ -5,13 +5,13 @@ const { endGame } = require('./endGame');
 const { generateBalls } = require('./ball');
 
 async function startGame(game,io,activeGames,gameIntervals,users) {
-    game.status = "in-progress";
-    io.emit("waitingGames",   getWaitingGames(activeGames,"in-progress"));
+    game.status = "active";
+    io.emit("waitingGames",   getWaitingGames(activeGames,"active"));
     clearGameIntervals(gameIntervals,game.id);
   
     io.emit("gameStatus",{
       roomId: game.roomId,
-      game_status: "in-progress"
+      game_status: "active"
     })
   
     const players = Array.from(game.players.keys()).map(playerId => ({
@@ -36,18 +36,20 @@ async function startGame(game,io,activeGames,gameIntervals,users) {
       game.calledNumbers.push(ball);
       game.selectedNumbers = [];
       io.emit("pickedNumbers",game.selectedNumbers)
-    
-      io.to(game.roomId).emit("gameState", {
+      const data_for_client = {
         gameId: game.id,
         roomId: game.roomId,
         pickedNumbers: game.selectedNumbers,
         game_status: game.status,
         count_down: game.countDown,
         win_amount: game.roomId * game.players.size * 0.8,
+        total_players: game.players.size,
         lastBall: ball,
         called_numbers: game.calledNumbers,
         total_called_numbers: game.calledNumbers.length
-      });
+      }
+      console.log("data_for_client", data_for_client)
+      io.to(game.roomId).emit("gameState", data_for_client);
      
   
       if (game.calledNumbers.length >= 75) {

@@ -6,7 +6,7 @@ function handleJoin(io, socket, data, activeGames, users, gameIntervals) {
   if (!data.playerId || !game) return;
 
   // Reject if game is already in progress
-  if (game.status === 'in-progress') {
+  if (game.status === 'active') {
     socket.emit('joinError', {
       roomId: data.roomId,
       playerId: data.playerId,

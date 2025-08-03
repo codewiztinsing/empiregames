@@ -29,6 +29,25 @@ body, #root {
   
 }
 
+.status-badge {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: white;
+  padding: 5px;
+}
+.status-badge.active {
+  background-color: #4CAF50;
+}
+.status-badge.waiting {
+  background-color: #af954c;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: white;
+  padding: 5px;
+
+
+}
+
 .combination-boards-container-parent {
   display: flex;
   flex-direction: column;
@@ -151,9 +170,9 @@ body, #root {
 }
 
 .number-cell {
-  width: 35px;
-  height: 25px;
-  font-weight: 900;
+  width: 30px;
+  height: 20px;
+  font-weight: 700;
   border: 1px solid #383559;
   text-align: center;
   cursor: pointer;
@@ -230,7 +249,8 @@ body, #root {
 }
 .number-cell-text{
   color:white;
- 
+  font-weight: 500;
+  font-size: 0.8em;
 }
 
 
@@ -340,6 +360,7 @@ body, #root {
   font-size: 0.8em;
   margin-bottom: 10px;
 }
+
 
 
 
