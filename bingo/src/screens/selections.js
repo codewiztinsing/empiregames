@@ -60,19 +60,27 @@ const Selections = () => {
     socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
     // Listen for page visibility changes
     const handleVisibilityChange = () => {
-      if (document.hidden) {
         socket.emit("leaveGame", { 
           playerId,
           roomId,
           selectedNumber,
           selectedNumber2
         });
-      }
+      
     };
 
+    const handleBackChange = () => {
+      console.log("back button clicked")
+      socket.emit("leaveGame", { 
+        playerId,
+        roomId,
+        selectedNumber,
+        selectedNumber2
+      });
+    }
     document.addEventListener("visibilitychange", handleVisibilityChange);
-
-   
+    window.addEventListener('popstate', handleBack);
+  
 
     const fetchBalance = async () => {
       console.log("fetching balance")
@@ -104,6 +112,7 @@ const Selections = () => {
       socket.off('pickedNumbers', handlePickedNumbers);
       socket.off('gameState', handleGameState);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener('popstate', handleBackChange);
     };
   }, [socket, gameId, gameStatus, choosenNumbers]);
 
@@ -146,7 +155,6 @@ const Selections = () => {
 
   socket.on('gameState', (state) => {
     if (state.roomId == roomId) {
-      console.log("state == ",state)
       setPickedNumbers(state.pickedNumbers);
 
       if(state.game_status != "in-progress"){
@@ -200,7 +208,6 @@ const Selections = () => {
 
 
   const handlePickedNumbers = (state) => {
-    console.log("state == ",state)
     if(state.roomId == roomId){
       setPickedNumbers(state.numbers);
     }
@@ -345,7 +352,7 @@ const Selections = () => {
           <div className="balance-container">
         
           <div className="balance-text">
-          ቀሪ ሒሳብ/Balance {balance} ብር
+          Balance {balance} ብር
             </div>
           
             <div className="balance-text">

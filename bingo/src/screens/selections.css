@@ -65,7 +65,7 @@ body, #root {
   width: 90%;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-around;
 
 
 }
@@ -73,7 +73,6 @@ body, #root {
   font-size: 1em;
   font-weight: bold;
   color: white;
-  padding: 4px;
   border: 1px solid white;
   border-radius: 5px;
   display: flex;
