@@ -50,124 +50,81 @@ const Selections = () => {
   // Generate numbers 1-100 (memoized since it's static)
   const numbers = Array.from({ length: 400 }, (_, i) => i + 1);
   // Socket listeners with cleanup
-  // useEffect(() => {
-  //   const queryParams = new URLSearchParams(window.location.search);
-  //   setPlayerId(queryParams.get('playerId'));
-  //   setRoomId(queryParams.get('betAmount'));
-  //   console.log("player name = ",queryParams.get('playerName'))
-  //   setPlayerName(queryParams.get('playerName'));
-
-  //   socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
-  //   // Listen for page visibility changes
-  //   const handleVisibilityChange = () => {
-  //       socket.emit("leaveGame", { 
-  //         playerId,
-  //         roomId,
-  //         selectedNumber,
-  //         selectedNumber2
-  //       });
-      
-  //   };
-
-  //   const handleBackChange = () => {
-  //     socket.emit("leaveGame", { 
-  //       playerId,
-  //       roomId,
-  //       selectedNumber,
-  //       selectedNumber2
-  //     });
-  //   }
-  //   document.addEventListener("visibilitychange", handleVisibilityChange);
-  //   window.addEventListener('popstate', handleBack);
-  //   window.addEventListener("beforeunload", handleBack);
-
-  
-
-  //   const fetchBalance = async () => {
-  //     console.log("fetching balance")
-    
-  //     const apiUrl = process.env.REACT_APP_API_URL;
-  //     console.log("apiUrl", apiUrl)
-    
-  //     try {
-  //       const headers = {
-  //         'Access-Control-Allow-Origin': '*',
-  //         'Content-Type': 'application/json'
-  //       };
-  //       const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
-      
-      
-  //       setBalance(response.data.balance);
-  //       setLoading(false);
-  //     } catch (error) {
-  //       console.error('Error fetching balance:', error);
-  //     }
-  //   };
-  
-  //   fetchBalance();
-
-  //   socket.on('gameState', handleGameState);
-  //   socket.on('pickedNumbers', handlePickedNumbers);
-  //   socket.on("gameStatus", handleGameStatus)
-  //   return () => {
-  //     socket.off('pickedNumbers', handlePickedNumbers);
-  //     socket.off('gameState', handleGameState);
-  //     document.removeEventListener("visibilitychange", handleVisibilityChange);
-  //     window.removeEventListener('popstate', handleBackChange);
-  //     window.removeEventListener("beforeunload", handleBack);
-  //     handleBack();
-  //   };
-  // }, [socket, gameId, gameStatus, choosenNumbers]);
-
-
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
-    const pId = queryParams.get('playerId');
-    const rId = queryParams.get('betAmount');
-    const pName = queryParams.get('playerName');
-  
-    setPlayerId(pId);
-    setRoomId(rId);
-    setPlayerName(pName);
-  
-    socket.emit("playerJoined", { playerId: pId, roomId: rId });
-  
-    // ✅ Function to emit leaveGame
+    setPlayerId(queryParams.get('playerId'));
+    setRoomId(queryParams.get('betAmount'));
+    console.log("player name = ",queryParams.get('playerName'))
+    setPlayerName(queryParams.get('playerName'));
+
+    socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
+   
     const handleLeaveGame = () => {
       socket.emit("leaveGame", { 
-        playerId: pId,
-        roomId: rId,
+        playerId,
+        roomId,
         selectedNumber,
         selectedNumber2
       });
-    };
-  
+    }
+
     // ✅ Handle browser close/tab refresh
-    const handleBeforeUnload = (e) => {
+  const handleBeforeUnload = (e) => {
+    handleLeaveGame()
+    // optional: force confirmation dialog
+    e.preventDefault();
+    e.returnValue = '';
+  };
+
+  // ✅ Page visibility lost (e.g. switch tab)
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') {
       handleLeaveGame();
-      // optional: force confirmation dialog
-      e.preventDefault();
-      e.returnValue = '';
-    };
+    }
+  };
+
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
   
-    // ✅ Page visibility lost (e.g. switch tab)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        handleLeaveGame();
+
+    const fetchBalance = async () => {
+      console.log("fetching balance")
+    
+      const apiUrl = process.env.REACT_APP_API_URL;
+      console.log("apiUrl", apiUrl)
+    
+      try {
+        const headers = {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json'
+        };
+        const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
+      
+      
+        setBalance(response.data.balance);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching balance:', error);
       }
     };
   
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-  
-    return () => {
-      // Cleanup
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      handleLeaveGame();
-    };
-  }, [socket, selectedNumber, selectedNumber2]);
+    fetchBalance();
 
+    socket.on('gameState', handleGameState);
+    socket.on('pickedNumbers', handlePickedNumbers);
+    socket.on("gameStatus", handleGameStatus)
+    return () => {
+      socket.off('pickedNumbers', handlePickedNumbers);
+      socket.off('gameState', handleGameState);
+       // Cleanup
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    handleLeaveGame();
+    };
+  }, [socket, gameId, gameStatus, choosenNumbers]);
+
+
+ 
 
   const handleGameState = (state) => {
     const gameRoom = state.roomId
