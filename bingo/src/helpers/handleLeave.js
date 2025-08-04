@@ -55,6 +55,15 @@ async function handleLeave(data, activeGames, io) {
     activeGames.delete(game.roomId);
     console.log(`Game ${game.roomId} has been deleted due to no active players.`);
   }
+
+  console.log("player left", game.selectedNumbers)
+
+  io.emit("playerLeft", {
+    roomId: game.roomId,
+    playerId: playerId,
+    pickedNumbers: game.selectedNumbers,
+   
+  })
 }
 
 module.exports = { handleLeave };

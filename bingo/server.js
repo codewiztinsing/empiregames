@@ -74,6 +74,13 @@ io.on('connection', (socket) => {
  
   })
 
+
+  socket.on("playerLeft",(data) => {
+    handlePlayerLeft(data,activeGames,io)
+  })
+
+
+
   socket.on("getWinners", () => {
     socket.emit("winners", winners);
   });

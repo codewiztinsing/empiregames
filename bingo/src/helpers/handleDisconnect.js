@@ -8,7 +8,6 @@ function handleDisconnect(io,socket,activeGames,users,gameIntervals){
       userId: user?.playerId,
       gameId: user?.gameId,
       timestamp: new Date().toISOString(),
-      selectedNumbers: game.selectedNumbers
       
     });
   

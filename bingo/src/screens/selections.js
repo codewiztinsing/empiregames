@@ -76,6 +76,13 @@ const Selections = () => {
     e.returnValue = '';
   };
 
+
+   
+    const handlePopState = () => {
+      handleLeaveGame();
+      navigate(`/?playerId=${queryParams.get('playerId')}&&betAmount=${queryParams.get('betAmount')}`);
+    };
+
   // ✅ Page visibility lost (e.g. switch tab)
   const handleVisibilityChange = () => {
     if (document.visibilityState === 'hidden') {
@@ -119,9 +126,31 @@ const Selections = () => {
        // Cleanup
     window.removeEventListener('beforeunload', handleBeforeUnload);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
+    socket.off('gameStatus', handleGameStatus);
+    socket.off('playerLeft');
+    socket.off('activeGames');
+
+  
+    window.addEventListener('popstate', handlePopState);
+
+    // Handle Telegram back button
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.onEvent('backButtonClicked', () => {
+        handleLeaveGame();
+        navigate(`/?playerId=${queryParams.get('playerId')}&&betAmount=${queryParams.get('betAmount')}`);
+      });
+    }
+
+    // Cleanup popstate listener
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.Telegram.WebApp.offEvent('backButtonClicked');
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
     handleLeaveGame();
     };
-  }, [socket, gameId, gameStatus, choosenNumbers,pickedNumbers]);
+  }, [socket, gameId, gameStatus, choosenNumbers]);
 
 
  
@@ -162,6 +191,15 @@ const Selections = () => {
       }
     }
   });
+
+
+
+  socket.on('playerLeft', (state) => {
+    console.log("player left", state)
+    if (state.roomId == roomId) {
+      setPickedNumbers(state.pickedNumbers);
+    }
+  })
 
   socket.on('gameState', (state) => {
     if (state.roomId == roomId) {
