@@ -74,7 +74,8 @@ const PlayingBoard = () => {
   }, [socket, lastBall, selectedCell, isBingo,firstBoardLost,secondBoardLost]);
 
   const handleBingo = (board,boardNumber) => {
-    console.log("playerName",playerName)
+    console.log("total called numbers",totalCalledNumbers)
+   
     if(totalCalledNumbers === 0){
       toast.error("Game is not started yet");
       return;
@@ -93,14 +94,7 @@ const PlayingBoard = () => {
   };
 
   function handleGameState(data) {
-    // if (data.lastBall && data.lastBall.length > 0 && data.roomId == roomId) {
-    //   setLastBall(data.lastBall[data.lastBall.length - 1]);   
-    //   setRecentCalledNumbers(prev => [...prev, data.lastBall[data.lastBall.length - 1]]);
-    //   if (recentCalledNumbers.length > 3) {
-    //     setRecentCalledNumbers(prev => prev.slice(1));
-    //   }
-    // }
-
+  
 
     setLastBall(data.lastBall)
    

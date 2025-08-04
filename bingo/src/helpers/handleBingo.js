@@ -4,10 +4,11 @@ const { endGame } = require('./endGame');
 const { gameWinWallet } = require('./api');
 
 async function handleBingo(data, activeGames, io, gameIntervals, users) {
+  console.log("handleBingo", data)
   const { gameId, playerId, board, boardNumber, playerName, roomId } = data;
 
   const game = activeGames.get(gameId);
-  if (!game || game.status !== 'in-progress') return;
+  if (!game || game.status !== 'active') return;
 
   const playerCards = game.players.get(playerId);
   if (!playerCards || !Array.isArray(playerCards)) return;
