@@ -60,7 +60,7 @@ const Selections = () => {
     socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
    
     const handleLeaveGame = () => {
-      socket.emit("leaveGame", { 
+      socket.emit("leave", { 
         playerId,
         roomId,
         selectedNumber,
@@ -69,18 +69,18 @@ const Selections = () => {
     }
 
     // ✅ Handle browser close/tab refresh
-  const handleBeforeUnload = (e) => {
-    handleLeaveGame()
-    // optional: force confirmation dialog
-    e.preventDefault();
-    e.returnValue = '';
-  };
+    const handleBeforeUnload = (e) => {
+      handleLeaveGame()
+      // optional: force confirmation dialog
+      e.preventDefault();
+      e.returnValue = '';
+    };
 
 
    
     const handlePopState = () => {
-      handleLeaveGame();
-      navigate(`/?playerId=${queryParams.get('playerId')}&&betAmount=${queryParams.get('betAmount')}`);
+      handleLeaveGame()
+    
     };
 
   // ✅ Page visibility lost (e.g. switch tab)
@@ -120,35 +120,24 @@ const Selections = () => {
     socket.on('gameState', handleGameState);
     socket.on('pickedNumbers', handlePickedNumbers);
     socket.on("gameStatus", handleGameStatus)
+
     return () => {
       socket.off('pickedNumbers', handlePickedNumbers);
       socket.off('gameState', handleGameState);
+      socket.off('gameStatus', handleGameStatus);
+ 
        // Cleanup
-    window.removeEventListener('beforeunload', handleBeforeUnload);
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-    socket.off('gameStatus', handleGameStatus);
-    socket.off('playerLeft');
-    socket.off('activeGames');
-
-  
-    window.addEventListener('popstate', handlePopState);
-
-    // Handle Telegram back button
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.onEvent('backButtonClicked', () => {
-        handleLeaveGame();
-        navigate(`/?playerId=${queryParams.get('playerId')}&&betAmount=${queryParams.get('betAmount')}`);
-      });
-    }
-
-    // Cleanup popstate listener
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      window.Telegram.WebApp.offEvent('backButtonClicked');
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-    handleLeaveGame();
+      window.addEventListener('popstate', handlePopState);
+      // Handle Telegram WebApp close button
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.onEvent('backButtonClicked', () => {
+          handleLeaveGame();
+          window.Telegram.WebApp.close();
+        });
+      }
+
     };
   }, [socket, gameId, gameStatus, choosenNumbers]);
 
@@ -162,7 +151,7 @@ const Selections = () => {
     setCurrentCall(state.currentCall)
 
     if (roomId == gameRoom) {
-      setPickedNumbers(state.pickedNumbers.numbers);
+      setPickedNumbers(state.pickedNumbers);
 
       if(state.game_status == "active"){
         setGameStatus("active");
@@ -194,12 +183,7 @@ const Selections = () => {
 
 
 
-  socket.on('playerLeft', (state) => {
-    console.log("player left", state)
-    if (state.roomId == roomId) {
-      setPickedNumbers(state.pickedNumbers);
-    }
-  })
+ 
 
   socket.on('gameState', (state) => {
     if (state.roomId == roomId) {
