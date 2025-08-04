@@ -97,6 +97,7 @@ function handleJoin(io, socket, data, activeGames, users, gameIntervals) {
     startCountDown(game, io, activeGames, gameIntervals, users);
   }
 
+  console.log("game selected numbers  ",game.selectedNumbers)
   // Track socket info
   users.set(socket.id, {
     playerId: data.playerId,

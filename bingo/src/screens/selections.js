@@ -121,7 +121,7 @@ const Selections = () => {
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     handleLeaveGame();
     };
-  }, [socket, gameId, gameStatus, choosenNumbers]);
+  }, [socket, gameId, gameStatus, choosenNumbers,pickedNumbers]);
 
 
  
