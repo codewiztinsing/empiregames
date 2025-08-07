@@ -446,9 +446,23 @@ const PlayingBoard = () => {
               {countDown > 0  && countDown != 29 ? (
                 // Show countdown when greater than 0
                 <div className='game-starting-container'>
-                  <p className='game-starting'>00</p>
+                  <p className='game-starting' style={{
+                    fontSize: "12px",
+                    fontWeight: "bold"
+                    
+                    
+                  }}>Count Down</p>
                   <p className='game-starting'>:</p>
-                  <p className='game-countdown'>{countDown}</p>
+                  <p className='game-countdown'
+                   style={{
+                    fontSize: "12px",
+                    fontWeight: "bold"
+                    
+                    
+                  }}
+                  
+                  
+                  >{countDown}</p>
                 </div>
               ) : countDown === 0 ? (
                 <div className="recent-called-numbers">
@@ -495,10 +509,10 @@ const PlayingBoard = () => {
                     <div key={colIndex} className="board-row">
                       {selectBoard.map((row, rowIndex) => (
                         <div key={rowIndex}
-                          className={`board-cell`}
+                          className={`inner-board-cell`}
 
                           // if cell is * it should always be green
-                          style={{ backgroundColor: row[colIndex] === '*' ? '#4CAF50' : selectedCell.has(row[colIndex]) ? '#4CAF50' : '#2c2856',zIndex:1000 }}
+                          style={{ backgroundColor: row[colIndex] === '*' ? '#4CAF50' : selectedCell.has(row[colIndex]) ? '#4CAF50' : 'white',zIndex:1000 }}
                           id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
                           onClick={() => {
                             handleCellClick(row[colIndex]);
@@ -555,10 +569,10 @@ const PlayingBoard = () => {
               <div key={colIndex} className="board-row">
                 {selectBoard2.map((row, rowIndex) => (
                   <div key={rowIndex}
-                    className={`board-cell`}
+                    className={`inner-board-cell`}
 
                     // if cell is * it should always be green
-                    style={{ backgroundColor: row[colIndex] === '*' ? '#4CAF50' : selectedCell.has(row[colIndex]) ? '#4CAF50' : '#2c2856' }}
+                    style={{ backgroundColor: row[colIndex] === '*' ? '#4CAF50' : selectedCell.has(row[colIndex]) ? '#4CAF50' : '#ffffff',border:'none' }}
                     id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
                     onClick={() => {
                       handleCellClick(row[colIndex]);
@@ -586,7 +600,8 @@ const PlayingBoard = () => {
                   onClick={() => handleBingo(selectBoard2,selectedNumber2)} 
                   disabled={secondBoardLost}
                   style={{
-                    backgroundColor: secondBoardLost ? "red" : "orange"
+                    backgroundColor: secondBoardLost ? "red" : "orange",
+      
                   }}
             >
              {secondBoardLost ? "You made Faul" : "BINGO!"}
