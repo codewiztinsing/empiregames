@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext, useCallback, use } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { SocketContext } from '../contexts/socket';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 import './selections.css';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,9 @@ import checkPlayerBalance from '../api';
 import axios from 'axios';
 const Selections = () => {
   const {
+    setToast,
+    isToast,
+    setIsToast,
     selectedNumber,
     selectedNumber2,
     setSelectedNumber,
@@ -31,10 +34,7 @@ const Selections = () => {
     playerName,
     setPlayerName,
     choosenBoards,
-    setChooseBoards,
-    setToast,
-    isToast,
-    setIsToast
+    setChooseBoards
   } = useContext(BingoContext);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -101,14 +101,15 @@ const Selections = () => {
       console.log("apiUrl", apiUrl)
     
       try {
-        const headers = {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json'
-        };
-        const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
+        // const headers = {
+        //   'Access-Control-Allow-Origin': '*',
+        //   'Content-Type': 'application/json'
+        // };
+        // const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
       
       
-        setBalance(response.data.balance);
+        // setBalance(response.data.balance);
+        setBalance(10)
         setLoading(false);
       } catch (error) {
         console.error('Error fetching balance:', error);
@@ -253,11 +254,15 @@ const Selections = () => {
   };
 
   const handleStartGame = async () => {
+    console.log("handleStartGame")
+  
     if (!selectedNumber || !playerId || !gameId ) return;
-    // setIsLoading(true);
+    setIsLoading(true);
+
+    console.log("game status", gameStatus)
 
     if (gameStatus == "active") {
-      toast.error("Game is already in progress");
+      setToast("Game is already in progress");
       setIsToast(true);
       return;
     }
@@ -265,16 +270,15 @@ const Selections = () => {
  
     if(selectedNumber2) {
       if(balance < roomId * 2) {
-        setToast("Insufficient balance for two cards,please select one card");
-        setIsToast(true);
+      
+        toast.error("Insufficient balance for two cards, please select one card");
         return;
       }
     }
 
     if (balance < roomId || balance == 0) {
      
-          setToast("Insufficient balance");
-          setIsToast(true);
+          toast.error("Insufficient balance");
           return;
      
       
@@ -293,8 +297,7 @@ const Selections = () => {
 
   socket.on('joinError', (error) => {
    
-    setToast(error.message);
-    setIsToast(true);
+    toast.error(error.message);
     setJoinError(true);
     return;
   })
@@ -372,8 +375,7 @@ const Selections = () => {
 
   return (
     <>
-
-      {isToast && <Toaster message={toast} />}
+  
       {loading && <div className="loading-container">
         <div className="loading-spinner"></div>
         <div className="loading-text">Loading...</div>

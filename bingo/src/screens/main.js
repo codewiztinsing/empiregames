@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect, use } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { SocketContext } from '../contexts/socket';
 import { useNavigate } from 'react-router-dom';
 import './main.css';
@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 
 const PlayingBoard = () => {
-  const { selectedNumber,selectedNumber2, selectBoard,selectBoard2, playersLength, countDown,setCountDown, roomId, playerId, gameId, setGameId, setToast, setIsToast, playerName } = useContext(BingoContext);
+  const { selectedNumber,selectedNumber2, selectBoard,selectBoard2, playersLength, countDown,setCountDown, roomId, playerId, gameId, setGameId, playerName } = useContext(BingoContext);
 
   const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
@@ -165,8 +165,7 @@ const PlayingBoard = () => {
 
   socket.on('joinError', (data) => {
     if (data.roomId == roomId) {
-      setToast(data.message);
-      setIsToast(true);
+      toast.error(data.message);
       navigate(`/selection?playerId=${playerId}&betAmount=${roomId}`);
     }
 
@@ -211,7 +210,6 @@ const PlayingBoard = () => {
 
   return (
     <div className="game-container">
-      <Toaster />
 
   {isBingo && (
   <div className="bingo-winner-overlay">

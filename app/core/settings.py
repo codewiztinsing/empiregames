@@ -21,6 +21,18 @@ print("DEBUG = ",DEBUG)
 # Custom 404 page settings
 HANDLER404 = 'core.views.custom_404'
 
+ASGI_APPLICATION = "core.asgi.application"
+
+
+# Redis as channel layer
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],  # Redis server
+        },
+    },
+}
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "wowliyubingo.com", "server.wowliyubingo.com"]
 CSRF_TRUSTED_ORIGINS = ["https://wowliyubingo.com", "https://*.ngrok.app"]
@@ -36,7 +48,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # third party apps
     "corsheaders",
+    "channels",
+
+
+    # local apps
     'game',
     'users',
     'wallet',

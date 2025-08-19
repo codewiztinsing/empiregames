@@ -29,9 +29,9 @@ const server = http.createServer(app);
 
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT_URL,
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"],
-    credentials: true
+    // credentials: true
   },
   connectionStateRecovery: {
     maxDisconnectionDuration: 2 * 60 * 1000,
@@ -96,7 +96,8 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, './build', 'index.html'));
 });
 
-const PORT = process.env.SERVER_PORT
+// const PORT = process.env.SERVER_PORT || 5000
+const PORT = 5000 
 const IP = ip.address();
 server.listen(PORT, () => console.log(`Server running on port ${PORT} and IP ${IP}`));
 
