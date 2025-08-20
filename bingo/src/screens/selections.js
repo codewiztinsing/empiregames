@@ -109,7 +109,7 @@ const Selections = () => {
       
       
         // setBalance(response.data.balance);
-        setBalance(10)
+        setBalance(100)
         setLoading(false);
       } catch (error) {
         console.error('Error fetching balance:', error);

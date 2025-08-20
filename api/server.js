@@ -19,7 +19,8 @@ const { handleRefresh } = require('./helpers/handleRefresh');
 const { handleDisconnect } = require('./helpers/handleDisconnect');
 const { handlePlayerConnection } = require('./helpers/handlePlayerConnection');
 const usersRouter = require('./routes/users');
-
+const gamesRouter = require('./routes/games');
+const dashboardRouter = require('./routes/dashboard');
 const ip = require('ip');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -27,6 +28,8 @@ const app = express();
 app.use(cors());
 app.use(express.json()); // Add JSON body parsing middleware
 app.use('/api/v1/users', usersRouter);
+app.use('/api/v1/games', gamesRouter);
+app.use('/api/v1/dashboard', dashboardRouter);
 const server = http.createServer(app);
 
 

@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import PlayingBoard from './screens/main';
 import SelectionScreen from './screens/selections';
 import Landing from './screens/landing';
+import Dashboard from './screens/dashboard';
 function App() {
   return (
     <BingoProvider>
@@ -12,6 +13,7 @@ function App() {
         <Routes>
           <Route path="/play" element={<PlayingBoard />} />
           <Route path="" element={<SelectionScreen />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           {/* <Route path="/" element={<Landing />} /> */}
         </Routes>
       </Router>
