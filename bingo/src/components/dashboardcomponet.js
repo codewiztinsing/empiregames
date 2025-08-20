@@ -1,6 +1,6 @@
 
 import { Users, Play, DollarSign, ArrowDown, ArrowUp } from "lucide-react";
-import { getDashboardStats } from "../services/api";
+import { getDashboardStats, getDashboardRecentStats } from "../services/api";
 import { useState, useEffect } from "react";
 
 
@@ -31,16 +31,28 @@ function DashboardComponet() {
     return <div>Loading...</div>;
   }
 
+  const handleTimeRangeChange = (e) => {
+    getDashboardRecentStats(e.target.value).then(response => {
+      setDashboardStats(response.data);
+      setPlayersJoinedToday(response.data.playersJoinedToday || 0);
+      setTotalPlayers(response.data.totalPlayers || 0);
+      setTotalGames(response.data.totalGames || 0);
+      setRevenue(response.data.totalBalance || 0);
+      setDeposits(response.data.deposits || 0);
+      setWithdrawals(response.data.withdrawals || 0);
+    });
+  }
+
   return (
 
 <main className="flex-1 p-6 overflow-y-auto">
 <div className="flex justify-between items-center mb-6">
   <h1 className="text-2xl font-bold">Dashboard</h1>
   <div className="flex items-center gap-2">
-    <select className="bg-gray-700 p-2 rounded-lg">
-      <option>Last 30 days</option>
-      <option>Last 7 days</option>
-      <option>Today</option>
+    <select className="bg-gray-700 p-2 rounded-lg" onChange={handleTimeRangeChange}>
+      <option value="last30days">Last 30 days</option>
+      <option value="last7days">Last 7 days</option>
+      <option value="today">Today</option>
     </select>
     <button className="bg-indigo-600 px-4 py-2 rounded-lg">Refresh</button>
   </div>

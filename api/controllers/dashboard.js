@@ -131,6 +131,131 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
+// GET /api/v1/dashboard/stats/recent - Get dashboard recent statistics
+const getDashboardRecentStats = async (req, res) => {
+  try {
+    const { timeRange } = req.query;
+    console.log("timeRange ",timeRange);
+    // Calculate date range based on timeRange parameter
+    let startDate;
+    const endDate = new Date();
+    
+    switch (timeRange) {
+      case 'today':
+        startDate = new Date();
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case 'last7days':
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case 'last30days':
+      default:
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        break;
+    }
+
+    // Get filtered data based on time range
+    const filteredPlayers = await prisma.player.findMany({
+      where: {
+        joinedAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      }
+    });
+
+    const filteredGames = await prisma.game.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      include: {
+        players: true
+      }
+    });
+
+    const filteredDeposits = await prisma.deposit.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      }
+    });
+
+    const filteredWithdrawals = await prisma.withdrawal.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      }
+    });
+
+    // Calculate filtered aggregations
+    const filteredTotalDeposits = await prisma.deposit.aggregate({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      _sum: {
+        amount: true
+      }
+    });
+
+    const filteredTotalWithdrawals = await prisma.withdrawal.aggregate({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      _sum: {
+        amount: true
+      }
+    });
+
+    // Get filtered balance for the time period
+    const filteredBalance = await prisma.player.aggregate({
+      where: {
+        joinedAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      _sum: {
+        balance: true
+      }
+    });
+
+    // Format the filtered response
+    const filteredStats = {
+      newPlayers: filteredPlayers.length,
+      totalGames: filteredGames.length,
+      revenue: filteredBalance._sum.balance || 0,
+      deposits: filteredDeposits.length,
+      withdrawals: filteredWithdrawals.length,
+      totalDeposits: filteredTotalDeposits._sum.amount || 0,
+      totalWithdrawals: filteredTotalWithdrawals._sum.amount || 0,
+      timeRange,
+      startDate,
+      endDate
+    };
+    res.json(filteredStats);
+  } catch (error) {
+    console.error('Dashboard recent stats error:', error);
+    res.status(500).json({ error: 'Failed to fetch dashboard recent statistics' });
+  }
+};
+
+
 module.exports = {
-  getDashboardStats
+  getDashboardStats,
+  getDashboardRecentStats
 };

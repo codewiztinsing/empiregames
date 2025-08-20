@@ -13,6 +13,7 @@ const api = axios.create({
 export const getUsers = () => api.get("/users");
 export const getGames = () => api.get("/games");
 export const getDashboardStats = () => api.get("/dashboard/stats");
+export const getDashboardRecentStats = (timeRange) => api.get(`/dashboard/stats/recent?timeRange=${timeRange}`);
 export const createUser = (data) => api.post("/users", data);
 
 export default api;
