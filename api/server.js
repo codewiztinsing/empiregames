@@ -21,6 +21,7 @@ const { handlePlayerConnection } = require('./helpers/handlePlayerConnection');
 const usersRouter = require('./routes/users');
 const gamesRouter = require('./routes/games');
 const dashboardRouter = require('./routes/dashboard');
+const walletRouter = require('./routes/wallet');
 const ip = require('ip');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -30,6 +31,9 @@ app.use(express.json()); // Add JSON body parsing middleware
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/games', gamesRouter);
 app.use('/api/v1/dashboard', dashboardRouter);
+app.use('/api/v1/wallet', walletRouter);
+
+
 const server = http.createServer(app);
 
 
@@ -70,7 +74,6 @@ io.on('connection', (socket) => {
   });
   
   socket.on("bingo", (data) => {
-    console.log("bingo", data)
     handleBingo(data,activeGames,io,gameIntervals,users)
   });
 

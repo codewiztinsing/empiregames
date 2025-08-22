@@ -12,7 +12,9 @@ function handleDisconnect(io,socket,activeGames,users,gameIntervals){
     });
   
     if (user) {
+
       if (game?.players.has(user.playerId)) {
+        console.log("game.status",game.status)
         if(game.status === "waiting") {
           game.players.delete(user.playerId);
           game.playersLeftBeforeStart.push(user.playerId)

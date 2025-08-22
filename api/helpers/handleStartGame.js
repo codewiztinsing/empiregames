@@ -52,7 +52,6 @@ async function startGame(game,io,activeGames,gameIntervals,users) {
         called_numbers: game.calledNumbers,
         total_called_numbers: game.calledNumbers.length
       }
-      console.log("data_for_client", data_for_client)
       io.to(game.roomId).emit("gameState", data_for_client);
      
   

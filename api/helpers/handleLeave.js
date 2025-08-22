@@ -5,6 +5,10 @@ async function handleLeave(data, activeGames, io) {
   const playerId = data.playerId;
   const selectedCard = data.selectedNumber;
   const selectedCard2 = data.selectedNumber2;
+  if(game !== undefined){
+    console.log("status",game.status)
+  }
+
 
   // If no game or no playerId provided, exit early
   if (!game || !playerId) return;
@@ -56,13 +60,17 @@ async function handleLeave(data, activeGames, io) {
     console.log(`Game ${game.roomId} has been deleted due to no active players.`);
   }
 
-  io.emit("gameState", {
-    roomId: game.roomId,
-    players: game.players,
-    selectedNumbers: game.selectedNumbers,
-    total_players: game.total_players,
-    total_winAmount: game.total_winAmount
-  })
+  if(game.status === "waiting"){
+    io.emit("gameState", {
+      roomId: game.roomId,
+      players: game.players,
+      selectedNumbers: game.selectedNumbers,
+      total_players: game.total_players,
+      total_winAmount: game.total_winAmount
+    })
+  }
+
+ 
 
   
 }

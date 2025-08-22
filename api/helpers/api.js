@@ -1,59 +1,40 @@
 const axios = require('axios');
 const dotenv = require('dotenv');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 dotenv.config();
 
-const gameWinWallet = async (player,bet_amount,win_amount)=>{
-  console.log("win amount",win_amount)
-  const current_game = await getCurrentGame(bet_amount)
-  const game_id = current_game.game_id
-  const data = {
-      player,
-      win_amount ,
-      game_id
-  };
-
-  console.log("data",data)
-  if(!data.player || !data.win_amount || !data.game_id) return null;
-  
-  try{
-    const backUrl = process.env.BACK_URL
-    const winUrl = backUrl + 'game/win-game/'
-    
-     const res=  await axios.post(winUrl,data)
-              .then(res=>{
-                  console.log("gameWinWallet res",res.data)
-                  return res.data
-              })
-     
-  }catch(e){
-    console.log("gameWinWallet error",e)
-  }
+const gameWinWallet = async (playerId,bet_amount,win_amount)=>{
+  console.log("playerId",playerId)
+  console.log("bet_amount",bet_amount)
+  console.log("win_amount",win_amount)
+  const player = await prisma.player.update({
+    where: {
+      id: playerId
+    },
+    data: {
+      balance: {
+        increment: win_amount
+      }
+    }
+  });
+  return player.balance;
+ 
   
 } 
 
 
 const checkBalance = async (playerId) => {
-  try {
-    const backUrl = process.env.BACK_URL
-    const balanceUrl = backUrl + 'balance/?user_id=' + playerId
-    const response = await fetch(balanceUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch balance');
+  console.log("playerId",playerId)
+  console.log("checkBalance")
+  const player = await prisma.player.findUnique({
+    where: {
+      id: playerId
     }
-
-    const data = await response.json();
-    return data.balance;
-
-  } catch (error) {
-    console.error('Error checking balance:', error);
-    throw error;
-  }
+  });
+  return player.balance;
+  
+  
 };
 
 
@@ -72,33 +53,82 @@ const getCurrentGame = async (betAmount)=>{
 
 
 const gameLossWallet = async (players,betAmount)=>{
-  const current_game = await getCurrentGame(betAmount)
-  const game_id = current_game.game_id
- 
-  const data = {
-      players: players,
-      bet_amount: betAmount,
-      game_id:game_id
-  };
+  console.log("players ",players)
+  console.log("betAmount ",betAmount)
+  console.log("gameLossWallet")
 
-  try{
-      if(!data.players) return null;
-      const backUrl = process.env.BACK_URL
-      const lossUrl = backUrl + 'game/join-game/'
-      console.log("lossUrl",lossUrl)
-      await axios.post(lossUrl,data)
-      .then(res=>{
-          console.log("gameLossWallet res",res.data)
-      })
-  }catch(e){
-    console.log("gameLossWallet error")
+
+  try {
+    
+    const results = [];
+    const errors = [];
+    
+    for (const player of players) {
+      try {
+        const { playerId, numberOfBoards = 1 } = player;
+        const totalBetAmount = parseFloat(betAmount) * numberOfBoards;
+        
+        // Check if player has sufficient balance
+        const currentPlayer = await prisma.player.findUnique({
+          where: { id: parseInt(playerId) }
+        });
+        console.log("currentPlayer",currentPlayer)
+        
+        if (!currentPlayer) {
+          errors.push({ playerId, error: 'Player not found' });
+          continue;
+        }
+        
+        if (currentPlayer.balance < totalBetAmount) {
+          errors.push({ playerId, error: 'Insufficient balance' });
+          continue;
+        }
+        
+        const updatedPlayer = await prisma.player.update({
+          where: { id: parseInt(playerId) },
+          data: {
+            balance: {
+              decrement: totalBetAmount
+            }
+          }
+        });
+
+        console.log("updatedPlayer",updatedPlayer)
+        
+        results.push({
+          playerId: parseInt(playerId),
+          newBalance: updatedPlayer.balance,
+          deductedAmount: totalBetAmount,
+          numberOfBoards
+        });
+        
+        console.log(`Player ${playerId} lost ${totalBetAmount} (${numberOfBoards} boards) in game ${game_id}. New balance: ${updatedPlayer.balance}`);
+      } catch (error) {
+        errors.push({ playerId: player.playerId, error: error.message });
+      }
+    }
+    
+    await prisma.$disconnect();
+    console.log("results",results)
+    console.log("errors",errors)
+    
+    return { 
+      success: true, 
+      results,
+      errors,
+      message: `Processed ${results.length} players successfully, ${errors.length} errors` 
+    };
+  } catch (error) {
+    console.error('Error handling batch loss:', error);
+    throw error;
   }
-  
 }
 
 
 
 const updateLastGame = async (roomId)=>{
+  console.log("roomId",roomId)
+  console.log("updateLastGame")
   const backUrl = process.env.BACK_URL
   const updateLastGameUrl = backUrl + 'game/update-last-game/'
   const params = {
@@ -114,6 +144,7 @@ const updateLastGame = async (roomId)=>{
 
 
 const getGameSettings = async ()=>{
+  console.log("getGameSettings")
   const backUrl = process.env.BACK_URL
   const gameSettingsUrl = backUrl + 'game/game-settings/'
   const response = await axios.get(gameSettingsUrl)
