@@ -56,6 +56,14 @@ const PlayingBoard = () => {
     // When user reloads or closes the tab
     window.addEventListener("beforeunload", handleLeave);
 
+    // listen for screen visibility change
+    window.addEventListener("visibilitychange", () => {
+      console.log("visibilitychange",document.visibilityState)
+      if (document.visibilityState === "hidden") {
+        handleLeave();
+      }
+    });
+
     if (lastBall) {
       const element = document.getElementById(`${lastBall.letter}${lastBall.number}`);
       const recentBall = `${lastBall.letter}${lastBall.number}`
@@ -72,6 +80,11 @@ const PlayingBoard = () => {
       socket.off('numberSelected');
     };
   }, [socket, lastBall, selectedCell, isBingo,firstBoardLost,secondBoardLost]);
+
+
+
+
+
 
   const handleBingo = (board,boardNumber) => {
     console.log("total called numbers",totalCalledNumbers)

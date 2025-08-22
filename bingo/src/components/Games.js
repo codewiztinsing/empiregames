@@ -59,9 +59,7 @@ function Games() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-white">Games Management</h1>
-          <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200">
-            Create New Game
-          </button>
+         
         </div>
 
         <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
@@ -70,11 +68,11 @@ function Games() {
               <thead className="bg-gray-700">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Game</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Players</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Prize</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Schedule</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Total Win</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Winner</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Time stamp</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Pattern</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -86,9 +84,7 @@ function Games() {
                       <div className="text-white font-medium">{game.name}</div>
                       <div className="text-gray-400 text-sm">ID: {game.id}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-gray-300">{game.gameType}</span>
-                    </td>
+                   
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${getStatusColor(game.status)}`}>
                         {game.status}
@@ -97,14 +93,17 @@ function Games() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-gray-300">
                         <Users className="w-4 h-4 mr-2" />
-                        {game.players}
+                        {game.players || 0}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-green-400">
-                        <DollarSign className="w-4 h-4 mr-1" />
                         {game.prize}
                       </div>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-gray-300">{game.winner || "N/A"}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-gray-300">

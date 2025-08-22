@@ -14,6 +14,9 @@ function DashboardComponet() {
   const [revenue, setRevenue] = useState(null);
   const [deposits, setDeposits] = useState(0);
   const [withdrawals, setWithdrawals] = useState(0);
+  const [timeRange, setTimeRange] = useState("last 30days");
+  const [startDate, setStartDate] = useState(new Date().toLocaleDateString());
+  const [endDate, setEndDate] = useState(new Date().toLocaleDateString());
   useEffect(() => {
     getDashboardStats().then(response => {
       console.log("dashboardStats ",response.data);
@@ -58,7 +61,7 @@ function DashboardComponet() {
   </div>
 </div>
 
-<p className="text-gray-400 mb-6">Showing data for: Last 30 days<br />7/19/2025 to 8/20/2025</p>
+<p className="text-gray-400 mb-6">Showing data for: {timeRange}<br />{startDate} to {endDate}</p>
 
 {/* Stats Section */}
 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

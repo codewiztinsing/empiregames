@@ -160,10 +160,10 @@ function Payments() {
   const pendingPayments = filteredPayments.filter(p => p.status === 'pending').length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-x-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-white">Payments</h1>
+        <h1 className="ml-6 text-2xl font-bold text-white">Payments</h1>
         <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
           <Download className="w-4 h-4" />
           Export

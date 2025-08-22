@@ -24,8 +24,6 @@ import Payments from "../components/Payments";
           <button className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-lg" onClick={() => setDisplay("players")}>Players</button>
           <button className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-lg" onClick={() => setDisplay("bingo-cards")}>Bingo Cards</button>
           <button className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-lg" onClick={() => setDisplay("referrals")}>Referrals</button>
-          <button className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-lg" onClick={() => setDisplay("messages")}>Messages</button>
-          <button className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-lg" onClick={() => setDisplay("contact-info")}>Contact Info</button>
           <button className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-lg" onClick={() => setDisplay("logout")}>Logout</button>
         </nav>
       </aside>

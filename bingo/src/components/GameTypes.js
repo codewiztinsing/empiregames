@@ -3,46 +3,46 @@ import React from 'react';
 const gameTypes = [
   {
     id: 1,
-    name: 'Classic Bingo',
+    name: 'Classic Bingo 75 Ball',
     description: 'Traditional 5x5 bingo with standard patterns',
     price: 'ETB 10.00',
-    players: '1-100',
-    duration: '15-30 min',
-    pattern: 'Line, Full House',
-    difficulty: 'Easy',
+    players: '1-400',
+    duration: '5-15 min',
+    pattern: 'Any Line, Full House',
+    difficulty: 'Beginner',
     color: 'bg-blue-600'
   },
   {
     id: 2,
-    name: 'Speed Bingo',
-    description: 'Fast-paced bingo with quick number calls',
-    price: 'ETB 15.00',
-    players: '1-50',
-    duration: '5-10 min',
-    pattern: 'Any Line',
-    difficulty: 'Medium',
+    name: 'Classic Bingo 75 Ball',
+    description: 'Traditional 5x5 bingo with standard patterns',
+    price: 'ETB 20.00',
+    players: '1-400',
+    duration: '5-15 min',
+    pattern: 'Any Line, Full House',
+    difficulty: 'Intermediate',
     color: 'bg-green-600'
   },
   {
     id: 3,
-    name: 'Pattern Bingo',
-    description: 'Complete specific patterns to win',
-    price: 'ETB 20.00',
-    players: '1-75',
-    duration: '20-40 min',
-    pattern: 'Custom Patterns',
-    difficulty: 'Hard',
+    name: 'Classic Bingo 75 Ball',
+    description: 'Traditional 5x5 bingo with standard patterns',
+    price: 'ETB 50.00',
+    players: '1-400',
+    duration: '5-15 min',
+    pattern: 'Any Line, Full House',
+    difficulty: 'Advanced',
     color: 'bg-purple-600'
   },
   {
     id: 4,
-    name: 'Progressive Jackpot',
-    description: 'Growing jackpot with multiple winners',
-    price: 'ETB 25.00',
-    players: '1-200',
-    duration: '30-60 min',
-    pattern: 'Full House',
-    difficulty: 'Expert',
+    name: 'Classic Bingo 75 Ball',
+    description: 'Traditional 5x5 bingo with standard patterns',
+    price: 'ETB 100.00',
+    players: '1-400',
+    duration: '5-15 min',
+    pattern: 'Any Line, Full House',
+    difficulty: 'Professional',
     color: 'bg-yellow-600'
   }
 ];
@@ -96,42 +96,13 @@ function GameTypes() {
                   </div>
                 </div>
                 
-                <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200">
-                  Join Game
-                </button>
+               
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-12 bg-gray-800 rounded-xl p-6">
-          <h2 className="text-2xl font-bold text-white mb-4">How to Play</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="bg-indigo-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-white font-bold text-lg">1</span>
-              </div>
-              <h3 className="text-white font-semibold mb-2">Choose Game Type</h3>
-              <p className="text-gray-400 text-sm">Select your preferred bingo game style and difficulty level</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="bg-green-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-white font-bold text-lg">2</span>
-              </div>
-              <h3 className="text-white font-semibold mb-2">Get Your Card</h3>
-              <p className="text-gray-400 text-sm">Receive your unique bingo card with random numbers</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="bg-yellow-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-white font-bold text-lg">3</span>
-              </div>
-              <h3 className="text-white font-semibold mb-2">Mark & Win</h3>
-              <p className="text-gray-400 text-sm">Mark called numbers and complete the winning pattern</p>
-            </div>
-          </div>
-        </div>
+      
       </div>
     </div>
   );

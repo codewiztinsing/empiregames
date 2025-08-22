@@ -257,6 +257,7 @@ background-color: #bd9fd1;
   flex-direction: row;
   align-items: center;
   gap: 10px;
+  margin-top: 15px;
 }
 
 .called {
@@ -272,7 +273,7 @@ background-color: #bd9fd1;
   gap: 4px;
 }
 .called-numbers {
-  background-color:#cfade0;
+  /* background-color:#cfade0; */
   padding: 13px;
   margin-left: -12px;
   border-radius: 10px;
@@ -306,8 +307,7 @@ background-color: #bd9fd1;
 }
 
 .number {
-  
-  padding: 8px;
+  padding: 14px;
   width: 10px;
   height: 10px;
   display: flex;
