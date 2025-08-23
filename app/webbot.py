@@ -535,7 +535,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                     reply_markup=reply_markup
                 )
 
-                return ConversationHandler.END
+                return ConversationHandler8408827169:AAEvrQiXPmbSQ3uxbhWuXzMYZCOmRLoeEVc.END
 
             else:
                 await query.edit_message_text(text="An error occurred. Please try again.")
@@ -748,7 +748,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main() -> None:
     BOT_TOKEN = get_bot_seetings().get("bot_token")
-    application = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
+    application = ApplicationBuilder().token("8408827169:AAEvrQiXPmbSQ3uxbhWuXzMYZCOmRLoeEVc").post_init(post_init).build()
     register_conversation_handler = ConversationHandler(
         entry_points=[CommandHandler('register', begin_register)],
         states={
