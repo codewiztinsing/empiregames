@@ -17,7 +17,14 @@ services:
     networks:
       - bingo-network
 
+    
+
   app:
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+      - 8.8.4.4
+      - 1.0.0.1
     build: ./app
     ports:
       - "4000:4000"
