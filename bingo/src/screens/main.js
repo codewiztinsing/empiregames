@@ -318,14 +318,7 @@ const PlayingBoard = () => {
         </div>
 
 
-        <div className="stat-item">
-          <span>ድምጽ </span>
-          <select className='language-select'>
-            <option value="1">Amh</option>
-            <option value="3">Oromo</option>
-            <option value="4">Tigrigna</option>
-          </select>
-        </div>
+       
       </div>
 
 <div className='middle-container'>
