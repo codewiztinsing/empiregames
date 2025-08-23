@@ -8,6 +8,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --production
 
+# Install Prisma
+RUN npx prisma generate
+
 # Copy source code
 COPY . .
 COPY .env .env
