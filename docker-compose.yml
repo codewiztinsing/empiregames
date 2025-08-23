@@ -14,7 +14,6 @@ services:
       DB_PASSWORD: postgres
     depends_on:
       - postgres
-    networks:
-      - bingo-network
+
 
     
