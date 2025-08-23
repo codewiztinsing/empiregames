@@ -55,8 +55,12 @@ def generate_tx_ref(length=20):
 
 # Define conversation states
 DEPOSIT_AMOUNT = range(1)
-SCREENSHOT = range(2)
-GET_DEPOSIT_AMOUNT,WITHDRAW_AMOUNT_CONFIRM,WITHDRAW_AMOUNT_CANCEL,CHOOSE_PAYMENT_METHOD,GET_WITHDRAW_ACCOUNT,GET_TRANSCATION_DETAILS = range(2,8)
+GET_WITHDRAW_ACCOUNT = range(2)
+WITHDRAW_AMOUNT_CONFIRM = range(3)
+GET_TRANSCATION_DETAILS = range(4)
+PHONE_NUMBER = range(5)
+PHONE = range(6)  # Add PHONE state for registration
+
 
 CONVERSATION_TIMEOUT = 300  # 5 minutes
 
@@ -74,8 +78,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         [InlineKeyboardButton("💰 Check Balance", callback_data='check_balance'),
          InlineKeyboardButton("💳 Deposit", callback_data='deposit')],
         [InlineKeyboardButton("📞 Contact Support", callback_data='contact_support'),
-         InlineKeyboardButton("📚 Instruction", callback_data='instructions')],
-        [InlineKeyboardButton("🔗 Join Group", url='https://t.me/wowbingos')]
+         InlineKeyboardButton("🔗 Join Group", url='https://t.me/wowbingos')]
     ]
     
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -92,8 +95,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         except ValueError:
             logger.warning(f"Invalid referrer ID format: {context.args[0]}")
     await update.message.reply_text('Welcome to Wow  Bingo! Select an option:', reply_markup=reply_markup)
-    context.job_queue.run_once(conversation_timeout, CONVERSATION_TIMEOUT, chat_id=update.effective_chat.id)
-    return SOME_STATE
+    
+    # Only set up job queue if it exists
+    if hasattr(context, 'job_queue') and context.job_queue:
+        context.job_queue.run_once(conversation_timeout, CONVERSATION_TIMEOUT, chat_id=update.effective_chat.id)
+    
+    # Start command doesn't need to return a conversation state
+    return
 
 
 # Function to create the play options keyboardF
@@ -123,6 +131,17 @@ def deposit_opitions_keyboard() -> InlineKeyboardMarkup:
     reply_markup = InlineKeyboardMarkup(keyboard)
     return reply_markup
 
+
+def get_available_banks():
+    """Get available banks for withdrawal"""
+    # This is a placeholder - you should implement this to get banks from your API
+    return {
+        "data": [
+            {"id": "1", "name": "Commercial Bank of Ethiopia"},
+            {"id": "2", "name": "Dashen Bank"},
+            {"id": "3", "name": "Bank of Abyssinia"}
+        ]
+    }
 
 def withdraw_opitions_keyboard(context: ContextTypes.DEFAULT_TYPE) -> InlineKeyboardMarkup:
     
@@ -318,6 +337,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         if query.data in ['10']:
             player_id = query.from_user.id
+            logger.info(f"player_id = {player_id}")
 
             web_app_url = f"{BACK_URL}?playerId={player_id}&betAmount={10}&playerName={query.from_user.username}"
             logger.info(f"web_app_url = {web_app_url}")
@@ -372,12 +392,14 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 text="Choose a play option:",
                 reply_markup=play_options_keyboard()
             )
+            return ConversationHandler.END
 
         elif query.data == 'contact_support':
             await query.edit_message_text(
                 text="Choose a contact support:",
                 reply_markup=support_options_keyboard()
             )
+            return ConversationHandler.END
 
         
 
@@ -391,28 +413,28 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
        
         elif query.data == 'check_balance':
-            BACK_URL = get_bot_seetings().get("bot_url") 
-            username = query.from_user.username
-            first_name = query.from_user.first_name
-            last_name = query.from_user.last_name
+            BACK_URL = get_bot_seetings().get("server_url") 
             telegram_id = query.from_user.id
-            print("BACK_URL = ",f"{BACK_URL}/api/v1/wallet/player/{telegram_id}")
-            response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
+            response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
             print("response = ",response)
             balance = response.json().get('balance',0)
-           
+            first_name = response.json().get('first_name',0)
+            last_name = response.json().get('last_name',0)
+            username = response.json().get('username',0)
+            print("balance = ",balance)
+            print("first_name = ",first_name)
            
 
             # Create payment summary with user details
             payment_summary = (
-                    "🏦 TELE BIRR STATEMENT\n" +
+                    "🏦  Aker Bingo STATEMENT\n" +
                     f"💰  {balance} Birr\n" +
                     f"👥  {first_name} \n" +
-                    f"📄 Transaction ID: {telegram_id}\n" +
+                    f"📄 USER TELEGRAM ID: {telegram_id}\n" +
                     f"🔙 Back to Menu\n" 
                 ) 
             await query.edit_message_text(text=payment_summary)
-            return
+            return ConversationHandler.END
 
         
                 
@@ -538,10 +560,22 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         
         elif query.data == "register":
-
+            # For registration, we need to start a conversation
+            # Since this is a callback query, we'll send a new message with the keyboard
+            await query.message.reply_text(
+                text="Please share your phone number to complete registration.",
+                reply_markup=ReplyKeyboardMarkup(
+                    [[KeyboardButton("Share Contact", request_contact=True)]],
+                    one_time_keyboard=True,
+                    resize_keyboard=True
+                )
+            )
+            return PHONE_NUMBER
            
-            # return begin_register(update,context)
-            await query.edit_message_text('Welcome! Use /register to start the registration process.')
+        
+
+          
+          
           
         elif query.data == 'menu':
             keyboard = [
@@ -554,7 +588,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             await query.edit_message_text("Welcome to Wow Bingo! Please select an option:", reply_markup=reply_markup)
-            
+            return ConversationHandler.END
             
  
         else:
@@ -567,6 +601,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             await query.edit_message_text("Welcome to Wo w Bingo! Please select an option:", reply_markup=reply_markup)
+            return ConversationHandler.END
     except Exception as e:
         logger.error(f"Error handling query: {query.data} - {e}")
         await query.edit_message_text(text="An error occurred. Please try again.")
@@ -614,17 +649,24 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 async def get_transcation_details(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
   
     message = update.message.text
-    amount = parsed_data.get('amount')
-    user_id = update.effective_user.id
-    username = update.effective_user.username
-    transaction_number = parsed_data.get('transaction_details')['id']
-    response = requests.get(f'{BACK_URL}/transactions/transactionId/{transaction_number}')
-    res = response.json()
-    if res.get('status') == 'error':
-        await update.message.reply_text("Transaction Does not exist.")
-        return ConversationHandler.END
-    res_amount = res.get('amount').get('value')
+    # Parse the message to extract transaction details
     try:
+        # Assuming the message contains transaction details in some format
+        # You may need to adjust this based on your actual message format
+        user_id = update.effective_user.id
+        username = update.effective_user.username
+        
+        # For now, let's assume the message contains the transaction number
+        # You may need to implement proper parsing logic here
+        transaction_number = message.strip()  # Simple parsing for now
+        
+        response = requests.get(f'{BACK_URL}/transactions/transactionId/{transaction_number}')
+        res = response.json()
+        if res.get('status') == 'error':
+            await update.message.reply_text("Transaction Does not exist.")
+            return ConversationHandler.END
+        res_amount = res.get('amount').get('value')
+        
         current_balance = requests.get(f'{BACK_URL}/users/{user_id}/').json().get('user',{}).get('balance',0)
         response = requests.put(f'{BACK_URL}/users/balance/{user_id}/', json={"balance": current_balance + res_amount})
         withdraw_response = requests.delete(f'{BACK_URL}/transactions/{transaction_number}')
@@ -654,11 +696,7 @@ all_public_commands_descriptions = [
         "start playing"
         ),
 
-    BotCommand(
-        "instructions", 
-        "instructions to play game"
-        ),
-
+  
       BotCommand(
         "support", 
         "Contact us"
@@ -715,18 +753,30 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(message)
 
 
+async def conversation_timeout(context):
+    await context.bot.send_message(
+        chat_id=context.job.chat_id,
+        text="Conversation timed out due to inactivity. Please start again."
+    )
+
+async def cancel(update, context):
+    await update.message.reply_text("Conversation cancelled. You can start again anytime.")
+    return ConversationHandler.END
+
 
 def main() -> None:
     BOT_TOKEN = get_bot_seetings().get("bot_token")
     application = ApplicationBuilder().token("8408827169:AAEvrQiXPmbSQ3uxbhWuXzMYZCOmRLoeEVc").post_init(post_init).build()
+    # Create a proper registration conversation handler
     register_conversation_handler = ConversationHandler(
         entry_points=[CommandHandler('register', begin_register)],
         states={
-            PHONE: [MessageHandler(filters.CONTACT, handle_phone)]
+            PHONE : [MessageHandler(filters.CONTACT, handle_phone)]
         },
         fallbacks=[CommandHandler('cancel', cancel)],
     )
 
+    # Main conversation handler for button interactions and other states
     deposit_conversation_handler = ConversationHandler(
         entry_points=[CallbackQueryHandler(button)],
         states={
@@ -734,7 +784,8 @@ def main() -> None:
             DEPOSIT_AMOUNT          : [MessageHandler(filters.TEXT & ~filters.COMMAND, deposit_amount)],
             GET_WITHDRAW_ACCOUNT    : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_withdraw_account)],
             WITHDRAW_AMOUNT_CONFIRM : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_withdraw_amount)],
-            GET_TRANSCATION_DETAILS  : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_transcation_details)]
+            GET_TRANSCATION_DETAILS  : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_transcation_details)],
+            PHONE_NUMBER            : [MessageHandler(filters.CONTACT, handle_phone)]
         },
         fallbacks=[CommandHandler('cancel', cancel)],
         allow_reentry=True
@@ -745,7 +796,6 @@ def main() -> None:
 
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('play', play_command))
-    application.add_handler(CommandHandler('instructions', instruction_command))
     application.add_handler(CommandHandler('support', support_command))
     application.add_handler(CommandHandler('withdraw', withdraw_command))
     application.add_handler(deposit_conversation_handler)
@@ -755,13 +805,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-async def conversation_timeout(context):
-    await context.bot.send_message(
-        chat_id=context.job.chat_id,
-        text="Conversation timed out due to inactivity. Please start again."
-    )
-
-async def cancel(update, context):
-    await update.message.reply_text("Conversation cancelled. You can start again anytime.")
-    return ConversationHandler.END

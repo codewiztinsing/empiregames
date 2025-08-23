@@ -14,10 +14,25 @@ from telegram import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
-
+import logging
+logger = logging.getLogger(__name__)
 user_data = {}  
 # Define states for conversation
 PHONE,EMAIL,PASSWORD,CONFIRM_PASSWORD = range(4)
+
+async def begin_register(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Start the registration process"""
+    await update.message.reply_text(
+        "Welcome to registration! Please share your phone number to continue.",
+        reply_markup=ReplyKeyboardMarkup(
+            [[KeyboardButton("Share Contact", request_contact=True)]],
+            one_time_keyboard=True,
+            resize_keyboard=True
+        )
+    )
+    return PHONE
+
+
 
 
 
@@ -25,13 +40,9 @@ PHONE,EMAIL,PASSWORD,CONFIRM_PASSWORD = range(4)
 
 def play_options_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton("🎮 Play 10", callback_data='10'),
-         InlineKeyboardButton("🎮 Play 20", callback_data='20')],
-        [InlineKeyboardButton("🎮 Play 50", callback_data='50'),
-         InlineKeyboardButton("🎮 Play 100", callback_data='100')],
-        [InlineKeyboardButton("🎮 Play Demo", callback_data='play_demo'),
-         InlineKeyboardButton("🔙  Back to Menu", callback_data='back')
-         ],
+        [InlineKeyboardButton("🎮 Play 10", callback_data='10')],
+        [InlineKeyboardButton("🎮 Play Demo", callback_data='play_demo')],
+        [InlineKeyboardButton("🔙  Back to Menu", callback_data='back')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -39,77 +50,68 @@ def play_options_keyboard() -> InlineKeyboardMarkup:
 
 
 
-async def begin_register(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    BACK_URL = get_bot_seetings().get("bot_url")
-    telegram_id = update.message.from_user.id
-    username = update.message.from_user.username if update.message.from_user.username else update.message.from_user.first_name
-    user_data["username"] = username
 
-
-
-    url  = f"{BACK_URL}/api/v1/users/{telegram_id}/"
-    user_exists  = requests.get(url)
-    if user_exists.status_code == 200:
-        user_exists = user_exists.json()
-        
-        await update.message.reply_text(
-                    text="You are already registred,please start playing:",
-                    reply_markup=play_options_keyboard()
-                )
-    else:
-        await update.message.reply_text(f"Welcome! Your username is: {username}. Please share your phone number.")
-        referrer_id = context.user_data.get('referrer_id')
-     
-        # Create a button to share phone number
-        phone_button = KeyboardButton("Share Phone Number", request_contact=True)
-    
-    
-        reply_markup = ReplyKeyboardMarkup([[phone_button]], resize_keyboard=True, one_time_keyboard=True)
-
-        await update.message.reply_text("Click the button below to share your phone number:", reply_markup=reply_markup)
-
-        return PHONE  # Move to the PHONE state
 
 async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    BACK_URL = get_bot_seetings().get("bot_url")
-    # Check if the message contains a contact
+    SERVER_URL = get_bot_seetings().get("server_url")
+    logger.info(f"SERVER_URL = {SERVER_URL}")
+    
     if update.message.contact:
-        phone_number = update.message.contact.phone_number
-        user_data["phone"] = phone_number
+        telegram_id = update.message.from_user.id
+        logger.info(f"telegram_id = {telegram_id}")
 
-        user_id = update.message.from_user.id
-        first_name = update.message.from_user.first_name,
-        last_name = update.message.from_user.last_name
-        confirm_password= update.message.text
-        user_data.update({
-            'telegram_id': str(update.message.from_user.id)
-        })
-        user_data.update({
-            'phone': user_data.get('phone',"botphone")
-        })
+        # Check if user already exists
+        check_url = f"{SERVER_URL}/api/v1/users/{telegram_id}"
+        logger.info(f"Checking if user exists at: {check_url}")
         
-        user_data.update({
-            "email":f"{user_data.get('username')}@gmail.com"
-        })
+        try:
+            check_response = requests.get(check_url)
+            logger.info(f"Check user response status: {check_response.status_code}")
+            logger.info(f"Check user response text: {check_response.text}")
+            
+            if check_response.status_code == 200:
+                # User already exists
+                await update.message.reply_text("You are already registered!")
+                await update.message.reply_text("Please click the button below to proceed:", reply_markup=play_options_keyboard())
+                return ConversationHandler.END
+            
+            # User doesn't exist, proceed with registration
+            create_url = f"{SERVER_URL}/api/v1/users"
+            payload = {
+                "username": update.message.from_user.username or update.message.from_user.first_name,
+                "telegramId": str(telegram_id),  # Convert to string as API expects
+                "phoneNumber": update.message.contact.phone_number
+            }
+            
+            logger.info(f"Creating user with payload: {payload}")
+            create_response = requests.post(create_url, json=payload)
+            logger.info(f"Create user response status: {create_response.status_code}")
+            logger.info(f"Create user response text: {create_response.text}")
+            
+            if create_response.status_code == 201:
+                try:
+                    user_data = create_response.json()
+                    logger.info(f"User created successfully: {user_data}")
+                    await update.message.reply_text("Registration completed successfully!")
+                    await update.message.reply_text("Please click the button below to proceed:", reply_markup=play_options_keyboard())
+                except ValueError as e:
+                    logger.error(f"Failed to parse JSON response: {e}")
+                    await update.message.reply_text("Registration completed but there was an issue with the response. Please try again later.")
+            else:
+                logger.error(f"Registration failed with status {create_response.status_code}: {create_response.text}")
+                await update.message.reply_text("Registration failed. Please try again later.")
+                
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request error: {e}")
+            await update.message.reply_text("Network error. Please try again later.")
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}")
+            await update.message.reply_text("An unexpected error occurred. Please try again later.")
+    else:
+        await update.message.reply_text("Please share your contact information to register.")
+        return PHONE
 
-        username = user_data.get("username",first_name)
-        phone = user_data.get('phone',"botphone")
-        password = "123456"
-        user_data.update({'password':password})
-
-
-        
-
-
-        response = requests.post(f"{BACK_URL}/api/v1/users/register", json=user_data)
-
-        if response.status_code == 200:  # Assume 201 means success
-            await update.message.reply_text("Registration completed successfully!")
-            await update.message.reply_text("Please click the button below to proceed to the next step:", reply_markup=play_options_keyboard())
-        else:
-            print("response = ",response.json())
-            await update.message.reply_text(f"Registration failed")
-
+    return ConversationHandler.END
       
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
