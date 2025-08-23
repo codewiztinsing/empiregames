@@ -576,7 +576,7 @@ background-color: #bd9fd1;
 }
 
 .action-buttons {
-  margin-top: 10px;
+  margin-top: 5px;
   display: flex;
   gap: 5px;
   justify-content: space-around;
@@ -595,11 +595,11 @@ background-color: #bd9fd1;
 
 .leave-button {
   /* max-width: 150px; */
-  width: 100px;
+  width: 50px;
   background-color: #f44336;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 5px 5px;
   border-radius: 5px;
   cursor: pointer;
 }

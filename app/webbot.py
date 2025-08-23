@@ -15,8 +15,7 @@ from telegram import (
 )
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from datetime import datetime, timedelta
-from utils import initialize_payment,get_bot_seetings   
-from utils.chapa import get_available_banks,transfer_funds
+from utils import get_bot_seetings   
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -29,9 +28,7 @@ from telegram.ext import (
 from datetime import datetime
 from telegram import BotCommand
 from register import *
-from helpers import get_numbers_of_games_played,helper_initialize_payment_chapa,daily_withdrawal_limit
-
-
+from helpers import get_numbers_of_games_played,daily_withdrawal_limit
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO

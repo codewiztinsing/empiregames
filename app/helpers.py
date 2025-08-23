@@ -1,4 +1,4 @@
-from utils import initialize_payment,get_bot_seetings
+from utils import get_bot_seetings
 
 import requests
 import logging
