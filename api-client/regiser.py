@@ -162,7 +162,7 @@ def delete_user(base_url: str, username: str) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
-    base_url = "http://localhost:5000"
+    base_url = "https://server.akerbingo.com"
     username = random_username()
     telegramId = random_telegram_id()
     phoneNumber = random_phone_number()
