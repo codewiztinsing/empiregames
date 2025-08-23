@@ -8,12 +8,14 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --production
 
-# Install Prisma
-RUN npx prisma generate
+
 
 # Copy source code
 COPY . .
 COPY .env .env
+
+# Install Prisma
+RUN npx prisma generate
 
 # Expose app port
 EXPOSE 5000
