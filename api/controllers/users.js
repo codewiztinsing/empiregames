@@ -15,17 +15,32 @@ const getAllUsers = async (req, res) => {
 // GET /api/users/:id - Get user by ID
 const getUserById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const user = await prisma.player.findUnique({
-      where: { id: parseInt(id) }
-    });
+    const { telegramId } = req.params;
+    console.log("telegramId = ",telegramId)
     
+    // Try to find user by telegramId
+    let user;
+    try {
+      user = await prisma.player.findUnique({
+        where: { telegramId: telegramId }
+      });
+    } catch (uniqueError) {
+      // If findUnique fails (e.g., telegramId not unique yet), fall back to findFirst
+      console.log("Fallback to findFirst due to:", uniqueError.message);
+      user = await prisma.player.findFirst({
+        where: { telegramId: telegramId }
+      });
+    }
+    
+    console.log("user = ",user)
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
     
     res.json(user);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: 'Failed to fetch user' });
   }
 };
@@ -35,11 +50,20 @@ const createUser = async (req, res) => {
     console.log("createUser");
     console.log(req.body);
   try {
-    const { username, telegramId,phoneNumber } = req.body;
+    const { username, telegramId, phoneNumber } = req.body;
     console.log(req.body);
     
     if (!username || !telegramId || !phoneNumber) {
       return res.status(400).json({ error: 'Username, telegramId and phoneNumber are required' });
+    }
+    
+    // Check if user already exists
+    const existingUser = await prisma.player.findFirst({
+      where: { telegramId: telegramId }
+    });
+    
+    if (existingUser) {
+      return res.status(409).json({ error: 'User with this telegramId already exists' });
     }
     
     const player = await prisma.player.create({
@@ -54,6 +78,9 @@ const createUser = async (req, res) => {
     res.status(201).json(player);
   } catch (error) {
     console.log(error);
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'User with this telegramId already exists' });
+    }
     res.status(500).json({ error: 'Failed to create user' });
   }
 };

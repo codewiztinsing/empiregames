@@ -6,7 +6,7 @@ const { getAllUsers, getUserById, createUser, updateUser, deleteUser } = require
 router.get('/', getAllUsers);
 
 // GET /api/users/:id - Get user by ID
-router.get('/:id', getUserById);
+router.get('/:telegramId', getUserById);
 
 // POST /api/users - Create new user
 router.post('/', createUser);

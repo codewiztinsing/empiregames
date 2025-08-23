@@ -24,7 +24,7 @@ model Game {
 model Player {
   id          Int      @id @default(autoincrement())
   username    String
-  telegramId  String
+  telegramId  String  @unique
   phoneNumber String
   balance     Int
   joinedAt    DateTime @default(now())
