@@ -100,10 +100,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def play_options_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton("🎮 Play 10", callback_data='10'),
-         InlineKeyboardButton("🎮 Play 20", callback_data='20')],
-        [InlineKeyboardButton("🎮 Play 50", callback_data='50'),
-         InlineKeyboardButton("🎮 Play 100", callback_data='100')],
-        [InlineKeyboardButton("🎮 Play Demo", callback_data='play_demo'),
          InlineKeyboardButton("🔙 Back to Menu", callback_data='back')
          ],
     ]
@@ -320,40 +316,14 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
   
 
     try:
-        if query.data in ['10', '20', '50', '100']:
-            user_id = query.from_user.id
-            
-            # Check if user is registered
-            response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
-            logger.info(f"Response {response}")
-            data = response.json()
-            logger.info(f"Data {data}")
-            if data.get('phone') is None:
-                await query.edit_message_text(
-                    text="You need to register first before playing. Use the /register command.",
-                    reply_markup=instructions_options_keyboard()
-                )
-                return
-
-            # Check user's balance
-            bet_amount = int(query.data)
-            wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
-            wallet_data = wallet_response.json()
-            balance = wallet_data.get('balance', 0)
-           
-          
-            if balance < bet_amount:
-                await query.edit_message_text(
-                    text=f"Insufficient balance. Your current balance is {balance} ETB. Please deposit more to play.",
-                    reply_markup=deposit_opitions_keyboard()
-                )
-                return
-
+        if query.data in ['10']:
             player_id = query.from_user.id
-            web_app_url = f"{BACK_URL}?playerId={player_id}&betAmount={bet_amount}&playerName={query.from_user.username}"
+
+            web_app_url = f"{BACK_URL}?playerId={player_id}&betAmount={10}&playerName={query.from_user.username}"
+            logger.info(f"web_app_url = {web_app_url}")
             
             await query.edit_message_text(
-                text=f"Starting game with {bet_amount} ETB bet...",
+                text=f"Starting game with 10 ETB bet...",
                 reply_markup=InlineKeyboardMarkup([[
                     InlineKeyboardButton("Play Game", web_app=WebAppInfo(url=web_app_url))
                 ]])
