@@ -4,13 +4,17 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /app
 
-# Install dependencies first (better caching)
+# Copy package files first
 COPY package*.json ./
-RUN npm install
 
-# Copy source code
+# Copy Prisma schema files before npm install
+COPY prisma ./prisma
+
+# Install dependencies (this will now work since prisma schema is available)
+RUN npm install --legacy-peer-deps
+
+# Copy the rest of the source code
 COPY . .
-COPY .env .env
 
 # Install Prisma CLI globally
 RUN npm install -g prisma
