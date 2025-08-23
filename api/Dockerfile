@@ -6,19 +6,20 @@ WORKDIR /app
 
 # Install dependencies first (better caching)
 COPY package*.json ./
-RUN npm install --production
-
-
+RUN npm install
 
 # Copy source code
 COPY . .
 COPY .env .env
 
-# Install Prisma
-RUN npx prisma generate
+# Install Prisma CLI globally
+RUN npm install -g prisma
+
+# Make startup script executable
+RUN chmod +x /app/start.sh
 
 # Expose app port
 EXPOSE 5000
 
-# Run app
-CMD ["npm", "start"]
+# Run the startup script
+CMD ["/app/start.sh"]
