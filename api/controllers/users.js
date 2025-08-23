@@ -21,7 +21,7 @@ const getUserById = async (req, res) => {
     // Try to find user by telegramId
     let user;
     try {
-      user = await prisma.player.findUnique({
+      user = await prisma.player.findFirst({
         where: { telegramId: telegramId }
       });
     } catch (uniqueError) {
@@ -88,23 +88,33 @@ const createUser = async (req, res) => {
 // PUT /api/users/:id - Update user by ID
 const updateUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, gameId } = req.body;
+    const { telegramId } = req.params;
+    const { username, phoneNumber, balance, status } = req.body;
     
     const updateData = {};
-    if (name) updateData.name = name;
-    if (gameId) updateData.gameId = parseInt(gameId);
+    if (username) updateData.username = username;
+    if (phoneNumber) updateData.phoneNumber = phoneNumber;
+    if (balance) updateData.balance = parseInt(balance);
+    if (status) updateData.status = status;
     
+    // First find the user by telegramId since it's not unique
+    const existingUser = await prisma.player.findFirst({
+      where: { telegramId: telegramId }
+    });
+    
+    if (!existingUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Update using the unique id field
     const user = await prisma.player.update({
-      where: { id: parseInt(id) },
-      data: updateData,
-      include: {
-        game: true
-      }
+      where: { id: existingUser.id },
+      data: updateData
     });
     
     res.json(user);
   } catch (error) {
+    console.log(error);
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'User not found' });
     }

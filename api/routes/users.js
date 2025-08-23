@@ -12,7 +12,7 @@ router.get('/:telegramId', getUserById);
 router.post('/', createUser);
 
 // PUT /api/users/:id - Update user by ID
-router.put('/:id', updateUser);
+router.put('/:telegramId', updateUser);
 
 // DELETE /api/users/:id - Delete user by ID
 router.delete('/:id', deleteUser);

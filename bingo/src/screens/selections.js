@@ -101,15 +101,14 @@ const Selections = () => {
       console.log("apiUrl", apiUrl)
     
       try {
-        // const headers = {
-        //   'Access-Control-Allow-Origin': '*',
-        //   'Content-Type': 'application/json'
-        // };
-        // const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
+        const headers = {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json'
+        };
+        const response = await axios.get(`${apiUrl}users/${queryParams.get('playerId')}`);
       
       
-        // setBalance(response.data.balance);
-        setBalance(100)
+        setBalance(response.data.balance);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching balance:', error);

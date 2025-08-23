@@ -71,7 +71,7 @@ def get_user(base_url: str, username: str) -> Dict[str, Any]:
     Returns:
         Dict containing the user data or error information
     """
-    url = f"{base_url}/api/users/{username}"
+    url = f"{base_url}/api/users/{telegramId}"
     
     try:
         response = requests.get(url)
@@ -162,7 +162,8 @@ def delete_user(base_url: str, username: str) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
-    base_url = "https://server.akerbingo.com"
+    # base_url = "https://server.akerbingo.com"
+    base_url = "http://localhost:5000"
     username = random_username()
     telegramId = random_telegram_id()
     phoneNumber = random_phone_number()
@@ -172,4 +173,4 @@ if __name__ == "__main__":
     print(get_user(base_url, username))
     # delete created user
     print(get_all_users(base_url))
-    print(delete_user(base_url, username))
+   
