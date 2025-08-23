@@ -36,6 +36,7 @@ services:
       DB_NAME: bingo_db
       DB_USER: postgres
       DB_PASSWORD: postgres
+      SERVER_URL: https://server.akerbingo.com/
     depends_on:
       postgres:
         condition: service_healthy
