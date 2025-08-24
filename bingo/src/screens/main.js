@@ -56,6 +56,9 @@ const PlayingBoard = () => {
     // When user reloads or closes the tab
     window.addEventListener("beforeunload", handleLeave);
 
+    // when page is refreshed
+    window.addEventListener("load", handleLeave);
+
     if (lastBall) {
       const element = document.getElementById(`${lastBall.letter}${lastBall.number}`);
       const recentBall = `${lastBall.letter}${lastBall.number}`
