@@ -56,8 +56,13 @@ const PlayingBoard = () => {
     // When user reloads or closes the tab
     window.addEventListener("beforeunload", handleLeave);
 
-    // when page is refreshed
-    window.addEventListener("load", handleLeave);
+    // listen for screen visibility change
+    window.addEventListener("visibilitychange", () => {
+      console.log("visibilitychange",document.visibilityState)
+      if (document.visibilityState === "hidden") {
+        handleLeave();
+      }
+    });
 
     if (lastBall) {
       const element = document.getElementById(`${lastBall.letter}${lastBall.number}`);
