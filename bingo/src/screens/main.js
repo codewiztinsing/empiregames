@@ -125,6 +125,13 @@ const PlayingBoard = () => {
 
   socket.on('gameState', handleGameState);
 
+  socket.on("disconnect", () => {
+    if (playerId) {
+      handleLeave();
+     
+    }
+  })
+
 
   function handleFalseBingo(data) {
     const losserBoard = data.losser_board
@@ -195,7 +202,7 @@ const PlayingBoard = () => {
       selectedNumber2
 
     })
-    navigate(`/?playerId=${playerId}&&betAmount=${roomId}&playerName=${playerName}`);
+    navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
 
     window.location.reload();
   };
@@ -220,7 +227,7 @@ const PlayingBoard = () => {
 
     setIsBingo(false);
     const queryParams =
-      navigate(`/?playerId=${playerId}&&betAmount=${roomId}&&playerName=${playerName}`);
+      navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
   };
 
   return (

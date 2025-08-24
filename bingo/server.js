@@ -574,6 +574,11 @@ io.on('connection', (socket) => {
     if (selectedCard2 && game.selectedNumbers.includes(selectedCard2)) {
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedCard2);
     }
+
+    console.log("game.selectedNumbers",game.selectedNumbers)
+
+    
+
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
     io.emit("waitingGames",   [...getWaitingGames(activeGames),...getWaitingGames(activeGames,"waiting")]);
