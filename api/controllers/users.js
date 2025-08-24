@@ -122,17 +122,29 @@ const updateUser = async (req, res) => {
   }
 };
 
-// DELETE /api/users/:id - Delete user by ID
+// DELETE /api/users/:telegramId - Delete user by ID
 const deleteUser = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { telegramId } = req.params;
+    console.log("telegramId = ",telegramId)
     
+    // First find the user by telegramId since it's not unique
+    const existingUser = await prisma.player.findFirst({
+      where: { telegramId: telegramId }
+    });
+    
+    if (!existingUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Delete using the unique id field
     await prisma.player.delete({
-      where: { id: parseInt(id) }
+      where: { id: existingUser.id }
     });
     
     res.status(204).send();
   } catch (error) {
+    console.log("error = ",error)
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'User not found' });
     }

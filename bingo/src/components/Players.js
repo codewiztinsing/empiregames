@@ -13,7 +13,9 @@ import {
   Edit,
   Trash2
 } from 'lucide-react';
-import { getAllUsers } from '../services/api';
+import { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import { getAllUsers, deleteUser } from '../services/api';
 import EditPlayer from './EditPlayer';
 
 function Players() {
@@ -97,11 +99,21 @@ function Players() {
     return played > 0 ? ((won / played) * 100).toFixed(1) : '0.0';
   };
 
-  const handleDelete = (telegramId) => {
-    console.log("telegramId",telegramId);
+  const handleDelete = async (player) => {
+    const response = await deleteUser(player.telegramId);
+    console.log("response = ",response)
+    if(response.status === 204){
+      setPlayers(players.filter(p => p.telegramId !== player.telegramId));
+      setFilteredPlayers(filteredPlayers.filter(p => p.telegramId !== player.telegramId));
+      toast.success("Player deleted successfully");
+    }else{
+      toast.error("Error deleting player");
+    }
   };
 
   return (
+    <>
+    <Toaster position="top-right" reverseOrder={false} />
     <div className="min-h-screen bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -264,6 +276,7 @@ function Players() {
       </div>
       {editPlayer && <EditPlayer playerId={editPlayer} username={username} phoneNumber={phoneNumber} balance={balance} status={status} onClose={() => setEditPlayer(false)} />}
     </div>
+    </>
   );
 }
 

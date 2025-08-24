@@ -14,7 +14,7 @@ router.post('/', createUser);
 // PUT /api/users/:id - Update user by ID
 router.put('/:telegramId', updateUser);
 
-// DELETE /api/users/:id - Delete user by ID
-router.delete('/:id', deleteUser);
+// DELETE /api/users/:telegramId - Delete user by ID
+router.delete('/:telegramId', deleteUser);
 
 module.exports = router;

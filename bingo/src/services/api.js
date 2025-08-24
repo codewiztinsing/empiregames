@@ -18,5 +18,6 @@ export const createUser = (data) => api.post("/users", data);
 export const getUser = (telegramId) => api.get(`/users/${telegramId}`);
 export const getAllUsers = () => api.get("/users");
 export const updateUser = (telegramId, data) => api.put(`/users/${telegramId}`, data);
+export const deleteUser = (telegramId) => api.delete(`/users/${telegramId}`);
 
 export default api;

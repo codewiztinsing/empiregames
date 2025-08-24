@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, User, Mail, Phone, Calendar, Shield } from 'lucide-react';
 import { getUser, updateUser } from '../services/api';
-
+import toast from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 const EditPlayer = ({ playerId, username, phoneNumber, balance, status, onClose, onSave }) => {
   const [playerData, setPlayerData] = useState({
     username: username,
@@ -63,8 +64,15 @@ const EditPlayer = ({ playerId, username, phoneNumber, balance, status, onClose,
     try {
       setLoading(true);
       // Here you would typically call an update API endpoint
-      await updateUser(playerId, playerData);
-      onSave(playerData);
+      const response =  await updateUser(playerId, playerData);
+      if(response.status === 200){
+        console.log("status code",response.status);
+        // onSave(response.data);
+        toast.success("Player updated successfully");
+      }else{
+        console.log("Error updating player:", response.data);
+        toast.error("Error updating player:", response.data);
+      }
       onClose();
     } catch (error) {
       console.error('Error updating player:', error);
@@ -74,6 +82,8 @@ const EditPlayer = ({ playerId, username, phoneNumber, balance, status, onClose,
   };
 
   return (
+    <>
+    <Toaster />
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
@@ -216,6 +226,7 @@ const EditPlayer = ({ playerId, username, phoneNumber, balance, status, onClose,
         </form>
       </div>
     </div>
+    </>
   );
 };
 
