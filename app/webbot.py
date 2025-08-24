@@ -172,7 +172,7 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         balance = float(wallet_response.get('balance', 0))
         logger.info(f"balance {balance}")
       
-        if int(balance) < 20:
+        if int(balance) < 100000:
             await update.message.reply_text(f"You must leave at least 20 ETB in your wallet. Please enter a smaller amount.")
             return WITHDRAW_AMOUNT_CONFIRM
 
@@ -758,7 +758,7 @@ def main() -> None:
     application.add_handler(CommandHandler('play', play_command))
     application.add_handler(CommandHandler('instructions', instruction_command))
     application.add_handler(CommandHandler('support', support_command))
-    # application.add_handler(CommandHandler('withdraw', withdraw_command))
+    application.add_handler(CommandHandler('withdraw', withdraw_command))
     application.add_handler(deposit_conversation_handler)
     application.add_handler(CommandHandler('invite', handle_invite))  
     application.add_handler(register_conversation_handler)
