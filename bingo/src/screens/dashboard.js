@@ -6,6 +6,7 @@ import Transactions from "../components/Transactions";
 import Players from "../components/Players";
 import Referrals from "../components/Referrals";
 import Payments from "../components/Payments";
+import Logout from "../components/Logout";
  function Dashboard() {
     const [display, setDisplay] = useState("dashboard");
 
@@ -36,6 +37,7 @@ import Payments from "../components/Payments";
       {display === "players" && <Players />}
       {display === "referrals" && <Referrals />}
       {display === "payments" && <Payments />}
+      {display === "logout" && <Logout />}
     </div>
   );
 }
