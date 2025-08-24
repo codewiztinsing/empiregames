@@ -69,3 +69,11 @@ def daily_withdrawal_limit(telegram_id: int) -> int:
     return response.json().get("daily_withdrawal_limit")
 
      
+def get_user_balance(telegram_id: int) -> int:
+    BACK_URL = get_bot_seetings().get("bot_url")
+    url = f"/api/v1/users/{telegram_id}/"
+    full_url = f"{BACK_URL}{url}"
+    response = requests.get(full_url)
+    logger.info(f"full_url = {full_url}")
+    logger.info(f"response = {response.json()}")
+    return response.json().get("balance")

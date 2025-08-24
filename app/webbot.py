@@ -28,7 +28,7 @@ from telegram.ext import (
 from datetime import datetime
 from telegram import BotCommand
 from register import *
-from helpers import get_numbers_of_games_played,daily_withdrawal_limit
+from helpers import get_numbers_of_games_played,daily_withdrawal_limit,get_user_balance
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -78,7 +78,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         [InlineKeyboardButton("💰 Check Balance", callback_data='check_balance'),
          InlineKeyboardButton("💳 Deposit", callback_data='deposit')],
         [InlineKeyboardButton("📞 Contact Support", callback_data='contact_support'),
-         InlineKeyboardButton("🔗 Join Group", url='https://t.me/wowbingos')]
+         InlineKeyboardButton("🔗 Join Group", url='https://t.me/AkerBingoGroup')]
     ]
     
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -306,13 +306,10 @@ def instructions_options_keyboard() -> InlineKeyboardMarkup:
 # Function to create the play options keyboard
 def support_options_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton("📞 Support 1 👨‍💼 -->  0944424252 📱",  url='https://t.me/@Wowbingosupport1')],
-        [InlineKeyboardButton("📞 Support 2 👩‍💼 -->  0964543434 📱",  url='https://t.me/@Wowbingosupport2')],
-        [InlineKeyboardButton("📞 Support 3 👨‍💼 -->  0952018080 📱",  url='https://t.me/@iToffice1')],
+        [InlineKeyboardButton("📞 Support 1 👨‍💼 -->  0912729725 📱",  url='https://t.me/WassihunT')],
+       
     ]
     return InlineKeyboardMarkup(keyboard)
-
-
 
 async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = support_options_keyboard()
@@ -338,8 +335,26 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if query.data in ['10']:
             player_id = query.from_user.id
             logger.info(f"player_id = {player_id}")
+            user_balance = get_user_balance(player_id)
+            logger.info(f"user_balance = {user_balance}")
+            if user_balance == 0:
+                await query.edit_message_text(
+                    text=f"You have no balance. Please deposit to play.",
+                    reply_markup=InlineKeyboardMarkup([[
+                        InlineKeyboardButton("Deposit", callback_data='deposit')
+                    ]])
+                )
+                return ConversationHandler.END
+            if user_balance < 10:
+                await query.edit_message_text(
+                    text=f"You have no balance. Please deposit to play.",
+                    reply_markup=InlineKeyboardMarkup([[
+                        InlineKeyboardButton("Deposit", callback_data='deposit')
+                    ]])
+                )
+                return ConversationHandler.END
 
-            web_app_url = f"{BACK_URL}?playerId={player_id}&betAmount={10}&playerName={query.from_user.username}"
+            web_app_url = f"{BACK_URL}?playerId={player_id}&betAmount={10}&playerName={query.from_user.username}&wallet_amount={user_balance}"
             logger.info(f"web_app_url = {web_app_url}")
             
             await query.edit_message_text(
@@ -348,13 +363,9 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                     InlineKeyboardButton("Play Game", web_app=WebAppInfo(url=web_app_url))
                 ]])
             )
-            
+        
            
             return ConversationHandler.END
-            
-           
-
-        
         if query.data == 'play_demo':
             player_id = query.from_user.id
             username = query.from_user.username
@@ -401,11 +412,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
             return ConversationHandler.END
 
-        
-
-            
-
-
 
         elif query.data == 'get_deposit_amount':
           
@@ -446,12 +452,10 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             user_id = query.from_user.id
             username = query.from_user.username or query.from_user.first_name
             bet_amount = query.data
+            user_balance = get_user_balance(user_id)
         
-            wallet_amount = requests.get(f'{BACK_URL}/users/{user_id}/').json().get('balance',0)
-            print("wallet_amount = ",wallet_amount)
-
             web_app_url = (
-                f"https://wowliyubingo.com/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={wallet_amount}"
+                f"https://wowliyubingo.com/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={user_balance}"
             )
 
             keyboard = [
