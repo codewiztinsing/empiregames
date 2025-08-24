@@ -538,8 +538,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             await query.edit_message_text(
                 text="how much do you want to withdraw?"
             )
-            # return WITHDRAW_AMOUNT_CONFIRM
-            return ConversationHandler.END
+            return WITHDRAW_AMOUNT_CONFIRM
+            # return ConversationHandler.END
 
           
             
@@ -758,7 +758,7 @@ def main() -> None:
     application.add_handler(CommandHandler('play', play_command))
     application.add_handler(CommandHandler('instructions', instruction_command))
     application.add_handler(CommandHandler('support', support_command))
-    application.add_handler(CommandHandler('withdraw', withdraw_command))
+    # application.add_handler(CommandHandler('withdraw', withdraw_command))
     application.add_handler(deposit_conversation_handler)
     application.add_handler(CommandHandler('invite', handle_invite))  
     application.add_handler(register_conversation_handler)
