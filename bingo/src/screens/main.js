@@ -172,11 +172,16 @@ const PlayingBoard = () => {
       reason
 
     })
-    navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
-
-    window.location.reload();
+  
   };
 
+
+  socket.on("playerLeft", (data) => {
+    if(data.playerId == playerId){
+      navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+      window.location.reload();
+    }
+  })
 
 
 

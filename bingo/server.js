@@ -394,28 +394,31 @@ io.on('connection', (socket) => {
 
   socket.on("leave",(data) => {
     const game = activeGames.get(data.roomId);
-    const playerId = data.playerId;
-   
-    // remove this playerId from game
-    if (game?.players.has(playerId)) {
-      game.players.delete(playerId);
-    }
-  
-    
-    const selectedCard = data.selectedNumber
-    const selectedCard2 = data.selectedNumber2
     if (!game) return;
-    if (selectedCard && game.selectedNumbers.includes(selectedCard)) {
-      game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedCard);
+  
+    if (game?.players?.has(data.playerId)) {
+      game.players.delete(data.playerId);
     }
-    if (selectedCard2 && game.selectedNumbers.includes(selectedCard2)) {
-      game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedCard2);
-    }
-    console.log("reason for disconnection",data.reason)
+    
+    const playerId = data.playerId
+    const selectedNumber = data.selectedNumber
+    const selectedNumber2 = data.selectedNumber2
+    game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);
+    game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber2);
+    console.log("selectedNumber 1 in leave",selectedNumber)
+    console.log("selectedNumber2 in leave",selectedNumber2)
+    game.selectedNumbersToPlayer.delete(playerId)
+    game.selectedNumbersToPlayer.delete(playerId)
+
 
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
     io.emit("waitingGames",   [...getWaitingGames(activeGames),...getWaitingGames(activeGames,"waiting")]);
+    io.emit("playerLeft",{
+      playerId: data.playerId,
+      selectedNumber: data.selectedNumber,
+      selectedNumber2: data.selectedNumber2
+    })
     
   })
 
@@ -430,12 +433,13 @@ io.on('connection', (socket) => {
     if (user) {
       const game = activeGames.get(user.gameId);
       const playerId = user.playerId
-      const selectedNumber = game.selectedNumbersToPlayer.get(playerId)[0]
-      const selectedNumber2 = game.selectedNumbersToPlayer.get(playerId)[1]
-
-      console.log("selectedNumber 1 in disconnect",selectedNumber)
-      console.log("selectedNumber2 in disconnect ",selectedNumber2)
-    
+   
+      if(game.selectedNumbersToPlayer.has(playerId)){
+        const selectedNumber = game.selectedNumbersToPlayer.get(playerId)[0]
+        const selectedNumber2 = game.selectedNumbersToPlayer.get(playerId)[1]
+      }
+     
+ 
       if (game?.players.has(user.playerId)) {
         if(game.status === "waiting") {
           game.players.delete(user.playerId);
