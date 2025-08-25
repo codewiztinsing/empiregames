@@ -48,7 +48,7 @@ def charge_player(players, entry_fee, game_id):
                 wallet.save()
                 logger.info(f"Wallet balance after deduction: {wallet.balance}")
                 # push transaction
-                push_transaction(player_obj.telegram_id, entry_fee,entry_fee,"BET","success",game_id)
+                push_transaction(player_obj.telegram_id, entry_fee,entry_fee * players[player],"BET","success",game_id)
             charged_players.append(player_obj.id)
             logger.info(f"Charged players: {charged_players}")
           
