@@ -278,8 +278,11 @@ io.on('connection', (socket) => {
 
     game.selectedNumbers.push(data.selectedNumber)
     game.selectedNumbers.push(data.selectedNumber2)
-    game.selectedNumbersToPlayer.set(data.playerId,data.selectedNumber)
-    game.selectedNumbersToPlayer.set(data.playerId,data.selectedNumber2)
+
+    
+    game.selectedNumbersToPlayer.set(data.playerId, [data.selectedNumber, data.selectedNumber2])
+
+
     game.numberOfBoardsToPlayer.set(data.playerId,data.numberOfBoards)
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
     if (game.players.size >= 100) {
@@ -427,8 +430,8 @@ io.on('connection', (socket) => {
     if (user) {
       const game = activeGames.get(user.gameId);
       const playerId = user.playerId
-      const selectedNumber = game.selectedNumbersToPlayer.get(playerId)
-      const selectedNumber2 = game.selectedNumbersToPlayer.get(playerId)
+      const selectedNumber = game.selectedNumbersToPlayer.get(playerId)[0]
+      const selectedNumber2 = game.selectedNumbersToPlayer.get(playerId)[1]
 
       console.log("selectedNumber 1 in disconnect",selectedNumber)
       console.log("selectedNumber2 in disconnect ",selectedNumber2)
@@ -438,6 +441,8 @@ io.on('connection', (socket) => {
           game.players.delete(user.playerId);
           game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);
           game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber2);
+          console.log("selected number 2 in disconnect",selectedNumber2)
+          console.log("selected number 2 in disconnect",selectedNumber2)
           io.to(game.roomId).emit("gameState", {
             message: `User ${user.playerId} disconnected`,
             gameId: game.id,
@@ -447,6 +452,7 @@ io.on('connection', (socket) => {
             game_status: game.status,
             count_down: game.countDown
           });
+
 
         
           game.selectedNumbersToPlayer.delete(playerId)
