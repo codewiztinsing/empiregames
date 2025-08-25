@@ -128,7 +128,7 @@ function startCountDown(game) {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers,
-      total_players: game.total_players,
+      total_players: game.selectedNumbers.length,
       game_status: game.status,
       count_down: game.countDown
     });
@@ -405,15 +405,21 @@ io.on('connection', (socket) => {
     const selectedNumber2 = data.selectedNumber2
     game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);
     game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber2);
-    console.log("selectedNumber 1 in leave",selectedNumber)
-    console.log("selectedNumber2 in leave",selectedNumber2)
     game.selectedNumbersToPlayer.delete(playerId)
     game.selectedNumbersToPlayer.delete(playerId)
 
 
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
+    io.to(game.roomId).emit("gameState", {
+      gameId: game.id,
+      roomId: game.roomId,
+      pickedNumbers: game.selectedNumbers,
+      total_players: game.selectedNumbers.length,
+      game_status: game.status,
+    })
   
     io.emit("waitingGames",   [...getWaitingGames(activeGames),...getWaitingGames(activeGames,"waiting")]);
+
     io.emit("playerLeft",{
       playerId: data.playerId,
       selectedNumber: data.selectedNumber,
@@ -452,7 +458,7 @@ io.on('connection', (socket) => {
             gameId: game.id,
             roomId: game.roomId,
             pickedNumbers: game.selectedNumbers.filter(num => num !== selectedNumber && num !== selectedNumber2),
-            total_players: game.total_players,
+            total_players: game.selectedNumbers.length,
             game_status: game.status,
             count_down: game.countDown
           });

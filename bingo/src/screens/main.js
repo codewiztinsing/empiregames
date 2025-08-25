@@ -11,198 +11,164 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 
 const PlayingBoard = () => {
-  const { selectedNumber,selectedNumber2, selectBoard,selectBoard2, playersLength, countDown,setCountDown, roomId, playerId, gameId, setGameId, setToast, setIsToast, playerName } = useContext(BingoContext);
+  const {
+    selectedNumber,
+    selectedNumber2,
+    selectBoard,
+    selectBoard2,
+    playersLength,
+    countDown,
+    setCountDown,
+    roomId,
+    playerId,
+    gameId,
+    setGameId,
+    setToast,
+    setIsToast,
+    playerName,
+  } = useContext(BingoContext);
 
-  const [board, setBoard] = useState(Array(5).fill().map(() => Array(5).fill(null)));
   const [calledNumbers, setCalledNumbers] = useState([]);
-  const [currentCall, setCurrentCall] = useState(null);
-  const [lastBall, setLastBall] = useState(0);
-  const [winAmount, setWinAmount] = useState(0);
+  const [lastBall, setLastBall] = useState(null);
   const [totalCalledNumbers, setTotalCalledNumbers] = useState(0);
   const [selectedCell, setSelectedCell] = useState(new Set());
   const [isBingo, setIsBingo] = useState(false);
   const [winningCard, setWinningCard] = useState([]);
-  const [recentCalledNumbers, setRecentCalledNumbers] = useState(["*","*","*"]);
-  const [winner, setWinner] = useState("skdfn9123u42139")
-  const [winnerCardNumber, setWinnerCardNumber] = useState(0);  
-  const [hasToasted, setHasToasted] = useState(false);
-  const [winnerPlayerName, setWinnerPlayerName] = useState("");
-  const [isDisabled,setIsDisabled] = useState(false)
-  const [firstBoardLost,setFirstBoardLost] = useState(false)
-  const [secondBoardLost,setSecondBoardLost] = useState(false)
-  // const [betAmount, setBetAmount] = useState(0);
+  const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
+  const [winner, setWinner] = useState('');
+  const [winnerCardNumber, setWinnerCardNumber] = useState(0);
+  const [winnerPlayerName, setWinnerPlayerName] = useState('');
+  const [firstBoardLost, setFirstBoardLost] = useState(false);
+  const [secondBoardLost, setSecondBoardLost] = useState(false);
+
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
 
-
+  // ✅ Socket event bindings
   useEffect(() => {
+    if (!socket) return;
 
-    socket.on('numberSelected', (number) => {setCurrentCall(number);});  
-    
-    // When user reloads or closes the tab
-    window.addEventListener("beforeunload", () => handleLeave("beforeunload"));
-    
-
-    // Listen for disconnect event from server
-    socket.on("disconnect", () => {
-      console.log("Client disconnected from server");
-      handleLeave("disconnect");
-    });
-
-    if (lastBall) {
-      const element = document.getElementById(`${lastBall.letter}${lastBall.number}`);
-      const recentBall = `${lastBall.letter}${lastBall.number}`
-      setRecentCalledNumbers(prev => [...prev,recentBall])
-      if (recentCalledNumbers.length > 3) {
-        setRecentCalledNumbers(prev => prev.slice(1));
+    const handleGameState = (data) => {
+      const calledNumber = data?.lastBall?.combined.split("-")[1]
+      console.log("calledNumber",calledNumber)
+      if(calledNumber){
+        calledNumbers.push(parseInt(calledNumber))
+        setCalledNumbers(calledNumbers)
       }
-      element.classList.add("last-called")
-    }
+      setLastBall(data.lastBall);
+      if (data.total_called_numbers) setTotalCalledNumbers(data.total_called_numbers);
+      if (data.count_down) setCountDown(data.count_down);
+      setGameId(data.gameId);
+    };
+
+    const handleFalseBingo = (data) => {
+      const loserBoard = data.losser_board;
+      if (loserBoard === selectedNumber) setFirstBoardLost(true);
+      if (loserBoard === selectedNumber2) setSecondBoardLost(true);
+    };
+
+    const handleGameOver = (data) => {
+      if (data.roomId === roomId) {
+        navigate(`/?playerId=${playerId}&&betAmount=${roomId}&playerName=${playerName}`);
+      }
+    };
+
+    const handleWinBingo = (data) => {
+      if (data.winningCard) {
+        setWinningCard(data.markedCells);
+        setIsBingo(data.isBingo);
+        setWinner(data.playerId);
+        setWinnerCardNumber(data.winner_Number);
+        setWinnerPlayerName(data.playerName);
+      }
+    };
+
+    const handleJoinError = (data) => {
+      if (data.roomId === roomId) {
+        setToast(data.message);
+        setIsToast(true);
+        navigate(`/selection?playerId=${playerId}&betAmount=${roomId}`);
+      }
+    };
+
+    const handlePlayerLeft = (data) => {
+      if (data.playerId === playerId) {
+        navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+        window.location.reload();
+      }
+    };
+
+    socket.on('numberSelected', (number) => setLastBall(number));
+    socket.on('gameState', handleGameState);
+    socket.on('gameOver', handleGameOver);
+    socket.on('winBingo', handleWinBingo);
+    socket.on('falseBingo', handleFalseBingo);
+    socket.on('joinError', handleJoinError);
+    socket.on('playerLeft', handlePlayerLeft);
+
+    socket.on('disconnect', () => {
+      console.log('Client disconnected from server');
+      handleLeave('disconnect');
+    });
 
     return () => {
       socket.off('numberSelected');
-      window.removeEventListener("beforeunload", () => handleLeave("beforeunload"));
-      window.removeEventListener("visibilitychange", () => handleLeave("visibilitychange"));
-      socket.off("disconnect");
+      socket.off('gameState', handleGameState);
+      socket.off('gameOver', handleGameOver);
+      socket.off('winBingo', handleWinBingo);
+      socket.off('falseBingo', handleFalseBingo);
+      socket.off('joinError', handleJoinError);
+      socket.off('playerLeft', handlePlayerLeft);
+      socket.off('disconnect');
     };
-  }, [socket, lastBall, selectedCell, isBingo,firstBoardLost,secondBoardLost]);
+  }, [socket, roomId, playerId, playerName, selectedNumber, selectedNumber2, setCountDown, setGameId, setToast, setIsToast, navigate]);
 
-  const handleBingo = (board,boardNumber) => {
-    console.log("playerName",playerName)
-    if(totalCalledNumbers === 0){
-      toast.error("Game is not started yet");
+  // ✅ Track recent balls
+  useEffect(() => {
+    if (!lastBall) return;
+    const recentBall = `${lastBall.letter}${lastBall.number}`;
+    setRecentCalledNumbers((prev) => {
+      const updated = [...prev, recentBall];
+      return updated.length > 3 ? updated.slice(1) : updated;
+    });
+  }, [lastBall]);
+
+  const handleBingo = (board, boardNumber) => {
+    if (totalCalledNumbers === 0) {
+      toast.error('Game is not started yet');
       return;
     }
-   
     socket.emit('bingo', {
-      gameId: gameId,
-      roomId: roomId,
-      playerId: playerId,
+      gameId,
+      roomId,
+      playerId,
       markedCells: Array.from(selectedCell),
-      playerName: playerName,
-      board: board,
-      boardNumber:boardNumber
+      playerName,
+      board,
+      boardNumber,
     });
-
   };
-
-  function handleGameState(data) {
-    setLastBall(data.lastBall)
-   
-    if (data.total_called_numbers) {
-      setTotalCalledNumbers(data.total_called_numbers)
-    }
-    if (data.count_down) {
-      setCountDown(data.count_down)
-    }
-
-    
-    setGameId(data.gameId)
-  }
-
-  socket.on('gameState', handleGameState);
-
-  function handleFalseBingo(data) {
-    const losserBoard = data.losser_board
-    if (losserBoard === selectedNumber){
-      setFirstBoardLost(true)
-    }
-    if (losserBoard === selectedNumber2){
-      setSecondBoardLost(true)
-    }
-    
-    return ;
-  
-  }
-
 
   const handleRefresh = () => {
-    socket.emit('handleRefresh', {
-      gameId: gameId,
-      roomId: roomId,
-      playerId: playerId
-    });
-
+    socket.emit('handleRefresh', { gameId, roomId, playerId });
   };
-
-
-
-
-  socket.on('gameOver', (data) => {
-    if (data.roomId == roomId) {
-      navigate(`/?playerId=${playerId}&&betAmount=${roomId}&playerName=${playerName}`);
-    }
-  })
-
-  socket.on('winBingo', (data) => {
-    if (data.winningCard) {
-        setWinningCard(data.markedCells)
-        setIsBingo(data.isBingo)
-        setWinner(data.playerId)
-        setWinnerCardNumber(data.winner_Number)
-        setWinnerPlayerName(data.playerName)
-      
-    }
-  })
-
- 
-
-  socket.on('falseBingo', (data) => {
-    if (data.playerId === playerId && data.isBingo === false) {
-      handleFalseBingo(data);
-    }
-  });
-
-  socket.on('joinError', (data) => {
-    if (data.roomId == roomId) {
-      setToast(data.message);
-      setIsToast(true);
-      navigate(`/selection?playerId=${playerId}&betAmount=${roomId}`);
-    }
-
-  })
-
 
   const handleLeave = (reason) => {
-    socket.emit("leave", {
-      playerId,
-      roomId,
-      selectedNumber,
-      selectedNumber2,
-      reason
-
-    })
-  
+    socket.emit('leave', { playerId, roomId, selectedNumber, selectedNumber2, reason });
   };
-
-
-  socket.on("playerLeft", (data) => {
-    if(data.playerId == playerId){
-      navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
-      window.location.reload();
-    }
-  })
-
-
 
   const handleCellClick = (cell) => {
-    const updatedSet = new Set(selectedCell);
-
-    if (updatedSet.has(cell)) {
-      updatedSet.delete(cell);
-    } else {
-      updatedSet.add(cell);
-    }
-
-    setSelectedCell(updatedSet);
+    setSelectedCell((prev) => {
+      const updated = new Set(prev);
+      if (updated.has(cell)) updated.delete(cell);
+      else updated.add(cell);
+      return new Set(updated);
+    });
   };
 
-
   const handleCloseWinner = () => {
-
     setIsBingo(false);
-    const queryParams =
-      navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+    navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
   };
 
   return (
@@ -325,7 +291,7 @@ const PlayingBoard = () => {
               color: "white"
             }}>B</div>
             {Array.from({ length: 15 }, (_, i) => (
-              <div key={i} className={`number ${calledNumbers?.includes(i + 1) ? 'called' : ''}`}
+              <div key={i} className={`number ${calledNumbers?.includes(i + 1) ? 'called' : ''} ${selectedNumber == i + 1 ? 'selected' : ''}`}
                 id={`B${i + 1}`}
 
               >
@@ -339,7 +305,7 @@ const PlayingBoard = () => {
               color: "white"
             }}>I</div>
             {Array.from({ length: 15 }, (_, i) => (
-              <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'called' : ''}`}
+            <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'called' : ''} ${selectedNumber == i + 16 ? 'selected' : ''}`}
                 id={`I${i + 16}`}
 
               >
@@ -353,7 +319,7 @@ const PlayingBoard = () => {
               color: "white"
             }}>N</div>
             {Array.from({ length: 15 }, (_, i) => (
-              <div key={i} className={`number ${calledNumbers?.includes(i + 31) ? 'called' : ''}`}
+            <div key={i} className={`number ${calledNumbers?.includes(i + 31) ? 'called' : ''} ${selectedNumber == i + 31 ? 'selected' : ''}`}
                 id={`N${i + 31}`}
 
               >
@@ -368,7 +334,7 @@ const PlayingBoard = () => {
             }}>G</div>
             {Array.from({ length: 15 }, (_, i) => (
               <div key={i}
-                className={`number ${calledNumbers?.includes(i + 46) ? 'called' : ''}`}
+                className={`number ${calledNumbers?.includes(i + 46) ? 'called' : ''} ${selectedNumber == i + 46 ? 'selected' : ''}`}
                 id={`G${i + 46}`}
               >
                 {i + 46}
@@ -381,7 +347,7 @@ const PlayingBoard = () => {
               color: "white"
             }}>O</div>
             {Array.from({ length: 15 }, (_, i) => (
-              <div key={i} className={`number ${calledNumbers?.includes(i + 61) ? 'called' : ''}`}
+                <div key={i} className={`number ${calledNumbers?.includes(i + 61) ? 'called' : ''} ${selectedNumber == i + 61 ? 'selected' : ''}  `}
                 id={`O${i + 61}`}
 
               >
