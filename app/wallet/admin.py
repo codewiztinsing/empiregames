@@ -10,9 +10,12 @@ class WalletAdmin(admin.ModelAdmin):
 admin.site.register(Wallet, WalletAdmin)
 
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ( 'amount', 'type', 'status', 'reference')
+    list_display = ( 'amount', 'type', 'status', 'reference','user_username','user_telegram_id','created_at')
 
     list_filter = ('type', 'status')
+    search_fields = ('user__username', 'user__telegram_id','reference')
+    raw_id_fields = ('user',)
+    ordering = ('-created_at',)
     list_per_page = 10
 
 
