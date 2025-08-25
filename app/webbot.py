@@ -27,7 +27,7 @@ from telegram.ext import (
 )
 from datetime import datetime
 from telegram import BotCommand
-from register import *
+from utils.handle_phone import handle_phone
 from helpers import get_numbers_of_games_played,daily_withdrawal_limit,get_user_balance
 
 logging.basicConfig(
@@ -767,7 +767,7 @@ def main() -> None:
     application = ApplicationBuilder().token("8408827169:AAEvrQiXPmbSQ3uxbhWuXzMYZCOmRLoeEVc").post_init(post_init).build()
     # Create a proper registration conversation handler
     register_conversation_handler = ConversationHandler(
-        entry_points=[CommandHandler('register', begin_register)],
+        entry_points=[CommandHandler('register', handle_phone)],
         states={
             PHONE : [MessageHandler(filters.CONTACT, handle_phone)]
         },

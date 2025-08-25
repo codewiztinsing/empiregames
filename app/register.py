@@ -76,7 +76,8 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return ConversationHandler.END
             
             # User doesn't exist, proceed with registration
-            create_url = f"{SERVER_URL}/api/v1/auth/register"
+            create_url = f"{SERVER_URL}/api/v1/users/"
+            logger.info(f"Creating user with payload: {create_url}")
             payload = {
                 "username": update.message.from_user.username or update.message.from_user.first_name,
                 "telegramId": str(telegram_id),  # Convert to string as API expects
