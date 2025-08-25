@@ -42,9 +42,7 @@ const PlayingBoard = () => {
     // When user reloads or closes the tab
     window.addEventListener("beforeunload", () => handleLeave("beforeunload"));
     
-    // listen for screen visibility change
-    // window.addEventListener("visibilitychange", () => handleLeave("visibilitychange"));
-    
+
     // Listen for disconnect event from server
     socket.on("disconnect", () => {
       console.log("Client disconnected from server");
@@ -391,7 +389,7 @@ const PlayingBoard = () => {
               <button className="refresh-button" onClick={handleRefresh}>
                 Refresh
               </button>
-              <button className="leave-button" onClick={handleLeave}>
+              <button className="leave-button" onClick={() => handleLeave("leave")}>
                 Leave
               </button>
       </div>
