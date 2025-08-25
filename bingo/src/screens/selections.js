@@ -72,7 +72,9 @@ const Selections = () => {
           'Access-Control-Allow-Origin': '*',
           'Content-Type': 'application/json'
         };
+        console.log("apiUrl",`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
         const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
+        console.log("response",response.data)
       
       
         setBalance(response.data.balance);
@@ -210,7 +212,15 @@ const Selections = () => {
       return;
     }
 
-    if (balance < roomId || balance == 0) {
+    if (balance < parseInt(roomId) || balance == 0) {
+      setToast("Insufficient balance");
+      setIsToast(true);
+      return;
+    }
+    if(balance < parseInt(roomId) * choosenBoards.length){
+      console.log("balance",balance)
+      console.log("roomId",roomId)
+      console.log("choosenBoards.length",choosenBoards.length)
       setToast("Insufficient balance");
       setIsToast(true);
       return;
