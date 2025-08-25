@@ -327,6 +327,7 @@ async def instruction_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     BACK_URL = get_bot_seetings().get("bot_url")
+    GAME_URL = get_bot_seetings().get("GAME_URL")
     username = query.from_user.username 
     await query.answer()
   
@@ -354,7 +355,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 )
                 return ConversationHandler.END
 
-            web_app_url = f"{BACK_URL}?playerId={player_id}&betAmount={10}&playerName={query.from_user.username}&wallet_amount={user_balance}"
+            web_app_url = f"{GAME_URL}?playerId={player_id}&betAmount={10}&playerName={query.from_user.username}&wallet_amount={user_balance}"
             logger.info(f"web_app_url = {web_app_url}")
             
             await query.edit_message_text(
@@ -480,7 +481,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
             return DEPOSIT_AMOUNT
 
-        elif query.data == "chapa":
             BACK_URL = get_bot_seetings().get("bot_url")
             url = "/api/v1/wallet/chapa/create-session"
             full_url = f"{BACK_URL}{url}"

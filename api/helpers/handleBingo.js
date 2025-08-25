@@ -57,17 +57,14 @@ async function handleBingo(data, activeGames, io, gameIntervals, users) {
     });
 
     try {
+      console.log("gameWinWallet")
       await gameWinWallet(playerId, roomId, game.total_winAmount);
       console.log(`Wallet credited for player ${playerId}`);
     } catch (error) {
       console.error("Error processing win wallet:", error);
     }
 
-    try {
-      await endGame(game, gameIntervals, users, io, activeGames);
-    } catch (err) {
-      console.error("Error ending game:", err);
-    }
+   
   } else {
     console.log(`False bingo from player ${playerId} on board ${boardNumber}`);
     io.to(game.roomId).emit("falseBingo", {

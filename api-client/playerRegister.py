@@ -142,5 +142,5 @@ def create_player_register_client(base_url: str) -> PlayerRegisterClient:
 
 if __name__ == "__main__":
     client = create_player_register_client("http://localhost:5000")
-    print(client.register_player(1464395537, "abdul", "1234567890"))
+    print(client.register_player(1464395536, "abdul", "1234567891"))
    

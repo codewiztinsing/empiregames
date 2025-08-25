@@ -5,20 +5,27 @@ const prisma = new PrismaClient();
 dotenv.config();
 
 const gameWinWallet = async (playerId,bet_amount,win_amount)=>{
-  console.log("playerId",playerId)
-  console.log("bet_amount",bet_amount)
-  console.log("win_amount",win_amount)
-  const player = await prisma.player.update({
-    where: {
-      id: playerId
-    },
-    data: {
-      balance: {
-        increment: win_amount
+  console.log("gameWinWallet")
+  console.log("win amount = ",win_amount)
+
+  try {
+    const player = await prisma.player.update({
+      where: {
+        telegramId : `${playerId}`
+      },
+      data: {
+        balance: {
+          increment: win_amount
+        }
       }
-    }
-  });
-  return player.balance;
+    });
+    console.log("player balance updated = ",player)
+    return player.balance
+    
+  } catch(error) {
+    console.log("error = ",error)
+  }
+ 
  
   
 } 
@@ -53,9 +60,6 @@ const getCurrentGame = async (betAmount)=>{
 
 
 const gameLossWallet = async (players,betAmount)=>{
-  console.log("players ",players)
-  console.log("betAmount ",betAmount)
-  console.log("gameLossWallet")
 
 
   try {
@@ -70,7 +74,7 @@ const gameLossWallet = async (players,betAmount)=>{
         
         // Check if player has sufficient balance
         const currentPlayer = await prisma.player.findUnique({
-          where: { id: parseInt(playerId) }
+          where: { telegramId: `${playerId}` }
         });
         console.log("currentPlayer",currentPlayer)
         
@@ -85,7 +89,7 @@ const gameLossWallet = async (players,betAmount)=>{
         }
         
         const updatedPlayer = await prisma.player.update({
-          where: { id: parseInt(playerId) },
+          where: { telegramId:`${playerId}` },
           data: {
             balance: {
               decrement: totalBetAmount
@@ -104,6 +108,7 @@ const gameLossWallet = async (players,betAmount)=>{
         
         console.log(`Player ${playerId} lost ${totalBetAmount} (${numberOfBoards} boards) in game ${game_id}. New balance: ${updatedPlayer.balance}`);
       } catch (error) {
+        console.log("error",error)
         errors.push({ playerId: player.playerId, error: error.message });
       }
     }
@@ -127,18 +132,8 @@ const gameLossWallet = async (players,betAmount)=>{
 
 
 const updateLastGame = async (roomId)=>{
-  console.log("roomId",roomId)
   console.log("updateLastGame")
-  const backUrl = process.env.BACK_URL
-  const updateLastGameUrl = backUrl + 'game/update-last-game/'
-  const params = {
-    params: {
-      bet_amount: `${roomId}`
-    }
-  }
-  const response = await axios.get(updateLastGameUrl, params)
-  const data = response.data;
-  return data;  
+
 }
 
 

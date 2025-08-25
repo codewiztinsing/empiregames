@@ -34,7 +34,6 @@ async function startGame(game,io,activeGames,gameIntervals,users) {
       }
       game.currentCall = ball;
       game.calledNumbers.push(ball);
-      game.total_winAmount = (game.selectedNumbers?.filter(num => num !== null)?.length || 0) * game.roomId * 0.8;
       game.selectedNumbers = [];
       io.emit("pickedNumbers",game.selectedNumbers)
       const data_for_client = {
@@ -53,6 +52,7 @@ async function startGame(game,io,activeGames,gameIntervals,users) {
         total_called_numbers: game.calledNumbers.length
       }
       io.to(game.roomId).emit("gameState", data_for_client);
+      console.log("game.total_winAmount = ",game.total_winAmount)
      
   
       if (game.calledNumbers.length >= 75) {
