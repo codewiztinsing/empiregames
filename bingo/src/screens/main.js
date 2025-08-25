@@ -36,32 +36,19 @@ const PlayingBoard = () => {
 
 
   useEffect(() => {
-   
-    socket.on('numberSelected', (number) => {setCurrentCall(number);});
 
-    const handleLeave = () => {
-      socket.emit("leave", {
-        playerId,
-        roomId,
-        selectedNumber,
-        selectedNumber2
-  
-      })
-      navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
-  
-      window.location.reload();
-    };
-  
-  
+    socket.on('numberSelected', (number) => {setCurrentCall(number);});  
+    
     // When user reloads or closes the tab
-    window.addEventListener("beforeunload", handleLeave);
-
+    window.addEventListener("beforeunload", () => handleLeave("beforeunload"));
+    
     // listen for screen visibility change
-    window.addEventListener("visibilitychange", () => {
-      console.log("visibilitychange",document.visibilityState)
-      if (document.visibilityState === "hidden") {
-        handleLeave();
-      }
+    window.addEventListener("visibilitychange", () => handleLeave("visibilitychange"));
+    
+    // Listen for disconnect event from server
+    socket.on("disconnect", () => {
+      console.log("Client disconnected from server");
+      handleLeave("disconnect");
     });
 
     if (lastBall) {
@@ -74,10 +61,11 @@ const PlayingBoard = () => {
       element.classList.add("last-called")
     }
 
-
-
     return () => {
       socket.off('numberSelected');
+      window.removeEventListener("beforeunload", () => handleLeave("beforeunload"));
+      window.removeEventListener("visibilitychange", () => handleLeave("visibilitychange"));
+      socket.off("disconnect");
     };
   }, [socket, lastBall, selectedCell, isBingo,firstBoardLost,secondBoardLost]);
 
@@ -100,16 +88,10 @@ const PlayingBoard = () => {
 
   };
 
+
+ 
+
   function handleGameState(data) {
-    // if (data.lastBall && data.lastBall.length > 0 && data.roomId == roomId) {
-    //   setLastBall(data.lastBall[data.lastBall.length - 1]);   
-    //   setRecentCalledNumbers(prev => [...prev, data.lastBall[data.lastBall.length - 1]]);
-    //   if (recentCalledNumbers.length > 3) {
-    //     setRecentCalledNumbers(prev => prev.slice(1));
-    //   }
-    // }
-
-
     setLastBall(data.lastBall)
    
     if (data.total_called_numbers) {
@@ -124,17 +106,6 @@ const PlayingBoard = () => {
   }
 
   socket.on('gameState', handleGameState);
-
-  socket.on("disconnect", () => {
-    socket.emit("leave", {
-      roomId: roomId,
-      playerId: playerId,
-      selectedNumber: selectedNumber,
-      selectedNumber2: selectedNumber2
-    });
-    
-  })
-
 
   function handleFalseBingo(data) {
     const losserBoard = data.losser_board
@@ -197,12 +168,13 @@ const PlayingBoard = () => {
   })
 
 
-  const handleLeave = () => {
+  const handleLeave = (reason) => {
     socket.emit("leave", {
       playerId,
       roomId,
       selectedNumber,
-      selectedNumber2
+      selectedNumber2,
+      reason
 
     })
     navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
