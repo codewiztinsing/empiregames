@@ -291,7 +291,7 @@ const PlayingBoard = () => {
               color: "white"
             }}>B</div>
             {Array.from({ length: 15 }, (_, i) => (
-              <div key={i} className={`number ${calledNumbers?.includes(i + 1) ? 'called' : ''} ${selectedNumber == i + 1 ? 'selected' : ''}`}
+              <div key={i} className={`number ${calledNumbers?.includes(i + 1) ? 'last-called' : ''} ${selectedNumber == i + 1 ? 'selected' : ''}`}
                 id={`B${i + 1}`}
 
               >
@@ -305,7 +305,7 @@ const PlayingBoard = () => {
               color: "white"
             }}>I</div>
             {Array.from({ length: 15 }, (_, i) => (
-            <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'called' : ''} ${selectedNumber == i + 16 ? 'selected' : ''}`}
+            <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'last-called' : ''} ${selectedNumber == i + 16 ? 'selected' : ''}`}
                 id={`I${i + 16}`}
 
               >
@@ -319,7 +319,7 @@ const PlayingBoard = () => {
               color: "white"
             }}>N</div>
             {Array.from({ length: 15 }, (_, i) => (
-            <div key={i} className={`number ${calledNumbers?.includes(i + 31) ? 'called' : ''} ${selectedNumber == i + 31 ? 'selected' : ''}`}
+            <div key={i} className={`number ${calledNumbers?.includes(i + 31) ? 'last-called' : ''} ${selectedNumber == i + 31 ? 'selected' : ''}`}
                 id={`N${i + 31}`}
 
               >
@@ -334,7 +334,7 @@ const PlayingBoard = () => {
             }}>G</div>
             {Array.from({ length: 15 }, (_, i) => (
               <div key={i}
-                className={`number ${calledNumbers?.includes(i + 46) ? 'called' : ''} ${selectedNumber == i + 46 ? 'selected' : ''}`}
+                className={`number ${calledNumbers?.includes(i + 46) ? 'last-called' : ''} ${selectedNumber == i + 46 ? 'selected' : ''}`}
                 id={`G${i + 46}`}
               >
                 {i + 46}
@@ -347,7 +347,7 @@ const PlayingBoard = () => {
               color: "white"
             }}>O</div>
             {Array.from({ length: 15 }, (_, i) => (
-                <div key={i} className={`number ${calledNumbers?.includes(i + 61) ? 'called' : ''} ${selectedNumber == i + 61 ? 'selected' : ''}  `}
+                <div key={i} className={`number ${calledNumbers?.includes(i + 61) ? 'last-called' : ''} ${selectedNumber == i + 61 ? 'selected' : ''}  `}
                 id={`O${i + 61}`}
 
               >

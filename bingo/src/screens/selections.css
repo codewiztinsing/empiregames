@@ -357,10 +357,10 @@ body, #root {
 
 .status-badge {
   display: inline-block;
-  padding: 6px 16px;
+  padding: 6px 10px;
   border-radius: 5px;
   font-weight: bold;
-  font-size: 1.1em;
+  font-size: 1em;
 }
 
 .status-badge.in-progress {

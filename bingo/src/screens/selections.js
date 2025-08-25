@@ -320,7 +320,7 @@ const Selections = () => {
           <div className="balance-container">
         
           <div className="balance-text">
-          ቀሪ ሒሳብ/Balance {balance} ብር
+          Balance {balance} ብር
             </div>
           
             <div className="balance-text">
