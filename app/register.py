@@ -61,7 +61,7 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.info(f"telegram_id = {telegram_id}")
 
         # Check if user already exists
-        check_url = f"{SERVER_URL}/api/v1/users/{telegram_id}"
+        check_url = f"{SERVER_URL}/api/v1/auth/register"
         logger.info(f"Checking if user exists at: {check_url}")
         
         try:
@@ -76,7 +76,7 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return ConversationHandler.END
             
             # User doesn't exist, proceed with registration
-            create_url = f"{SERVER_URL}/api/v1/users"
+            create_url = f"{SERVER_URL}/api/v1/auth/register"
             payload = {
                 "username": update.message.from_user.username or update.message.from_user.first_name,
                 "telegramId": str(telegram_id),  # Convert to string as API expects

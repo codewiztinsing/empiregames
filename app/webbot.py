@@ -421,21 +421,15 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         elif query.data == 'check_balance':
             BACK_URL = get_bot_seetings().get("server_url") 
             telegram_id = query.from_user.id
-            response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
-            print("response = ",response)
-            balance = response.json().get('balance',0)
-            first_name = response.json().get('first_name',0)
-            last_name = response.json().get('last_name',0)
-            username = response.json().get('username',0)
-            print("balance = ",balance)
-            print("first_name = ",first_name)
-           
+            balance = get_user_balance(telegram_id)
+            username = query.from_user.username
+          
 
             # Create payment summary with user details
             payment_summary = (
-                    "🏦  Aker Bingo STATEMENT\n" +
+                    "🏦  Bilen Bingo STATEMENT\n" +
                     f"💰  {balance} Birr\n" +
-                    f"👥  {first_name} \n" +
+                    f"👥  {username} \n" +
                     f"📄 USER TELEGRAM ID: {telegram_id}\n" +
                     f"🔙 Back to Menu\n" 
                 ) 

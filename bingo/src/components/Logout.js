@@ -1,17 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { logout } from '../features/authSlice';
 
 function Logout() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogout = () => {
-    // Clear any stored authentication tokens or user data
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    sessionStorage.clear();
-    
-    // Redirect to login/home page
-    navigate('/');
+    dispatch(logout());
+    navigate('/login');
   };
 
   return (

@@ -22,6 +22,7 @@ const usersRouter = require('./routes/users');
 const gamesRouter = require('./routes/games');
 const dashboardRouter = require('./routes/dashboard');
 const walletRouter = require('./routes/wallet');
+const authRouter = require('./routes/auth');
 const ip = require('ip');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -32,6 +33,7 @@ app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/games', gamesRouter);
 app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/wallet', walletRouter);
+app.use('/api/v1/auth', authRouter);
 
 
 const server = http.createServer(app);

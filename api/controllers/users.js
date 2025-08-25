@@ -22,7 +22,7 @@ const getUserById = async (req, res) => {
     let user;
     try {
       user = await prisma.player.findFirst({
-        where: { telegramId: telegramId }
+        where: { telegramId: `${telegramId}` }
       });
     } catch (uniqueError) {
       // If findUnique fails (e.g., telegramId not unique yet), fall back to findFirst
@@ -45,36 +45,65 @@ const getUserById = async (req, res) => {
   }
 };
 
+
+// GET /api/users/balance/:telegramId - Get user balance
+const getUserBalance = async (req, res) => {
+  try {
+    const { telegramId } = req.params;
+    console.log("telegramId = ",telegramId)
+    console.log("telegramId type = ",typeof telegramId)
+    console.log("telegramId = ",telegramId)
+    const user = await prisma.player.findFirst({
+      where: { telegramId: `${telegramId}` }
+    });
+    if (!user) {
+      console.log("User not found")
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({
+      balance: user.balance,
+      username: user.username,
+      telegramId: user.telegramId,
+      phoneNumber: user.phoneNumber
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Failed to fetch user balance' });
+  }
+};
+
 // POST /api/users - Create new user
 const createUser = async (req, res) => {
-    console.log("createUser");
-    console.log(req.body);
+  console.log("createUser");
+
   try {
     const { username, telegramId, phoneNumber } = req.body;
-    console.log(req.body);
+
     
     if (!username || !telegramId || !phoneNumber) {
+      console.log("Username, telegramId and phoneNumber are required");
       return res.status(400).json({ error: 'Username, telegramId and phoneNumber are required' });
     }
     
     // Check if user already exists
     const existingUser = await prisma.player.findFirst({
-      where: { telegramId: telegramId }
+      where: { telegramId: `${telegramId}` }
     });
     
     if (existingUser) {
+      console.log("User with this telegramId already exists");
       return res.status(409).json({ error: 'User with this telegramId already exists' });
     }
     
     const player = await prisma.player.create({
       data: {
         username,
-        telegramId,
+        telegramId: `${telegramId}`,
         phoneNumber,
         balance: 0
       }
     });
-    
+    console.log("player = ",player)
     res.status(201).json(player);
   } catch (error) {
     console.log(error);
@@ -155,6 +184,7 @@ const deleteUser = async (req, res) => {
 module.exports = {
   getAllUsers,
   getUserById,
+  getUserBalance,
   createUser,
   updateUser,
   deleteUser

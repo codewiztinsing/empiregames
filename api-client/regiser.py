@@ -121,12 +121,13 @@ def get_all_users(base_url: str) -> Dict[str, Any]:
             "status_code": None
         }
 
-def create_user(base_url: str, username: str, telegramId: str, phoneNumber: str) -> Dict[str, Any]:
-    url = f"{base_url}/api/v1/users"
+def create_user(base_url: str, username: str, telegramId: str, phoneNumber: str, password: str) -> Dict[str, Any]:
+    url = f"{base_url}/api/v1/auth/register"
     payload = {
         "username": username,
         "telegramId": telegramId,
-        "phoneNumber": phoneNumber
+        "phoneNumber": phoneNumber,
+        "password": password
     }
     print(payload)
     try:
@@ -134,7 +135,7 @@ def create_user(base_url: str, username: str, telegramId: str, phoneNumber: str)
         print(response.json())
         print(response.status_code)
         return response.json()
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException as e:   
         return {
             "success": False,
             "error": f"Network error: {str(e)}",
@@ -161,16 +162,37 @@ def delete_user(base_url: str, username: str) -> Dict[str, Any]:
         }
 
 
+def login(base_url: str, username: str, password: str) -> Dict[str, Any]:
+    url = f"{base_url}/api/v1/auth/login"
+    payload = {
+        "username": username,
+        "password": password
+    }
+    try:
+        response = requests.post(url, data=json.dumps(payload), headers={"Content-Type": "application/json"})
+        return {
+            "success": True,
+            "data": response.json(),
+            "message": "Login successful"
+        }
+    except requests.exceptions.RequestException as e:
+        return {
+            "success": False,
+            "error": f"Network error: {str(e)}",
+            "status_code": None
+        }
+
+
 if __name__ == "__main__":
     # base_url = "https://server.akerbingo.com"
     base_url = "http://localhost:5000"
     username = random_username()
     telegramId = random_telegram_id()
     phoneNumber = random_phone_number()
+    password = "123456"
 
-    print(create_user(base_url, username, telegramId, phoneNumber))
-    # get created user
-    print(get_user(base_url, username))
-    # delete created user
-    print(get_all_users(base_url))
+
+    print(create_user(base_url, username, telegramId, phoneNumber, password))
+    user = login(base_url, username, password)
+    print(user["data"])
    
