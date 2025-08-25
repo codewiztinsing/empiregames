@@ -436,6 +436,8 @@ io.on('connection', (socket) => {
       if (game?.players.has(user.playerId)) {
         if(game.status === "waiting") {
           game.players.delete(user.playerId);
+          game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);
+          game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber2);
           io.to(game.roomId).emit("gameState", {
             message: `User ${user.playerId} disconnected`,
             gameId: game.id,
@@ -446,8 +448,7 @@ io.on('connection', (socket) => {
             count_down: game.countDown
           });
 
-          game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);
-          game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber2);
+        
           game.selectedNumbersToPlayer.delete(playerId)
           game.selectedNumbersToPlayer.delete(playerId)
           io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
