@@ -43,7 +43,7 @@ const PlayingBoard = () => {
     window.addEventListener("beforeunload", () => handleLeave("beforeunload"));
     
     // listen for screen visibility change
-    window.addEventListener("visibilitychange", () => handleLeave("visibilitychange"));
+    // window.addEventListener("visibilitychange", () => handleLeave("visibilitychange"));
     
     // Listen for disconnect event from server
     socket.on("disconnect", () => {
@@ -87,9 +87,6 @@ const PlayingBoard = () => {
     });
 
   };
-
-
- 
 
   function handleGameState(data) {
     setLastBall(data.lastBall)
