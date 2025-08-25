@@ -126,10 +126,10 @@ const PlayingBoard = () => {
   socket.on('gameState', handleGameState);
 
   socket.on("disconnect", () => {
-    if (playerId) {
+  
       handleLeave();
      
-    }
+  
   })
 
 
