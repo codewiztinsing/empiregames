@@ -446,10 +446,15 @@ io.on('connection', (socket) => {
             count_down: game.countDown
           });
 
-          game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber && num !== selectedNumber2);
+          game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);
+          game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber2);
+          game.selectedNumbersToPlayer.delete(playerId)
+          game.selectedNumbersToPlayer.delete(playerId)
           io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
-
           users.delete(socket.id);
+          users.delete(socket.id);
+          users.delete(socket.id);
+
         }
        
     }
