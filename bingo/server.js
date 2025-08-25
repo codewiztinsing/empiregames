@@ -429,6 +429,9 @@ io.on('connection', (socket) => {
       const playerId = user.playerId
       const selectedNumber = game.selectedNumbersToPlayer.get(playerId)
       const selectedNumber2 = game.selectedNumbersToPlayer.get(playerId)
+
+      console.log("selectedNumber 1 in disconnect",selectedNumber)
+      console.log("selectedNumber2 in disconnect ",selectedNumber2)
     
       if (game?.players.has(user.playerId)) {
         if(game.status === "waiting") {
@@ -442,6 +445,10 @@ io.on('connection', (socket) => {
             game_status: game.status,
             count_down: game.countDown
           });
+
+          game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber && num !== selectedNumber2);
+          io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
+
           users.delete(socket.id);
         }
        
