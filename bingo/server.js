@@ -127,8 +127,8 @@ function startCountDown(game) {
     io.to(game.roomId).emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
-      pickedNumbers: game.selectedNumbers,
-      total_players: game.selectedNumbers.length,
+      pickedNumbers: game.selectedNumbers.filter(num => num !== null),
+      total_players: game.selectedNumbers.filter(num => num !== null).length,
       game_status: game.status,
       count_down: game.countDown
     });
