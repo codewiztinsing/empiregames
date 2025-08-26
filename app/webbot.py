@@ -173,9 +173,9 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         balance = float(wallet_response.get('balance', 0))
         logger.info(f"balance {balance}")
 
-        daily_withdraw_limit = daily_withdraw_limit(telegram_id)
-        logger.info(f"daily_withdraw_limit {daily_withdraw_limit}")
-        if daily_withdraw_limit > 3:
+        daily_limit = daily_withdraw_limit(telegram_id)
+        logger.info(f"daily_withdraw_limit {daily_limit}")
+        if daily_limit > 3:
             await update.message.reply_text(f"You have reached the daily withdraw limit. Please try again tomorrow.")
             return WITHDRAW_AMOUNT_CONFIRM
 
