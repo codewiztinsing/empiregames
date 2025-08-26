@@ -119,4 +119,22 @@ def get_daily_withdraw_limit(request,user_id:int):
     except Exception as e:
         return {"success": False, "message": "Failed to get daily withdraw limit"}
 
+
+@users_router.get("/{user_id}/number-of-game-played")
+def get_number_of_game_played(request,user_id:int):
+    try:
+        number_of_game_played = Transaction.objects.filter(user_id=user_id,type="BET").count()
+        return {"number_of_game_played": number_of_game_played}
+    except Exception as e:
+        return {"success": False, "message": "Failed to get number of game played"}
     
+
+@users_router.get("/{user_id}/number-of-game-won")
+def get_number_of_game_won(request,user_id:int):
+    try:
+        number_of_game_won = Transaction.objects.filter(user_id=user_id,type="WIN").count()
+        return {"number_of_game_won": number_of_game_won}
+    except Exception as e:
+        return {"success": False, "message": "Failed to get number of game won"}    
+
+

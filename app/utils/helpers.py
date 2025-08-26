@@ -9,4 +9,26 @@ def daily_withdraw_limit(user_id):
         return response.json().get("daily_withdraw_limit")
     else:
         return 0
-   
+
+def numnber_of_game_played(user_id):
+    response = requests.get(f"{BACK_URL}/api/v1/game/user/{user_id}/number-of-game-played")
+    if response.status_code == 200:
+        return response.json().get("number_of_game_played")
+    else:
+        return 0
+
+def number_of_game_won(user_id):
+    response = requests.get(f"{BACK_URL}/api/v1/game/user/{user_id}/number-of-game-won")
+    if response.status_code == 200:
+        return response.json().get("number_of_game_won")
+    else:
+        return 0
+    
+def number_of_game_played_and_won(user_id):
+    response = requests.get(f"{BACK_URL}/api/v1/game/user/{user_id}/number-of-game-played-and-won")
+    if response.status_code == 200:
+        return response.json().get("number_of_game_played_and_won")
+    else:
+        return 0
+
+        

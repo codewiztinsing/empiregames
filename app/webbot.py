@@ -103,9 +103,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def play_options_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton("🎮 Play 10", callback_data='10'),
-         InlineKeyboardButton("🎮 Play 20", callback_data='20')],
-        [InlineKeyboardButton("🎮 Play 50", callback_data='50'),
-         InlineKeyboardButton("🎮 Play 100", callback_data='100')],
+         InlineKeyboardButton("🎮 Play 10", callback_data='10')],
+        [InlineKeyboardButton("🎮 Play 10", callback_data='10'),
+         InlineKeyboardButton("🎮 Play 10", callback_data='10')],
         [InlineKeyboardButton("🎮 Play Demo", callback_data='play_demo'),
          InlineKeyboardButton("🔙 Back to Menu", callback_data='back')
          ],
@@ -179,8 +179,18 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             await update.message.reply_text(f"You have reached the daily withdraw limit. Please try again tomorrow.")
             return WITHDRAW_AMOUNT_CONFIRM
 
+        number_of_game_played = number_of_game_played(telegram_id)
+        number_of_game_won = number_of_game_won(telegram_id)
 
-      
+        if number_of_game_played < 5:
+            await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት")
+            return WITHDRAW_AMOUNT_CONFIRM
+
+        if number_of_game_won < 2:
+            await update.message.reply_text(f"2 ጨወታ ማሽነፍ አለብዎት")
+            return WITHDRAW_AMOUNT_CONFIRM
+
+       
         if int(balance) < 100:
             await update.message.reply_text(f"You must leave at least 100 ETB in your wallet. Please enter a smaller amount.")
             return WITHDRAW_AMOUNT_CONFIRM
@@ -285,7 +295,10 @@ def instructions_options_keyboard() -> InlineKeyboardMarkup:
 # Function to create the play options keyboard
 def support_options_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton("📞 Support",  url='https://t.me/@wowliyu_bingo')],
+        [InlineKeyboardButton("📞 Support 1",  url='https://t.me/@Wowbingosupport2')],
+        [InlineKeyboardButton("📞 Support 2",  url='https://t.me/@Wowbingosupport1')],
+        [InlineKeyboardButton("📞 Support 3",  url='https://t.me/@IToffice1')],
+        [InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
