@@ -26,6 +26,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     ConversationHandler,
 )
+from app.utils.helpers import daily_withdraw_limit
 from datetime import datetime
 from telegram import BotCommand
 from register import *
@@ -171,9 +172,17 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}').json()
         balance = float(wallet_response.get('balance', 0))
         logger.info(f"balance {balance}")
+
+        daily_withdraw_limit = daily_withdraw_limit(telegram_id)
+        logger.info(f"daily_withdraw_limit {daily_withdraw_limit}")
+        if daily_withdraw_limit > 3:
+            await update.message.reply_text(f"You have reached the daily withdraw limit. Please try again tomorrow.")
+            return WITHDRAW_AMOUNT_CONFIRM
+
+
       
-        if int(balance) < 100000:
-            await update.message.reply_text(f"You must leave at least 100,000 ETB in your wallet. Please enter a smaller amount.")
+        if int(balance) < 100:
+            await update.message.reply_text(f"You must leave at least 100 ETB in your wallet. Please enter a smaller amount.")
             return WITHDRAW_AMOUNT_CONFIRM
 
 
