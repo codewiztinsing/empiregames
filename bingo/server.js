@@ -18,8 +18,8 @@ const server = http.createServer(app);
 
 const getConstant = async () => {
   return {
-    gameSpeed: 5000,
-    countDown: 30
+    gameSpeed: 500,
+    countDown: 3
   }
 }
 
@@ -171,8 +171,6 @@ async function startGame(game) {
 
   game.total_players = game.total_players
   game.total_winAmount = game.selectedNumbers.length * game.roomId * 0.8
-
-  console.log("game.total_winAmount",game.total_winAmount)
 
 
 

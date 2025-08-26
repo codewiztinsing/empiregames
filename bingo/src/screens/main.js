@@ -193,48 +193,77 @@ const PlayingBoard = () => {
         fontWeight: "bold"
       }}>ስም : {winnerPlayerName},is Winner</p>
 
-
-      <div className="winning-card">
-        <div className="winning-card-row">
-          {["B", "I", "N", "G", "O"].map((letter, index) => (
-            <div key={index} className="winning-card-cell">
-              <span>{letter}</span>
-            </div>
-          ))}
-        </div>
-
-        {winningCard[0].map((_, colIndex) => {
-          const isColumnComplete = winningCard.every(row => row[colIndex].marked);
-          const isRowComplete = winningCard[colIndex].every(cell => cell.marked);
-          const isDiagonalComplete = winningCard.every((row, i) => row[i].marked);
-          const isReverseDiagonalComplete = winningCard.every((row, i) => row[4-i].marked);
-          const isFourCornersComplete = winningCard[0][0].marked && winningCard[0][4].marked && 
-                                      winningCard[4][0].marked && winningCard[4][4].marked;
-          const isFourEdgesComplete = winningCard[0][2].marked && winningCard[2][0].marked &&
-                                    winningCard[2][4].marked && winningCard[4][2].marked;
-
-          return (
-            <div key={colIndex} className="winning-card-row">
-              {winningCard.map((row, rowIndex) => (
-                <div
-                  key={rowIndex}
-                  className="winning-card-cell"
-                  style={{
-                    backgroundColor: isRowComplete || isColumnComplete || isDiagonalComplete || isReverseDiagonalComplete || isFourCornersComplete || isFourEdgesComplete
-                      ? 'green'
-                      : row[colIndex].marked
-                    
-                      ? 'red'
-                      : 'white',
-                  }}
-                >
-                  <span>{row[colIndex].number}</span>
-                </div>
-              ))}
-            </div>
-          );
-        })}
+     
+<div className="winning-card">
+  {/* Header row */}
+  <div className="winning-card-row">
+    {["B", "I", "N", "G", "O"].map((letter, index) => (
+      <div key={index} className="winning-card-cell">
+        <span>{letter}</span>
       </div>
+    ))}
+  </div>
+
+  {winningCard.map((row, rowIndex) => (
+    <div key={rowIndex} className="winning-card-row">
+      {row.map((cell, colIndex) => {
+        // Check win conditions
+        const rowComplete = winningCard[rowIndex].every(c => c.marked);
+        const colComplete = winningCard.every(r => r[colIndex].marked);
+        const diagonalComplete =
+          rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
+        const reverseDiagonalComplete =
+          rowIndex + colIndex === 4 && winningCard.every((r, i) => r[4 - i].marked);
+
+        const fourCornersComplete =
+          winningCard[0][0].marked &&
+          winningCard[0][4].marked &&
+          winningCard[4][0].marked &&
+          winningCard[4][4].marked;
+
+        const fourEdgesComplete =
+          winningCard[0][2].marked &&
+          winningCard[2][0].marked &&
+          winningCard[2][4].marked &&
+          winningCard[4][2].marked;
+
+        // Does this cell belong to a winning line?
+        const inWinningLine =
+          (rowComplete && cell.marked) ||
+          (colComplete && cell.marked) ||
+          (diagonalComplete && cell.marked) ||
+          (reverseDiagonalComplete && cell.marked) ||
+          (fourCornersComplete &&
+            cell.marked &&
+            ((rowIndex === 0 && (colIndex === 0 || colIndex === 4)) ||
+             (rowIndex === 4 && (colIndex === 0 || colIndex === 4)))) ||
+          (fourEdgesComplete &&
+            cell.marked &&
+            ((rowIndex === 0 && colIndex === 2) ||
+             (rowIndex === 2 && (colIndex === 0 || colIndex === 4)) ||
+             (rowIndex === 4 && colIndex === 2)));
+
+        // Final background color
+        let bgColor = "white";
+        if (inWinningLine) {
+          bgColor = "green";   // part of winning line
+        } else if (cell.marked) {
+          bgColor = "red";     // marked but not winning
+        }
+
+        return (
+          <div
+            key={colIndex}
+            className="winning-card-cell"
+            style={{ backgroundColor: bgColor }}
+          >
+            <span>{cell.number}</span>
+          </div>
+        );
+      })}
+    </div>
+  ))}
+</div>
 
       <div className="choosen-numbers">
         <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
