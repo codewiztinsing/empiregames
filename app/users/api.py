@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from datetime import datetime, timedelta
 from django.contrib.auth import authenticate
 from django.conf import settings
-from app.wallet.models import Transaction
+from wallet.models import Transaction
 from pydantic import BaseModel
 from typing import Optional, Union
 
@@ -116,7 +116,6 @@ def get_daily_withdraw_limit(request,user_id:int):
         transactions = Transaction.objects.filter(user_id=user_id,type="WITHDRAW",created_at__date=datetime.now().date())
         daily_withdraw_limit  = sum(transaction.amount for transaction in transactions)
         return {"daily_withdraw_limit": daily_withdraw_limit}
-        
     except Exception as e:
         return {"success": False, "message": "Failed to get daily withdraw limit"}
 

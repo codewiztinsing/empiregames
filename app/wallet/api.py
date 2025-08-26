@@ -52,6 +52,8 @@ def chapa_callback(request):
             wallet = Wallet.objects.get(user=user)
             wallet.balance += float(chapa_session.amount)
             wallet.save()
+            chapa_session.status = "success"
+            chapa_session.save()
       
 
         return JsonResponse({"message": "Callback received"}, status=200)
