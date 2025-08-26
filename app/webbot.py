@@ -26,7 +26,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     ConversationHandler,
 )
-from utils.helpers import daily_withdraw_limit
+from utils.helpers import daily_withdraw_limit,number_of_game_played,number_of_game_won
 from datetime import datetime
 from telegram import BotCommand
 from register import *
@@ -295,8 +295,8 @@ def instructions_options_keyboard() -> InlineKeyboardMarkup:
 # Function to create the play options keyboard
 def support_options_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton("📞 Support 1",  url='https://t.me/@Wowbingosupport2')],
-        [InlineKeyboardButton("📞 Support 2",  url='https://t.me/@Wowbingosupport1')],
+        [InlineKeyboardButton("📞 Support 1",  url='https://t.me/@Wowbingosupport1')],
+        [InlineKeyboardButton("📞 Support 2",  url='https://t.me/@Wowbingosupport2')],
         [InlineKeyboardButton("📞 Support 3",  url='https://t.me/IToffice1')],
         [InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')]
     ]
