@@ -2,16 +2,19 @@ from django.contrib import admin
 from .models import Wallet, Transaction, ChapaSession
 
 class WalletAdmin(admin.ModelAdmin):
-    list_display = ('user', 'balance')
-    search_fields = ('user__username',)
+    list_display = ('user', 'balance','created_at','user__phone','user__telegram_id')
+    search_fields = ('user__username',"user__telegram_id","user__phone")
     list_filter = ('user__is_active', 'user__is_staff')
     list_per_page = 10
 
 admin.site.register(Wallet, WalletAdmin)
 
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ( 'amount', 'type', 'status', 'reference',"user__phone","user__telegram_id","created_at")
+    list_display = ("user__username", 'amount', 'type', 'status', 'reference',"user__phone","user__telegram_id","created_at")
     search_fields = ('user__phone', 'user__telegram_id')
+    ordering = ('-created_at',)
+    list_display_links = ('reference',)
+
     list_filter = ('type', 'status','user__phone','user__telegram_id','created_at')
     list_per_page = 10
 
