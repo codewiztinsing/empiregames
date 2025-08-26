@@ -102,7 +102,6 @@ const Selections = () => {
     const gameRoom = state.roomId
     if (roomId == gameRoom) {
       setPickedNumbers(state.pickedNumbers.numbers);
-
       if(state.game_status == "in-progress"){
         setGameStatus("in-progress");
       }

@@ -18,8 +18,8 @@ const server = http.createServer(app);
 
 const getConstant = async () => {
   return {
-    gameSpeed: 5000,
-    countDown: 30
+    gameSpeed: 500,
+    countDown: 3
   }
 }
 
@@ -142,6 +142,10 @@ function startCountDown(game) {
       game.countDown = game.countDown;
       game.currentCall = null;
       game.calledNumbers = [];
+      game.selectedNumbers = game.selectedNumbers.filter(num => num !== null);
+      game.win_amount = game.roomId * game.selectedNumbers.length * 0.8
+      console.log("selected number before game start ",game.selectedNumbers)
+      console.log("win amount before start game ",game.win_amount)
       startGame(game);
     }
     game.countDown--;
@@ -293,6 +297,7 @@ io.on('connection', (socket) => {
     }
 
     const total_players = game.selectedNumbers.filter(num => num !== null).length
+
     const win_amount = total_players * game.roomId * 0.8
     game.total_winAmount = win_amount
     game.total_players = total_players

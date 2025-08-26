@@ -11,6 +11,8 @@ const gameWinWallet = async (player,bet_amount,win_amount)=>{
       game_id
   };
 
+  console.log("data in gameWinWallet",data)
+
   console.log("data",data)
   if(!data.player || !data.win_amount || !data.game_id) return null;
   
@@ -58,7 +60,9 @@ const checkBalance = async (playerId) => {
 
 const getCurrentGame = async (betAmount)=>{
   const backUrl = process.env.BACK_URL
+  
   const currentGameUrl = backUrl + 'game/next-game'
+  console.log("currentGameUrl",currentGameUrl)
   const params = {
     params: {
       bet_amount: `${betAmount}`
