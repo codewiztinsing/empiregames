@@ -122,7 +122,7 @@ def get_all_users(base_url: str) -> Dict[str, Any]:
         }
 
 def create_user(base_url: str, username: str, telegramId: str, phoneNumber: str, password: str) -> Dict[str, Any]:
-    url = f"{base_url}/api/v1/auth/register"
+    url = f"{base_url}/api/v1/users"
     payload = {
         "username": username,
         "telegramId": telegramId,
