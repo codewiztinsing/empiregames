@@ -297,7 +297,7 @@ def support_options_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton("📞 Support 1",  url='https://t.me/@Wowbingosupport2')],
         [InlineKeyboardButton("📞 Support 2",  url='https://t.me/@Wowbingosupport1')],
-        [InlineKeyboardButton("📞 Support 3",  url='https://t.me/@IToffice1')],
+        [InlineKeyboardButton("📞 Support 3",  url='https://t.me/IToffice1')],
         [InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')]
     ]
     return InlineKeyboardMarkup(keyboard)
