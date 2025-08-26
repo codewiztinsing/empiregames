@@ -12,6 +12,8 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
       DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/bingo_db"
+      JWT_SECRET: lsdafndkf983qy481asdkbfaksdbjf
+      JWT_REFRESH_SECRET: lsdafndkf983qy481asdkbfaksdbjf
     depends_on:
       postgres:
         condition: service_healthy
