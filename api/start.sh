@@ -9,6 +9,9 @@ until npx prisma db push --accept-data-loss > /dev/null 2>&1; do
   sleep 2
 done
 
+# reset database
+npx prisma migrate reset
+
 echo "Database is ready. Running migrations..."
 npx prisma migrate deploy
 

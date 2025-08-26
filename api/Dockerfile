@@ -19,8 +19,7 @@ COPY . .
 # Install Prisma CLI globally
 RUN npm install -g prisma
 
-# reset database
-RUN npx prisma generate
+
 
 
 # Make startup script executable
