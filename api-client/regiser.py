@@ -183,6 +183,32 @@ def login(base_url: str, username: str, password: str) -> Dict[str, Any]:
         }
 
 
+def update_user(base_url: str, username: str, password: str) -> Dict[str, Any]:
+    url = f"{base_url}/api/v1/users/{username}"
+    payload = {
+        "password": password
+    }
+    try:
+        response = requests.put(url, data=json.dumps(payload), headers={"Content-Type": "application/json"})
+        return {
+            "success": True,
+            "data": response.json(),
+            "message": "User updated successfully"
+        }
+    except requests.exceptions.RequestException as e:
+        return {
+            "success": False,
+            "error": f"Network error: {str(e)}",
+            "status_code": None
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Error: {str(e)}",
+            "status_code": None
+        }
+
+
 if __name__ == "__main__":
     # base_url = "https://server.akerbingo.com"
     base_url = "http://localhost:5000"
