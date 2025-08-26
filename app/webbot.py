@@ -752,10 +752,10 @@ def main() -> None:
   
  
 
-    # application.add_handler(CommandHandler('start', start))
-    # application.add_handler(CommandHandler('play', play_command))
-    # application.add_handler(CommandHandler('support', support_command))
-    # application.add_handler(CommandHandler('withdraw', withdraw_command))
+    application.add_handler(CommandHandler('start', start))
+    application.add_handler(CommandHandler('play', play_command))
+    application.add_handler(CommandHandler('support', support_command))
+    application.add_handler(CommandHandler('withdraw', withdraw_command))
     application.add_handler(deposit_conversation_handler)
     application.add_handler(CommandHandler('invite', handle_invite))  
     application.add_handler(register_conversation_handler)
