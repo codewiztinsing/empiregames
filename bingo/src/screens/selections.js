@@ -55,12 +55,12 @@ const Selections = () => {
     const queryParams = new URLSearchParams(window.location.search);
     setPlayerId(queryParams.get('playerId'));
     setRoomId(queryParams.get('betAmount'));
-    console.log("player name = ",queryParams.get('playerName'))
+    console.log("player name = ", queryParams.get('playerName'))
     setPlayerName(queryParams.get('playerName'));
 
- 
+
     socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
-  
+
     const fetchBalance = async () => {
       console.log("fetching balance")
 
@@ -72,11 +72,11 @@ const Selections = () => {
           'Access-Control-Allow-Origin': '*',
           'Content-Type': 'application/json'
         };
-        console.log("apiUrl",`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
+        console.log("apiUrl", `${apiUrl}wallet/player/${queryParams.get('playerId')}`);
         const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
-        console.log("response",response.data)
-      
-      
+        console.log("response", response.data)
+
+
         setBalance(response.data.balance);
         setLoading(false);
       } catch (error) {
@@ -102,17 +102,17 @@ const Selections = () => {
     const gameRoom = state.roomId
     if (roomId == gameRoom) {
       setPickedNumbers(state.pickedNumbers.numbers);
-      if(state.game_status == "in-progress"){
+      if (state.game_status == "in-progress") {
         setGameStatus("in-progress");
       }
-      if(state.game_status == "waiting"){
+      if (state.game_status == "waiting") {
         setGameStatus("waiting");
       }
-      if(state.game_status == "ended"){
+      if (state.game_status == "ended") {
         setGameStatus("ended");
       }
 
-      if(state.game_status != "in-progress"){
+      if (state.game_status != "in-progress") {
         setPlayersLength(state.total_players);
       }
       setCountDown(state.count_down);
@@ -137,12 +137,12 @@ const Selections = () => {
     if (state.roomId == roomId) {
       setPickedNumbers(state.pickedNumbers.numbers);
 
-      if(state.game_status != "in-progress"){
-              setPlayersLength(state.total_players);
+      if (state.game_status != "in-progress") {
+        setPlayersLength(state.total_players);
 
       }
-      
-      
+
+
       setCountDown(state.count_down);
     }
   });
@@ -178,7 +178,7 @@ const Selections = () => {
     }
     // return card;
     // Transpose the card array
-    const transposedCard = card[0].map((_, colIndex) => 
+    const transposedCard = card[0].map((_, colIndex) =>
       card.map(row => row[colIndex])
     );
     return transposedCard;
@@ -188,7 +188,7 @@ const Selections = () => {
 
 
   const handlePickedNumbers = (state) => {
-    console.log("state = ", state)
+    console.log("choosenNumbers", choosenNumbers)
     if (state.roomId == roomId) {
       setPickedNumbers(state.numbers);
     }
@@ -216,17 +216,17 @@ const Selections = () => {
       setIsToast(true);
       return;
     }
-    if(balance < parseInt(roomId) * choosenBoards.length){
-      console.log("balance",balance)
-      console.log("roomId",roomId)
-      console.log("choosenBoards.length",choosenBoards.length)
+    if (balance < parseInt(roomId) * choosenBoards.length) {
+      console.log("balance", balance)
+      console.log("roomId", roomId)
+      console.log("choosenBoards.length", choosenBoards.length)
       setToast("Insufficient balance");
       setIsToast(true);
       return;
     }
 
     try {
-      socket.emit('joinGame', { playerId, gameId, selectedNumber,selectedNumber2, roomId, selectBoard, selectBoard2, numberOfBoards: choosenBoards.length })
+      socket.emit('joinGame', { playerId, gameId, selectedNumber, selectedNumber2, roomId, selectBoard, selectBoard2, numberOfBoards: choosenBoards.length })
 
       navigate('/play');
     } catch (error) {
@@ -243,13 +243,11 @@ const Selections = () => {
     setJoinError(true);
     return;
   })
-  
-
   const handleNumberClick = (number) => {
     if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) {
       return;
     }
-
+  
     // If number is already chosen, remove it
     if (choosenNumbers.includes(number)) {
       const index = choosenNumbers.indexOf(number);
@@ -258,48 +256,128 @@ const Selections = () => {
         const newBoards = [...choosenBoards];
         newNumbers.splice(index, 1);
         newBoards.splice(index, 1);
+  
         setChoosenNumbers(newNumbers);
         setChooseBoards(newBoards);
-        
-        // Update the appropriate selected number and board
-        if (index === 0) {
+  
+        // Rebalance cards after removal
+        if (newNumbers.length === 0) {
           setSelectedNumber(null);
           setSelectBoard([]);
-        } else {
-          setSelectedNumber2(null); 
+          setSelectedNumber2(null);
           setSelectBoard2([]);
+        } else if (newNumbers.length === 1) {
+          // Only one card left → it becomes the first
+          setSelectedNumber(newNumbers[0]);
+          setSelectBoard(newBoards[0]);
+          setSelectedNumber2(null);
+          setSelectBoard2([]);
+        } else {
+          // Two cards remain → reset both
+          setSelectedNumber(newNumbers[0]);
+          setSelectBoard(newBoards[0]);
+          setSelectedNumber2(newNumbers[1]);
+          setSelectBoard2(newBoards[1]);
         }
       }
       return;
     }
-
+  
     // Only allow selecting up to 2 numbers
     if (choosenNumbers.length >= 2) {
       return;
     }
-
+  
     // Add new number and generate new board
     const newNumbers = [...choosenNumbers, number];
     const newBoard = generateCombination();
-
-    setChoosenNumbers(newNumbers);
-    
-    // Set appropriate selected number and board based on position
-    if (newNumbers.length === 1) {
-      setSelectedNumber(number);
-      setSelectBoard(newBoard);
-      setChooseBoards([newBoard]);
-    } else {
-      setSelectedNumber2(number);
-      setSelectBoard2(newBoard);
-      setChooseBoards([...choosenBoards, newBoard]);
-    }
-
+    const newBoards = [...choosenBoards, newBoard];
   
+    setChoosenNumbers(newNumbers);
+    setChooseBoards(newBoards);
+  
+    // Rebalance after adding
+    if (newNumbers.length === 1) {
+      setSelectedNumber(newNumbers[0]);
+      setSelectBoard(newBoards[0]);
+    } else if (newNumbers.length === 2) {
+      setSelectedNumber(newNumbers[0]);
+      setSelectBoard(newBoards[0]);
+      setSelectedNumber2(newNumbers[1]);
+      setSelectBoard2(newBoards[1]);
+    }
   };
   
+
+  // const handleNumberClick = (number) => {
+  //   if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) {
+  //     return;
+  //   }
+
+  //   // If number is already chosen, remove it
+  //   if (choosenNumbers.includes(number)) {
+  //     const index = choosenNumbers.indexOf(number);
+  //     if (index > -1) {
+  //       const newNumbers = [...choosenNumbers];
+  //       const newBoards = [...choosenBoards];
+  //       newNumbers.splice(index, 1);
+  //       newBoards.splice(index, 1);
+  //       setChoosenNumbers(newNumbers);
+  //       setChooseBoards(newBoards);
+
+  //       // Update the appropriate selected number and board
+  //       if (index === 0) {
+  //         setSelectedNumber(null);
+  //         setSelectBoard([]);
+  //       } else {
+  //         setSelectedNumber2(null);
+  //         setSelectBoard2([]);
+  //       }
+
+  //       if (choosenNumbers.length == 0) {
+  //         setSelectedNumber(null);
+  //         setSelectBoard([]);
+  //       }
+  //     }
+  //     return;
+  //   }
+
+  //   // Only allow selecting up to 2 numbers
+  //   if (choosenNumbers.length >= 2) {
+  //     return;
+  //   }
+
+  //   // Add new number and generate new board
+  //   const newNumbers = [...choosenNumbers, number];
+  //   const newBoard = generateCombination();
+
+  //   setChoosenNumbers(newNumbers);
+
+  //   // Set appropriate selected number and board based on position
+  //   if (newNumbers.length === 1) {
+
+  //     if (number != selectedNumber2) {
+  //       setSelectedNumber(number);
+  //     }
+
+  //     setSelectBoard(newBoard);
+  //     setChooseBoards([newBoard]);
+  //   } else {
+
+  //     if (number != selectedNumber) {
+  //       setSelectedNumber2(number);
+  //     }
+
+
+
+  //     setSelectBoard2(newBoard);
+  //     setChooseBoards([...choosenBoards, newBoard]);
+  //   }
+
+
+  // };
+
   const handleGameStatus = (state) => {
-    console.log("state", state)
     const gameRoom = state.roomId
     if (roomId == gameRoom) {
       setGameStatus(state.status);
@@ -327,13 +405,13 @@ const Selections = () => {
       {!loading && (
         <div className="selections-container">
           <div className="balance-container">
-        
-          <div className="balance-text">
-          Balance {balance} ብር
-            </div>
-          
+
             <div className="balance-text">
-            Stake {roomId} ብር
+              Balance {balance} ብር
+            </div>
+
+            <div className="balance-text">
+              Stake {roomId} ብር
             </div>
             <div className="game-status">
               <div className={`status-badge ${gameStatus}`}>
@@ -341,8 +419,8 @@ const Selections = () => {
               </div>
             </div>
 
-           
-        
+
+
           </div>
 
           <div className="numbers-grid">
@@ -377,135 +455,60 @@ const Selections = () => {
             })}
           </div>
 
-          {selectedNumber && (
+          {choosenNumbers.length > 0 && (selectedNumber || selectedNumber2) && (
             <div className='combination-boards-container-parent'>
-           
-            <div className="combination-board-container">
-        
-              <div className="combination-board">  
-                
+              <div className="combination-board-container">
+                {console.log("selectedNumber 1", selectedNumber)}
+                {console.log("selectedNumber2 2", selectedNumber2)}
 
-              
-             <div className='card-number-container'>
-             <div className='card-number'># Card {selectedNumber}</div>
-                
-                <div className="combination-bingo-header">
-           
-                    <div className="combination-bingo-header-text">
-                      B
-                    </div>
-                    <div className="combination-bingo-header-text">
-                      I
-                    </div>
-                    <div className="combination-bingo-header-text">
-                      N
-                    </div>
-                    <div className="combination-bingo-header-text">
-                      G
-                    </div>
-                    <div className="combination-bingo-header-text">
-                      O
-                    </div>
-                    
-                </div>
-              </div>
-
-                <div className="board-grid-selections">
-                  {selectBoard.map((row, rowIndex) => (
-                    
-                    <div key={rowIndex} className="board-row-selections">
-                      {row.map((num, colIndex) => (
-                        <div
-                          key={colIndex}
-                          className={`combination-number-cell ${pickedNumbers && pickedNumbers.length > 1 && pickedNumbers.includes(num) ? 'picked-on-board' : ''
-                            }`}
-                        >
-                          {num}
-                          {pickedNumbers && pickedNumbers.length > 1 && pickedNumbers.includes(num) && (
-                            <span className="picked-indicator">✓</span>
-                          )}
+                {/* Reusable Bingo Card Component */}
+                {[{ number: selectedNumber, board: selectBoard }, { number: selectedNumber2, board: selectBoard2 }]
+                  .filter(item => item.number) // render only if number exists
+                  .map((item, idx) => (
+                    <div key={idx} className="combination-board">
+                      <div className='card-number-container'>
+                        <div className='card-number'># Card {item.number}</div>
+                        <div className="combination-bingo-header">
+                          {['B', 'I', 'N', 'G', 'O'].map((letter, i) => (
+                            <div key={i} className="combination-bingo-header-text">{letter}</div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-               
-              </div>
+                      </div>
 
-
-
-           
-            {selectedNumber2 && (
-              <div className="combination-board">  
-                <div className='card-number-container'>
-                <div className='card-number'># Card {selectedNumber2}</div>
-                
-                <div className="combination-bingo-header">
-              
-              <div className="combination-bingo-header-text">
-                B
-              </div>
-              <div className="combination-bingo-header-text">
-                I
-              </div>
-              <div className="combination-bingo-header-text">
-                N
-              </div>
-              <div className="combination-bingo-header-text">
-                G
-              </div>
-              <div className="combination-bingo-header-text">
-                O
-              </div>
-            
-            </div>
-         
-
-
-            </div>
-                
-                
-              
-                  <div className="board-grid-selections">
-                    {selectBoard2.map((row, rowIndex) => (
-                      
-                      <div key={rowIndex} className="board-row-selections">
-                        {row.map((num, colIndex) => (
-                          <div
-                            key={colIndex}
-                            className={`combination-number-cell ${pickedNumbers && pickedNumbers.length > 1 && pickedNumbers.includes(num) ? 'picked-on-board' : ''
-                              }`}
-                          >
-                            {num}
-                            {pickedNumbers && pickedNumbers.length > 1 && pickedNumbers.includes(num) && (
-                              <span className="picked-indicator">✓</span>
-                            )}
+                      <div className="board-grid-selections">
+                        {item.board.map((row, rowIndex) => (
+                          <div key={rowIndex} className="board-row-selections">
+                            {row.map((num, colIndex) => (
+                              <div
+                                key={colIndex}
+                                className={`combination-number-cell ${pickedNumbers?.length > 1 && pickedNumbers.includes(num)
+                                    ? 'picked-on-board'
+                                    : ''
+                                  }`}
+                              >
+                                {num}
+                                {pickedNumbers?.length > 1 && pickedNumbers.includes(num) && (
+                                  <span className="picked-indicator">✓</span>
+                                )}
+                              </div>
+                            ))}
                           </div>
                         ))}
                       </div>
-                    ))}
-                  </div>
-                 
+                    </div>
+                  ))
+                }
+
               </div>
-            )}
 
-
-           
-         
-            </div>
-            <button
-                  className="start-game-button"
-                  onClick={handleStartGame}
-                >
-                  {isLoading ? 'Starting...' : 'Start Game'}
+              <button className="start-game-button" onClick={handleStartGame}>
+                {isLoading ? 'Starting...' : 'Start Game'}
               </button>
             </div>
-
-
-
-
-
           )}
+
+
+
         </div>
       )}
 
