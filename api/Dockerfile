@@ -19,6 +19,9 @@ COPY . .
 # Install Prisma CLI globally
 RUN npm install -g prisma
 
+# reset database
+RUN npx prisma migrate reset --force
+
 # Make startup script executable
 RUN chmod +x /app/start.sh
 
