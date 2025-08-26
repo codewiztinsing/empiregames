@@ -204,12 +204,13 @@ const PlayingBoard = () => {
     ))}
   </div>
 
-  {winningCard.map((row, rowIndex) => (
+  {winningCard[0] && winningCard[0].map((_, rowIndex) => (
     <div key={rowIndex} className="winning-card-row">
-      {row.map((cell, colIndex) => {
+      {winningCard.map((row, colIndex) => {
+        const cell = row[rowIndex];
         // Check win conditions
-        const rowComplete = winningCard[rowIndex].every(c => c.marked);
-        const colComplete = winningCard.every(r => r[colIndex].marked);
+        const rowComplete = winningCard.every(r => r[rowIndex].marked);
+        const colComplete = winningCard[colIndex].every(c => c.marked);
         const diagonalComplete =
           rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
         const reverseDiagonalComplete =
@@ -235,13 +236,13 @@ const PlayingBoard = () => {
           (reverseDiagonalComplete && cell.marked) ||
           (fourCornersComplete &&
             cell.marked &&
-            ((rowIndex === 0 && (colIndex === 0 || colIndex === 4)) ||
-             (rowIndex === 4 && (colIndex === 0 || colIndex === 4)))) ||
+            ((colIndex === 0 && (rowIndex === 0 || rowIndex === 4)) ||
+             (colIndex === 4 && (rowIndex === 0 || rowIndex === 4)))) ||
           (fourEdgesComplete &&
             cell.marked &&
-            ((rowIndex === 0 && colIndex === 2) ||
-             (rowIndex === 2 && (colIndex === 0 || colIndex === 4)) ||
-             (rowIndex === 4 && colIndex === 2)));
+            ((colIndex === 0 && rowIndex === 2) ||
+             (colIndex === 2 && (rowIndex === 0 || rowIndex === 4)) ||
+             (colIndex === 4 && rowIndex === 2)));
 
         // Final background color
         let bgColor = "white";
