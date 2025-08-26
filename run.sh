@@ -24,3 +24,6 @@ rm -rf templates/build/*
 cp -r ../bingo/build/* templates/build/
 
 echo "Build completed"
+
+# run pm2 restart all
+pm2 restart all
