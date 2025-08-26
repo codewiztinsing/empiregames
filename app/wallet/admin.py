@@ -11,7 +11,7 @@ admin.site.register(Wallet, WalletAdmin)
 
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ("user__username", 'amount', 'type', 'status', 'reference',"user__phone","user__telegram_id","created_at")
-    search_fields = ('user__phone', 'user__telegram_id')
+    search_fields = ('user__phone', 'user__telegram_id','user__username',"created_at")
     ordering = ('-created_at',)
     list_display_links = ('reference',)
 
