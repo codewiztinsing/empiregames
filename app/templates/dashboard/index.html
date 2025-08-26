@@ -1,0 +1,179 @@
+{% extends 'dashboard/base.html' %}
+
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Welcome Card -->
+    <div class="col-12 mb-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h4 class="card-title">
+                    <i class="fas fa-home me-2"></i>
+                    Welcome{% if user.is_authenticated %}, {{ user.username }}{% endif %}!
+                </h4>
+                <p class="card-text">Welcome to your dashboard. Here you can manage your games and view your statistics.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quick Stats -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Games Played</h5>
+                        <h2 class="mb-0">{{games_played}}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-gamepad fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Games Won</h5>
+                        <h2 class="mb-0">{{games_won}}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-trophy fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Total Player Balance</h5>
+                        <h2 class="mb-0">{{wallet.total_balance}}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-wallet fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Total Withdrawals</h5>
+                        <h2 class="mb-0">{{wallet.totalwithdrawals}}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+   
+
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Deposits</h5>
+                        <h2 class="mb-0">{{wallet.deposits}}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-money-bill-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+
+    
+</div>
+
+<div class="row">
+    <!-- Quick Actions -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/" class="btn btn-primary">
+                        <i class="fas fa-play me-2"></i>
+                        Start New Game
+                    </a>
+                    <button class="btn btn-outline-secondary">
+                        <i class="fas fa-users me-2"></i>
+                        Join Game Room
+                    </button>
+                    <button class="btn btn-outline-info">
+                        <i class="fas fa-history me-2"></i>
+                        View Game History
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-clock me-2"></i>
+                    Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>No recent activity to display</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Game Statistics Chart -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Game Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-chart-bar fa-4x mb-3"></i>
+                    <h5>No Statistics Available</h5>
+                    <p>Start playing games to see your statistics here!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
