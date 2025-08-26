@@ -20,7 +20,8 @@ COPY . .
 RUN npm install -g prisma
 
 # reset database
-RUN npx prisma migrate reset --force
+RUN npx prisma generate
+
 
 # Make startup script executable
 RUN chmod +x /app/start.sh
