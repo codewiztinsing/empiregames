@@ -55,28 +55,19 @@ const Selections = () => {
     const queryParams = new URLSearchParams(window.location.search);
     setPlayerId(queryParams.get('playerId'));
     setRoomId(queryParams.get('betAmount'));
-    console.log("player name = ", queryParams.get('playerName'))
     setPlayerName(queryParams.get('playerName'));
 
 
     socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
 
     const fetchBalance = async () => {
-      console.log("fetching balance")
-
       const apiUrl = process.env.REACT_APP_API_URL;
-      console.log("apiUrl", apiUrl)
-
       try {
         const headers = {
           'Access-Control-Allow-Origin': '*',
           'Content-Type': 'application/json'
         };
-        console.log("apiUrl", `${apiUrl}wallet/player/${queryParams.get('playerId')}`);
         const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
-        console.log("response", response.data)
-
-
         setBalance(response.data.balance);
         setLoading(false);
       } catch (error) {
@@ -101,17 +92,16 @@ const Selections = () => {
   const handleGameState = (state) => {
     const gameRoom = state.roomId
     if (roomId == gameRoom) {
-      setPickedNumbers(state.pickedNumbers.numbers);
+      if (state.pickedNumbers !== null) {
+        setPickedNumbers(state.pickedNumbers.numbers);
+      }
       if (state.game_status == "in-progress") {
         setGameStatus("in-progress");
       }
       if (state.game_status == "waiting") {
         setGameStatus("waiting");
       }
-      if (state.game_status == "ended") {
-        setGameStatus("ended");
-      }
-
+     
       if (state.game_status != "in-progress") {
         setPlayersLength(state.total_players);
       }
@@ -123,7 +113,6 @@ const Selections = () => {
   socket.on('activeGames', (state) => {
     if (state?.activeGames?.length > 0) {
       const activeGameId = state.activeGames[0].id
-      console.log("active game id", activeGameId)
       if (activeGameId == roomId) {
         setGameStatus("in-progress");
       }
@@ -135,14 +124,14 @@ const Selections = () => {
 
   socket.on('gameState', (state) => {
     if (state.roomId == roomId) {
-      setPickedNumbers(state.pickedNumbers.numbers);
+      if (state.pickedNumbers !== null) {
+        setPickedNumbers(state.pickedNumbers.numbers);
+      }
 
       if (state.game_status != "in-progress") {
         setPlayersLength(state.total_players);
 
       }
-
-
       setCountDown(state.count_down);
     }
   });
@@ -188,7 +177,6 @@ const Selections = () => {
 
 
   const handlePickedNumbers = (state) => {
-    console.log("choosenNumbers", choosenNumbers)
     if (state.roomId == roomId) {
       setPickedNumbers(state.numbers);
     }
@@ -217,9 +205,6 @@ const Selections = () => {
       return;
     }
     if (balance < parseInt(roomId) * choosenBoards.length) {
-      console.log("balance", balance)
-      console.log("roomId", roomId)
-      console.log("choosenBoards.length", choosenBoards.length)
       setToast("Insufficient balance");
       setIsToast(true);
       return;
@@ -237,7 +222,6 @@ const Selections = () => {
   };
 
   socket.on('joinError', (error) => {
-    console.log("error", error)
     setToast(error.message);
     setIsToast(true);
     setJoinError(true);
@@ -309,75 +293,9 @@ const Selections = () => {
   };
   
 
-  // const handleNumberClick = (number) => {
-  //   if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) {
-  //     return;
-  //   }
-
-  //   // If number is already chosen, remove it
-  //   if (choosenNumbers.includes(number)) {
-  //     const index = choosenNumbers.indexOf(number);
-  //     if (index > -1) {
-  //       const newNumbers = [...choosenNumbers];
-  //       const newBoards = [...choosenBoards];
-  //       newNumbers.splice(index, 1);
-  //       newBoards.splice(index, 1);
-  //       setChoosenNumbers(newNumbers);
-  //       setChooseBoards(newBoards);
-
-  //       // Update the appropriate selected number and board
-  //       if (index === 0) {
-  //         setSelectedNumber(null);
-  //         setSelectBoard([]);
-  //       } else {
-  //         setSelectedNumber2(null);
-  //         setSelectBoard2([]);
-  //       }
-
-  //       if (choosenNumbers.length == 0) {
-  //         setSelectedNumber(null);
-  //         setSelectBoard([]);
-  //       }
-  //     }
-  //     return;
-  //   }
-
-  //   // Only allow selecting up to 2 numbers
-  //   if (choosenNumbers.length >= 2) {
-  //     return;
-  //   }
-
-  //   // Add new number and generate new board
-  //   const newNumbers = [...choosenNumbers, number];
-  //   const newBoard = generateCombination();
-
-  //   setChoosenNumbers(newNumbers);
-
-  //   // Set appropriate selected number and board based on position
-  //   if (newNumbers.length === 1) {
-
-  //     if (number != selectedNumber2) {
-  //       setSelectedNumber(number);
-  //     }
-
-  //     setSelectBoard(newBoard);
-  //     setChooseBoards([newBoard]);
-  //   } else {
-
-  //     if (number != selectedNumber) {
-  //       setSelectedNumber2(number);
-  //     }
-
-
-
-  //     setSelectBoard2(newBoard);
-  //     setChooseBoards([...choosenBoards, newBoard]);
-  //   }
-
-
-  // };
 
   const handleGameStatus = (state) => {
+    console.log("gameStatus", state)
     const gameRoom = state.roomId
     if (roomId == gameRoom) {
       setGameStatus(state.status);
@@ -458,8 +376,7 @@ const Selections = () => {
           {choosenNumbers.length > 0 && (selectedNumber || selectedNumber2) && (
             <div className='combination-boards-container-parent'>
               <div className="combination-board-container">
-                {console.log("selectedNumber 1", selectedNumber)}
-                {console.log("selectedNumber2 2", selectedNumber2)}
+               
 
                 {/* Reusable Bingo Card Component */}
                 {[{ number: selectedNumber, board: selectBoard }, { number: selectedNumber2, board: selectBoard2 }]

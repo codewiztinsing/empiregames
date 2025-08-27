@@ -18,8 +18,8 @@ const server = http.createServer(app);
 
 const getConstant = async () => {
   return {
-    gameSpeed: 5000,
-    countDown: 30
+    gameSpeed: 500,
+    countDown: 3
   }
 }
 
@@ -94,8 +94,13 @@ async  function endGame(game) {
   }
 
   const data = await updateLastGame(game.roomId);
-  console.log("game updating data ",data)
   startCountDown(game);
+
+  io.emit("gameStatus", {
+    status: "waiting",
+    roomId: game.roomId,
+    gameId: game.id
+  });
 }
 
 function getWaitingGames(activeGames,status="in-progress") {
@@ -437,7 +442,7 @@ io.on('connection', (socket) => {
 
   socket.on("disconnect", () => {
     const user = users.get(socket.id)
-    console.log("user disconnected",user)
+    
     
     if (user) {
       const game = activeGames.get(user.gameId);
@@ -450,12 +455,13 @@ io.on('connection', (socket) => {
      
  
       if (game?.players.has(user.playerId)) {
+        console.log("game.status",game.status)
         if(game.status === "waiting") {
           game.players.delete(user.playerId);
           game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);
           game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber2);
-          console.log("selected number 2 in disconnect",selectedNumber2)
-          console.log("selected number 2 in disconnect",selectedNumber2)
+    
+    
           io.to(game.roomId).emit("gameState", {
             message: `User ${user.playerId} disconnected`,
             gameId: game.id,
