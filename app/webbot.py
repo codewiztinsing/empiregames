@@ -196,8 +196,8 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             return WITHDRAW_AMOUNT_CONFIRM
 
        
-        if int(balance) < 100:
-            await update.message.reply_text(f"You must leave at least 100 ETB in your wallet. Please enter a smaller amount.")
+        if int(balance) < 20:
+            await update.message.reply_text(f"You must leave at least 20 ETB in your wallet. Please enter a smaller amount.")
             return WITHDRAW_AMOUNT_CONFIRM
 
 
