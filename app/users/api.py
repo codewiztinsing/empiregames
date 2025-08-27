@@ -12,7 +12,8 @@ from users.models import User
 from datetime import datetime, timedelta
 from django.contrib.auth import authenticate
 from django.conf import settings
-from wallet.models import Transaction
+from wallet.models import Transaction,ChapaSession
+
 
 from pydantic import BaseModel
 from typing import Optional, Union
@@ -144,5 +145,30 @@ def get_number_of_game_won(request,user_id:int):
         return {"number_of_game_won": number_of_game_won}
     except Exception as e:
         return {"success": False, "message": "Failed to get number of game won"}    
+# is deposited user
+@users_router.get("/{user_id}/is-deposited")
+def is_deposited(request, user_id: int):
+    try:
+        user = User.objects.get(telegram_id=user_id)
+        print("phone ",user.phone)
+        print("user ",user)
+        # Check if user has any successful deposit transactions via ChapaSession
+        has_deposited = ChapaSession.objects.filter(
+            phone_number=user.phone)
+
+        print("has deposited ",has_deposited)
+        has_deposited = ChapaSession.objects.filter(
+            phone_number=user.phone,
+            status='success'
+        ).exists()
+
+        return {"is_deposited": has_deposited}
+    except User.DoesNotExist:
+        return {"success": False, "message": "User not found"}
+    except Exception as e:
+        print("error ",e)
+        return {"success": False, "message": "Failed to check deposit status"}
+
+
 
 

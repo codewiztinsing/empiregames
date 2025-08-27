@@ -26,7 +26,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     ConversationHandler,
 )
-from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won
+from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player
 from datetime import datetime
 from telegram import BotCommand
 from register import *
@@ -174,6 +174,11 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         logger.info(f"balance {balance}")
 
         daily_limit = daily_withdraw_limit(telegram_id)
+        is_deposited = is_deposited_player(telegram_id)
+        if not is_deposited:
+            await update.message.reply_text(f"You need to deposit first. 20 ETB minimum deposit is required to withdraw.")
+            return WITHDRAW_AMOUNT_CONFIRM
+
         logger.info(f"daily_withdraw_limit {daily_limit}")
         if daily_limit > 3:
             await update.message.reply_text(f"You have reached the daily withdraw limit. Please try again tomorrow.")
