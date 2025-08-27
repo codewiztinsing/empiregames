@@ -182,8 +182,8 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         number_game_played = numnber_of_game_played(telegram_id)
         number_game_won = number_of_game_won(telegram_id)
 
-        if number_game_played < 10:
-            await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት")
+        if number_game_played < 5:
+            await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት\n 2 ጨወታ ማሽነፍ አለብዎት")
             return WITHDRAW_AMOUNT_CONFIRM
 
         if number_game_won < 2:

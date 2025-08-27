@@ -3,16 +3,17 @@ from ninja import NinjaAPI,Router
 from ninja.security import django_auth
 from .auth import encode_jwt,decode_jwt
 from .schema import RegisterSchema, LoginSchema,UserSchema
-from .models import User
+# from .models import User
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
-
+from users.models import User
 from datetime import datetime, timedelta
 from django.contrib.auth import authenticate
 from django.conf import settings
 from wallet.models import Transaction
+
 from pydantic import BaseModel
 from typing import Optional, Union
 
@@ -123,7 +124,13 @@ def get_daily_withdraw_limit(request,user_id:int):
 @users_router.get("/{user_id}/number-of-game-played")
 def get_number_of_game_played(request,user_id:int):
     try:
-        number_of_game_played = Transaction.objects.filter(user_id=user_id,type="BET").count()
+        print("user_id = ",user_id)
+        user = User.objects.get(telegram_id=user_id)
+        print("user = ",user)
+        transactions = Transaction.objects.filter(user=user,type="BET")
+        print("transactions = ",transactions)
+        number_of_game_played = transactions.count()
+        print("number_of_game_played = ",number_of_game_played)
         return {"number_of_game_played": number_of_game_played}
     except Exception as e:
         return {"success": False, "message": "Failed to get number of game played"}
@@ -132,7 +139,8 @@ def get_number_of_game_played(request,user_id:int):
 @users_router.get("/{user_id}/number-of-game-won")
 def get_number_of_game_won(request,user_id:int):
     try:
-        number_of_game_won = Transaction.objects.filter(user_id=user_id,type="WIN").count()
+        user = User.objects.get(telegram_id=user_id)
+        number_of_game_won = Transaction.objects.filter(user=user,type="WIN").count()
         return {"number_of_game_won": number_of_game_won}
     except Exception as e:
         return {"success": False, "message": "Failed to get number of game won"}    
