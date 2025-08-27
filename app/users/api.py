@@ -116,8 +116,9 @@ def get_user_by_telegram_id(request,telegram_id:int):
 def get_daily_withdraw_limit(request,user_id:int):
     try:
         user = User.objects.get(telegram_id=user_id)
-        transactions = Transaction.objects.filter(user=user,type="WITHDRAW",created_at__date=datetime.now().date())
-        daily_withdraw_limit  = sum(transaction.amount for transaction in transactions)
+        today = datetime.now().date()
+        transactions = Transaction.objects.filter(user=user,type="WITHDRAW",created_at__date=today)
+        daily_withdraw_limit = len(transactions)
         return {"daily_withdraw_limit": daily_withdraw_limit}
     except Exception as e:
         print("error = ",e)
