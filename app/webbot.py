@@ -180,10 +180,10 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             return WITHDRAW_AMOUNT_CONFIRM
 
         logger.info(f"daily_withdraw_limit {daily_limit}")
-        if int(daily_limit) > 3:
+        if int(daily_limit) >= 3:
             await update.message.reply_text(f"You have reached the daily withdraw limit. Please try again tomorrow.")
             return WITHDRAW_AMOUNT_CONFIRM
-
+    
         number_game_played = numnber_of_game_played(telegram_id)
         number_game_won = number_of_game_won(telegram_id)
 
