@@ -246,7 +246,7 @@ async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYP
         # deduct amount from user's balance
         res = requests.put(f'{BACK_URL}/api/v1/wallet/player/{update.effective_user.id}/', json={'amount': withdraw_amount,"action":"withdraw"})
         ###
-        await update.message.reply_text("Withdrawal request sent to admin. Please wait for approval.")
+        await update.message.reply_text("Withdrawal successful. Please wait message from bank/telebirr/Mpesa.")
         transfer_funds(f"{update.effective_user.first_name} {update.effective_user.last_name}", account_number, withdraw_amount, "ETB", generate_tx_ref(), context.user_data['bank_id'])
         return ConversationHandler.END
     except Exception as e:
