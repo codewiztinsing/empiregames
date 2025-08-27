@@ -82,3 +82,27 @@ model Admin {
   updatedAt DateTime @updatedAt
 }
 
+
+model Promotion {
+  id              Int      @id @default(autoincrement())
+  title           String
+  description     String?
+  type            String   // deposit_bonus, free_credits, cashback, referral_bonus
+  value           Int      // bonus amount or percentage
+  valueType       String   // fixed, percentage
+  minDeposit      Int?     // minimum deposit required
+  maxBonus        Int?     // maximum bonus amount
+  code            String?  @unique // promo code
+  isActive        Boolean  @default(true)
+  startDate       DateTime
+  endDate         DateTime?
+  usageLimit      Int?     // total usage limit
+  usageCount      Int      @default(0) // current usage count
+  playerUsageLimit Int?    // per player usage limit
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+ 
+}
+
+

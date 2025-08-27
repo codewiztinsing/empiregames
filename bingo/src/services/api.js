@@ -16,6 +16,8 @@ export const getUsers = () => api.get("/users");
 export const getGames = () => api.get("/games");
 export const getDashboardStats = () => api.get("/dashboard/stats");
 export const getDashboardRecentStats = (timeRange) => api.get(`/dashboard/stats/recent?timeRange=${timeRange}`);
+export const deleteApiPromotion = (id) => api.delete(`/promotions/${id}`);
+export const createApiPromotion = (data) => api.post("/promotions", data);
 export const createUser = (data) => api.post("/users", data);
 export const createGame = (data) => api.post("/games", data);
 export const getUser = (telegramId) => api.get(`/users/${telegramId}`);

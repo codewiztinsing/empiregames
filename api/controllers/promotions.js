@@ -43,6 +43,7 @@ const createPromotion = async (req, res) => {
       description, 
       type, 
       value, 
+      valueType,
       minDeposit, 
       maxBonus, 
       startDate, 
@@ -51,16 +52,33 @@ const createPromotion = async (req, res) => {
       terms 
     } = req.body;
 
+    // Set default dates if not provided
+    const today = new Date();
+    const oneWeekFromToday = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
+    
+    // Validate dates
+    const validStartDate = startDate ? new Date(startDate) : today;
+    const validEndDate = endDate ? new Date(endDate) : oneWeekFromToday;
+
+    // Check if dates are valid
+    if (startDate && isNaN(validStartDate.getTime())) {
+      return res.status(400).json({ error: 'Invalid start date format' });
+    }
+    if (endDate && isNaN(validEndDate.getTime())) {
+      return res.status(400).json({ error: 'Invalid end date format' });
+    }
+
     const promotion = await prisma.promotion.create({
       data: {
         title,
         description,
         type,
         value: parseFloat(value),
+        valueType: valueType || 'fixed', // Default to 'fixed' if not provided
         minDeposit: minDeposit ? parseFloat(minDeposit) : null,
         maxBonus: maxBonus ? parseFloat(maxBonus) : null,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
+        startDate: validStartDate,
+        endDate: validEndDate,
         isActive: isActive || false,
         terms
       }
@@ -82,6 +100,7 @@ const updatePromotion = async (req, res) => {
       description, 
       type, 
       value, 
+      valueType,
       minDeposit, 
       maxBonus, 
       startDate, 
@@ -95,10 +114,26 @@ const updatePromotion = async (req, res) => {
     if (description) updateData.description = description;
     if (type) updateData.type = type;
     if (value) updateData.value = parseFloat(value);
+    if (valueType) updateData.valueType = valueType;
     if (minDeposit) updateData.minDeposit = parseFloat(minDeposit);
     if (maxBonus) updateData.maxBonus = parseFloat(maxBonus);
-    if (startDate) updateData.startDate = new Date(startDate);
-    if (endDate) updateData.endDate = new Date(endDate);
+    
+    // Validate dates before adding to updateData
+    if (startDate) {
+      const validStartDate = new Date(startDate);
+      if (isNaN(validStartDate.getTime())) {
+        return res.status(400).json({ error: 'Invalid start date format' });
+      }
+      updateData.startDate = validStartDate;
+    }
+    if (endDate) {
+      const validEndDate = new Date(endDate);
+      if (isNaN(validEndDate.getTime())) {
+        return res.status(400).json({ error: 'Invalid end date format' });
+      }
+      updateData.endDate = validEndDate;
+    }
+    
     if (isActive !== undefined) updateData.isActive = isActive;
     if (terms) updateData.terms = terms;
 

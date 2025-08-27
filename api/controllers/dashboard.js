@@ -6,6 +6,8 @@ const getDashboardStats = async (req, res) => {
   try {
     // Get total number of players
     const totalPlayers = await prisma.player.count();
+
+    const allPromotions = await prisma.promotion.findMany();
     
     // Get total number of games
     const totalGames = await prisma.game.count();
@@ -85,6 +87,8 @@ const getDashboardStats = async (req, res) => {
       wonGamesCount: player.wonGames.length
     }));
 
+    
+
 
     // get deposits
     const deposits = await prisma.deposit.findMany();
@@ -105,6 +109,55 @@ const getDashboardStats = async (req, res) => {
         amount: true
       }
     });
+
+    // Calculate 30 days ago from now
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Get data for last 30 days
+    const gamesLast30Days = await prisma.game.count({
+      where: {
+        createdAt: {
+          gte: thirtyDaysAgo
+        }
+      }
+    });
+
+    const playersLast30Days = await prisma.player.count({
+      where: {
+        joinedAt: {
+          gte: thirtyDaysAgo
+        }
+      }
+    });
+
+    const depositsLast30Days = await prisma.deposit.count({
+      where: {
+        createdAt: {
+          gte: thirtyDaysAgo
+        }
+      }
+    });
+
+    const withdrawalsLast30Days = await prisma.withdrawal.count({
+      where: {
+        createdAt: {
+          gte: thirtyDaysAgo
+        }
+      }
+    });
+
+    const revenueLast30Days = await prisma.deposit.aggregate({
+      where: {
+        createdAt: {
+          gte: thirtyDaysAgo
+        },
+        status: 'completed'
+      },
+      _sum: {
+        amount: true
+      }
+    });
     
     // Format the response
     const stats = {
@@ -117,11 +170,17 @@ const getDashboardStats = async (req, res) => {
         return acc;
       }, {}),
       recentGames,
-    topPlayers: topPlayersWithCount,
+      topPlayers: topPlayersWithCount,
+      allPromotions,
       deposits: deposits.length,
       withdrawals: withdrawals.length,
       totalDeposits: totalDeposits._sum.amount || 0,
-      totalWithdrawals: totalWithdrawals._sum.amount || 0
+      totalWithdrawals: totalWithdrawals._sum.amount || 0,
+      gamesLast30Days,
+      playersLast30Days,
+      depositsLast30Days,
+      withdrawalsLast30Days,
+      revenueLast30Days 
     };
     
     res.json(stats);
@@ -231,6 +290,55 @@ const getDashboardRecentStats = async (req, res) => {
       },
       _sum: {
         balance: true
+      }
+    });
+
+    // Calculate 30 days ago from now
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Get data for last 30 days
+    const gamesLast30Days = await prisma.game.count({
+      where: {
+        createdAt: {
+          gte: thirtyDaysAgo
+        }
+      }
+    });
+
+    const playersLast30Days = await prisma.player.count({
+      where: {
+        joinedAt: {
+          gte: thirtyDaysAgo
+        }
+      }
+    });
+
+    const depositsLast30Days = await prisma.deposit.count({
+      where: {
+        createdAt: {
+          gte: thirtyDaysAgo
+        }
+      }
+    });
+
+    const withdrawalsLast30Days = await prisma.withdrawal.count({
+      where: {
+        createdAt: {
+          gte: thirtyDaysAgo
+        }
+      }
+    });
+
+    const revenueLast30Days = await prisma.deposit.aggregate({
+      where: {
+        createdAt: {
+          gte: thirtyDaysAgo
+        },
+        status: 'completed'
+      },
+      _sum: {
+        amount: true
       }
     });
 

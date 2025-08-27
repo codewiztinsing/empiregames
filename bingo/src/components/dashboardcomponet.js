@@ -1,6 +1,9 @@
 import { Users, Play, DollarSign, ArrowDown, ArrowUp, Edit, Trash2 } from "lucide-react";
-import { getDashboardStats, getDashboardRecentStats } from "../services/api";
-import { useState, useEffect } from "react";
+
+  import { getDashboardStats, getDashboardRecentStats,deleteApiPromotion,createApiPromotion} from "../services/api";
+  import { useState, useEffect } from "react";
+  import PromotionEditModal from "./promotionEditModal";
+  import PromotionAddModal from "./PromotionAddModal";
 
 
 
@@ -24,12 +27,38 @@ function DashboardComponet() {
   const [activePromotions, setActivePromotions] = useState([]);
   const [scheduledPromotions, setScheduledPromotions] = useState([]);
   const [inactivePromotions, setInactivePromotions] = useState([]);
+  const [allPromotions, setAllPromotions] = useState([]);
   const [quickStats, setQuickStats] = useState({
     activePromotions: 0,
     usersEngaged: 0,
     bonusAwarded: 0,
     conversionRate: 0
   });
+  const [editPromotionId, setEditPromotionId] = useState(null);
+  const [editPromotionModal, setEditPromotionModal] = useState(false);
+  const [addPromotionModal, setAddPromotionModal] = useState(false);
+  const handlePromotionSave = (promotion) => {
+    console.log("handlePromotionSave ",promotion);
+    createApiPromotion(promotion).then(response => {
+      console.log("Promotion created successfully:", response.data);
+      // Refresh the promotions data
+      getDashboardStats().then(refreshResponse => {
+        setDashboardStats(refreshResponse.data);
+        setActivePromotions(refreshResponse.data.activePromotions);
+        setScheduledPromotions(refreshResponse.data.scheduledPromotions);
+        setInactivePromotions(refreshResponse.data.inactivePromotions);
+        setAllPromotions(refreshResponse.data.allPromotions);
+        setQuickStats({
+          activePromotions: refreshResponse.data.activePromotions || 0,
+          usersEngaged: refreshResponse.data.usersEngaged || 0,
+          bonusAwarded: refreshResponse.data.bonusAwarded || 0,
+          conversionRate: refreshResponse.data.conversionRate || 0
+        });
+      });
+      // Close the modal
+      setAddPromotionModal(false);
+    });
+  }
 
   useEffect(() => {
     getDashboardStats().then(response => {
@@ -41,6 +70,16 @@ function DashboardComponet() {
       setRevenue(response.data.totalBalance);
       setDeposits(response.data.deposits);
       setWithdrawals(response.data.withdrawals);
+      setActivePromotions(response.data.activePromotions);
+      setScheduledPromotions(response.data.scheduledPromotions);
+      setInactivePromotions(response.data.inactivePromotions);
+      setAllPromotions(response.data.allPromotions);
+      setQuickStats({
+        activePromotions: response.data.activePromotions || 0,
+        usersEngaged: response.data.usersEngaged || 0,
+        bonusAwarded: response.data.bonusAwarded || 0,
+        conversionRate: response.data.conversionRate || 0
+      });   
     });
   }, []);
 
@@ -65,6 +104,7 @@ function DashboardComponet() {
       setActivePromotions(response.data.activePromotions || []);
       setScheduledPromotions(response.data.scheduledPromotions || []);
       setInactivePromotions(response.data.inactivePromotions || []);
+      setAllPromotions(response.data.allPromotions || []);
       setQuickStats({
         activePromotions: response.data.activePromotions || 0,
         usersEngaged: response.data.usersEngaged || 0,
@@ -74,8 +114,28 @@ function DashboardComponet() {
     });
   }
 
-  return (
+  const deletePromotion = (id) => {
+    deleteApiPromotion(id).then(response => {
+      // Show success toast message
+      const message = response.data.message || 'Promotion deleted successfully';
+      // You would need to implement toast functionality here
+      console.log(message);
+      
+      // Update the state to remove the deleted promotion
+      setAllPromotions(prevPromotions => 
+        prevPromotions.filter(promotion => promotion.id !== id)
+      );
+    });
+  }
 
+  const editPromotion = (id) => {
+    setEditPromotionId(id);
+    setEditPromotionModal(true);
+    console.log("editPromotion ",id);
+  }
+
+  return (
+<> 
 <main className="flex-1 p-6 overflow-y-auto">
 <div className="flex justify-between items-center mb-6">
   <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -198,71 +258,35 @@ function DashboardComponet() {
 <div className="bg-gray-800 p-6 rounded-xl shadow">
   <div className="flex justify-between items-center mb-6">
     <h3 className="text-lg font-semibold">Active Promotions</h3>
-    <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors">
+    <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors" onClick={() => setAddPromotionModal(true)}>
       Add New Promotion
     </button>
   </div>
   
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {/* Promotion Card 1 */}
-    <div className="bg-gray-700 p-4 rounded-lg">
-      <div className="h-32 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg mb-4 flex items-center justify-center">
-        <span className="text-white font-bold text-lg">50% BONUS</span>
-      </div>
-      <h4 className="font-semibold mb-2">Welcome Bonus</h4>
-      <p className="text-gray-400 text-sm mb-3">Get 50% bonus on your first deposit</p>
-      <div className="flex justify-between items-center text-sm">
-        <span className="text-green-400">Active</span>
-        <div className="flex space-x-2">
-          <button className="text-blue-400 hover:text-blue-300">
-            <Edit size={16} />
-          </button>
-          <button className="text-red-400 hover:text-red-300">
-            <Trash2 size={16} />
-          </button>
-        </div>
-      </div>
-    </div>
-
-    {/* Promotion Card 2 */}
-    <div className="bg-gray-700 p-4 rounded-lg">
-      <div className="h-32 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg mb-4 flex items-center justify-center">
-        <span className="text-white font-bold text-lg">FREE SPINS</span>
-      </div>
-      <h4 className="font-semibold mb-2">Daily Free Spins</h4>
-      <p className="text-gray-400 text-sm mb-3">10 free spins every day for active players</p>
-      <div className="flex justify-between items-center text-sm">
-        <span className="text-green-400">Active</span>
-        <div className="flex space-x-2">
-          <button className="text-blue-400 hover:text-blue-300">
-            <Edit size={16} />
-          </button>
-          <button className="text-red-400 hover:text-red-300">
-            <Trash2 size={16} />
-          </button>
-        </div>
-      </div>
-    </div>
-
-    {/* Promotion Card 3 */}
-    <div className="bg-gray-700 p-4 rounded-lg">
+   
+  {
+    allPromotions.map((promotion) => (
+      <div className="bg-gray-700 p-4 rounded-lg">
       <div className="h-32 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg mb-4 flex items-center justify-center">
-        <span className="text-white font-bold text-lg">CASHBACK</span>
+        <span className="text-white font-bold text-lg">{promotion.title.length > 20 ? promotion.title.substring(0, 20) + '...' : promotion.title}</span>
       </div>
-      <h4 className="font-semibold mb-2">Weekend Cashback</h4>
-      <p className="text-gray-400 text-sm mb-3">20% cashback on weekend losses</p>
+      <h4 className="font-semibold mb-2">{promotion.title.length > 20 ? promotion.title.substring(0, 20) + '...' : promotion.title}</h4>
+      <p className="text-gray-400 text-sm mb-3">{promotion.description.length > 20 ? promotion.description.substring(0, 20) + '...' : promotion.description}</p>
       <div className="flex justify-between items-center text-sm">
-        <span className="text-yellow-400">Scheduled</span>
+        <span className="text-yellow-400">{promotion.status}</span>
         <div className="flex space-x-2">
           <button className="text-blue-400 hover:text-blue-300">
-            <Edit size={16} />
+            <Edit size={16}  onClick={() => editPromotion(promotion.id)}/>
           </button>
           <button className="text-red-400 hover:text-red-300">
-            <Trash2 size={16} />
+            <Trash2 size={16}  onClick={() => deletePromotion(promotion.id)}/>
           </button>
         </div>
       </div>
     </div>
+    ))
+  }
   </div>
 
   <div className="mt-6 p-4 bg-gray-700 rounded-lg">
@@ -290,8 +314,20 @@ function DashboardComponet() {
 
 
 </main>
-        
-    )
+<PromotionEditModal
+  isOpen={editPromotionModal}
+  onClose={() => setEditPromotionModal(false)}
+  promotionId={editPromotionId}
+  promotion={allPromotions.find(promotion => promotion.id === editPromotionId)}
+  onSave={handlePromotionSave}
+/>
+<PromotionAddModal
+  isOpen={addPromotionModal}
+  onClose={() => setAddPromotionModal(false)}
+  onSave={handlePromotionSave}
+/>
+</>
+)
 }
 
 export default DashboardComponet;
