@@ -1,5 +1,4 @@
-
-import { Users, Play, DollarSign, ArrowDown, ArrowUp } from "lucide-react";
+import { Users, Play, DollarSign, ArrowDown, ArrowUp, Edit, Trash2 } from "lucide-react";
 import { getDashboardStats, getDashboardRecentStats } from "../services/api";
 import { useState, useEffect } from "react";
 
@@ -17,6 +16,21 @@ function DashboardComponet() {
   const [timeRange, setTimeRange] = useState("last 30days");
   const [startDate, setStartDate] = useState(new Date().toLocaleDateString());
   const [endDate, setEndDate] = useState(new Date().toLocaleDateString());
+  const [playersJoinedLast30Days, setPlayersJoinedLast30Days] = useState(0);
+  const [gamesLast30Days, setGamesLast30Days] = useState(0);
+  const [revenueLast30Days, setRevenueLast30Days] = useState(0);
+  const [depositsLast30Days, setDepositsLast30Days] = useState(0);
+  const [withdrawalsLast30Days, setWithdrawalsLast30Days] = useState(0);
+  const [activePromotions, setActivePromotions] = useState([]);
+  const [scheduledPromotions, setScheduledPromotions] = useState([]);
+  const [inactivePromotions, setInactivePromotions] = useState([]);
+  const [quickStats, setQuickStats] = useState({
+    activePromotions: 0,
+    usersEngaged: 0,
+    bonusAwarded: 0,
+    conversionRate: 0
+  });
+
   useEffect(() => {
     getDashboardStats().then(response => {
       console.log("dashboardStats ",response.data);
@@ -43,6 +57,20 @@ function DashboardComponet() {
       setRevenue(response.data.totalBalance || 0);
       setDeposits(response.data.deposits || 0);
       setWithdrawals(response.data.withdrawals || 0);
+      setPlayersJoinedLast30Days(response.data.playersJoinedLast30Days || 0);
+      setGamesLast30Days(response.data.gamesLast30Days || 0);
+      setRevenueLast30Days(response.data.revenueLast30Days || 0);
+      setDepositsLast30Days(response.data.depositsLast30Days || 0);
+      setWithdrawalsLast30Days(response.data.withdrawalsLast30Days || 0);
+      setActivePromotions(response.data.activePromotions || []);
+      setScheduledPromotions(response.data.scheduledPromotions || []);
+      setInactivePromotions(response.data.inactivePromotions || []);
+      setQuickStats({
+        activePromotions: response.data.activePromotions || 0,
+        usersEngaged: response.data.usersEngaged || 0,
+        bonusAwarded: response.data.bonusAwarded || 0,
+        conversionRate: response.data.conversionRate || 0
+      });
     });
   }
 
@@ -114,6 +142,153 @@ function DashboardComponet() {
     <span className="text-gray-400 text-sm">Total Withdrawals: {withdrawals}</span>
   </div>
 </div>
+
+{/* Last 30 Days Summary */}
+<h2 className="text-xl font-bold mb-4 mt-8">Last 30 Days Summary</h2>
+<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div className="bg-gray-800 p-6 rounded-xl shadow flex flex-col">
+    <div className="flex justify-between items-center">
+      <h2 className="text-lg font-semibold">New Players</h2>
+      <Users className="text-blue-400" />
+    </div>
+    <p className="text-2xl font-bold mt-2">{playersJoinedLast30Days || 0}</p>
+    <span className="text-gray-400 text-sm">Last 30 days</span>
+  </div>
+
+  <div className="bg-gray-800 p-6 rounded-xl shadow flex flex-col">
+    <div className="flex justify-between items-center">
+      <h2 className="text-lg font-semibold">Games Played</h2>
+      <Play className="text-green-400" />
+    </div>
+    <p className="text-2xl font-bold mt-2">{gamesLast30Days || 0}</p>
+    <span className="text-gray-400 text-sm">Last 30 days</span>
+  </div>
+
+  <div className="bg-gray-800 p-6 rounded-xl shadow flex flex-col">
+    <div className="flex justify-between items-center">
+      <h2 className="text-lg font-semibold">Revenue</h2>
+      <DollarSign className="text-yellow-400" />
+    </div>
+    <p className="text-2xl font-bold mt-2">{revenueLast30Days || 0}</p>
+    <span className="text-gray-400 text-sm">Last 30 days</span>
+  </div>
+</div>
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+  <div className="bg-gray-800 p-6 rounded-xl shadow flex flex-col">
+    <div className="flex justify-between items-center">
+      <h2 className="text-lg font-semibold">Deposits</h2>
+      <ArrowDown className="text-blue-400" />
+    </div>
+    <p className="text-2xl font-bold mt-2">{depositsLast30Days || 0}</p>
+    <span className="text-gray-400 text-sm">Last 30 days</span>
+  </div>
+
+  <div className="bg-gray-800 p-6 rounded-xl shadow flex flex-col">
+    <div className="flex justify-between items-center">
+      <h2 className="text-lg font-semibold">Withdrawals</h2>
+      <ArrowUp className="text-red-400" />
+    </div>
+    <p className="text-2xl font-bold mt-2">{withdrawalsLast30Days || 0}</p>
+    <span className="text-gray-400 text-sm">Last 30 days</span>
+  </div>
+</div>
+
+<h2 className="text-xl font-bold mb-4 mt-8">Promotions Management</h2>
+<div className="bg-gray-800 p-6 rounded-xl shadow">
+  <div className="flex justify-between items-center mb-6">
+    <h3 className="text-lg font-semibold">Active Promotions</h3>
+    <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors">
+      Add New Promotion
+    </button>
+  </div>
+  
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {/* Promotion Card 1 */}
+    <div className="bg-gray-700 p-4 rounded-lg">
+      <div className="h-32 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg mb-4 flex items-center justify-center">
+        <span className="text-white font-bold text-lg">50% BONUS</span>
+      </div>
+      <h4 className="font-semibold mb-2">Welcome Bonus</h4>
+      <p className="text-gray-400 text-sm mb-3">Get 50% bonus on your first deposit</p>
+      <div className="flex justify-between items-center text-sm">
+        <span className="text-green-400">Active</span>
+        <div className="flex space-x-2">
+          <button className="text-blue-400 hover:text-blue-300">
+            <Edit size={16} />
+          </button>
+          <button className="text-red-400 hover:text-red-300">
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {/* Promotion Card 2 */}
+    <div className="bg-gray-700 p-4 rounded-lg">
+      <div className="h-32 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg mb-4 flex items-center justify-center">
+        <span className="text-white font-bold text-lg">FREE SPINS</span>
+      </div>
+      <h4 className="font-semibold mb-2">Daily Free Spins</h4>
+      <p className="text-gray-400 text-sm mb-3">10 free spins every day for active players</p>
+      <div className="flex justify-between items-center text-sm">
+        <span className="text-green-400">Active</span>
+        <div className="flex space-x-2">
+          <button className="text-blue-400 hover:text-blue-300">
+            <Edit size={16} />
+          </button>
+          <button className="text-red-400 hover:text-red-300">
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {/* Promotion Card 3 */}
+    <div className="bg-gray-700 p-4 rounded-lg">
+      <div className="h-32 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg mb-4 flex items-center justify-center">
+        <span className="text-white font-bold text-lg">CASHBACK</span>
+      </div>
+      <h4 className="font-semibold mb-2">Weekend Cashback</h4>
+      <p className="text-gray-400 text-sm mb-3">20% cashback on weekend losses</p>
+      <div className="flex justify-between items-center text-sm">
+        <span className="text-yellow-400">Scheduled</span>
+        <div className="flex space-x-2">
+          <button className="text-blue-400 hover:text-blue-300">
+            <Edit size={16} />
+          </button>
+          <button className="text-red-400 hover:text-red-300">
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div className="mt-6 p-4 bg-gray-700 rounded-lg">
+    <h4 className="font-semibold mb-3">Quick Stats</h4>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+      <div>
+        <p className="text-2xl font-bold text-blue-400">3</p>
+        <p className="text-gray-400 text-sm">Active Promotions</p>
+      </div>
+      <div>
+        <p className="text-2xl font-bold text-green-400">1,247</p>
+        <p className="text-gray-400 text-sm">Users Engaged</p>
+      </div>
+      <div>
+        <p className="text-2xl font-bold text-yellow-400">$15,680</p>
+        <p className="text-gray-400 text-sm">Bonus Awarded</p>
+      </div>
+      <div>
+        <p className="text-2xl font-bold text-purple-400">24.5%</p>
+        <p className="text-gray-400 text-sm">Conversion Rate</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 </main>
         
     )

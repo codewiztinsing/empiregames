@@ -4,7 +4,6 @@ const { getDashboardStats, getDashboardRecentStats } = require('../controllers/d
 
 // GET /api/v1/dashboard/stats - Get dashboard statistics
 router.get('/stats', getDashboardStats);
-
 // GET /api/v1/dashboard/stats/recent - Get dashboard recent statistics
 router.get('/stats/recent', getDashboardRecentStats);
 

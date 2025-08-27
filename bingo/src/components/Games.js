@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getGames } from '../services/api';
-import { ChevronLeft, ChevronRight, Calendar, Users, Clock, DollarSign } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Users, Clock, DollarSign, Play } from 'lucide-react';
 
 function Games() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -8,6 +8,8 @@ function Games() {
   const [allGames, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAddGame, setShowAddGame] = useState(false);
+
 
   useEffect(() => {
     getGames()
@@ -31,6 +33,10 @@ function Games() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const handleAddGame = () => {
+    setShowAddGame(true);
+  }
 
 
 
@@ -56,12 +62,121 @@ function Games() {
 
   return (
     <div className="flex-1 p-6 overflow-y-auto">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-white">Games Management</h1>
-         
+      {/* Filters Section */}
+      <div className="mb-6 bg-gray-800 rounded-lg p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+            <select className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+              <option value="">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Completed">Completed</option>
+              <option value="Scheduled">Scheduled</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Game Type</label>
+            <select className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+              <option value="">All Types</option>
+              <option value="Traditional 75-Ball">Traditional 75-Ball</option>
+              <option value="Speed Bingo">Speed Bingo</option>
+              <option value="Progressive">Progressive</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Date Range</label>
+            <select className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+              <option value="">All Time</option>
+              <option value="today">Today</option>
+              <option value="last7days">Last 7 Days</option>
+              <option value="last30days">Last 30 Days</option>
+              <option value="last90days">Last 90 Days</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Search</label>
+            <input
+              type="text"
+              placeholder="Search games..."
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+        </div>
+        
+        <div className="flex justify-between items-center mt-4">
+          <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white transition-colors">
+            Apply Filters
+          </button>
+          <button className="text-gray-400 hover:text-white transition-colors">
+            Clear All
+          </button>
+        </div>
+      </div>
+
+      {/* Game Statistics Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">Total Games</h3>
+              <p className="text-3xl font-bold text-blue-400">{allGames.length}</p>
+            </div>
+            <div className="bg-blue-500 p-3 rounded-full">
+              <Play className="w-6 h-6 text-white" />
+            </div>
+          </div>
         </div>
 
+        <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">Active Games</h3>
+              <p className="text-3xl font-bold text-green-400">
+                {allGames.filter(game => game.status === 'Active').length}
+              </p>
+            </div>
+            <div className="bg-green-500 p-3 rounded-full">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">Total Players</h3>
+              <p className="text-3xl font-bold text-purple-400">
+                {allGames.reduce((total, game) => total + (game.players || 0), 0)}
+              </p>
+            </div>
+            <div className="bg-purple-500 p-3 rounded-full">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">Total Prize Pool</h3>
+              <p className="text-3xl font-bold text-yellow-400">
+                {allGames.reduce((total, game) => total + parseFloat(game.prize?.replace(/[^0-9.-]+/g, '') || 0), 0).toFixed(2)} ETB
+              </p>
+            </div>
+            <div className="bg-yellow-500 p-3 rounded-full">
+              <DollarSign className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+      <div className="max-w-7xl mx-auto">
+       
         <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -194,54 +309,7 @@ function Games() {
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
-          <div className="bg-gray-800 p-6 rounded-xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Total Games</h3>
-              <div className="bg-blue-600 p-2 rounded-lg">
-                <Calendar className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-white mt-2">{allGames.length}</p>
-          </div>
-
-          <div className="bg-gray-800 p-6 rounded-xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Active Games</h3>
-              <div className="bg-green-600 p-2 rounded-lg">
-                <Clock className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-white mt-2">
-              {allGames.filter(game => game.status === 'Active').length}
-            </p>
-          </div>
-
-          <div className="bg-gray-800 p-6 rounded-xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Total Players</h3>
-              <div className="bg-purple-600 p-2 rounded-lg">
-                <Users className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-white mt-2">
-              {allGames.reduce((total, game) => total + game.players, 0)}
-            </p>
-          </div>
-
-          <div className="bg-gray-800 p-6 rounded-xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Total Prizes</h3>
-              <div className="bg-yellow-600 p-2 rounded-lg">
-                <DollarSign className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-white mt-2">
-              ETB {allGames.reduce((total, game) => total + parseFloat(game.prize.replace('ETB ', '').replace(',', '')), 0).toLocaleString()}
-            </p>
-          </div>
-        </div>
+       
       </div>
     </div>
   );

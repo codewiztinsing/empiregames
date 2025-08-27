@@ -7,6 +7,9 @@ import Players from "../components/Players";
 import Referrals from "../components/Referrals";
 import Payments from "../components/Payments";
 import Logout from "../components/Logout";
+import Messages from "../components/Messages";
+import ContactInfo from "../components/ContactInfo";
+import BingoCard from "../components/BingoCard";
  function Dashboard() {
     const [display, setDisplay] = useState("dashboard");
 
@@ -25,6 +28,8 @@ import Logout from "../components/Logout";
           <button className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-lg" onClick={() => setDisplay("players")}>Players</button>
           <button className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-lg" onClick={() => setDisplay("bingo-cards")}>Bingo Cards</button>
           <button className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-lg" onClick={() => setDisplay("referrals")}>Referrals</button>
+          <button className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-lg" onClick={() => setDisplay("messages")}>Messages</button>
+          <button className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-lg" onClick={() => setDisplay("contact-info")}>Contact Info</button>
           <button className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-lg" onClick={() => setDisplay("logout")}>Logout</button>
         </nav>
       </aside>
@@ -35,8 +40,11 @@ import Logout from "../components/Logout";
       {display === "games" && <Games />}
       {display === "transactions" && <Transactions />}
       {display === "players" && <Players />}
+      {display === "bingo-cards" && <BingoCard />}
       {display === "referrals" && <Referrals />}
       {display === "payments" && <Payments />}
+      {display === "messages" && <Messages />}
+      {display === "contact-info" && <ContactInfo />}
       {display === "logout" && <Logout />}
     </div>
   );

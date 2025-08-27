@@ -1,7 +1,7 @@
 import requests
 import logging
 from typing import Dict, Any, Optional
-
+from regiser import random_username, random_phone_number, random_telegram_id
 logger = logging.getLogger(__name__)
 
 
@@ -142,5 +142,8 @@ def create_player_register_client(base_url: str) -> PlayerRegisterClient:
 
 if __name__ == "__main__":
     client = create_player_register_client("http://localhost:5000")
-    print(client.register_player(1464395536, "abdul", "1234567891"))
+    name= random_username()
+    phone = random_phone_number()
+    telegram_id = random_telegram_id()
+    print(client.register_player(telegram_id, name, phone))
    

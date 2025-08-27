@@ -1,111 +1,108 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { getGames } from '../services/api';
+import AddGame from './AddGame';
 
-const gameTypes = [
-  {
-    id: 1,
-    name: 'Classic Bingo 75 Ball',
-    description: 'Traditional 5x5 bingo with standard patterns',
-    price: 'ETB 10.00',
-    players: '1-400',
-    duration: '5-15 min',
-    pattern: 'Any Line, Full House',
-    difficulty: 'Beginner',
-    color: 'bg-blue-600'
-  },
-  {
-    id: 2,
-    name: 'Classic Bingo 75 Ball',
-    description: 'Traditional 5x5 bingo with standard patterns',
-    price: 'ETB 20.00',
-    players: '1-400',
-    duration: '5-15 min',
-    pattern: 'Any Line, Full House',
-    difficulty: 'Intermediate',
-    color: 'bg-green-600'
-  },
-  {
-    id: 3,
-    name: 'Classic Bingo 75 Ball',
-    description: 'Traditional 5x5 bingo with standard patterns',
-    price: 'ETB 50.00',
-    players: '1-400',
-    duration: '5-15 min',
-    pattern: 'Any Line, Full House',
-    difficulty: 'Advanced',
-    color: 'bg-purple-600'
-  },
-  {
-    id: 4,
-    name: 'Classic Bingo 75 Ball',
-    description: 'Traditional 5x5 bingo with standard patterns',
-    price: 'ETB 100.00',
-    players: '1-400',
-    duration: '5-15 min',
-    pattern: 'Any Line, Full House',
-    difficulty: 'Professional',
-    color: 'bg-yellow-600'
+const Games = () => {
+  const [games, setGames] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddGame, setShowAddGame] = useState(false);
+
+  useEffect(() => {
+    fetchGames();
+  }, []);
+
+  const fetchGames = async () => {
+    try {
+      const response = await getGames();
+      setGames(response.data);
+    } catch (error) {
+      console.error('Error fetching games:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (gameId) => {
+    // Edit functionality
+    console.log('Edit game:', gameId);
+  };
+
+  const handleDelete = (gameId) => {
+    // Delete functionality
+    console.log('Delete game:', gameId);
+    // Example: remove from UI (local state)
+    setGames((prev) => prev.filter((g) => g.id !== gameId));
+  };
+
+  if (loading) {
+    return <div className="text-white">Loading games...</div>;
   }
-];
 
-function GameTypes() {
   return (
-    <div className="p-6 bg-gray-900 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Game Types</h1>
-          <p className="text-gray-400">Choose your preferred bingo game style</p>
-        </div>
+    <div className="min-w-3/4 p-6 m-auto max-h-screen overflow-y-auto">
+      <h1 className="text-2xl font-bold text-white mb-6">Game Management</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {gameTypes.map((game) => (
-            <div key={game.id} className="bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-              <div className={`${game.color} p-4`}>
-                <h3 className="text-xl font-bold text-white">{game.name}</h3>
-                <span className={`inline-block px-2 py-1 rounded text-xs font-medium mt-2 ${
-                  game.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
-                  game.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                  game.difficulty === 'Hard' ? 'bg-orange-100 text-orange-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                  {game.difficulty}
-                </span>
-              </div>
-              
-              <div className="p-6">
-                <p className="text-gray-300 mb-4 text-sm">{game.description}</p>
-                
-                <div className="space-y-3 mb-6">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Price:</span>
-                    <span className="text-white font-semibold">{game.price}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Players:</span>
-                    <span className="text-white">{game.players}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Duration:</span>
-                    <span className="text-white">{game.duration}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Pattern:</span>
-                    <span className="text-white">{game.pattern}</span>
+      <div className="mb-6">
+        <button
+          className="bg-green-500 hover:bg-green-600 px-6 py-2 rounded text-white font-medium transition-colors"
+          onClick={() => setShowAddGame(true)}
+        >
+          Add New Game
+        </button>
+      </div>
+
+      {showAddGame ? (
+        <AddGame />
+      ) : (
+        <div className="space-y-4">
+          {games.map((game, index) => (
+            <div key={game.id} className="bg-gray-800 rounded-lg p-4 text-white">
+              <div className="flex justify-between items-center">
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold">
+                    Room ID: room_{game.id || index + 10}
+                  </h3>
+
+                  <div className="grid grid-cols-2 gap-6 text-sm">
+                    <div>
+                      <p>Stake: {game.betAmount || '10.00'} birr</p>
+                      <p>Min Players: {game.minPlayers || 2}</p>
+                      <p>Draw Speed: {game.drawSpeed || 3} seconds</p>
+                    </div>
+                    <div>
+                      <p>Commission: {game.commission || '70.00'}%</p>
+                      <p>Max Players: {game.maxPlayers || 100}</p>
+                    </div>
                   </div>
                 </div>
-                
-               
+
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleEdit(game.id)}
+                    className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded text-white transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(game.id)}
+                    className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded text-white transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}
-        </div>
 
-      
-      </div>
+          {games.length === 0 && (
+            <div className="text-gray-400 text-center py-8">
+              No games found
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
-}
+};
 
-export default GameTypes;
+export default Games;

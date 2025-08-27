@@ -1,11 +1,13 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "https://server.akerbingo.com/",
+  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5000",
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+
 
 //14603570
 // Habtamu Hailemichael Belew
@@ -15,6 +17,7 @@ export const getGames = () => api.get("/games");
 export const getDashboardStats = () => api.get("/dashboard/stats");
 export const getDashboardRecentStats = (timeRange) => api.get(`/dashboard/stats/recent?timeRange=${timeRange}`);
 export const createUser = (data) => api.post("/users", data);
+export const createGame = (data) => api.post("/games", data);
 export const getUser = (telegramId) => api.get(`/users/${telegramId}`);
 export const getAllUsers = () => api.get("/users");
 export const updateUser = (telegramId, data) => api.put(`/users/${telegramId}`, data);
