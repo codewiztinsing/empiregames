@@ -52,7 +52,7 @@ def update_player_balance(base_url: str, telegram_id: str, new_balance: float) -
 if __name__ == "__main__":
     # Example usage
     base_url = "http://localhost:5000"
-    telegram_id = "1464395537"
+    telegram_id = 1464395537
     
  
     # Update balance

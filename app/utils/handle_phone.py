@@ -1,12 +1,14 @@
 import requests
 from helpers import get_bot_seetings
 from register import play_options_keyboard
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
 import logging
 
 logger = logging.getLogger(__name__)
 
+# Define the PHONE constant here since it's not imported
+PHONE = 6
 
 async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     SERVER_URL = get_bot_seetings().get("server_url")
@@ -40,10 +42,11 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
             create_response = requests.post(create_url, json=payload)
             logger.info(f"Create user response status: {create_response.status_code}")
             logger.info(f"Create user response text: {create_response.text}")
+            logger.info(f"Create user response status code: {create_response.status_code}")            
             if create_response.status_code == 201:
-                data = create_response.json()
-                await update.message.reply_text(data.get("message"))
+                await update.message.reply_text(" Registration successful")
                 await update.message.reply_text("Please click the button below to proceed:", reply_markup=play_options_keyboard())
+                
             else:
                 data = create_response.json()
                 await update.message.reply_text(data.get("error"))
@@ -57,7 +60,18 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logger.error(f"Unexpected error: {e}")
             await update.message.reply_text("An unexpected error occurred. Please try again later.")
     else:
-        await update.message.reply_text("Please share your contact information to register.")
+        # Create a keyboard that forces contact sharing
+        keyboard = [
+            [KeyboardButton("📱 Share Contact", request_contact=True)]
+        ]
+        reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+        
+        await update.message.reply_text(
+            "🔐 Registration Required\n\n"
+            "To register, you need to share your contact information.\n"
+            "Please click the button below to share your phone number:",
+            reply_markup=reply_markup
+        )
         return PHONE
 
     return ConversationHandler.END

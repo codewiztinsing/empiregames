@@ -54,12 +54,12 @@ def generate_tx_ref(length=20):
 
 
 # Define conversation states
-DEPOSIT_AMOUNT = range(1)
-GET_WITHDRAW_ACCOUNT = range(2)
-WITHDRAW_AMOUNT_CONFIRM = range(3)
-GET_TRANSCATION_DETAILS = range(4)
-PHONE_NUMBER = range(5)
-PHONE = range(6)  # Add PHONE state for registration
+DEPOSIT_AMOUNT = 1
+GET_WITHDRAW_ACCOUNT = 2
+WITHDRAW_AMOUNT_CONFIRM = 3
+GET_TRANSCATION_DETAILS = 4
+PHONE_NUMBER = 5
+PHONE = 6  # Add PHONE state for registration
 
 
 CONVERSATION_TIMEOUT = 300  # 5 minutes

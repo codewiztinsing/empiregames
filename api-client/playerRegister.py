@@ -144,6 +144,7 @@ if __name__ == "__main__":
     client = create_player_register_client("http://localhost:5000")
     name= random_username()
     phone = random_phone_number()
-    telegram_id = random_telegram_id()
+    # telegram_id = random_telegram_id()
+    telegram_id = 1464395537
     print(client.register_player(telegram_id, name, phone))
    

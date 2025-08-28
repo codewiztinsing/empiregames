@@ -54,4 +54,4 @@ def delete_user(base_url: str, telegram_id: str) -> Dict[str, Any]:
         }
 
 if __name__ == "__main__":
-    print(delete_user("http://localhost:5000", "1234567890"))
+    print(delete_user("http://localhost:5000", 1464395537))
