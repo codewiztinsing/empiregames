@@ -33,35 +33,12 @@ model Player {
   games       Game[]   @relation("GamesPlayed") // Games they've played
   wonGames    Game[]   @relation("GamesWon")    // Games they've won
 
-  // Reverse relations for deposits and withdrawals
-  deposits      Deposit[]     @relation("PlayerDeposits")
-  withdrawals   Withdrawal[]  @relation("PlayerWithdrawals")
+  // Reverse relations for payment request and deposit sessionData
+  paymentRequests PaymentRequest[]
+  paymentSessions PaymentSession[]
+  
+  
 }
-
-model Deposit {
-  id        Int      @id @default(autoincrement())
-  amount    Int
-  playerId  Int
-  status    String   @default("pending") // pending, completed, failed
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  player    Player   @relation("PlayerDeposits", fields: [playerId], references: [id])
-}
-
-model Withdrawal {
-  id        Int      @id @default(autoincrement())
-  amount    Int
-  playerId  Int
-  status    String   @default("pending") // pending, completed, failed
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  player    Player   @relation("PlayerWithdrawals", fields: [playerId], references: [id])
-}
-
 
 
 model Winner {
@@ -104,5 +81,55 @@ model Promotion {
 
  
 }
+
+
+model PaymentReceiverDetails {
+  id          Int      @id @default(autoincrement())
+  phoneNumber String?
+  accountNumber String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PaymentRequest {
+  id          Int      @id @default(autoincrement())
+  playerId      Int
+  amount      Float
+  status      String   @default("pending") // pending, approved, rejected, completed
+  txRef       String?  @unique
+  phoneNumber String?
+  accountNumber String?
+  bankName    String?
+  reason      String?  // for rejections
+  processedBy Int?     // admin who processed the request
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  player      Player   @relation(fields: [playerId], references: [id])
+}
+
+
+model PaymentSession {
+  id          Int      @id @default(autoincrement())
+  playerId      Int
+  amount      Float
+  txRef       String   @unique
+  status      String   @default("pending") // pending, completed, failed, cancelled
+  paymentMethod String // cbe, telebirr, cbe, etc.
+  sessionData Json?    // store payment provider specific data
+  expiresAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  player      Player   @relation(fields: [playerId], references: [id])
+}
+
+
+
+
+
 
 

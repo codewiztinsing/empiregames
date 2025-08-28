@@ -24,6 +24,7 @@ const dashboardRouter = require('./routes/dashboard');
 const walletRouter = require('./routes/wallet');
 const authRouter = require('./routes/auth');
 const promotionsRouter = require('./routes/promotions');
+const paymentsRouter = require('./routes/payments');
 const ip = require('ip');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -36,6 +37,7 @@ app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/wallet', walletRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/promotions', promotionsRouter);
+app.use('/api/v1/payments', paymentsRouter);
 
 
 const server = http.createServer(app);
