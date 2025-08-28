@@ -28,7 +28,7 @@ from telegram.ext import (
 from datetime import datetime
 from telegram import BotCommand
 from utils.handle_phone import handle_phone
-from helpers import get_numbers_of_games_played,daily_withdrawal_limit,get_user_balance
+from helpers import get_user_balance,get_payment_receivers,initialize_payment_manual,initialize_payment_request
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -136,9 +136,8 @@ def get_available_banks():
     # This is a placeholder - you should implement this to get banks from your API
     return {
         "data": [
-            {"id": "1", "name": "Commercial Bank of Ethiopia"},
-            {"id": "2", "name": "Dashen Bank"},
-            {"id": "3", "name": "Bank of Abyssinia"}
+            {"id": "1", "name": "Telebirr"},
+            {"id": "2", "name": "CBE Bank"}
         ]
     }
 
@@ -178,22 +177,18 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
     logger.info(f"amount {amount}")
  
     try:
-        logger.info(f"wallet url {BACK_URL}/api/v1/wallet/player/{telegram_id}")
+        logger.info(f"wallet url {BACK_URL}/api/v1/users/{telegram_id}")
 
-        wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}').json()
-        balance = float(wallet_response.get('balance', 0))
+        user = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}').json()
+        logger.info(f"user {user.get("balance")}")
+        balance = float(user.get('balance', 0))
         logger.info(f"balance {balance}")
       
         if int(balance) < 20:
             await update.message.reply_text(f"You must leave at least 20 ETB in your wallet. Please enter a smaller amount.")
             return WITHDRAW_AMOUNT_CONFIRM
 
-        limit =  daily_withdrawal_limit(telegram_id)
-        
-        logger.info(f"daily_withdrawal_limit {limit}")
-        if limit > 3:
-            await update.message.reply_text(f"You have reached the daily withdrawal limit. Please try again tomorrow.")
-            return WITHDRAW_AMOUNT_CONFIRM
+      
 
         if int(amount) > 150:
             await update.message.reply_text(f"Withdrawal amount must be less than 150 ETB")
@@ -202,13 +197,6 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         if int(amount) < 100:
             await update.message.reply_text(f"Withdrawal amount must be at least 100 ETB")
-            return WITHDRAW_AMOUNT_CONFIRM
-
-        game_played = get_numbers_of_games_played(telegram_id)
-        logger.info(f"game_played {game_played}")
-
-        if game_played < 5:
-            await update.message.reply_text(f"You must play at least 5 games before withdrawing. Please play more games.")
             return WITHDRAW_AMOUNT_CONFIRM
 
         
@@ -228,7 +216,7 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             logger.info(f"banks_to_bank_id {banks_to_bank_id}")
             logger.info(f"bank id  {context.user_data['bank_id']}")
             await update.message.reply_text(
-                f"Please enter your {bank_name} number  where you want to receive the withdrawal:"
+                f"Please enter your phone or account number  where you want to receive the withdrawal:"
             )
             return GET_WITHDRAW_ACCOUNT
 
@@ -247,12 +235,24 @@ async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYP
     account_number = update.message.text
     BACK_URL = get_bot_seetings().get("bot_url")
     try:
-        withdraw_amount = float(context.user_data['withdraw_amount'])
-        # deduct amount from user's balance
-        res = requests.put(f'{BACK_URL}/api/v1/wallet/player/{update.effective_user.id}/', json={'amount': withdraw_amount,"action":"withdraw"})
-        ###
-        await update.message.reply_text("Withdraw is sucessfull.please wait message from your bank or telebirr")
-        transfer_funds(f"{update.effective_user.first_name} {update.effective_user.last_name}", account_number, withdraw_amount, "ETB", generate_tx_ref(), context.user_data['bank_id'])
+        logger.info(f"account_number {account_number}")
+        context.user_data['withdraw_account'] = account_number
+        logger.info(f"context.user_data['withdraw_account'] {context.user_data['withdraw_account']}")
+        
+        # Get withdrawal details from context
+        amount = context.user_data.get('withdraw_amount')
+        telegram_id = update.effective_user.id
+        
+        # Initialize payment request with amount and telegram_id
+        response = initialize_payment_request(amount, telegram_id)
+        logger.info(f"response {response}")
+        # Notify user to wait patiently for message from bank
+        await update.message.reply_text(
+            "✅ Your withdrawal request has been submitted successfully!\n\n"
+            "📱 Please wait patiently for a message from your bank regarding the withdrawal.\n"
+            "⏰ This process may take a few minutes to complete.\n\n"
+            "Thank you for your patience! 🙏"
+        )
         return ConversationHandler.END
     except Exception as e:
         print(f"Error sending message to user: {e}")
@@ -291,10 +291,7 @@ def instructions_options_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton("📝 Registraion", callback_data='register_instructions'),
             InlineKeyboardButton("🎮 Game play ", callback_data='play_instruction')
          ],
-        [
-            InlineKeyboardButton("💰 Deposit", callback_data='deposit_instruction'),
-            InlineKeyboardButton("💰 Withdraw", callback_data='withdraw_instruction')
-         ],
+      
          [InlineKeyboardButton("🔙 Back to Menu", callback_data='back')]
     ]
     
@@ -314,7 +311,27 @@ async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = support_options_keyboard()
     await update.message.reply_text("Contact us using support button. We will respond to your message as soon as possible.", reply_markup=reply_markup)
 
-
+async def deposit_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Go to the next state for deposit amount input
+    logger.info(f"context {context}")
+    user_id = update.effective_user.id
+    username = update.effective_user.username
+    BACK_URL = get_bot_seetings().get("bot_url")
+    # Check if user is registered
+    response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
+    if response.status_code != 200:
+        await update.message.reply_text(
+            "You need to register first before making a deposit. Use the /register command."
+        )
+        return
+    else:
+        await update.message.reply_text("Please enter the amount you want to deposit (minimum 20 ETB):")
+        # Set the conversation state to wait for amount input
+        context.user_data['waiting_for_deposit'] = True
+        return DEPOSIT_AMOUNT
+        
+    
+  
 
 async def instruction_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = instructions_options_keyboard()  # Create the inline keyboard
@@ -417,7 +434,73 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
           
             return DEPOSIT_AMOUNT
 
-       
+        elif query.data == 'confirm_deposit':
+            # Get deposit details from context
+            deposit_amount = context.user_data.get('deposit_amount')
+            user_id = update.effective_user.id
+            username = update.effective_user.username
+            payment_receivers = get_payment_receivers(user_id)
+            logger.info(f"payment_receivers {payment_receivers}")
+            if payment_receivers:
+                for receiver in payment_receivers:
+                    logger.info(f"receiver {receiver}")
+                    phone_number = receiver.get('phoneNumber')
+                    account_number = receiver.get('accountNumber')
+                # Construct payment instruction message
+                payment_message = (
+                    f"💳 **DEPOSIT INSTRUCTIONS**\n\n"
+                    f"💰 Amount to deposit: **{deposit_amount} ETB**\n\n"
+                    f"📱 **Transfer to any of these numbers:**\n"
+                )
+                
+                for i, receiver in enumerate(payment_receivers, 1):
+                    phone_number = receiver.get('phoneNumber')
+                    account_number = receiver.get('accountNumber')
+                    bank_name = receiver.get('bankName', 'Mobile Money')
+                    
+                    payment_message += f"{i}. {bank_name}\n"
+                    if phone_number:
+                        payment_message += f"   📞 Phone: {phone_number}\n"
+                    if account_number:
+                        payment_message += f"   🏦 Account: {account_number}\n"
+                    payment_message += "\n"
+                
+                payment_message += (
+                    f"📋 **IMPORTANT:**\n"
+                    f"• Transfer exactly **{deposit_amount} ETB**\n"
+                    f"• After transfer, send us the SMS/confirmation message you received from your bank\n"
+                    f"• Include your transaction reference number\n"
+                    f"• Your deposit will be processed within 5-10 minutes\n\n"
+                    f"💬 Send your confirmation message now:"
+                )
+                
+                await query.edit_message_text(
+                    text=payment_message,
+                    parse_mode=ParseMode.MARKDOWN,
+                    reply_markup=InlineKeyboardMarkup([[
+                        InlineKeyboardButton("❌ Cancel", callback_data='cancel_deposit')
+                    ]])
+                )
+
+                initialize_payment_manual(deposit_amount,phone_number,user_id)
+                  
+               
+                return ConversationHandler.END
+            else:
+                await query.edit_message_text(
+                    text=f"No payment receivers found. Please add a payment receiver first.",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Add Payment Receiver", callback_data='add_payment_receiver')]])
+                )
+         
+            
+            return ConversationHandler.END
+
+        elif query.data == 'cancel_deposit':
+            await query.answer("Deposit cancelled.")
+            await query.edit_message_text("❌ Deposit cancelled. You can start a new deposit anytime.")
+            return ConversationHandler.END
+
+         
         elif query.data == 'check_balance':
             BACK_URL = get_bot_seetings().get("server_url") 
             telegram_id = query.from_user.id
@@ -557,8 +640,10 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     full_url = f"{back_url}/api/v1/users/{update.effective_user.id}"
     logger.info(f"full_url = {full_url}")
 
-    phone = requests.get(full_url).json().get("phone")
-    print("phone = ",phone)
+    response = requests.get(full_url).json()
+    logger.info(f"response = {response}")
+    phone = response.get("phoneNumber")
+    logger.info(f"phone = {phone}")
     context.user_data['deposit_amount'] = amount    
 
     message = """
@@ -568,18 +653,13 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     <b>💰 Amount:</b> {} ETB  
     <b>📅 Date:</b> {}
     """.format(update.effective_user.username,phone,amount,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    confirm_button = InlineKeyboardButton("Confirm", callback_data='confirm_deposit')
+    cancel_button = InlineKeyboardButton("Cancel", callback_data='cancel_deposit')
+    keyboard = [[confirm_button, cancel_button]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(message,parse_mode=ParseMode.HTML,reply_markup=reply_markup)
+    return ConversationHandler.END
 
-    webhook_url=   helper_initialize_payment_chapa(amount,update.effective_user.first_name,update.effective_user.first_name,phone)
-    if webhook_url:
-        logger.info(f"webhook_url  3 = {webhook_url}")
-        inline_keyboard = [
-            # [InlineKeyboardButton(f"Pay {amount} ETB", url=webhook_url)],
-            [InlineKeyboardButton(f"Pay {amount} ETB", url=webhook_url)],
-        
-            ]
-        reply_markup = InlineKeyboardMarkup(inline_keyboard)
-        await update.message.reply_text(message,parse_mode=ParseMode.HTML,reply_markup=reply_markup)
-        
     
   
 
@@ -736,7 +816,7 @@ def main() -> None:
 
     # Main conversation handler for button interactions and other states
     deposit_conversation_handler = ConversationHandler(
-        entry_points=[CallbackQueryHandler(button)],
+        entry_points=[CallbackQueryHandler(button), CommandHandler('deposit', deposit_command)],
         states={
             # get_deposit_amount
             DEPOSIT_AMOUNT          : [MessageHandler(filters.TEXT & ~filters.COMMAND, deposit_amount)],

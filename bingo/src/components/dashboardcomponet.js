@@ -267,7 +267,7 @@ function DashboardComponet() {
    
   {
     allPromotions.map((promotion) => (
-      <div className="bg-gray-700 p-4 rounded-lg">
+      <div className="bg-gray-700 p-4 rounded-lg" key={promotion.id}>
       <div className="h-32 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg mb-4 flex items-center justify-center">
         <span className="text-white font-bold text-lg">{promotion.title.length > 20 ? promotion.title.substring(0, 20) + '...' : promotion.title}</span>
       </div>

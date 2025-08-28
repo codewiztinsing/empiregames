@@ -24,6 +24,17 @@ export const getUser = (telegramId) => api.get(`/users/${telegramId}`);
 export const getAllUsers = () => api.get("/users");
 export const updateUser = (telegramId, data) => api.put(`/users/${telegramId}`, data);
 export const deleteUser = (telegramId) => api.delete(`/users/${telegramId}`);
+export const getWithdrawalRequests = () => api.get(`/payments/payment-request`);
+export const getAutomaticDeposit = () => api.get(`/payments/payment-sessions`);
+export const getWithdrawalRequestsByTelegramId = (telegramId) => api.get(`/payments/payment-request/${telegramId}`);
+export const getPaymentSessionsByTelegramId = (telegramId) => api.get(`/payments/payment-session/${telegramId}`);
+export const rejectWithdrawalRequest = (id) => api.post(`/payments/payment-request/reject/${id}`);
+export const approveWithdrawalRequest = (id) => api.post(`/payments/payment-request/approve/${id}`);
+
+
+
+
+
 export const login = (data) => api.post("/auth/login", data);
 export const logout = () => api.post("/auth/logout");
 

@@ -1,22 +1,33 @@
 import React, { useState, useEffect } from 'react';
+import PaymentRequestModal from './PaymentRequestModal';
+import { getWithdrawalRequests, getWithdrawalRequestsByTelegramId, getAutomaticDeposit } from "../services/api";
 
 const Payments = () => {
   const [activeTab, setActiveTab] = useState('withdrawalRequests');
   const [filterStatus, setFilterStatus] = useState('Pending');
   const [withdrawalRequests, setWithdrawalRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [automaticDeposit, setAutomaticDeposit] = useState([]);
+  const [loading, setLoading] = useState(true); 
+  const [isPaymentRequestModalOpen, setIsPaymentRequestModalOpen] = useState(false);
+  const [telegramId, setTelegramId] = useState(null);
+  const handleSubmitPaymentRequest = async (data) => {
+    console.log("data", data);
+  };
 
   useEffect(() => {
     fetchWithdrawalRequests();
+    fetchAutomaticDeposit();
   }, []);
 
   const fetchWithdrawalRequests = async () => {
+    console.log("fetching withdrawal requests")
     try {
       // Replace with actual API call:
-      // const response = await getWithdrawalRequests();
-      // setWithdrawalRequests(response.data);
-
-      setWithdrawalRequests([]); // Empty placeholder for now
+      const response = await getWithdrawalRequests();
+      console.log("response details", response.data)
+      setWithdrawalRequests(response.data);
+      
+      setTelegramId(response.data.telegramId);
     } catch (error) {
       console.error('Error fetching withdrawal requests:', error);
     } finally {
@@ -24,11 +35,27 @@ const Payments = () => {
     }
   };
 
+  const fetchAutomaticDeposit = async () => {
+    try {
+      const response = await getAutomaticDeposit();
+      console.log("automatic deposit response details", response.data)
+      setAutomaticDeposit(response.data);
+    } catch (error) {
+      console.error('Error fetching automatic deposit:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const openPaymentRequestDetails = (telegramId) => {
+    setIsPaymentRequestModalOpen(true);
+    setTelegramId(telegramId);
+  };
+
   const tabs = [
     { id: 'withdrawalRequests', label: 'Withdrawal Requests' },
+    { id: 'automaticDeposit', label: 'Automatic Deposit' },
     { id: 'paymentSettings', label: 'Payment Settings' },
-    { id: 'manualDeposit', label: 'Manual Deposit' },
-    { id: 'manualWithdraw', label: 'Manual Withdraw' }
   ];
 
   const renderTabContent = () => {
@@ -61,24 +88,28 @@ const Payments = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {withdrawalRequests.map((request, index) => (
+                  {console.log("withdrawalRequests data", withdrawalRequests.data)}
+                  {Array.isArray(withdrawalRequests.data) && withdrawalRequests.data.map((request, index) => (
                     <div
+                      onClick={() => openPaymentRequestDetails(request.player.telegramId)}
                       key={index}
                       className="bg-gray-700 rounded-lg p-4 flex justify-between items-center"
                     >
-                      <div>
-                        <p className="text-white font-medium">User: {request.username}</p>
-                        <p className="text-gray-400">Amount: {request.amount} birr</p>
-                        <p className="text-gray-400">Date: {request.date}</p>
+                      <div >
+                        <p className="text-white font-medium flex items-center gap-2">
+                          <i className="fas fa-user"></i>
+                          Phone: {request.player.phoneNumber}
+                        </p>
+                        <p className="text-gray-400 flex items-center gap-2">
+                          <i className="fas fa-money-bill-wave"></i>
+                          Amount: {request.amount} birr
+                        </p>
+                        <p className="text-gray-400 flex items-center gap-2">
+                          <i className="fas fa-calendar-alt"></i>
+                          Date: {request.updatedAt}
+                        </p>
                       </div>
-                      <div className="flex gap-2">
-                        <button className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white">
-                          Approve
-                        </button>
-                        <button className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white">
-                          Reject
-                        </button>
-                      </div>
+                    
                     </div>
                   ))}
                 </div>
@@ -123,43 +154,62 @@ const Payments = () => {
           </div>
         );
 
-      case 'manualDeposit':
+      case 'automaticDeposit':
         return (
           <div className="bg-gray-800 rounded-lg p-6 min-w-3/4 m-auto w-full">
-            <h2 className="text-xl font-semibold text-white mb-4">Manual Deposit</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">Automatic Deposit</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-300 mb-2">User ID / Username</label>
-                <input
-                  type="text"
-                  className="w-full bg-gray-700 text-white px-3 py-2 rounded border border-gray-600"
-                  placeholder="Enter user identifier"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-2">Deposit Amount</label>
-                <input
-                  type="number"
-                  className="w-full bg-gray-700 text-white px-3 py-2 rounded border border-gray-600"
-                  placeholder="Enter amount"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-300 mb-2">Reason / Note</label>
-                <textarea
-                  className="w-full bg-gray-700 text-white px-3 py-2 rounded border border-gray-600"
-                  rows="3"
-                  placeholder="Enter reason for manual deposit"
-                />
+                <label className="block text-gray-300 mb-2">Payment Sessions</label>
+                <div className="bg-gray-700 rounded-lg p-4 max-h-96 overflow-y-auto">
+                  <div className="space-y-3">
+                  {console.log("payment request",automaticDeposit.data)}
+                  {automaticDeposit.data.map((session, index) => (
+                    <div key={index}>
+                        {/* Payment Session Item */}
+                    <div className="bg-gray-600 rounded-lg p-3 border border-gray-500">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="text-white font-medium">Session #{session.id}</h4>
+                          <p className="text-gray-400 text-sm">User: {session.player.username}</p>
+                        </div>
+                        <span className={`px-2 py-1 text-white text-xs rounded ${
+                          session.status === 'completed' ? 'bg-green-600' :
+                          session.status === 'pending' ? 'bg-yellow-600' :
+                          session.status === 'failed' ? 'bg-red-600' :
+                          'bg-gray-600'
+                        }`}>{session.status}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-400">Amount:</p>
+                          <p className="text-white font-medium">{session.amount} birr</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400">Date:</p>
+                          <p className="text-white">{session.createdAt}</p>
+                        </div>
+                      </div>
+                    </div>
+                    </div>
+                  ))}
+              
+                  
+
+                  
+                  
+                  </div>
+                </div>
+               
               </div>
               <button className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded text-white">
-                Process Deposit
+                Process Automatic Deposit
               </button>
             </div>
           </div>
         );
 
-      case 'manualWithdraw':
+      
         return (
           <div className="rounded-lg min-w-3/4 m-auto w-full">
             <h2 className="text-xl font-semibold text-white mb-4">Manual Withdraw</h2>
@@ -225,6 +275,12 @@ const Payments = () => {
         {/* Tab Content */}
         {renderTabContent()}
       </div>
+      <PaymentRequestModal
+        isOpen={isPaymentRequestModalOpen}
+        onClose={() => setIsPaymentRequestModalOpen(false)}
+        onSubmit={handleSubmitPaymentRequest}
+        telegramId={telegramId}
+      />
     </div>
   );
 };

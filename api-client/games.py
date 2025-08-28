@@ -2,6 +2,15 @@ import requests
 import json
 from typing import Dict, Any, List
 
+def get_all_players(base_url: str) -> Dict[str, Any]:
+    """Get all players from the API."""
+    url = f"{base_url}/api/v1/users"
+    return requests.get(url).json()
+
+def get_player_by_id(base_url: str, player_id: int) -> Dict[str, Any]:
+    """Get a specific player by ID."""
+    url = f"{base_url}/api/v1/players/{player_id}"
+    return requests.get(url).json()
 
 def get_all_games(base_url: str) -> Dict[str, Any]:
     """Get all games from the API."""
@@ -123,27 +132,25 @@ def delete_game(base_url: str, game_id: int) -> Dict[str, Any]:
         }
 
 
+def add_player_to_game(base_url: str, game_id: int, player_id: int) -> Dict[str, Any]:
+    """Add a player to a game."""
+    url = f"{base_url}/api/v1/games/add-player"
+    payload = {
+        "gameId": game_id,
+        "playerId": player_id
+    }
+    print(payload)
+    return requests.post(url, data=json.dumps(payload), headers={"Content-Type": "application/json"}).json()
+
 if __name__ == "__main__":
     base_url = "http://localhost:5000"
-    
-    # Create a new game
-    new_game = create_game(base_url, 100, 8)
-    print("Created game:", new_game)
-    
     # Get all games
     all_games = get_all_games(base_url)
-    print("All games:", all_games)
+    # Get all players
+    all_players = get_all_players(base_url)
+    for game in all_games:
+        for player in all_players:
+            add_player_to_game(base_url, game["id"], player["id"])
+
     
-    # If game was created successfully, test other operations
-    if "id" in new_game:
-        game_id = new_game["id"]
-        
-        # Get specific game
-        game = get_game_by_id(base_url, game_id)
-        print("Game by ID:", game)
-        
-        # Update game
-        updated_game = update_game(base_url, game_id, name="Updated Test Game", status="active")
-        print("Updated game:", updated_game)
-        
-      
+ 

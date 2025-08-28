@@ -41,7 +41,7 @@ const getGameById = async (req, res) => {
 // POST /api/games - Create new game
 const createGame = async (req, res) => {
   try {
-    const { betAmount, maxPlayers } = req.body;
+    const { betAmount } = req.body;
     
     if (!betAmount) {
       return res.status(400).json({ error: 'Bet amount is required' });
@@ -64,11 +64,10 @@ const createGame = async (req, res) => {
 const updateGame = async (req, res) => {
   try {
     const { id } = req.params;
-    const { betAmount, maxPlayers } = req.body;
+    const { betAmount } = req.body;
     
     const updateData = {};
     if (betAmount) updateData.betAmount = betAmount;
-    if (maxPlayers) updateData.maxPlayers = parseInt(maxPlayers);
     
     const game = await prisma.game.update({
       where: { id: parseInt(id) },
@@ -107,10 +106,33 @@ const deleteGame = async (req, res) => {
   }
 };
 
+
+const addPlayerToGame = async (req, res) => {
+  try {
+    const { gameId, playerId } = req.body;
+    const game = await prisma.game.findUnique({
+      where: { id: parseInt(gameId) }
+    });
+    if (!game) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+    const player = await prisma.player.findUnique({
+      where: { id: parseInt(playerId) }
+    });
+    if (!player) {  
+      return res.status(404).json({ error: 'Player not found' });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Failed to add player to game' });
+  }
+}
+
 module.exports = {
   getAllGames,
   getGameById,
   createGame,
   updateGame,
-  deleteGame
+  deleteGame,
+  addPlayerToGame
 };

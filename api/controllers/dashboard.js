@@ -90,21 +90,27 @@ const getDashboardStats = async (req, res) => {
     
 
 
-    // get deposits
-    const deposits = await prisma.deposit.findMany();
+    // get deposits (payment sessions)
+    const deposits = await prisma.paymentSession.findMany({
+      where: { status: 'completed' }
+    });
 
-    // get withdrawals
-    const withdrawals = await prisma.withdrawal.findMany();
+    // get withdrawals (payment requests)
+    const withdrawals = await prisma.paymentRequest.findMany({
+      where: { status: 'completed' }
+    });
 
     // get total deposits
-    const totalDeposits = await prisma.deposit.aggregate({
+    const totalDeposits = await prisma.paymentSession.aggregate({
+      where: { status: 'completed' },
       _sum: {
         amount: true
       }
     });
 
     // get total withdrawals
-    const totalWithdrawals = await prisma.withdrawal.aggregate({
+    const totalWithdrawals = await prisma.paymentRequest.aggregate({
+      where: { status: 'completed' },
       _sum: {
         amount: true
       }
@@ -131,23 +137,25 @@ const getDashboardStats = async (req, res) => {
       }
     });
 
-    const depositsLast30Days = await prisma.deposit.count({
+    const depositsLast30Days = await prisma.paymentSession.count({
       where: {
         createdAt: {
           gte: thirtyDaysAgo
-        }
+        },
+        status: 'completed'
       }
     });
 
-    const withdrawalsLast30Days = await prisma.withdrawal.count({
+    const withdrawalsLast30Days = await prisma.paymentRequest.count({
       where: {
         createdAt: {
           gte: thirtyDaysAgo
-        }
+        },
+        status: 'completed'
       }
     });
 
-    const revenueLast30Days = await prisma.deposit.aggregate({
+    const revenueLast30Days = await prisma.paymentSession.aggregate({
       where: {
         createdAt: {
           gte: thirtyDaysAgo

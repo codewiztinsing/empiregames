@@ -77,3 +77,42 @@ def get_user_balance(telegram_id: int) -> int:
     logger.info(f"full_url = {full_url}")
     logger.info(f"response = {response.json()}")
     return response.json().get("balance")
+
+
+
+def get_payment_receivers(telegram_id: int) -> int:
+    BACK_URL = get_bot_seetings().get("bot_url")
+    url = f"/api/v1/payments/receivers"
+    full_url = f"{BACK_URL}{url}"
+    response = requests.get(full_url)
+    return response.json().get("data")
+
+
+def initialize_payment_manual(amount,phone_number,telegram_id):
+    BACK_URL = get_bot_seetings().get("bot_url")
+    url = f"/api/v1/payments/payment-session"
+    full_url = f"{BACK_URL}{url}"
+    data = {
+        "amount": amount,
+        "phone_number": phone_number,
+        "telegram_id": telegram_id,
+        "tx_ref":generate_tx_ref()  
+    }
+    response = requests.post(full_url, json=data)
+    return response.json().get("data")
+
+
+
+def initialize_payment_request(amount,telegram_id):
+    BACK_URL = get_bot_seetings().get("bot_url")
+    url = f"/api/v1/payments/payment-request"
+    full_url = f"{BACK_URL}{url}"
+    logger.info(f"full_url {full_url}")
+    data = {
+        "amount": float(amount),
+        "telegram_id": telegram_id
+    }
+    logger.info(f"data {data}")
+    response = requests.post(full_url, json=data)
+    logger.info(f"response {response.json()}")
+    return response.json().get("data")
