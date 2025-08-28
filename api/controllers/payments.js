@@ -345,33 +345,50 @@ const getPaymentRequestByTelegramId = async (req, res) => {
 const rejectWithdrawalRequest = async (req, res) => {
     try {
         const { id } = req.params;
-        const paymentRequest = await prisma.paymentRequest.update({
-            where: { id: parseInt(id) },
-            data: { status: 'rejected' }
-        });
-        const player = await prisma.player.findUnique({
-            where: { id: paymentRequest.playerId }
-        });
-        if (!player) {
-            return res.status(404).json({
-                success: false,
-                message: 'Player not found'
+        
+        // Use a transaction to ensure data consistency
+        const result = await prisma.$transaction(async (tx) => {
+            const paymentRequest = await tx.paymentRequest.update({
+                where: { id: parseInt(id) },
+                data: { status: 'rejected' }
             });
-        }   
-        player.balance += paymentRequest.amount;
-        await prisma.player.update({
-            where: { id: paymentRequest.playerId },
-            data: { balance: player.balance }
+            
+            const player = await tx.player.findUnique({
+                where: { id: paymentRequest.playerId }
+            });
+            
+            if (!player) {
+                throw new Error('Player not found');
+            }
+            
+            const newBalance = player.balance + paymentRequest.amount;
+            
+            await tx.player.update({
+                where: { id: paymentRequest.playerId },
+                data: { balance: newBalance }
+            });
+            
+            // delete the payment request
+            await tx.paymentRequest.delete({
+                where: { id: parseInt(id) }
+            });
+            
+            return { paymentRequest, player: { ...player, balance: newBalance } };
         });
-        // delete the payment request
-        await prisma.paymentRequest.delete({
-            where: { id: parseInt(id) }
-        });
+        
+        const { paymentRequest, player } = result;
 
-        // notfiy telegram user that the withdrawal request has been rejected
+        // notify telegram user that the withdrawal request has been rejected
         const telegramId = player.telegramId;
-        const message = `Your withdrawal request has been rejected. Your balance has been credited back to your account.`;
-        await sendTelegramMessage(telegramId, message);
+        if (telegramId) {
+            const message = `Your withdrawal request has been rejected. Your balance has been credited back to your account.`;
+            try {
+                await sendTelegramMessage(telegramId, message);
+            } catch (error) {
+                console.warn('Failed to send Telegram notification for rejected withdrawal:', error.message);
+                // Continue with the operation even if Telegram fails
+            }
+        }
         res.status(200).json({
             success: true,
             message: 'Withdrawal request rejected successfully',
@@ -380,6 +397,15 @@ const rejectWithdrawalRequest = async (req, res) => {
     }
     catch (error) {
         console.error('Error rejecting withdrawal request:', error);
+        
+        // Handle specific transaction errors
+        if (error.message === 'Player not found') {
+            return res.status(404).json({
+                success: false,
+                message: 'Player not found'
+            });
+        }
+        
         res.status(500).json({
             success: false,
             message: 'Failed to reject withdrawal request',
@@ -392,27 +418,37 @@ const rejectWithdrawalRequest = async (req, res) => {
 const approveWithdrawalRequest = async (req, res) => {
     try {
         const { id } = req.params;
-        const paymentRequest = await prisma.paymentRequest.update({
-            where: { id: parseInt(id) },
-            data: { status: 'approved' }
-        });
-        const player = await prisma.player.findUnique({
-            where: { id: paymentRequest.playerId }
-        });
-        if (!player) {
-            return res.status(404).json({
-                success: false,
-                message: 'Player not found'
-            });
-        }
-
-        // deduct the amount from the player's balance
-        player.balance -= paymentRequest.amount;
         
-        await prisma.player.update({
-            where: { id: paymentRequest.playerId },
-            data: { balance: player.balance }
+        // Use a transaction to ensure data consistency
+        const result = await prisma.$transaction(async (tx) => {
+            const paymentRequest = await tx.paymentRequest.update({
+                where: { id: parseInt(id) },
+                data: { status: 'approved' }
+            });
+            
+            const player = await tx.player.findUnique({
+                where: { id: paymentRequest.playerId }
+            });
+            
+            if (!player) {
+                throw new Error('Player not found');
+            }
+            
+            if (player.balance < paymentRequest.amount) {
+                throw new Error('Insufficient balance');
+            }
+            
+            const newBalance = player.balance - paymentRequest.amount;
+            
+            await tx.player.update({
+                where: { id: paymentRequest.playerId },
+                data: { balance: newBalance }
+            });
+            
+            return { paymentRequest, player: { ...player, balance: newBalance } };
         });
+        
+        const { paymentRequest, player } = result;
 
         // notify telegram user that the withdrawal request has been approved
         const telegramId = player.telegramId;
@@ -427,6 +463,22 @@ const approveWithdrawalRequest = async (req, res) => {
     }
     catch (error) {
         console.error('Error approving withdrawal request:', error);
+        
+        // Handle specific transaction errors
+        if (error.message === 'Player not found') {
+            return res.status(404).json({
+                success: false,
+                message: 'Player not found'
+            });
+        }
+        
+        if (error.message === 'Insufficient balance') {
+            return res.status(400).json({
+                success: false,
+                message: 'Insufficient balance to approve withdrawal'
+            });
+        }
+        
         res.status(500).json({
             success: false,
             message: 'Failed to approve withdrawal request',

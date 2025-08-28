@@ -6,7 +6,20 @@ const telegramAxios = axios.create({
     maxRedirects: 3,
     validateStatus: function (status) {
         return status >= 200 && status < 300; // Accept only 2xx status codes
-    }
+    },
+    // Add connection pooling and keep-alive
+    httpAgent: new (require('http').Agent)({
+        keepAlive: true,
+        keepAliveMsecs: 1000,
+        maxSockets: 10,
+        maxFreeSockets: 5
+    }),
+    httpsAgent: new (require('https').Agent)({
+        keepAlive: true,
+        keepAliveMsecs: 1000,
+        maxSockets: 10,
+        maxFreeSockets: 5
+    })
 });
 
 // send telegram message to a user with timeout and retry logic
@@ -23,6 +36,8 @@ const sendTelegramMessage = async (telegramId, message, retries = 2) => {
             return null;
         }
 
+        console.log(`Attempting to send Telegram message to ${telegramId}: ${message.substring(0, 50)}...`);
+        
         const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
         
         const response = await telegramAxios.post(telegramApiUrl, {
@@ -41,8 +56,16 @@ const sendTelegramMessage = async (telegramId, message, retries = 2) => {
     } catch (error) {
         console.error('Error sending telegram message:', error.message);
         
-        // If we have retries left and it's a timeout/network error, retry
-        if (retries > 0 && (error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET' || error.code === 'ENOTFOUND' || error.code === 'ECONNABORTED')) {
+        // Categorize errors for better retry logic
+        const isRetryableError = error.code === 'ETIMEDOUT' || 
+                                error.code === 'ECONNRESET' || 
+                                error.code === 'ENOTFOUND' || 
+                                error.code === 'ECONNABORTED' ||
+                                error.code === 'ENETUNREACH' ||
+                                error.code === 'EHOSTUNREACH';
+        
+        // If we have retries left and it's a retryable error, retry
+        if (retries > 0 && isRetryableError) {
             console.log(`Retrying telegram message (${retries} attempts left)...`);
             await new Promise(resolve => setTimeout(resolve, 1000 * (3 - retries))); // Exponential backoff
             return sendTelegramMessage(telegramId, message, retries - 1);
@@ -54,4 +77,25 @@ const sendTelegramMessage = async (telegramId, message, retries = 2) => {
     }
 };
 
-module.exports = sendTelegramMessage;
+// Test function to verify Telegram connectivity
+const testTelegramConnection = async () => {
+    try {
+        const botToken = process.env.TELEGRAM_BOT_TOKEN;
+        if (!botToken) {
+            console.warn('TELEGRAM_BOT_TOKEN not configured');
+            return false;
+        }
+
+        const response = await telegramAxios.get(`https://api.telegram.org/bot${botToken}/getMe`, {
+            timeout: 10000
+        });
+        
+        console.log('Telegram connection test successful:', response.data);
+        return true;
+    } catch (error) {
+        console.error('Telegram connection test failed:', error.message);
+        return false;
+    }
+};
+
+module.exports = { sendTelegramMessage, testTelegramConnection };
