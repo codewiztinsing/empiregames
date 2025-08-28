@@ -11,21 +11,20 @@ const gameWinWallet = async (player,bet_amount,win_amount)=>{
       game_id
   };
 
-  console.log("data in gameWinWallet",data)
-
-  console.log("data",data)
-  if(!data.player || !data.win_amount || !data.game_id=='') return null;
+  if(!data.player || !data.win_amount || !data.game_id) return null;
   
   try{
     const backUrl = process.env.BACK_URL
+    console.log("backUrl",backUrl)
     const winUrl = backUrl + 'game/win-game/'
-    
-     const res=  await axios.post(winUrl,data)
+    console.log("winUrl",winUrl)
+    await axios.post(winUrl,data)
               .then(res=>{
                   console.log("gameWinWallet res",res.data)
-                  return res.data
               })
+      
      
+       
   }catch(e){
     console.log("gameWinWallet error",e)
   }

@@ -18,8 +18,8 @@ const server = http.createServer(app);
 
 const getConstant = async () => {
   return {
-    gameSpeed: 5000,
-    countDown: 30
+    gameSpeed: 500,
+    countDown: 3
   }
 }
 
@@ -377,7 +377,8 @@ io.on('connection', (socket) => {
       })
 
       try {
-        await gameWinWallet(data.playerId, game.roomId, game.total_winAmount);
+        const response = await gameWinWallet(data.playerId, game.roomId, game.total_winAmount);
+        console.log("response",response)
       } catch (error) {
         console.error("Error processing win wallet:", error);
       }
