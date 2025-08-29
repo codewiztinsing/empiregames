@@ -330,6 +330,26 @@ async def deposit_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         context.user_data['waiting_for_deposit'] = True
         return DEPOSIT_AMOUNT
         
+
+async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    balance = get_user_balance(user_id)
+    username  = update.effective_user.username
+    telegram_id = update.effective_user.id
+
+    payment_summary = (
+                    "🏦  Aker Bingo STATEMENT\n" +
+                    f"💰  {balance} Birr\n" +
+                    f"👥  {username} \n" +
+                    f"📄 USER TELEGRAM ID: {telegram_id}\n" +
+                    f"🔙 Back to Menu\n" 
+                ) 
+    await update.message.reply_text(text=payment_summary)
+    
+    return ConversationHandler.END
+
+
+
     
   
 
@@ -510,7 +530,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
             # Create payment summary with user details
             payment_summary = (
-                    "🏦  Bilen Bingo STATEMENT\n" +
+                    "🏦  Aker Bingo STATEMENT\n" +
                     f"💰  {balance} Birr\n" +
                     f"👥  {username} \n" +
                     f"📄 USER TELEGRAM ID: {telegram_id}\n" +
@@ -835,6 +855,8 @@ def main() -> None:
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('play', play_command))
     application.add_handler(CommandHandler('support', support_command))
+    application.add_handler(CommandHandler('balance', check_balance_command))
+    application.add_handler(CommandHandler('instructions', instruction_command))
     application.add_handler(CommandHandler('withdraw', withdraw_command))
     application.add_handler(deposit_conversation_handler)
     application.add_handler(CommandHandler('invite', handle_invite))  

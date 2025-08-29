@@ -56,6 +56,6 @@ def get_payment_receivers(base_url):
         }
 
 if __name__ == "__main__":
-    base_url = "http://localhost:5000"
+    base_url = "https://server.akerbingo.com"
     print(get_payment_receivers(base_url))
     print(create_payment_receiver(base_url, phone_number="0912345678", account_number="1234567890"))
