@@ -19,31 +19,18 @@ services:
         condition: service_healthy
     networks:
       - bingo-network
-
-    
-
   app:
-    dns:
-      - 1.1.1.1
-      - 1.0.0.1
-      - 8.8.8.8
-      - 8.8.4.4
     build: ./app
     ports:
       - "4000:4000"
     environment:
-      NODE_ENV: production
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: bingo_db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      SERVER_URL: https://server.akerbingo.com/
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - BOT_TOKEN=${BOT_TOKEN}
+      - SERVER_URL=${SERVER_URL}
+    env_file:
+      - .env
     networks:
       - bingo-network
+
 
   postgres:
     image: postgres:15-alpine
@@ -69,3 +56,4 @@ volumes:
 networks:
   bingo-network:
     driver: bridge
+
