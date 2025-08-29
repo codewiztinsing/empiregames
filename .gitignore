@@ -65,3 +65,6 @@ bingo/.env
 */*/migrations/__pycache__/
 */__pycache__/
 */*/__pycache__/
+
+# Environment files in bingo directory
+bingo/.env
