@@ -29,7 +29,6 @@ const PlayingBoard = () => {
   const [winnerPlayerName, setWinnerPlayerName] = useState("");
   const [isDisabled,setIsDisabled] = useState(false)
   const [firstBoardLost,setFirstBoardLost] = useState(false)
-  const [secondBoardLost,setSecondBoardLost] = useState(false)
   // const [betAmount, setBetAmount] = useState(0);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -43,8 +42,7 @@ const PlayingBoard = () => {
       socket.emit("leave", {
         playerId,
         roomId,
-        selectedNumber,
-        selectedNumber2
+        selectedNumber
   
       })
       navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
@@ -79,7 +77,7 @@ const PlayingBoard = () => {
     return () => {
       socket.off('numberSelected');
     };
-  }, [socket, lastBall, selectedCell, isBingo,firstBoardLost,secondBoardLost]);
+  }, [socket, lastBall, selectedCell, isBingo,firstBoardLost]);
 
 
 
@@ -130,9 +128,7 @@ const PlayingBoard = () => {
     if (losserBoard === selectedNumber){
       setFirstBoardLost(true)
     }
-    if (losserBoard === selectedNumber2){
-      setSecondBoardLost(true)
-    }
+
     
     return ;
   
@@ -189,8 +185,7 @@ const PlayingBoard = () => {
     socket.emit("leave", {
       playerId,
       roomId,
-      selectedNumber,
-      selectedNumber2
+      selectedNumber
 
     })
     navigate(`/?playerId=${playerId}&&betAmount=${roomId}&playerName=${playerName}`);
@@ -543,76 +538,7 @@ const PlayingBoard = () => {
           >
              {firstBoardLost ? "You made Faul" : "BINGO!"}
           </button>
-
-          <div className='line'>
-
           </div>
-
-         
-        
-          {selectedNumber2 !== null && (
-          <div className="bingo-header">
-            <div className='selected-number'>
-              <p className='selected-number-label'>የካርቴላ ቁጥር :-</p>
-              <p className='selected-number-value'>{selectedNumber2}</p>
-            </div>
-            <div className="bingo-letters">
-              <span className='bingo-letter-text'>B</span>
-              <span className='bingo-letter-text'>I</span>
-              <span className='bingo-letter-text'>N</span>
-              <span className='bingo-letter-text'>G</span>
-              <span className='bingo-letter-text'>O</span>
-            </div>
-          </div>
-          )
-
-}
-
-          <div className="bingo-board">
-            {selectBoard2[0] && !isBingo && selectBoard2[0].map((_, colIndex) => (
-              <div key={colIndex} className="board-row">
-                {selectBoard2.map((row, rowIndex) => (
-                  <div key={rowIndex}
-                    className={`inner-board-cell`}
-
-                    // if cell is * it should always be green
-                    style={{ backgroundColor: row[colIndex] === '*' ? '#4CAF50' : selectedCell.has(row[colIndex]) ? '#4CAF50' : '#ffffff',border:'none' }}
-                    id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
-                    onClick={() => {
-                      handleCellClick(row[colIndex]);
-                    }}
-                  >
-                    {row[colIndex]}
-                  </div>
-                ))}
-              </div>
-            ))}
-
-          
-
-          </div>
-
-
-          </div>
-
-        
-       
-
-       {selectedNumber2 !== null && (
-          <div className="game-controls">
-            <button className={`bingo-button-card-${selectedNumber2}`} 
-                  onClick={() => handleBingo(selectBoard2,selectedNumber2)} 
-                  disabled={secondBoardLost}
-                  style={{
-                    backgroundColor: secondBoardLost ? "red" : "orange",
-      
-                  }}
-            >
-             {secondBoardLost ? "You made Faul" : "BINGO!"}
-            </button>
-          </div>
-       )}
-
         </div>
       </div>
 </div>

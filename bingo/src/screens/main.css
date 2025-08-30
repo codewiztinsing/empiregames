@@ -465,12 +465,11 @@ background-color: #bd9fd1;
   padding: 2px;
   border-radius: 2px;
   border: 2px solid #ccc;
-  background-color: #bd9fd1;
   border-radius: 10px;
-
   height: 100%;
   max-width: 160px;
-  
+  background-color: #bd9fd1;
+  min-height: 250px;
 
 }
 
@@ -534,6 +533,7 @@ background-color: #bd9fd1;
 }
 
 .inner-board-cell {
+  padding: 10px;
   display: flex;
   background-color: white;
   align-items: center;

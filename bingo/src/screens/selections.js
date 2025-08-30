@@ -15,13 +15,9 @@ const Selections = () => {
     isToast,
     setIsToast,
     selectedNumber,
-    selectedNumber2,
     setSelectedNumber,
-    setSelectedNumber2,
     selectBoard,
     setSelectBoard,
-    selectBoard2,
-    setSelectBoard2,
     choosenNumbers,
     setChoosenNumbers,
     gameId,
@@ -63,36 +59,17 @@ const Selections = () => {
       socket.emit("leave", { 
         playerId,
         roomId,
-        selectedNumber,
-        selectedNumber2
+        selectedNumber
       });
     }
 
-    // ✅ Handle browser close/tab refresh
-    const handleBeforeUnload = (e) => {
-      handleLeaveGame()
-      // optional: force confirmation dialog
-      e.preventDefault();
-      e.returnValue = '';
-    };
-
+ 
 
    
     const handlePopState = () => {
       handleLeaveGame()
     
     };
-
-  // ✅ Page visibility lost (e.g. switch tab)
-  const handleVisibilityChange = () => {
-    if (document.visibilityState === 'hidden') {
-      handleLeaveGame();
-    }
-  };
-
-  window.addEventListener('beforeunload', handleBeforeUnload);
-  document.addEventListener('visibilitychange', handleVisibilityChange);
-  
 
     const fetchBalance = async () => {
       console.log("fetching balance")
@@ -126,17 +103,6 @@ const Selections = () => {
       socket.off('gameState', handleGameState);
       socket.off('gameStatus', handleGameStatus);
  
-       // Cleanup
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.addEventListener('popstate', handlePopState);
-      // Handle Telegram WebApp close button
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.onEvent('backButtonClicked', () => {
-          handleLeaveGame();
-          window.Telegram.WebApp.close();
-        });
-      }
 
     };
   }, [socket, gameId, gameStatus, choosenNumbers]);
@@ -267,13 +233,7 @@ const Selections = () => {
     }
 
  
-    if(selectedNumber2) {
-      if(balance < roomId * 2) {
-      
-        toast.error("Insufficient balance for two cards, please select one card");
-        return;
-      }
-    }
+
 
     if (balance < roomId || balance == 0) {
      
@@ -284,7 +244,7 @@ const Selections = () => {
     }
 
     try {
-      socket.emit('joinGame', { playerId, gameId, selectedNumber,selectedNumber2, roomId, selectBoard, selectBoard2, numberOfBoards: choosenBoards.length })
+      socket.emit('joinGame', { playerId, gameId, selectedNumber, roomId, selectBoard, numberOfBoards: choosenBoards.length })
 
       navigate('/play');
     } catch (error) {
@@ -323,8 +283,7 @@ const Selections = () => {
           setSelectedNumber(null);
           setSelectBoard([]);
         } else {
-          setSelectedNumber2(null); 
-          setSelectBoard2([]);
+         
         }
       }
       return;
@@ -347,8 +306,7 @@ const Selections = () => {
       setSelectBoard(newBoard);
       setChooseBoards([newBoard]);
     } else {
-      setSelectedNumber2(number);
-      setSelectBoard2(newBoard);
+     
       setChooseBoards([...choosenBoards, newBoard]);
     }
 
@@ -498,63 +456,6 @@ const Selections = () => {
 
 
 
-           
-            {selectedNumber2 && (
-              <div className="combination-board">  
-                <div className='card-number-container'>
-                <div className='card-number'># Card {selectedNumber2}</div>
-                
-                <div className="combination-bingo-header">
-              
-              <div className="combination-bingo-header-text">
-                B
-              </div>
-              <div className="combination-bingo-header-text">
-                I
-              </div>
-              <div className="combination-bingo-header-text">
-                N
-              </div>
-              <div className="combination-bingo-header-text">
-                G
-              </div>
-              <div className="combination-bingo-header-text">
-                O
-              </div>
-            
-            </div>
-         
-
-
-            </div>
-                
-                
-              
-                  <div className="board-grid-selections">
-                    {selectBoard2.map((row, rowIndex) => (
-                      
-                      <div key={rowIndex} className="board-row-selections">
-                        {row.map((num, colIndex) => (
-                          <div
-                            key={colIndex}
-                            className={`combination-number-cell ${pickedNumbers && pickedNumbers.length > 1 && pickedNumbers.includes(num) ? 'picked-on-board' : ''
-                              }`}
-                          >
-                            {num}
-                            {pickedNumbers && pickedNumbers.length > 1 && pickedNumbers.includes(num) && (
-                              <span className="picked-indicator">✓</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                 
-              </div>
-            )}
-
-
-           
          
             </div>
             <button
