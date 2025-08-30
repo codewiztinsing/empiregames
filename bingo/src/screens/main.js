@@ -54,16 +54,8 @@ const PlayingBoard = () => {
         setCalledNumbers(calledNumbers)
       }
       setLastBall(data.lastBall);
-      const SOUND_URL = process.env.REACT_APP_SOUND_URL
-      console.log("SOUND_URL",SOUND_URL)
- 
-      const soundUrl = `${SOUND_URL}/${calledNumber}.mp3`  
-      console.log("soundUrl",soundUrl)
-      const audio = new Audio(soundUrl);
-      audio.play().catch(error => {
-        console.log('Audio play failed:', error);
-      });
-    
+      handlePlaySound(calledNumber)
+      
 
       
       if (data.total_called_numbers) setTotalCalledNumbers(data.total_called_numbers);
@@ -81,6 +73,35 @@ const PlayingBoard = () => {
       if (data.roomId === roomId) {
         navigate(`/?playerId=${playerId}&&betAmount=${roomId}&playerName=${playerName}`);
       }
+    };
+
+    const handlePlaySound = async (calledNumber) => {
+      const SOUND_URL = process.env.REACT_APP_SOUND_URL
+      
+      // Cache audio files to improve performance and reduce loading time
+      if (!window.audioCache) {
+        window.audioCache = new Map();
+      }
+      
+      // Check if audio is already cached
+      if (window.audioCache.has(calledNumber)) {
+        const cachedAudio = window.audioCache.get(calledNumber);
+        // Clone the audio to allow multiple simultaneous plays
+        const audio = cachedAudio.cloneNode();
+        audio.play().catch(error => {
+          console.log('Cached audio play failed:', error);
+        });
+        return;
+      }
+
+      const soundUrl = `${SOUND_URL}/${calledNumber}.mp3`
+      const audio = new Audio(soundUrl);
+      audio.play().catch(error => {
+        console.log('Audio play failed:', error);
+      });
+
+      // Cache the audio file
+      window.audioCache.set(calledNumber, audio);
     };
 
     const handlePlayWinSound = async () => {
