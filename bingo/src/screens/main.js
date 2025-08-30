@@ -8,8 +8,6 @@ import BingoWinner from '../components/BingoWinner';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 
-
-
 const PlayingBoard = () => {
   const {
     selectedNumber,
@@ -56,6 +54,16 @@ const PlayingBoard = () => {
         setCalledNumbers(calledNumbers)
       }
       setLastBall(data.lastBall);
+      const SOUND_URL = process.env.REACT_APP_SOUND_URL
+ 
+      const soundUrl = `${SOUND_URL}/${calledNumber}.mp3`  
+      const audio = new Audio(soundUrl);
+      audio.play().catch(error => {
+        console.log('Audio play failed:', error);
+      });
+    
+
+      
       if (data.total_called_numbers) setTotalCalledNumbers(data.total_called_numbers);
       if (data.count_down) setCountDown(data.count_down);
       setGameId(data.gameId);
@@ -73,6 +81,15 @@ const PlayingBoard = () => {
       }
     };
 
+    const handlePlayWinSound = async () => {
+      const SOUND_URL = process.env.REACT_APP_SOUND_URL
+      const soundUrl = `${SOUND_URL}/win.mp3`
+      const audio = new Audio(soundUrl);
+      audio.play().catch(error => {
+        console.log('Audio play failed:', error);
+      });
+    };
+
     const handleWinBingo = (data) => {
       if (data.winningCard) {
         setWinningCard(data.markedCells);
@@ -80,8 +97,12 @@ const PlayingBoard = () => {
         setWinner(data.playerId);
         setWinnerCardNumber(data.winner_Number);
         setWinnerPlayerName(data.playerName);
+        handlePlayWinSound();
       }
     };
+
+  
+  
 
     const handleJoinError = (data) => {
       if (data.roomId === roomId) {

@@ -465,8 +465,8 @@ io.on('connection', (socket) => {
             const selectedNumber = game.selectedNumbersToPlayer.get(playerId)[0]
             const selectedNumber2 = game.selectedNumbersToPlayer.get(playerId)[1]
           }
-          game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);
-          game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber2);
+          game.selectedNumbers = game?.selectedNumbers?.filter(num => num !== selectedNumber);
+          game.selectedNumbers = game?.selectedNumbers?.filter(num => num !== selectedNumber2);
     
     
           io.to(game.roomId).emit("gameState", {
