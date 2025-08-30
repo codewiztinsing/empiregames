@@ -54,7 +54,7 @@ const PlayingBoard = () => {
         setCalledNumbers(calledNumbers)
       }
       setLastBall(data.lastBall);
-      const SOUND_URL = process.env.REACT_APP_SOUND_URL
+      const SOUND_URL = process.env.REACT_APP_SERVER_URL
  
       const soundUrl = `${SOUND_URL}/${calledNumber}.mp3`  
       const audio = new Audio(soundUrl);
