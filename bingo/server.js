@@ -18,8 +18,8 @@ const server = http.createServer(app);
 
 const getConstant = async () => {
   return {
-    gameSpeed: 5000,
-    countDown: 30
+    gameSpeed: 500,
+    countDown: 3
   }
 }
 
@@ -42,9 +42,7 @@ const winners = [];
 
 async function createGame(roomId) {
   const gameSettings = await getConstant();
-  console.log("gameSettings",gameSettings)
-  console.log("countDown",gameSettings.countDown)
-  console.log("gameSpeed",gameSettings.gameSpeed)
+ 
 
   const game = {
     id: roomId,

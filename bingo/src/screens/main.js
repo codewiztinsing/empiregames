@@ -54,9 +54,11 @@ const PlayingBoard = () => {
         setCalledNumbers(calledNumbers)
       }
       setLastBall(data.lastBall);
-      const SOUND_URL = process.env.REACT_APP_SERVER_URL
+      const SOUND_URL = process.env.REACT_APP_SOUND_URL
+      console.log("SOUND_URL",SOUND_URL)
  
       const soundUrl = `${SOUND_URL}/${calledNumber}.mp3`  
+      console.log("soundUrl",soundUrl)
       const audio = new Audio(soundUrl);
       audio.play().catch(error => {
         console.log('Audio play failed:', error);
@@ -84,6 +86,7 @@ const PlayingBoard = () => {
     const handlePlayWinSound = async () => {
       const SOUND_URL = process.env.REACT_APP_SOUND_URL
       const soundUrl = `${SOUND_URL}/win.mp3`
+      console.log("win soundUrl",soundUrl)
       const audio = new Audio(soundUrl);
       audio.play().catch(error => {
         console.log('Audio play failed:', error);
