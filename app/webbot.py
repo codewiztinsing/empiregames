@@ -15,8 +15,7 @@ from telegram import (
 )
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from datetime import datetime, timedelta
-from utils import initialize_payment,get_bot_seetings   
-from utils.chapa import get_available_banks,transfer_funds
+from utils import get_bot_seetings   
 from telegram.ext import (
     Application,
     CommandHandler,
