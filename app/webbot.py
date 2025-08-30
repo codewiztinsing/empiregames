@@ -25,7 +25,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     ConversationHandler,
 )
-from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player
+from utils.helpers import daily_withdrawal_limit
 from datetime import datetime
 from telegram import BotCommand
 from register import *
