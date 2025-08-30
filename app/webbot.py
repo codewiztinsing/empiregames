@@ -77,7 +77,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         [InlineKeyboardButton("💰 Check Balance", callback_data='check_balance'),
          InlineKeyboardButton("💳 Deposit", callback_data='deposit')],
         [InlineKeyboardButton("📞 Contact Support", callback_data='contact_support'),
-         InlineKeyboardButton("📚 Instruction", callback_data='instructions')]
+         InlineKeyboardButton("📚 Instruction", callback_data='instructions')],
         [InlineKeyboardButton("🔗 Join Group", url='https://t.me/wowbingos')]
     ]
     
