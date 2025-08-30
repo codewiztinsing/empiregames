@@ -442,9 +442,9 @@ io.on('connection', (socket) => {
   });
 
   socket.on("disconnect", () => {
-    const user = users.get(socket.id)
-    
-    
+   
+    const user = users.get(socket.id);
+    console.log("user",user)
     if (user) {
       const game = activeGames.get(user.gameId);
       const playerId = user.playerId
@@ -452,6 +452,8 @@ io.on('connection', (socket) => {
       if(game.selectedNumbersToPlayer.has(playerId)){
         const selectedNumber = game.selectedNumbersToPlayer.get(playerId)[0]
         const selectedNumber2 = game.selectedNumbersToPlayer.get(playerId)[1]
+        game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);
+        game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber2);
       }
      
  
@@ -459,6 +461,10 @@ io.on('connection', (socket) => {
         console.log("game.status",game.status)
         if(game.status === "waiting") {
           game.players.delete(user.playerId);
+          if(game.selectedNumbersToPlayer.has(playerId)){
+            const selectedNumber = game.selectedNumbersToPlayer.get(playerId)[0]
+            const selectedNumber2 = game.selectedNumbersToPlayer.get(playerId)[1]
+          }
           game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);
           game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber2);
     

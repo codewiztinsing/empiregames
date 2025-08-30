@@ -106,10 +106,7 @@ const PlayingBoard = () => {
     socket.on('joinError', handleJoinError);
     socket.on('playerLeft', handlePlayerLeft);
 
-    socket.on('disconnect', () => {
-      console.log('Client disconnected from server');
-      handleLeave('disconnect');
-    });
+  
 
     return () => {
       socket.off('numberSelected');
@@ -148,6 +145,23 @@ const PlayingBoard = () => {
       boardNumber,
     });
   };
+
+
+  socket.on('disconnect', () => {
+    console.log('Socket disconnected, sending user and game data');
+    socket.emit('userDisconnect', {
+      playerId,
+      playerName,
+      roomId,
+      gameId,
+      selectedNumber,
+      selectedNumber2,
+      markedCells: Array.from(selectedCell),
+      reason: 'disconnect'
+    });
+
+  });
+  
 
   const handleRefresh = () => {
     socket.emit('handleRefresh', { gameId, roomId, playerId });
