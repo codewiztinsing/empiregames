@@ -46,6 +46,13 @@ const Selections = () => {
   const [joinError, setJoinError] = useState(false);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [totalPlayers, setTotalPlayers] = useState(0);
+  const [totalCalledNumbers, setTotalCalledNumbers] = useState(0);
+  const [totalWinAmount, setTotalWinAmount] = useState(0);
+  const [isBingo, setIsBingo] = useState(false);
+  const [winnerCardNumber, setWinnerCardNumber] = useState(null);
+  const [winnerPlayerName, setWinnerPlayerName] = useState(null);
+  const [winningCard, setWinningCard] = useState([]);
 
   // Generate numbers 1-100 (memoized since it's static)
   const numbers = Array.from({ length: 400 }, (_, i) => i + 1);
@@ -80,6 +87,15 @@ const Selections = () => {
     socket.on('gameState', handleGameState);
     socket.on('pickedNumbers', handlePickedNumbers);
     socket.on("gameStatus", handleGameStatus)
+    socket.on("bingoWinner", handleBingoWinner)
+
+     if (isBingo) {
+      const timer = setTimeout(() => {
+        setIsBingo(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+     }
+
     return () => {
       // socket.off('pickedNumbers', handlePickedNumbers);
       socket.off('gameState', handleGameState);
@@ -87,9 +103,31 @@ const Selections = () => {
   }, [socket, gameId, gameStatus, choosenNumbers]);
 
 
+const handleGlobals = (state) => {
 
+  if (state.roomId == roomId) {
+  setCountDown(state.countDown);
+  if (state.lastBall && state.lastBall?.number) {
+    setCurrentCall(state.lastBall?.number);
+  }
+ 
+
+  setTotalPlayers(state.totalPlayers);
+    setTotalCalledNumbers(state.totalCalledNumbers);
+    setTotalWinAmount(state.totalWinAmount);
+  }
+}
+
+  const handleBingoWinner = (state) => {
+    console.log("bingoWinner",state)
+    setIsBingo(true);
+    setWinnerCardNumber(state.winnerCardNumber);
+    setWinnerPlayerName(state.winnerPlayerName);
+    setWinningCard(state.winningCard);
+  }
 
   const handleGameState = (state) => {
+    console.log("gameState",state)
     const gameRoom = state.roomId
     if (roomId == gameRoom) {
       if (state.pickedNumbers !== null) {
@@ -109,6 +147,8 @@ const Selections = () => {
     }
 
   };
+
+  socket.on('globals', handleGlobals);
 
   socket.on('activeGames', (state) => {
     if (state?.activeGames?.length > 0) {
@@ -142,7 +182,7 @@ const Selections = () => {
   const generateCombination = useCallback(() => {
     const card = [];
     const ranges = [
-      [1, 15],    // B
+      [1, 15],    // BfAlexo
       [16, 30],   // I
       [31, 45],   // N
       [46, 60],   // G
@@ -306,6 +346,7 @@ const Selections = () => {
 
   socket.on('pickedNumbers', handlePickedNumbers);
   socket.on('gameStatus', handleGameStatus);
+  socket.on("gameState", handleGameState);
 
 
 
@@ -319,6 +360,107 @@ const Selections = () => {
       </div>
 
       }
+
+{isBingo && (
+  <div className="bingo-winner-overlay">
+    <div className="bingo-winner-card">
+      <div className="winner-card-header">
+        <p className='winner-card-header-text'>Bingo Winner!</p>
+      </div>
+
+      <p className='winner-card-header-winner-number' style={{
+        color: "green",
+        fontSize: "1.6rem",
+        fontWeight: "bold"
+      }}>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
+      <p className='winner-card-header-text' style={{
+          color: "green",
+        fontSize: "1.6rem",
+        fontWeight: "bold"
+      }}>ስም : {winnerPlayerName},is Winner</p>
+
+     
+<div className="winning-card">
+  {/* Header row */}
+  <div className="winning-card-row">
+    {["B", "I", "N", "G", "O"].map((letter, index) => (
+      <div key={index} className="winning-card-cell">
+        <span>{letter}</span>
+      </div>
+    ))}
+  </div>
+
+  {winningCard[0] && winningCard[0].map((_, rowIndex) => (
+    <div key={rowIndex} className="winning-card-row">
+      {winningCard.map((row, colIndex) => {
+        const cell = row[rowIndex];
+        // Check win conditions
+        const rowComplete = winningCard.every(r => r[rowIndex].marked);
+        const colComplete = winningCard[colIndex].every(c => c.marked);
+        const diagonalComplete =
+          rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
+        const reverseDiagonalComplete =
+          rowIndex + colIndex === 4 && winningCard.every((r, i) => r[4 - i].marked);
+
+        const fourCornersComplete =
+          winningCard[0][0].marked &&
+          winningCard[0][4].marked &&
+          winningCard[4][0].marked &&
+          winningCard[4][4].marked;
+
+        const fourEdgesComplete =
+          winningCard[0][2].marked &&
+          winningCard[2][0].marked &&
+          winningCard[2][4].marked &&
+          winningCard[4][2].marked;
+
+        // Does this cell belong to a winning line?
+        const inWinningLine =
+          (rowComplete && cell.marked) ||
+          (colComplete && cell.marked) ||
+          (diagonalComplete && cell.marked) ||
+          (reverseDiagonalComplete && cell.marked) ||
+          (fourCornersComplete &&
+            cell.marked &&
+            ((colIndex === 0 && (rowIndex === 0 || rowIndex === 4)) ||
+             (colIndex === 4 && (rowIndex === 0 || rowIndex === 4)))) ||
+          (fourEdgesComplete &&
+            cell.marked &&
+            ((colIndex === 0 && rowIndex === 2) ||
+             (colIndex === 2 && (rowIndex === 0 || rowIndex === 4)) ||
+             (colIndex === 4 && rowIndex === 2)));
+
+        // Final background color
+        let bgColor = "white";
+        if (inWinningLine) {
+          bgColor = "green";   // part of winning line
+        } else if (cell.marked) {
+          bgColor = "red";     // marked but not winning
+        }
+
+        return (
+          <div
+            key={colIndex}
+            className="winning-card-cell"
+            style={{ backgroundColor: bgColor }}
+          >
+            <span>{cell.number}</span>
+          </div>
+        );
+      })}
+    </div>
+  ))}
+</div>
+
+      <div className="choosen-numbers">
+        <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
+      </div>
+    </div>
+  </div>
+)}
+     
+
+
 
       {!loading && (
         <div className="selections-container">
@@ -336,9 +478,36 @@ const Selections = () => {
                 {gameStatus}
               </div>
             </div>
+          </div>
 
+          <div className="globals-container">
 
+          {gameStatus == "waiting" && (
+            
+            <div className="game-info-text">
+              countDown {countDown}
+            </div>
+            )}
 
+        
+          {gameStatus == "in-progress" && (
+            
+           <>
+           <div className="global-ball-container">
+            <div className="global-ball">
+              Ball {currentCall}
+            </div>
+           </div>
+            <div className="game-info-text">
+              Total players {totalPlayers}
+            </div>
+
+           
+           
+           </>
+
+            
+            )}
           </div>
 
           <div className="numbers-grid">

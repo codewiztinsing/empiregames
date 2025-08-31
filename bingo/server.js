@@ -18,8 +18,8 @@ const server = http.createServer(app);
 
 const getConstant = async () => {
   return {
-    gameSpeed: 5000,
-    countDown: 30
+    gameSpeed: 500,
+    countDown: 3
   }
 }
 
@@ -136,6 +136,12 @@ function startCountDown(game) {
       count_down: game.countDown
     });
 
+    io.emit("globals", {
+      roomId: game.roomId,
+      countDown: game.countDown
+    })
+  
+
   
 
     if (game.countDown === 0) {
@@ -147,13 +153,11 @@ function startCountDown(game) {
       game.calledNumbers = [];
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== null);
       game.win_amount = game.roomId * game.selectedNumbers.length * 0.8
-      console.log("selected number before game start ",game.selectedNumbers)
-      console.log("win amount before start game ",game.win_amount)
       startGame(game);
     }
     game.countDown--;
   }, 1000);
-
+ 
   gameIntervals.set(game.id, [countdownInterval]);
 }
 
@@ -214,8 +218,20 @@ async function startGame(game) {
       })
       endGame(game);
     }
+    io.emit("globals", {
+      roomId: game.roomId,
+      lastBall: game.currentCall,
+      calledNumbers: game.calledNumbers,
+      totalCalledNumbers: game.calledNumbers.length,
+      totalPlayers: game.players.size,
+      totalWinAmount: game.total_winAmount,
+      totalPlayers: game.total_players,
+  
+    })
+   
   }, game.gameSpeed);
- 
+
+
 
   gameIntervals.set(game.id, [gameInterval]);
 }
@@ -372,6 +388,19 @@ io.on('connection', (socket) => {
             total_winAmount: game.total_winAmount,
             total_players: game.total_players,
             roomId: data.roomId
+      })
+
+      io.emit("bingoWinner", {
+        isBingo: true,
+        playerId: data.playerId,
+        markedCells: markedSingleCard,
+        winningCard: markedSingleCard,
+        winner: data.playerId,
+        winnerCardNumber: boardNumber,
+        winnerPlayerName: data.playerName,
+        winningCard: markedSingleCard,
+        gameId: data.gameId,
+        roomId: data.roomId
       })
 
       try {
