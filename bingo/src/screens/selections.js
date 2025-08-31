@@ -499,7 +499,8 @@ const handleGlobals = (state) => {
             </div>
            </div>
             <div className="game-info-text">
-              Total players {totalPlayers}
+               {totalPlayers} ሰው አሁን እየተጫወቱ ናቸው
+
             </div>
 
            
