@@ -53,6 +53,7 @@ const Selections = () => {
   const [winnerCardNumber, setWinnerCardNumber] = useState(null);
   const [winnerPlayerName, setWinnerPlayerName] = useState(null);
   const [winningCard, setWinningCard] = useState([]);
+  const [calledNumbers, setCalledNumbers] = useState([]);
 
   // Generate numbers 1-100 (memoized since it's static)
   const numbers = Array.from({ length: 400 }, (_, i) => i + 1);
@@ -106,7 +107,7 @@ const Selections = () => {
   const handlePlaySound = async (calledNumber) => {
     const SOUND_URL = process.env.REACT_APP_SOUND_URL
     
-    // Cache audio files to improve performance and reduce loading time
+    // Cache audio files to improve performance and reduce loading timegl
     if (!window.audioCache) {
       window.audioCache = new Map();
     }
@@ -138,8 +139,9 @@ const handleGlobals = (state) => {
   if (state.roomId == roomId) {
   setCountDown(state.countDown);
   if (state.lastBall && state.lastBall?.number) {
-    handlePlaySound(state.lastBall?.number)
+    // handlePlaySound(state.lastBall?.number)
     setCurrentCall(state.lastBall?.number);
+    setCalledNumbers(state.calledNumbers);
   }
  
 
@@ -526,7 +528,7 @@ const handleGlobals = (state) => {
            <>
            <div className="global-ball-container">
             <div className="global-ball">
-              Ball {currentCall}
+               {calledNumbers?.length}/<span>75</span>
             </div>
            </div>
             <div className="game-info-text">

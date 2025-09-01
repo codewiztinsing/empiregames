@@ -353,9 +353,12 @@ body {
 }
 
 .bingo-header {
-  background-color:#2c2856;
-  width: 180px;
-  display: grid;
+  padding: 3px;
+  border-radius: 2px;
+  border: 2px solid #ccc;
+  height: 100%;
+  width: 168px;
+ 
 }
 
 .bingo-letter-text {
@@ -394,7 +397,7 @@ body {
 }
 
 .bingo-letter-text:nth-child(4) {
-  background-color: rgb(29, 160, 12);
+  background-color: #75cbfb;
   color:white 
 }
 
@@ -542,6 +545,7 @@ body {
   font-weight: bold;
   font-size: medium;
   /* border: 1px solid #ccc !important; */
+  background-color: #2a2a2e;
   color: white;
   
 }
