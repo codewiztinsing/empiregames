@@ -103,11 +103,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def play_options_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton("🎮 Play 10", callback_data='10'),
-         InlineKeyboardButton("🎮 Play 10", callback_data='10')],
-        [InlineKeyboardButton("🎮 Play 10", callback_data='10'),
-         InlineKeyboardButton("🎮 Play 10", callback_data='10')],
-        [InlineKeyboardButton("🎮 Play Demo", callback_data='play_demo'),
-         InlineKeyboardButton("🔙 Back to Menu", callback_data='back')
+         InlineKeyboardButton("🎮 Play 20", callback_data='20')],
+        [InlineKeyboardButton("🎮 Play 50", callback_data='50'),
+         InlineKeyboardButton("🎮 Play 100", callback_data='100')],
+         [InlineKeyboardButton("🔙 Back to Menu", callback_data='back')
          ],
     ]
     return InlineKeyboardMarkup(keyboard)
