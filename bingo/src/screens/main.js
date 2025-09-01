@@ -247,38 +247,66 @@ const PlayingBoard = () => {
           ))}
         </div>
 
-        {winningCard[0].map((_, colIndex) => {
-          const isColumnComplete = winningCard.every(row => row[colIndex].marked);
-          const isRowComplete = winningCard[colIndex].every(cell => cell.marked);
-          const isDiagonalComplete = winningCard.every((row, i) => row[i].marked);
-          const isReverseDiagonalComplete = winningCard.every((row, i) => row[4-i].marked);
-          const isFourCornersComplete = winningCard[0][0].marked && winningCard[0][4].marked && 
-                                      winningCard[4][0].marked && winningCard[4][4].marked;
-          const isFourEdgesComplete = winningCard[0][2].marked && winningCard[2][0].marked &&
-                                    winningCard[2][4].marked && winningCard[4][2].marked;
+        {winningCard[0] && winningCard[0].map((_, rowIndex) => (
+    <div key={rowIndex} className="winning-card-row">
+      {winningCard.map((row, colIndex) => {
+        const cell = row[rowIndex];
+        // Check win conditions
+        const rowComplete = winningCard.every(r => r[rowIndex].marked);
+        const colComplete = winningCard[colIndex].every(c => c.marked);
+        const diagonalComplete =
+          rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
+        const reverseDiagonalComplete =
+          rowIndex + colIndex === 4 && winningCard.every((r, i) => r[4 - i].marked);
 
-         
+        const fourCornersComplete =
+          winningCard[0][0].marked &&
+          winningCard[0][4].marked &&
+          winningCard[4][0].marked &&
+          winningCard[4][4].marked;
 
-          return (
-            <div key={colIndex} className="winning-card-row">
-              {winningCard.map((row, rowIndex) => (
-                <div
-                  key={rowIndex}
-                  className="winning-card-cell"
-                  style={{
-                    backgroundColor: isRowComplete || isColumnComplete
-                      ? 'green'
-                      : row[colIndex].marked
-                      ? 'red'
-                      : 'white',
-                  }}
-                >
-                  <span>{row[colIndex].number}</span>
-                </div>
-              ))}
-            </div>
-          );
-        })}
+        const fourEdgesComplete =
+          winningCard[0][2].marked &&
+          winningCard[2][0].marked &&
+          winningCard[2][4].marked &&
+          winningCard[4][2].marked;
+
+        // Does this cell belong to a winning line?
+        const inWinningLine =
+          (rowComplete && cell.marked) ||
+          (colComplete && cell.marked) ||
+          (diagonalComplete && cell.marked) ||
+          (reverseDiagonalComplete && cell.marked) ||
+          (fourCornersComplete &&
+            cell.marked &&
+            ((colIndex === 0 && (rowIndex === 0 || rowIndex === 4)) ||
+             (colIndex === 4 && (rowIndex === 0 || rowIndex === 4)))) ||
+          (fourEdgesComplete &&
+            cell.marked &&
+            ((colIndex === 0 && rowIndex === 2) ||
+             (colIndex === 2 && (rowIndex === 0 || rowIndex === 4)) ||
+             (colIndex === 4 && rowIndex === 2)));
+
+        // Final background color
+        let bgColor = "white";
+        if (inWinningLine) {
+          bgColor = "green";   // part of winning line
+        } else if (cell.marked) {
+          bgColor = "red";     // marked but not winning
+        }
+
+        return (
+          <div
+            key={colIndex}
+            className="winning-card-cell"
+            style={{ backgroundColor: bgColor }}
+          >
+            <span>{cell.number}</span>
+          </div>
+        );
+      })}
+    </div>
+  ))}
       </div>
 
       <div className="choosen-numbers">
