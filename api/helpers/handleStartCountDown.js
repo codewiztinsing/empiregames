@@ -17,6 +17,15 @@ function startCountDown(game,io,activeGames,gameIntervals,users) {
         game_status: game.status,
         count_down: game.countDown
       });
+
+      io.emit("globalGameState", {
+        gameId: game.id,
+        roomId: game.roomId,
+        pickedNumbers: game.selectedNumbers.filter(num => num !== null),
+        total_players: game.players.size,
+        game_status: game.status,
+        count_down: game.countDown
+      });
   
     
   

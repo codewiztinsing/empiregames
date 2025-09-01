@@ -105,9 +105,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 # Function to create the play options keyboardF
-def play_options_keyboard() -> InlineKeyboardMarkup:
+def play_options_keyboard(user_id, username,user_balance=0) -> InlineKeyboardMarkup:
+    GAME_URL = get_bot_seetings().get("GAME_URL")
+    player_id = user_id
+    username = username    
+    web_app_url = f"{GAME_URL}?playerId={player_id}&betAmount={10}&playerName={username}&wallet_amount={user_balance}"
+    logger.info(f"web_app_url = {web_app_url}")
+
     keyboard = [
-        [InlineKeyboardButton("🎮 Play 10", callback_data='10')
+        [InlineKeyboardButton("🎮 Play 10", web_app=WebAppInfo(url=web_app_url))
          ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -263,7 +269,7 @@ async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def play_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    reply_markup = play_options_keyboard() 
+    reply_markup = play_options_keyboard(update.effective_user.id, update.effective_user.username) 
     user_id = update.effective_user.id
     username = update.effective_user.username
     try:
@@ -287,14 +293,8 @@ async def play_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Function to create the play options keyboard
 def instructions_options_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
-        [
-            InlineKeyboardButton("📝 Registraion", callback_data='register_instructions'),
-            InlineKeyboardButton("🎮 Game play ", callback_data='play_instruction')
-         ],
-      
-         [InlineKeyboardButton("🔙 Back to Menu", callback_data='back')]
+     
     ]
-    
 
     return InlineKeyboardMarkup(keyboard)
 
@@ -308,7 +308,7 @@ def support_options_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    reply_markup = support_options_keyboard()
+    reply_markup = support_options_keyboard(update.effective_user.id, update.effective_user.username)
     await update.message.reply_text("Contact us using support button. We will respond to your message as soon as possible.", reply_markup=reply_markup)
 
 async def deposit_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -393,13 +393,14 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
             web_app_url = f"{GAME_URL}?playerId={player_id}&betAmount={10}&playerName={query.from_user.username}&wallet_amount={user_balance}"
             logger.info(f"web_app_url = {web_app_url}")
+
             
-            await query.edit_message_text(
-                text=f"Starting game with 10 ETB bet...",
-                reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("Play Game", web_app=WebAppInfo(url=web_app_url))
-                ]])
-            )
+            # await query.edit_message_text(
+            #     text=f"Starting game with 10 ETB bet...",
+            #     reply_markup=InlineKeyboardMarkup([[
+            #         InlineKeyboardButton("Play Game", web_app=WebAppInfo(url=web_app_url))
+            #     ]])
+            # )
         
            
             return ConversationHandler.END
@@ -436,16 +437,20 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             return WITHDRAW_AMOUNT_CONFIRM
 
         if query.data == 'play' :
+            user_balance = get_user_balance(query.from_user.id)
+            if user_balance < 10:
+                    await query.edit_message_text(f"You have no balance. Please deposit to play.")
+                    return ConversationHandler.END
             await query.edit_message_text(
                 text="Choose a play option:",
-                reply_markup=play_options_keyboard()
+                reply_markup=play_options_keyboard(query.from_user.id, query.from_user.username,user_balance)
             )
             return ConversationHandler.END
 
         elif query.data == 'contact_support':
             await query.edit_message_text(
                 text="Choose a contact support:",
-                reply_markup=support_options_keyboard()
+                reply_markup=support_options_keyboard(query.from_user.id, query.from_user.username)
             )
             return ConversationHandler.END
 

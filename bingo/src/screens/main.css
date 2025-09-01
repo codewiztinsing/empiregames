@@ -1,5 +1,5 @@
 body {
-  background-color: #cfade0;
+  background-color:#17233b;
 }
 
 .game-container {
@@ -10,7 +10,7 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background-color:#cfade0;
+  background-color:#17233b;
 
  
 }

@@ -99,12 +99,14 @@ const Selections = () => {
     fetchBalance();
 
     socket.on('gameState', handleGameState);
+    socket.on('globalGameState', handleGlobalGameState);
     socket.on('pickedNumbers', handlePickedNumbers);
     socket.on("gameStatus", handleGameStatus)
 
     return () => {
       socket.off('pickedNumbers', handlePickedNumbers);
       socket.off('gameState', handleGameState);
+      socket.off('globalGameState', handleGlobalGameState);
       socket.off('gameStatus', handleGameStatus);
  
 
@@ -140,6 +142,12 @@ const Selections = () => {
     }
 
   };
+
+  const handleGlobalGameState = (state) => {
+    if(state.roomId == roomId){
+      setCountDown(state.count_down);
+    }
+  }
 
   socket.on('activeGames', (state) => {
     if (state?.activeGames?.length > 0) {
@@ -332,23 +340,19 @@ const Selections = () => {
 
 
           <div className="balance-container">
-        
-      
+          <div className="game-status">
+              <div className={`status-badge`}>
+                {countDown}
+              </div>
+            </div>
           <div className="balance-text">
-          Balance {balance} ብር
+          Wallet {balance} ብር
             </div>
           
             <div className="balance-text">
             Stake {roomId} ብር
             </div>
-            <div className="game-status">
-              <div className={`status-badge ${gameStatus}`}>
-                {gameStatus === 'active' ? '🟢' : '⏳'}
-              </div>
-            </div>
-
-           
-        
+          
           </div>
 
         
