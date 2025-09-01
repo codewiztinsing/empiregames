@@ -3,6 +3,8 @@ const { clearGameIntervals } = require('./handleClearGameIntervals');
 
 function handleJoin(io, socket, data, activeGames, users, gameIntervals) {
   const game = activeGames.get(data.roomId);
+  console.log("game data", game)
+    console.log("game", game)
   if (!data.playerId || !game) return;
 
   // Reject if game is already in progress

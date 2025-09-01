@@ -13,11 +13,11 @@ async function handleBingo(data, activeGames, io, gameIntervals, users) {
   const playerCards = game.players.get(playerId);
   if (!playerCards || !Array.isArray(playerCards)) return;
 
-  // Optional: Validate submitted board belongs to player
-  if (!playerCards.some(card => JSON.stringify(card) === JSON.stringify(board))) {
-    console.warn(`Submitted board does not belong to player ${playerId}`);
-    return;
-  }
+  // // Optional: Validate submitted board belongs to player
+  // if (!playerCards.some(card => JSON.stringify(card) === JSON.stringify(board))) {
+  //   console.warn(`Submitted board does not belong to player ${playerId}`);
+  //   return;
+  // }
 
   const markedCard = markPlayerCard(board, game.calledNumbers);
   const isBingo = checkSingleCardBingo(markedCard);

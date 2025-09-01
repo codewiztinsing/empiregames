@@ -49,20 +49,17 @@ body, #root {
 }
 
 .combination-boards-container-parent {
+  
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background-color:#cfade0;
+
   
 }
 
-.combination-board-container{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 5px;
 
-}
 
 .loading-spinner{
   border: 16px solid #f3f3f3; /* Light grey */
@@ -240,7 +237,7 @@ body, #root {
 .combination-number-cell{
   width: 30px;
   height: 25px;
-  border: 1px solid #383559;
+  border: 1px solid #cfade0;
   text-align: center;
   cursor: pointer;
   color:white;

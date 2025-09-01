@@ -52,6 +52,10 @@ const Selections = () => {
     setRoomId(queryParams.get('betAmount'));
     console.log("player name = ",queryParams.get('playerName'))
     setPlayerName(queryParams.get('playerName'));
+    console.log("game status = ",gameStatus)
+    if(gameStatus == "active"){
+      navigate("/play")
+    }
 
     socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
    
@@ -206,6 +210,7 @@ const Selections = () => {
 
 
   const handlePickedNumbers = (state) => {
+  
     if(state.roomId == roomId){
       setPickedNumbers(state.numbers);
     }
@@ -219,12 +224,11 @@ const Selections = () => {
   };
 
   const handleStartGame = async () => {
-    console.log("handleStartGame")
+  
   
     if (!selectedNumber || !playerId || !gameId ) return;
     setIsLoading(true);
 
-    console.log("game status", gameStatus)
 
     if (gameStatus == "active") {
       setToast("Game is already in progress");
@@ -264,53 +268,35 @@ const Selections = () => {
 
   const handleNumberClick = (number) => {
     if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) {
+      toast.error("Number already picked");
       return;
     }
-
-    // If number is already chosen, remove it
-    if (choosenNumbers.includes(number)) {
-      const index = choosenNumbers.indexOf(number);
-      if (index > -1) {
-        const newNumbers = [...choosenNumbers];
-        const newBoards = [...choosenBoards];
-        newNumbers.splice(index, 1);
-        newBoards.splice(index, 1);
-        setChoosenNumbers(newNumbers);
-        setChooseBoards(newBoards);
-        
-        // Update the appropriate selected number and board
-        if (index === 0) {
-          setSelectedNumber(null);
-          setSelectBoard([]);
-        } else {
-         
-        }
-      }
+    if(gameStatus == "in-progress"){
+      toast.error("Game is already in progress. Please wait for the next round.");
       return;
     }
-
-    // Only allow selecting up to 2 numbers
-    if (choosenNumbers.length >= 2) {
+    if(balance < roomId){
+      toast.error("Insufficient balance");
       return;
     }
-
-    // Add new number and generate new board
-    const newNumbers = [...choosenNumbers, number];
+    else {
     const newBoard = generateCombination();
+    setSelectBoard(newBoard);
+    setSelectedNumber(number);
+    try {
+      socket.emit('joinGame', { playerId, gameId, selectedNumber, roomId, selectBoard, numberOfBoards: choosenBoards.length })
 
-    setChoosenNumbers(newNumbers);
-    
-    // Set appropriate selected number and board based on position
-    if (newNumbers.length === 1) {
-      setSelectedNumber(number);
-      setSelectBoard(newBoard);
-      setChooseBoards([newBoard]);
-    } else {
-     
-      setChooseBoards([...choosenBoards, newBoard]);
+      navigate('/play');
+    } catch (error) {
+      console.error('Error starting game:', error);
+    } finally {
+      // setIsLoading(false);
     }
 
-  
+    }
+
+
+
   };
   
   const handleGameStatus = (state) => {
@@ -409,7 +395,7 @@ const Selections = () => {
 
               
              <div className='card-number-container'>
-             <div className='card-number'># Card {selectedNumber}</div>
+             {/* <div className='card-number'># Card {selectedNumber}</div> */}
                 
                 <div className="combination-bingo-header">
            
@@ -458,12 +444,12 @@ const Selections = () => {
 
          
             </div>
-            <button
+            {/* <button
                   className="start-game-button"
                   onClick={handleStartGame}
                 >
                   {isLoading ? 'Starting...' : 'Start Game'}
-              </button>
+              </button> */}
             </div>
 
 

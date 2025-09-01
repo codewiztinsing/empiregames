@@ -64,8 +64,6 @@ const winners = [];
 
 io.on('connection', (socket) => {
   socket.on("playerJoined", (data) => handlePlayerConnection(socket,data,activeGames))
-
-  
   const waitingGames = getWaitingGames(activeGames, "waiting");
   const inProgressGames = getWaitingGames(activeGames, "in-progress");
   socket.emit("waitingGames", [...waitingGames, ...inProgressGames]);

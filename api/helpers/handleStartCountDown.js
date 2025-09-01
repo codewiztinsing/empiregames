@@ -12,7 +12,8 @@ function startCountDown(game,io,activeGames,gameIntervals,users) {
         gameId: game.id,
         roomId: game.roomId,
         pickedNumbers: game.selectedNumbers.filter(num => num !== null),
-        total_players: game.selectedNumbers.filter(num => num !== null).length,
+        // total_players: game.selectedNumbers.filter(num => num !== null).length,
+        total_players: game.players.size,
         game_status: game.status,
         count_down: game.countDown
       });

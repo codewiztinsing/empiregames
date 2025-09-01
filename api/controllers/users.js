@@ -32,7 +32,6 @@ const getUserById = async (req, res) => {
       });
     }
     
-    console.log("user = ",user)
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
