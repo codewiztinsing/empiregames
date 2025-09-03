@@ -121,7 +121,7 @@ const PlayingBoard = () => {
         setWinner(data.playerId);
         setWinnerCardNumber(data.winner_Number);
         setWinnerPlayerName(data.playerName);
-        handlePlayWinSound();
+        // handlePlayWinSound();
       }
     };
 
