@@ -35,10 +35,11 @@ class ChapaSessionAdmin(admin.ModelAdmin):
 class AddisPaySessionAdmin(admin.ModelAdmin):
     list_display = ( 'amount', 'currency', 'email', 'first_name', 'last_name', 'phone_number', 'tx_ref', 'ref_id', 'callback_url', 'return_url', 'customization', 'status', 'created_at')
     ordering = ('-created_at',)
-    list_display_links = ('tx_ref',"phone_number")
+    list_display_links = ('tx_ref',"phone_number","status","created_at","amount","currency","email","first_name","last_name")
     list_filter = ('status','created_at')
     search_fields = ('user__phone', 'user__telegram_id','user__username')
     list_per_page = 10
+    list_filter = ('status','created_at')
 
 
 admin.site.register(Transaction, TransactionAdmin)  

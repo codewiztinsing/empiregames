@@ -573,25 +573,26 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 data = addis_session.get("data")
                 print("addis_session data = ",data)
                 # create session in database
-                session_creating_response = requests.post(f"{BACK_URL}/api/v1/wallet/addispay/create-session", json={
-                     float(context.user_data['deposit_amount']),
-                     "ETB",
-                     f"{query.from_user.username}@gmail.com",
-                     query.from_user.first_name,
-                     query.from_user.last_name,
-                     phone_number,
-                     tax_ref,
-                     f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/",
-                     "https://wowliyubingo.com/success",
-                     {
+                session_data = {
+                    "amount": float(context.user_data['deposit_amount']),
+                    "currency": "ETB",
+                    "email": f"{query.from_user.username}@gmail.com",
+                    "first_name": query.from_user.first_name or "User",
+                    "last_name": query.from_user.last_name or "Name",
+                    "phone_number": phone_number,
+                    "tx_ref": tax_ref,
+                    "callback_url": f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/",
+                    "return_url": "https://wowliyubingo.com/success",
+                    "customization": {
                         "title": "Wow Bingo",
                         "description": "Deposit to Wow Bingo",
                         "logo": "https://wowliyubingo.com/static/media/logo.png"
                     }
-                    
-                })
+                }
+                session_creating_response = requests.post(f"{BACK_URL}/api/v1/wallet/addispay/create-session", json=session_data)
                     
                 print("session_creating_response = ",session_creating_response)
+                print("session_creating_response.json() = ",session_creating_response.json())
                 checkout_url = data.get("checkout_url") + "/" + data.get("uuid")
                 print("checkout_url = ",checkout_url)
             else:
@@ -692,7 +693,7 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     amount = update.message.text
 
     if float(amount) < 5:
-        await update.message.reply_text("Minimum deposit amount is 20 ETB. Please enter a higher amount.")
+        await update.message.reply_text("Minimum deposit amount is 5 ETB. Please enter a higher amount.")
         return DEPOSIT_AMOUNT
 
     back_url = get_bot_seetings().get("bot_url")
