@@ -338,6 +338,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if query.data in ['10', '20', '50', '100']:
             user_id = query.from_user.id
             print("user_id = ",user_id)
+            print("url = ",f'{BACK_URL}/api/v1/users/{user_id}')
             
             # Check if user is registered
             response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
@@ -345,7 +346,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             logger.info(f"Response {response}")
             data = response.json()
             logger.info(f"Data {data}")
-            print("data = ",data)
+            print("data = ",data.get('phone'))
             if data.get('phone') is None:
                 await query.edit_message_text(
                     text="You need to register first before playing. Use the /register command.",
