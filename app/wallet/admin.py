@@ -1,5 +1,9 @@
 from django.contrib import admin
-from .models import Wallet, Transaction, ChapaSession
+from .models import (Wallet, 
+            Transaction,
+            ChapaSession,
+            AddisPaySession
+            )
 
 class WalletAdmin(admin.ModelAdmin):
     list_display = ('user', 'balance','created_at','user__phone','user__telegram_id')
@@ -27,5 +31,16 @@ class ChapaSessionAdmin(admin.ModelAdmin):
     search_fields = ('user__phone', 'user__telegram_id','user__username')
     list_per_page = 10
 
+
+class AddisPaySessionAdmin(admin.ModelAdmin):
+    list_display = ( 'amount', 'currency', 'email', 'first_name', 'last_name', 'phone_number', 'tx_ref', 'ref_id', 'callback_url', 'return_url', 'customization', 'status', 'created_at')
+    ordering = ('-created_at',)
+    list_display_links = ('tx_ref',"phone_number")
+    list_filter = ('status','created_at')
+    search_fields = ('user__phone', 'user__telegram_id','user__username')
+    list_per_page = 10
+
+
 admin.site.register(Transaction, TransactionAdmin)  
 admin.site.register(ChapaSession, ChapaSessionAdmin)
+admin.site.register(AddisPaySession, AddisPaySessionAdmin)

@@ -59,7 +59,7 @@ def generate_tx_ref(length=20):
 # Define conversation states
 DEPOSIT_AMOUNT = range(1)
 SCREENSHOT = range(2)
-GET_DEPOSIT_AMOUNT,WITHDRAW_AMOUNT_CONFIRM,WITHDRAW_AMOUNT_CANCEL,CHOOSE_PAYMENT_METHOD,GET_WITHDRAW_ACCOUNT,GET_TRANSCATION_DETAILS = range(2,8)
+GET_DEPOSIT_AMOUNT,WITHDRAW_AMOUNT_CONFIRM,WITHDRAW_AMOUNT_CANCEL,CHOOSE_PAYMENT_METHOD,GET_WITHDRAW_ACCOUNT,GET_TRANSCATION_DETAILS,PHONE,REGISTER,SOME_STATE = range(2,11)
 
 CONVERSATION_TIMEOUT = 300  # 5 minutes
 
@@ -106,8 +106,7 @@ def play_options_keyboard() -> InlineKeyboardMarkup:
          InlineKeyboardButton("🎮 Play 20", callback_data='20')],
         [InlineKeyboardButton("🎮 Play 50", callback_data='50'),
          InlineKeyboardButton("🎮 Play 100", callback_data='100')],
-         [InlineKeyboardButton("🔙 Back to Menu", callback_data='back')
-         ],
+        [InlineKeyboardButton("🔙 Back to Menu", callback_data='back')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -120,12 +119,8 @@ async def get_phone_number(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 def deposit_opitions_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
-              
-                 [
-                InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')
- 
-                 ]
-            ]
+        [InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')]
+    ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     return reply_markup
 
@@ -375,25 +370,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             
            
 
-        
-        if query.data == 'play_demo':
-            player_id = query.from_user.id
-            username = query.from_user.username
-            user_id = query.from_user.id
-            bet_amount = 0  # Demo game has no bet amount
-            wallet_amount = requests.get(f'{BACK_URL}/payments/wallet/{user_id}/').json().get('balance',0)
-            web_app_url = (
-                f"{BACK_URL}/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={wallet_amount}&demo=true"
-            )
 
-            await query.edit_message_text(
-                text=f"Starting demo game...",
-                reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("Play Demo", web_app=WebAppInfo(url=web_app_url))
-                ]])
-            )
-
-            return ConversationHandler.END
 
 
         elif query.data.startswith('withraw_with_'):
@@ -552,21 +529,69 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 await query.edit_message_text(text="An error occurred. Please try again.")
                 return ConversationHandler.END
            
+        elif query.data == "addispay":
+            print("addispay")
+            BACK_URL = get_bot_seetings().get("bot_url")
+            url = "/api/v1/wallet/addispay/create-session"
+            full_url = f"{BACK_URL}{url}"
+            
+            
 
-            keyboard = [
-                [InlineKeyboardButton("Pay with Chapa", callback_data=session_id)]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text(
-                text="Open Chapa to pay",
-                reply_markup=reply_markup
-            )
+            user_from_api = requests.get(f"{BACK_URL}api/v1/users/{query.from_user.id}").json()
+            phone_number = user_from_api.get("phone")
+           
+            data = {
+                "amount": context.user_data['deposit_amount'],
+                "currency": "ETB",
+                "first_name": query.from_user.first_name,
+                "last_name": query.from_user.last_name or query.from_user.username,
+                "email": f"{query.from_user.username}@gmail.com",
+                "phone_number": phone_number,
+                "tx_ref":generate_tx_ref(),
+                "return_url":f"https://t.me/wowbingobotbotbot",
+                "customization":{
+                    "title": "Wow Bingo",
+                    "description": "Deposit to Wow Bingo",
+                    "logo": "https://wowliyubingo.com/static/media/logo.png"
+                },
+                # "callback_url": "https://webhook.site/6bca0770-2235-4096-b8f6-41b861ec40e9"
+                "callback_url": f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/"
+            }
+
+            response = requests.post(full_url, json=data)
+            logger.info(f"response = {response}")
+            if response.status_code == 200:
+                chapa_session = initialize_payment(**data)
+                logger.info(f"data = {chapa_session}")
+
+                data = chapa_session.get("data")
+            
+                checkout_url = data.get("checkout_url")
+                keyboard = [
+                    [InlineKeyboardButton("Pay with Chapa", url=checkout_url)]
+                ]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                await query.edit_message_text(
+                    text="Click the button below to complete your payment:",
+                    reply_markup=reply_markup
+                )
+
+                return ConversationHandler.END
+
+            else:
+                await query.edit_message_text(text="An error occurred. Please try again.")
+                return ConversationHandler.END
+           
+
+      
 
         elif query.data == 'withraw_with_chapa':
             await query.edit_message_text(
                 text="how much do you want to withdraw?"
             )
-            return WITHDRAW_AMOUNT_CONFIRM
+            context.user_data['withdraw_amount'] = query.data
+            context.user_data['payment_method'] = 'chapa'
+            return DEPOSIT_AMOUNT
             # return ConversationHandler.END
 
           
@@ -580,17 +605,41 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         
         elif query.data == "register":
+            # Use a ReplyKeyboardMarkup with request_contact to actually receive phone number
+            contact_keyboard = ReplyKeyboardMarkup(
+                [[KeyboardButton(text="📞 Share Phone Number", request_contact=True)]],
+                resize_keyboard=True,
+                one_time_keyboard=True
+            )
+            await query.edit_message_text(text="📱 Please share your phone number to register:")
+            await query.message.reply_text(
+                text="Tap the button below to share your phone number.",
+                reply_markup=contact_keyboard
+            )
+            return REGISTER
 
+        elif query.data == 'share_phone':
+            # Fallback in case the inline button is used elsewhere
+            contact_keyboard = ReplyKeyboardMarkup(
+                [[KeyboardButton(text="📞 Share Phone Number", request_contact=True)]],
+                resize_keyboard=True,
+                one_time_keyboard=True
+            )
+            await query.edit_message_text(text="📱 Please share your phone number to register:")
+            await query.message.reply_text(
+                text="Tap the button below to share your phone number.",
+                reply_markup=contact_keyboard
+            )
+            return REGISTER
            
-            # return begin_register(update,context)
-            await query.edit_message_text('Welcome! Use /register to start the registration process.')
+    
           
         elif query.data == 'menu':
             keyboard = [
                 [InlineKeyboardButton("Play Game", callback_data='play'),
                  InlineKeyboardButton("Check Balance", callback_data='check_balance')],
                 [InlineKeyboardButton("Deposit", callback_data='deposit'),
-                 InlineKeyboardButton("Register", callback_data='register')]
+                 InlineKeyboardButton("Register", callback_data='register_menu')]
 
               
             ]
@@ -605,7 +654,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 [InlineKeyboardButton("Play Game", callback_data='play'),
                  InlineKeyboardButton("Check Balance", callback_data='check_balance')],
                 [InlineKeyboardButton("Deposit", callback_data='deposit'),
-                 InlineKeyboardButton("Register", callback_data='register')]
+                 InlineKeyboardButton("Register", callback_data='register_menu')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             await query.edit_message_text("Welcome to Wo w Bingo! Please select an option:", reply_markup=reply_markup)
@@ -637,7 +686,8 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     <b>📅 Date:</b> {}
     """.format(update.effective_user.username,phone,amount,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     inline_keyboard = [
-        [InlineKeyboardButton("Chapa", callback_data='chapa')]
+        [InlineKeyboardButton("Chapa", callback_data='chapa')],
+        [InlineKeyboardButton("AddisPay", callback_data='addispay')]
     ]
     reply_markup = InlineKeyboardMarkup(inline_keyboard)
     await update.message.reply_text(message,parse_mode=ParseMode.HTML,reply_markup=reply_markup)
@@ -650,13 +700,19 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 async def get_transcation_details(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
   
     message = update.message.text
-    amount = parsed_data.get('amount')
-    user_id = update.effective_user.id
-    username = update.effective_user.username
-    transaction_number = parsed_data.get('transaction_details')['id']
+    try:
+        parsed_data = json.loads(message)
+        amount = parsed_data.get('amount')
+        user_id = update.effective_user.id
+        username = update.effective_user.username
+        transaction_number = parsed_data.get('transaction_details')['id']
+    except json.JSONDecodeError:
+        await update.message.reply_text("Invalid transaction data format.")
+        return ConversationHandler.END
 
     print("transaction_number = ",transaction_number)
-   
+    
+    BACK_URL = get_bot_seetings().get("bot_url")
     response = requests.get(f'{BACK_URL}/transactions/transactionId/{transaction_number}')
     res = response.json()
     if res.get('status') == 'error':
@@ -723,7 +779,7 @@ async def post_init(app):
 
 async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    
+    BACK_URL = get_bot_seetings().get("bot_url")
     # Check if user is registered
     response = requests.get(f'{BACK_URL}/accounts/filter-users/{user_id}/')
     if response.status_code != 200:
@@ -733,7 +789,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # Get user's wallet balance
-    wallet_response = requests.get(f'{BACK_URL}/payments/wallet/{user_id}/').json()
+    wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}/').json()
     balance = wallet_response.get('balance', 0)
 
     invite_link = f"https://t.me/wowbingobot?start={user_id}"
@@ -746,7 +802,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     # Add 20 ETB bonus for inviting
-    requests.post(f'{BACK_URL}/payments/wallet/add-balance/', json={
+    requests.post(f'{BACK_URL}/api/v1/wallet/player/{user_id}/', json={
         'user_id': user_id,
         'amount': 20
     })
@@ -758,22 +814,18 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main() -> None:
     BOT_TOKEN = get_bot_seetings().get("bot_token")
     application = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
-    register_conversation_handler = ConversationHandler(
-        entry_points=[CommandHandler('register', begin_register)],
-        states={
-            PHONE: [MessageHandler(filters.CONTACT, handle_phone)]
-        },
-        fallbacks=[CommandHandler('cancel', cancel)],
-    )
+ 
 
-    deposit_conversation_handler = ConversationHandler(
+    conversation_handler = ConversationHandler(
         entry_points=[CallbackQueryHandler(button)],
         states={
             # get_deposit_amount
             DEPOSIT_AMOUNT          : [MessageHandler(filters.TEXT & ~filters.COMMAND, deposit_amount)],
             GET_WITHDRAW_ACCOUNT    : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_withdraw_account)],
             WITHDRAW_AMOUNT_CONFIRM : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_withdraw_amount)],
-            GET_TRANSCATION_DETAILS  : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_transcation_details)]
+            GET_TRANSCATION_DETAILS  : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_transcation_details)],
+            REGISTER                : [MessageHandler(filters.CONTACT, handle_phone)],
+
         },
         fallbacks=[CommandHandler('cancel', cancel)],
         allow_reentry=True
@@ -787,9 +839,8 @@ def main() -> None:
     application.add_handler(CommandHandler('instructions', instruction_command))
     application.add_handler(CommandHandler('support', support_command))
     application.add_handler(CommandHandler('withdraw', withdraw_command))
-    application.add_handler(deposit_conversation_handler)
+    application.add_handler(conversation_handler)
     application.add_handler(CommandHandler('invite', handle_invite))  
-    application.add_handler(register_conversation_handler)
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":

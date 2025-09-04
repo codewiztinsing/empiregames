@@ -72,36 +72,36 @@ async def begin_register(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     BACK_URL = get_bot_seetings().get("bot_url")
+    # check user already exists
+    url = f"{BACK_URL}/api/v1/users/{update.message.from_user.id}"
+    user_exists = requests.get(url)
+    if user_exists.status_code == 200:
+        await update.message.reply_text("You are already registered")
+        return ConversationHandler.END
+
     # Check if the message contains a contact
     if update.message.contact:
         phone_number = update.message.contact.phone_number
         user_data["phone"] = phone_number
-
+        print("phone_number = ",phone_number)
         user_id = update.message.from_user.id
         first_name = update.message.from_user.first_name,
         last_name = update.message.from_user.last_name
         confirm_password= update.message.text
+    
         user_data.update({
-            'telegram_id': str(update.message.from_user.id)
+            'telegram_id': str(update.message.from_user.id),
+            'phone': phone_number
         })
         user_data.update({
-            'phone': user_data.get('phone',"botphone")
+            'phone': user_data.get('phone',"botphone"),
+            'username':user_data.get('username',"").lower().replace(" ","_").replace("(","").replace(")",""),
+            'password': user_data.get('password',"123456"),
+            'email': user_data.get('email',f"{user_data.get('username')}@gmail.com")
         })
         
-        user_data.update({
-            "email":f"{user_data.get('username')}@gmail.com"
-        })
-
-        username = user_data.get("username",first_name)
-        phone = user_data.get('phone',"botphone")
-        password = "123456"
-        user_data.update({'password':password})
-
-
-        
-
-
         response = requests.post(f"{BACK_URL}/api/v1/users/register", json=user_data)
+        print("response = ",response.json())
 
         if response.status_code == 200:  # Assume 201 means success
             await update.message.reply_text("Registration completed successfully!")

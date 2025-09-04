@@ -27,6 +27,29 @@ class ChapaCallbackSchema(Schema):
 class WalletSchema(Schema):
     action: str=None
     amount: float=None
+
+
+class AddisPaySessionSchema(Schema):
+    amount: float
+    currency: str
+    email: str
+    first_name: str
+    last_name: str
+    phone_number: str
+    tx_ref: str
+    callback_url: str
+    return_url: str
+    customization: dict
+
+class AddisPaySessionResponseSchema(Schema):
+    status: str=None
+    message: str=None
+
+class AddisPayCallbackSchema(Schema):
+    status: str=None
+    ref_id: str=None
+    tx_ref: str=None
+    
     
     
     
