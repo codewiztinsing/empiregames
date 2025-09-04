@@ -17,6 +17,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 from datetime import datetime, timedelta
 from utils import initialize_payment,get_bot_seetings   
 from utils.chapa import get_available_banks,transfer_funds
+from utils.addis import create_session
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -63,6 +64,13 @@ GET_DEPOSIT_AMOUNT,WITHDRAW_AMOUNT_CONFIRM,WITHDRAW_AMOUNT_CANCEL,CHOOSE_PAYMENT
 
 CONVERSATION_TIMEOUT = 300  # 5 minutes
 
+
+
+async def conversation_timeout(context):
+    await context.bot.send_message(
+        chat_id=context.job.chat_id,
+        text="Conversation timed out due to inactivity. Please start again."
+    )
 
 
 
@@ -161,7 +169,8 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
     logger.info(f"amount {amount}")
  
     try:
-        wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}').json()
+        _resp = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
+        wallet_response = _resp.json() if _resp.headers.get('content-type','').startswith('application/json') else {}
         balance = float(wallet_response.get('balance', 0))
 
 
@@ -328,12 +337,15 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         if query.data in ['10', '20', '50', '100']:
             user_id = query.from_user.id
+            print("user_id = ",user_id)
             
             # Check if user is registered
             response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
+            print("response = ",response)
             logger.info(f"Response {response}")
             data = response.json()
             logger.info(f"Data {data}")
+            print("data = ",data)
             if data.get('phone') is None:
                 await query.edit_message_text(
                     text="You need to register first before playing. Use the /register command.",
@@ -443,7 +455,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             username = query.from_user.username or query.from_user.first_name
             bet_amount = query.data
         
-            wallet_amount = requests.get(f'{BACK_URL}/users/{user_id}/').json().get('balance',0)
+            _resp_u = requests.get(f'{BACK_URL}/users/{user_id}/')
+            wallet_amount = (_resp_u.json().get('balance',0)) if _resp_u.headers.get('content-type','').startswith('application/json') else 0
             print("wallet_amount = ",wallet_amount)
 
             web_app_url = (
@@ -484,7 +497,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             full_url = f"{BACK_URL}{url}"
             
 
-            user_from_api = requests.get(f"{BACK_URL}/api/v1/users/{query.from_user.id}").json()
+            _ufa = requests.get(f"{BACK_URL}/api/v1/users/{query.from_user.id}")
+            user_from_api = _ufa.json() if _ufa.headers.get('content-type','').startswith('application/json') else {}
             phone_number = user_from_api.get("phone")
            
             data = {
@@ -530,57 +544,68 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 return ConversationHandler.END
            
         elif query.data == "addispay":
-            print("addispay")
             BACK_URL = get_bot_seetings().get("bot_url")
-            url = "/api/v1/wallet/addispay/create-session"
-            full_url = f"{BACK_URL}{url}"
-            
-            
-
-            user_from_api = requests.get(f"{BACK_URL}api/v1/users/{query.from_user.id}").json()
-            phone_number = user_from_api.get("phone")
-           
-            data = {
-                "amount": context.user_data['deposit_amount'],
-                "currency": "ETB",
-                "first_name": query.from_user.first_name,
-                "last_name": query.from_user.last_name or query.from_user.username,
-                "email": f"{query.from_user.username}@gmail.com",
-                "phone_number": phone_number,
-                "tx_ref":generate_tx_ref(),
-                "return_url":f"https://t.me/wowbingobotbotbot",
-                "customization":{
-                    "title": "Wow Bingo",
-                    "description": "Deposit to Wow Bingo",
-                    "logo": "https://wowliyubingo.com/static/media/logo.png"
-                },
-                # "callback_url": "https://webhook.site/6bca0770-2235-4096-b8f6-41b861ec40e9"
-                "callback_url": f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/"
-            }
-
-            response = requests.post(full_url, json=data)
-            logger.info(f"response = {response}")
-            if response.status_code == 200:
-                chapa_session = initialize_payment(**data)
-                logger.info(f"data = {chapa_session}")
-
-                data = chapa_session.get("data")
-            
-                checkout_url = data.get("checkout_url")
-                keyboard = [
-                    [InlineKeyboardButton("Pay with Chapa", url=checkout_url)]
-                ]
-                reply_markup = InlineKeyboardMarkup(keyboard)
-                await query.edit_message_text(
-                    text="Click the button below to complete your payment:",
-                    reply_markup=reply_markup
-                )
-
+            # check if user is registered
+            response = requests.get(f"{BACK_URL}/api/v1/users/{query.from_user.id}")
+            user_from_api = response.json() if response.headers.get('content-type','').startswith('application/json') else {}            
+            if not user_from_api.get("success", False):
+                await query.edit_message_text(text="You need to register first. Use the /register command.")
                 return ConversationHandler.END
-
+                
+            phone_number = user_from_api.get("phone")
+            tax_ref = generate_tx_ref()
+            addis_session = create_session(
+            float(context.user_data['deposit_amount']), 
+            "ETB",
+            f"{query.from_user.username}@gmail.com", 
+            query.from_user.first_name,
+             query.from_user.last_name,
+            phone_number, 
+            tax_ref, 
+            f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/",
+             "https://wowliyubingo.com/success", {
+                "title": "Wow Bingo",
+                "description": "Deposit to Wow Bingo",
+                "logo": "https://wowliyubingo.com/static/media/logo.png"
+            })
+            if addis_session.get("status") == "success":
+                data = addis_session.get("data")
+                print("addis_session data = ",data)
+                # create session in database
+                session_creating_response = requests.post(f"{BACK_URL}/api/v1/wallet/addispay/create-session", json={
+                     float(context.user_data['deposit_amount']),
+                     "ETB",
+                     f"{query.from_user.username}@gmail.com",
+                     query.from_user.first_name,
+                     query.from_user.last_name,
+                     phone_number,
+                     tax_ref,
+                     f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/",
+                     "https://wowliyubingo.com/success",
+                     {
+                        "title": "Wow Bingo",
+                        "description": "Deposit to Wow Bingo",
+                        "logo": "https://wowliyubingo.com/static/media/logo.png"
+                    }
+                    
+                })
+                    
+                print("session_creating_response = ",session_creating_response)
+                checkout_url = data.get("checkout_url") + "/" + data.get("uuid")
+                print("checkout_url = ",checkout_url)
             else:
                 await query.edit_message_text(text="An error occurred. Please try again.")
                 return ConversationHandler.END
+            keyboard = [
+                [InlineKeyboardButton("Pay with AddisPay", url=checkout_url)]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(
+                text="Click the button below to complete your payment:",
+                reply_markup=reply_markup
+            )
+
+            return ConversationHandler.END
            
 
       
@@ -665,7 +690,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     amount = update.message.text
 
-    if float(amount) < 20:
+    if float(amount) < 5:
         await update.message.reply_text("Minimum deposit amount is 20 ETB. Please enter a higher amount.")
         return DEPOSIT_AMOUNT
 
@@ -674,7 +699,14 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     full_url = f"{back_url}/api/v1/users/{update.effective_user.id}"
     logger.info(f"full_url = {full_url}")
 
-    phone = requests.get(full_url).json().get("phone")
+    response = requests.get(full_url)
+    try:
+        response_data = response.json()
+        print("wow pay bot url ", response_data)
+        phone = response_data.get("phone")
+    except requests.exceptions.JSONDecodeError:
+        print("Invalid JSON response from API")
+        phone = None
     print("phone = ",phone)
     context.user_data['deposit_amount'] = amount    
 
@@ -720,7 +752,8 @@ async def get_transcation_details(update: Update, context: ContextTypes.DEFAULT_
         return ConversationHandler.END
     res_amount = res.get('amount').get('value')
     try:
-        current_balance = requests.get(f'{BACK_URL}/users/{user_id}/').json().get('user',{}).get('balance',0)
+        _cb = requests.get(f'{BACK_URL}/users/{user_id}/')
+        current_balance = (_cb.json().get('user',{}).get('balance',0)) if _cb.headers.get('content-type','').startswith('application/json') else 0
         response = requests.put(f'{BACK_URL}/users/balance/{user_id}/', json={"balance": current_balance + res_amount})
         withdraw_response = requests.delete(f'{BACK_URL}/transactions/{transaction_number}')
         
@@ -789,7 +822,8 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # Get user's wallet balance
-    wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}/').json()
+    _wr = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}/')
+    wallet_response = _wr.json() if _wr.headers.get('content-type','').startswith('application/json') else {}
     balance = wallet_response.get('balance', 0)
 
     invite_link = f"https://t.me/wowbingobot?start={user_id}"
@@ -845,12 +879,6 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-async def conversation_timeout(context):
-    await context.bot.send_message(
-        chat_id=context.job.chat_id,
-        text="Conversation timed out due to inactivity. Please start again."
-    )
 
 async def cancel(update, context):
     await update.message.reply_text("Conversation cancelled. You can start again anytime.")

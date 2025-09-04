@@ -1,4 +1,5 @@
 from ninja import Schema
+from typing import Optional
 
 class RegisterSchema(Schema):
     username: str
@@ -21,4 +22,12 @@ class UserSchema(Schema):
 class LoginSchema(Schema):
     username: str
     password: str
+
+class UserResponseSchema(Schema):
+    success: bool
+    message: Optional[str] = None
+    username: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    telegram_id: Optional[str] = None
 

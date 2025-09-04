@@ -2,7 +2,7 @@ import jwt
 from ninja import NinjaAPI,Router
 from ninja.security import django_auth
 from .auth import encode_jwt,decode_jwt
-from .schema import RegisterSchema, LoginSchema,UserSchema
+from .schema import RegisterSchema, LoginSchema, UserSchema, UserResponseSchema
 # from .models import User
 from django.db import IntegrityError
 from django.http import JsonResponse
@@ -31,9 +31,13 @@ def refresh_access_token(request):
 @users_router.post("/register")
 def register(request, data: RegisterSchema):
     try:
+        print("data = ",data)
         # Check if user already exists
         if User.objects.filter(phone=data.phone).exists():
-            return {"success": False, "message": "Phone number already registered"}
+            return JsonResponse({
+                "success": False,
+                "message": "Phone number already registered"
+            }, status=400)
         
         # Check if username already exists
         if User.objects.filter(username=data.username).exists():
@@ -50,12 +54,28 @@ def register(request, data: RegisterSchema):
             password=make_password(data.password)
         )
         
-        return {"success": True, "message": "User registered successfully"}
+        if user:
+            return JsonResponse({
+                "success": True,
+                "message": "User registered successfully",
+                "username": user.username,
+                "phone": user.phone,
+                "telegram_id": user.telegram_id
+            }, status=200)
+        else:
+            print("user registration failed")
+            return JsonResponse({
+                "success": False,
+                "message": "User registration failed"
+            }, status=400)
+        
         
     except Exception as e:
         print("error = ",e)
-        
-        return {"success": False, "message": f"{e}"}
+        return JsonResponse({
+            "success": False,
+            "message": f"Registration failed: {str(e)}"
+        }, status=500)
 
 
 
@@ -103,13 +123,21 @@ def login(request, data: LoginSchema):
 
 
 # get user by telegram id
-@users_router.get("/{telegram_id}",response=UserSchema)
+@users_router.get("/{telegram_id}",response=UserResponseSchema)
 def get_user_by_telegram_id(request,telegram_id:int):
     try:
         user = User.objects.get(telegram_id=str(telegram_id))
-        return UserSchema.from_orm(user)
+        print("user = ",user)
+        return UserResponseSchema(
+            success=True,
+            username=user.username,
+            email=user.email,
+            phone=user.phone,
+            telegram_id=user.telegram_id
+        )
     except Exception as e:
-        return {"success": False, "message": "User not found"}
+        print("error = ",e)
+        return UserResponseSchema(success=False, message="User not found")
 
 
 @users_router.get("/{user_id}/daily-withdraw-limit")

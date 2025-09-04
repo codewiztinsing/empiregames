@@ -75,7 +75,10 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # check user already exists
     url = f"{BACK_URL}/api/v1/users/{update.message.from_user.id}"
     user_exists = requests.get(url)
-    if user_exists.status_code == 200:
+    print("user_exists = ",user_exists.json())
+    telegram_id = user_exists.json().get("telegram_id",None)
+    print("telegram_id = ",telegram_id)
+    if telegram_id != None:
         await update.message.reply_text("You are already registered")
         return ConversationHandler.END
 
@@ -85,7 +88,7 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_data["phone"] = phone_number
         print("phone_number = ",phone_number)
         user_id = update.message.from_user.id
-        first_name = update.message.from_user.first_name,
+        first_name = update.message.from_user.first_name
         last_name = update.message.from_user.last_name
         confirm_password= update.message.text
     
@@ -95,14 +98,12 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         })
         user_data.update({
             'phone': user_data.get('phone',"botphone"),
-            'username':user_data.get('username',"").lower().replace(" ","_").replace("(","").replace(")",""),
+            'username':first_name or last_name or telegram_id or "bot" ,
             'password': user_data.get('password',"123456"),
             'email': user_data.get('email',f"{user_data.get('username')}@gmail.com")
         })
-        
+        print("user_data = ",user_data)
         response = requests.post(f"{BACK_URL}/api/v1/users/register", json=user_data)
-        print("response = ",response.json())
-
         if response.status_code == 200:  # Assume 201 means success
             await update.message.reply_text("Registration completed successfully!")
             await update.message.reply_text("Please click the button below to proceed to the next step:", reply_markup=play_options_keyboard())

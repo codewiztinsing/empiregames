@@ -47,7 +47,6 @@ def create_chapa_session(request, data: ChapaSessionSchema):
 
 # /api/v1/webhook/chapa/callback/??
 @router.get("/webhook/chapa/callback/")
-
 def chapa_callback(request):
     data = json.loads(request.body.decode('utf-8'))
     chapa_session = ChapaSession.objects.filter(tx_ref=data.get("trx_ref")).first()
@@ -131,15 +130,19 @@ def create_addispay_session(request, data: AddisPaySessionSchema):
     
 
 
-@router.get("/webhook/addispay/callback/")
+@router.get("/webhook/addispay/callback/success")
 def addispay_callback(request):
     data = json.loads(request.body.decode('utf-8'))
+    print("data = ",data)
     addispay_session = AddisPaySession.objects.filter(tx_ref=data.get("trx_ref")).first()
+    print("addispay_session = ",addispay_session)
     phone_number = addispay_session.phone_number
     user = User.objects.filter(phone=phone_number).first()
+    print("user = ",user)
     if addispay_session and user:
         addispay_session.status = data.get("status")
         if  data.get("status") == "success":
+            print("success")
             wallet = Wallet.objects.get(user=user)
             wallet.balance += float(addispay_session.amount)
             wallet.save()

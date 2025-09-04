@@ -1,3 +1,4 @@
+
 from decouple import config 
 import requests
 import time
@@ -15,14 +16,23 @@ def generate_tx_ref():
     return tx_ref
 
 def create_session(amount, currency, email, first_name, last_name, phone_number, tx_ref, callback_url, return_url, customization):
+
+    back_url = config("ADDISPAY_BASE_URL")
+    BACK_URL = config("BACK_URL")
+    print("addispay api key = ",apiKey)
+    print("back_url = ",back_url)
+    success_url = f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/success"
+    error_url = f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/error"
+    cancel_url = f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/cancel"
+    
     payment_data =  payment_data = {
     "data": {
         "redirect_url": "https://wowliyubingo.com",
-        "cancel_url": "https://wowliyubingo.com/cancel",
-        "success_url": "https://wowliyubingo.com/success",
-        "error_url": "https://wowliyubingo.com",
+        "cancel_url": cancel_url,
+        "success_url":success_url,
+        "error_url": error_url,
         "order_reason": "Wow Bingo deposit",
-        "currency": "ETB",
+        "currency": currency,
         "email": email,
         "first_name": first_name,
         "last_name": last_name,
@@ -60,11 +70,12 @@ def create_session(amount, currency, email, first_name, last_name, phone_number,
 
 
 def withdraw_funds(amount, currency, email, first_name, last_name, phone_number, tx_ref, callback_url, return_url, customization):
+    back_url = config("BACK_URL")
     payout_payment_data = {
     "data": {
-        "cancel_url": "https://wowliyubingo.com/cancel",
-        "success_url": "https://example.com/success",
-        "error_url": "https://example.com/error",
+        "cancel_url": f"{back_url}/api/v1/wallet/webhook/addispay/callback/cancel",
+        "success_url": f"{back_url}/api/v1/wallet/webhook/addispay/callback/success",
+        "error_url": f"{back_url}/api/v1/wallet/webhook/addispay/callback/error",
         "order_reason": "Wow Bingo withdrawal",
         "currency": "ETB",
         "customer_name": f"{first_name} {last_name}",
