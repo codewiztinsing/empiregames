@@ -2,6 +2,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ConversationHandler, ContextTypes
 import requests
 import os
+import random
 from utils import get_bot_seetings
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
 import requests
@@ -70,6 +71,9 @@ async def begin_register(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         return PHONE  # Move to the PHONE state
 
+def generate_random_username():
+    return f"user_{random.randint(1000,9999)}"
+
 async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     BACK_URL = get_bot_seetings().get("bot_url")
     # check user already exists
@@ -98,7 +102,7 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         })
         user_data.update({
             'phone': user_data.get('phone',"botphone"),
-            'username':first_name or last_name or telegram_id or "bot" ,
+            'username':first_name or last_name or telegram_id or generate_random_username() ,
             'password': user_data.get('password',"123456"),
             'email': user_data.get('email',f"{user_data.get('username')}@gmail.com")
         })
