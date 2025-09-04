@@ -190,15 +190,15 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         number_game_won = number_of_game_won(telegram_id)
 
         if int(number_game_played) < 5:
-            await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት\n 2 ጨወታ ማሽነፍ አለብዎት")
+            await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት")
             return WITHDRAW_AMOUNT_CONFIRM
 
-        if int(number_game_won) < 2:
-            await update.message.reply_text(f"2 ጨወታ ማሽነፍ አለብዎት")
-            return WITHDRAW_AMOUNT_CONFIRM
+        # if int(number_game_won) < 2:
+        #     await update.message.reply_text(f"2 ጨወታ ማሽነፍ አለብዎት")
+        #     return WITHDRAW_AMOUNT_CONFIRM
 
-        if int(amount) > 100:
-            await update.message.reply_text(f"Withdrawal amount must be less than 100 ETB")
+        if int(amount) > 500:
+            await update.message.reply_text(f"Withdrawal amount must be less than 500 ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
        
@@ -207,8 +207,8 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             return WITHDRAW_AMOUNT_CONFIRM
 
 
-        if int(amount) < 100:
-            await update.message.reply_text(f"Withdrawal amount must be at least 100 ETB")
+        if int(amount) < 50:
+            await update.message.reply_text(f"Withdrawal amount must be at least 50 ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
         
@@ -692,8 +692,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     amount = update.message.text
 
-    if float(amount) < 5:
-        await update.message.reply_text("Minimum deposit amount is 5 ETB. Please enter a higher amount.")
+    if float(amount) < 50:
+        await update.message.reply_text("Minimum deposit amount is 50 ETB. Please enter a higher amount.")
         return DEPOSIT_AMOUNT
 
     back_url = get_bot_seetings().get("bot_url")
