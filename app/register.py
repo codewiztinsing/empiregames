@@ -95,14 +95,14 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         first_name = update.message.from_user.first_name
         last_name = update.message.from_user.last_name
         confirm_password= update.message.text
-    
+        username =  update.message.from_user.username or generate_random_username()
         user_data.update({
             'telegram_id': str(update.message.from_user.id),
             'phone': phone_number
         })
         user_data.update({
             'phone': user_data.get('phone',"botphone"),
-            'username':first_name or last_name or telegram_id or generate_random_username() ,
+            'username':username,
             'password': user_data.get('password',"123456"),
             'email': user_data.get('email',f"{user_data.get('username')}@gmail.com")
         })
@@ -112,8 +112,8 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("Registration completed successfully!")
             await update.message.reply_text("Please click the button below to proceed to the next step:", reply_markup=play_options_keyboard())
         else:
-            print("response = ",response.json())
-            await update.message.reply_text(f"Registration failed")
+            print(f"Registration failed: {response.json()}")
+            await update.message.reply_text(response.json().get('message'))
 
       
 
