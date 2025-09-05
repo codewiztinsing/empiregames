@@ -28,7 +28,7 @@ class ChapaSessionAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
     list_display_links = ("phone_number","status","created_at","amount","currency","first_name")
    
-    search_fields = ('user__phone', 'user__telegram_id','user__username')
+    search_fields = ( 'first_name','phone_number','status','created_at','amount','currency')
     list_per_page = 10
 
 
@@ -37,7 +37,7 @@ class AddisPaySessionAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
     list_display_links = ("phone_number","status","created_at","amount","currency","first_name")
    
-    search_fields = ('user__phone', 'user__telegram_id','user__username')
+    search_fields = ('first_name','phone_number','status','created_at','amount','currency')
     list_per_page = 10
     list_filter = ('status','created_at')
 
