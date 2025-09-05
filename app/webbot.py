@@ -687,8 +687,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     amount = update.message.text
 
-    if float(amount) < 1:
-        await update.message.reply_text("Minimum deposit amount is 1 ETB. Please enter a higher amount.")
+    if float(amount) < 50:
+        await update.message.reply_text("Minimum deposit amount is 50 ETB. Please enter a higher amount.")
         return DEPOSIT_AMOUNT
 
     back_url = get_bot_seetings().get("bot_url")
