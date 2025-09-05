@@ -197,8 +197,8 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         #     await update.message.reply_text(f"2 ጨወታ ማሽነፍ አለብዎት")
         #     return WITHDRAW_AMOUNT_CONFIRM
 
-        if int(amount) > 500:
-            await update.message.reply_text(f"Withdrawal amount must be less than 500 ETB")
+        if int(amount) > 100:
+            await update.message.reply_text(f"Withdrawal amount must be less than 100 ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
        
@@ -687,7 +687,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     amount = update.message.text
 
-    if float(amount) <= 50:
+    if float(amount) <=49:
         await update.message.reply_text("Minimum deposit amount is 50 ETB. Please enter a higher amount.")
         return DEPOSIT_AMOUNT
 
