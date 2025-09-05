@@ -112,8 +112,8 @@ def play_options_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton("🎮 Play 10", callback_data='10'),
          InlineKeyboardButton("🎮 Play 20", callback_data='20')],
-        [InlineKeyboardButton("🎮 Play 50", callback_data='50'),
-         InlineKeyboardButton("🎮 Play 100", callback_data='100')],
+        # [InlineKeyboardButton("🎮 Play 50", callback_data='50'),
+        #  InlineKeyboardButton("🎮 Play 100", callback_data='100')],
         [InlineKeyboardButton("🔙 Back to Menu", callback_data='back')]
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -449,7 +449,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 
         
 
-        elif query.data in ['10','20', '50','100']:
+        elif query.data in ['10','20']:
 
             player_id = query.from_user.id
             user_id = query.from_user.id
@@ -571,7 +571,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             })
             if addis_session.get("status") == "success":
                 data = addis_session.get("data")
-                print("addis_session data = ",data)
                 # create session in database
                 session_data = {
                     "amount": float(context.user_data['deposit_amount']),
@@ -582,19 +581,15 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                     "phone_number": phone_number,
                     "tx_ref": tax_ref,
                     "callback_url": f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/",
-                    "return_url": "https://wowliyubingo.com/success",
-                    "customization": {
-                        "title": "Wow Bingo",
-                        "description": "Deposit to Wow Bingo",
-                        "logo": "https://wowliyubingo.com/static/media/logo.png"
-                    }
+                    "session_id": data.get("uuid")
                 }
+                print("session_data = ",session_data)
                 session_creating_response = requests.post(f"{BACK_URL}/api/v1/wallet/addispay/create-session", json=session_data)
-                    
-                print("session_creating_response = ",session_creating_response)
-                print("session_creating_response.json() = ",session_creating_response.json())
-                checkout_url = data.get("checkout_url") + "/" + data.get("uuid")
-                print("checkout_url = ",checkout_url)
+                if session_creating_response.status_code == 200:
+                    checkout_url = data.get("checkout_url") + "/" + data.get("uuid")
+                else:
+                    await query.edit_message_text(text="Failed to create payment session. Please try again.")
+                    return ConversationHandler.END
             else:
                 await query.edit_message_text(text="An error occurred. Please try again.")
                 return ConversationHandler.END
@@ -692,8 +687,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     amount = update.message.text
 
-    if float(amount) < 50:
-        await update.message.reply_text("Minimum deposit amount is 50 ETB. Please enter a higher amount.")
+    if float(amount) < 1:
+        await update.message.reply_text("Minimum deposit amount is 1 ETB. Please enter a higher amount.")
         return DEPOSIT_AMOUNT
 
     back_url = get_bot_seetings().get("bot_url")

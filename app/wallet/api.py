@@ -1,4 +1,7 @@
+import re
 from ninja import NinjaAPI,Router
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
 from .schema import (ChapaSessionSchema,
     ChapaSessionResponseSchema, 
     ChapaCallbackSchema,
@@ -36,17 +39,18 @@ def create_chapa_session(request, data: ChapaSessionSchema):
         customization=data.customization
     )
        
-        return 200,ChapaSessionResponseSchema(
-            session_id=chapa_session.id or None,
-            status=chapa_session.status or None,
-            message="Session created successfully"
-            )
+        return JsonResponse({
+            "session_id": chapa_session.id or None,
+            "status": chapa_session.status or None,
+            "message": "Session created successfully"
+        }, status=200)
     except Exception as e:
         print("error = ",e)
         return JsonResponse({"error": str(e)}, status=400)
 
-# /api/v1/webhook/chapa/callback/??
+# /api/v1/webhook/chapa/callback/
 @router.get("/webhook/chapa/callback/")
+@csrf_exempt
 def chapa_callback(request):
     data = json.loads(request.body.decode('utf-8'))
     chapa_session = ChapaSession.objects.filter(tx_ref=data.get("trx_ref")).first()
@@ -76,10 +80,10 @@ def player_wallet(request,telegram_id:int):
         print("user = ",user)
         wallet = Wallet.objects.filter(user=user).first()
         print("wallet = ",wallet)
-        return 200,{"balance": wallet.balance if wallet else 0}
+        return JsonResponse({"balance": wallet.balance if wallet else 0}, status=200)
     except Exception as e:
         print("error = ",e)
-        return 400,{"error": str(e)}
+        return JsonResponse({"error": str(e)}, status=400)
     
 
   
@@ -97,9 +101,9 @@ def update_player_wallet(request,telegram_id:int, data: WalletSchema):
             wallet_balance += float(data.amount)
         wallet.balance = wallet_balance
         wallet.save()
-        return 200,{"message": "Wallet updated successfully"}
+        return JsonResponse({"message": "Wallet updated successfully"}, status=200)
     except Exception as e:
-        return 400,{"error": str(e)}
+        return JsonResponse({"error": str(e)}, status=400)
 
 
 
@@ -116,38 +120,31 @@ def create_addispay_session(request, data: AddisPaySessionSchema):
             phone_number=data.phone_number,
             tx_ref=data.tx_ref,
             callback_url=data.callback_url,
-            return_url=data.return_url,
-            customization=data.customization
+            session_id=data.session_id
+          
         )
-        return 200,AddisPaySessionResponseSchema(
-            session_id=addispay_session.id or None,
-            status=addispay_session.status or None,
-            message="Session created successfully"
-        )
+        return JsonResponse({
+            "session_id": addispay_session.id or None,
+            "status": addispay_session.status or None,
+            "message": "Session created successfully"
+        }, status=200)
     except Exception as e:
         print("error = ",e)
         return JsonResponse({"error": str(e)}, status=400)
     
 
+# @router.get("/webhook/chapa/callback/")
+# @csrf_exempt
 
-@router.get("/webhook/addispay/callback/success")
+@router.get("/webhook/addispay/callback/success/")
+@csrf_exempt
 def addispay_callback(request):
-    data = json.loads(request.body.decode('utf-8'))
-    print("data = ",data)
-    addispay_session = AddisPaySession.objects.filter(tx_ref=data.get("trx_ref")).first()
-    print("addispay_session = ",addispay_session)
-    phone_number = addispay_session.phone_number
-    user = User.objects.filter(phone=phone_number).first()
-    print("user = ",user)
-    if addispay_session and user:
-        addispay_session.status = data.get("status")
-        if  data.get("status") == "success":
-            print("success")
-            wallet = Wallet.objects.get(user=user)
-            wallet.balance += float(addispay_session.amount)
-            wallet.save()
-            addispay_session.status = "success"
-            addispay_session.save()
-        return JsonResponse({"message": "Callback received"}, status=200)   
-    else:
-        return JsonResponse({"message": "Session not found"}, status=404)
+   data = json.loads(request.body.decode('utf-8'))
+   addispay_session = AddisPaySession.objects.filter(tx_ref=data.get("trx_ref")).first()
+   print("addispay_session = ",addispay_session)
+   phone_number = addispay_session.phone_number
+   user = User.objects.filter(phone=phone_number).first()
+   print("user = ",user)
+
+   return JsonResponse({"message": "Callback received"}, status=200)
+ 

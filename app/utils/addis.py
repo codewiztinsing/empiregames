@@ -19,13 +19,14 @@ def create_session(amount, currency, email, first_name, last_name, phone_number,
 
     back_url = config("ADDISPAY_BASE_URL")
     BACK_URL = config("BACK_URL")
+    # BACK_URL = "https://webhook.site/4b5999bc-ea1a-43c6-825b-858fd8ae972c"
     print("addispay api key = ",apiKey)
     print("back_url = ",back_url)
     success_url = f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/success"
     error_url = f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/error"
     cancel_url = f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/cancel"
     
-    payment_data =  payment_data = {
+    payment_data = {
     "data": {
         "redirect_url": "https://wowliyubingo.com",
         "cancel_url": cancel_url,
@@ -56,16 +57,17 @@ def create_session(amount, currency, email, first_name, last_name, phone_number,
     response = requests.post(f"{baseUrl}/create-order", json=payment_data, headers=headers)
     print("response = ",response.json())
     if response.status_code == 200:
+        response_data = response.json()
         return {
                 "status": "success",
                 "status_code": response.status_code,
-                "data": response.json()
+                "data": response_data
             }
     else:
         return {
             "status": "error",
             "status_code": response.status_code,
-            "data": "Unknown error"
+            "data": response.json() if response.headers.get('content-type','').startswith('application/json') else "Unknown error"
         }
 
 

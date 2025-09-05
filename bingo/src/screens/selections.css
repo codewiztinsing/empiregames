@@ -142,7 +142,6 @@ body, #root {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color:#2c2856;
   
 }
 
@@ -150,6 +149,7 @@ body, #root {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 5px;
+  
 
 }
 
@@ -257,7 +257,6 @@ body, #root {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer and Edge */
   gap: 5px;
-  margin-bottom: 20px;
 
 }
 
@@ -274,12 +273,13 @@ body, #root {
 }
 
 .combination-bingo-header{
-  width: 100%;
   display: flex;
   flex-direction: row;
   justify-content: space-around;
   background-color: #383559;
+  width: auto;
 }
+  
 
 .combination-bingo-header-text{
   width: 90%;

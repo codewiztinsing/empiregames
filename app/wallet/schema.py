@@ -38,8 +38,12 @@ class AddisPaySessionSchema(Schema):
     phone_number: str
     tx_ref: str
     callback_url: str
-    return_url: str
-    customization: dict
+    session_id: str=None
+
+    def __init__(self, **data):
+        print(f"AddisPaySessionSchema received data: {data}")
+        super().__init__(**data)
+   
 
 class AddisPaySessionResponseSchema(Schema):
     status: str=None

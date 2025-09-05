@@ -42,8 +42,6 @@ class AddisPaySession(models.Model):
     tx_ref = models.CharField(max_length=100)
     ref_id = models.CharField(max_length=100)
     callback_url = models.URLField()
-    return_url = models.URLField()
-    customization = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
