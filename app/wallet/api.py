@@ -52,23 +52,36 @@ def create_chapa_session(request, data: ChapaSessionSchema):
 @router.get("/webhook/chapa/callback/")
 @csrf_exempt
 def chapa_callback(request):
-    data = json.loads(request.body.decode('utf-8'))
-    chapa_session = ChapaSession.objects.filter(tx_ref=data.get("trx_ref")).first()
+    # For GET requests, data comes in query parameters, not request body
+    trx_ref = request.GET.get("trx_ref")
+    status = request.GET.get("status")
+    
+    print(f"Chapa callback - trx_ref: {trx_ref}, status: {status}")
+    
+    if not trx_ref or not status:
+        return JsonResponse({"message": "Missing required parameters"}, status=400)
+    
+    chapa_session = ChapaSession.objects.filter(tx_ref=trx_ref).first()
+    if not chapa_session:
+        print("Chapa session not found")
+        return JsonResponse({"message": "Session not found"}, status=404)
+    
     phone_number = chapa_session.phone_number
     user = User.objects.filter(phone=phone_number).first()
-    if chapa_session and user:
-        chapa_session.status = data.get("status")
-        if  data.get("status") == "success":
-            wallet = Wallet.objects.get(user=user)
-            wallet.balance += float(chapa_session.amount)
-            wallet.save()
-            chapa_session.status = "success"
-            chapa_session.save()
-      
+    if not user:
+        print("User not found")
+        return JsonResponse({"message": "User not found"}, status=404)
+    
+    chapa_session.status = status
+    if status == "success":
+        wallet = Wallet.objects.get(user=user)
+        wallet.balance += float(chapa_session.amount)
+        wallet.save()
+        chapa_session.status = "success"
+        chapa_session.save()
+        print("Payment processed successfully")
 
-        return JsonResponse({"message": "Callback received"}, status=200)
-    else:
-        return JsonResponse({"message": "Session not found"}, status=404)
+    return JsonResponse({"message": "Callback received"}, status=200)
 
 
 
@@ -133,18 +146,32 @@ def create_addispay_session(request, data: AddisPaySessionSchema):
         return JsonResponse({"error": str(e)}, status=400)
     
 
-# @router.get("/webhook/chapa/callback/")
-# @csrf_exempt
-
-@router.get("/webhook/addispay/callback/success/")
+@router.post("/webhook/addispay/callback/success/")
 @csrf_exempt
 def addispay_callback(request):
-   data = json.loads(request.body.decode('utf-8'))
-   addispay_session = AddisPaySession.objects.filter(tx_ref=data.get("trx_ref")).first()
-   print("addispay_session = ",addispay_session)
-   phone_number = addispay_session.phone_number
-   user = User.objects.filter(phone=phone_number).first()
-   print("user = ",user)
-
-   return JsonResponse({"message": "Callback received"}, status=200)
- 
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        print("AddisPay callback data:", data)
+        
+        if data.get("payment_status") == "success":
+            addispay_session = get_object_or_404(AddisPaySession, session_id=data.get("session_uuid"))
+            print("addispay_session = ",addispay_session)
+            phone_number = addispay_session.phone_number
+            user = get_object_or_404(User, phone=phone_number)
+            wallet = get_object_or_404(Wallet, user=user)
+            wallet.balance += float(addispay_session.amount)
+            wallet.save()
+            addispay_session.status = data.get("payment_status")
+            addispay_session.save()
+            print("AddisPay payment processed successfully")
+            return JsonResponse({"message": "Callback received"}, status=200)
+        else:
+            print(f"AddisPay payment failed with status: {data.get('payment_status')}")
+            return JsonResponse({"message": "Payment failed"}, status=400)
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        print(f"Error parsing AddisPay callback data: {e}")
+        return JsonResponse({"message": "Invalid callback data"}, status=400)
+    except Exception as e:
+        print(f"Error processing AddisPay callback: {e}")
+        return JsonResponse({"message": "Error processing callback"}, status=500)
+    
