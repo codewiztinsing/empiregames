@@ -36,4 +36,35 @@ def is_deposited_player(user_id):
     
 
 
+
+
+    
+def verify_receipt(message,paymentMethod):
+    """
+    Verify a receipt by reference number
+    
+    Args:
+        message (str): The message to verify
         
+    Returns:
+        dict: Response from the verification endpoint
+    """
+    manual_pay_url = config("MANUAL_BASE_URL")
+    print("manual payment url")
+    callbackurl = config("BACK_URL") +  "/api/v1/wallet/webhook/manual/success/"
+    print("callbackurl = ",callbackurl)
+    errorUrl = config("BACK_URL") +  "/api/v1/wallet/webhook/manual/error/"
+    print("errorUrl = ",errorUrl)
+    url = f"{manual_pay_url}receipts/verify/"
+    data = {"message": message,"callbackurl":callbackurl,"errorUrl":errorUrl,"paymentMethod":paymentMethod}
+
+    
+    try:
+        response = requests.post(url, json=data)
+        print("response = ",response.json())
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print("error = ",e)
+        return {"error": f"Request failed: {str(e)}"}
+
+

@@ -27,7 +27,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     ConversationHandler,
 )
-from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player
+from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player,verify_receipt
 from datetime import datetime
 from telegram import BotCommand
 from register import *
@@ -60,7 +60,7 @@ def generate_tx_ref(length=20):
 # Define conversation states
 DEPOSIT_AMOUNT = range(1)
 SCREENSHOT = range(2)
-GET_DEPOSIT_AMOUNT,WITHDRAW_AMOUNT_CONFIRM,WITHDRAW_AMOUNT_CANCEL,CHOOSE_PAYMENT_METHOD,GET_WITHDRAW_ACCOUNT,GET_TRANSCATION_DETAILS,PHONE,REGISTER,SOME_STATE = range(2,11)
+GET_DEPOSIT_AMOUNT,WITHDRAW_AMOUNT_CONFIRM,WITHDRAW_AMOUNT_CANCEL,CHOOSE_PAYMENT_METHOD,GET_WITHDRAW_ACCOUNT,GET_TRANSCATION_DETAILS,PHONE,REGISTER,SOME_STATE,WAIT_FOR_PAYMENT = range(2,12)
 
 CONVERSATION_TIMEOUT = 300  # 5 minutes
 
@@ -640,6 +640,32 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
             return REGISTER
 
+        elif query.data == 'manual':
+            await query.edit_message_text(text="Please payment method:")
+            keyboard = [
+                [InlineKeyboardButton("Telebirr", callback_data='manual_telebirr')],
+                [InlineKeyboardButton("CBE", callback_data='manual_cbe')],
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.message.reply_text(text="Please select a payment method:", reply_markup=reply_markup)
+
+        elif query.data == "manual_telebirr":
+            filepath = "telebirr_message.html"
+            with open(filepath, 'r') as file:
+                message = file.read()
+            context.user_data['payment_method'] = 'manual_telebirr'
+            await query.edit_message_text(text=message, parse_mode=ParseMode.HTML)
+            return WAIT_FOR_PAYMENT
+        elif query.data == "manual_cbe":
+            filepath = "cbe_message.html"
+            with open(filepath, 'r') as file:
+                message = file.read()
+            await query.edit_message_text(text=message, parse_mode=ParseMode.HTML)
+            context.user_data['payment_method'] = 'manual_cbe'
+            return WAIT_FOR_PAYMENT
+
+        
+
         elif query.data == 'share_phone':
             # Fallback in case the inline button is used elsewhere
             contact_keyboard = ReplyKeyboardMarkup(
@@ -715,8 +741,13 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     <b>📅 Date:</b> {}
     """.format(update.effective_user.username,phone,amount,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     inline_keyboard = [
-        [InlineKeyboardButton("Chapa", callback_data='chapa')],
-        [InlineKeyboardButton("AddisPay", callback_data='addispay')]
+        [
+            InlineKeyboardButton("Chapa", callback_data='chapa'),
+            InlineKeyboardButton("AddisPay", callback_data='addispay')
+        ],
+        [
+            InlineKeyboardButton("Manual", callback_data='manual')
+        ]
     ]
     reply_markup = InlineKeyboardMarkup(inline_keyboard)
     await update.message.reply_text(message,parse_mode=ParseMode.HTML,reply_markup=reply_markup)
@@ -842,6 +873,17 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
+async def handle_manual_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    payment_method = context.user_data['payment_method']
+    if payment_method == 'manual_telebirr':
+        message = update.message.text
+        verify_receipt(message,"Telebirr")
+        await update.message.reply_text("Telebirr payment received. Please wait for verification.")
+    elif payment_method == 'manual_cbe':
+        message = update.message.text
+        verify_receipt(message,"CBE")
+        await update.message.reply_text("CBE payment received. Please wait for verification.")
+
 def main() -> None:
     BOT_TOKEN = get_bot_seetings().get("bot_token")
     application = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
@@ -856,7 +898,7 @@ def main() -> None:
             WITHDRAW_AMOUNT_CONFIRM : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_withdraw_amount)],
             GET_TRANSCATION_DETAILS  : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_transcation_details)],
             REGISTER                : [MessageHandler(filters.CONTACT, handle_phone)],
-
+            WAIT_FOR_PAYMENT        : [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_manual_payment)],
         },
         fallbacks=[CommandHandler('cancel', cancel)],
         allow_reentry=True

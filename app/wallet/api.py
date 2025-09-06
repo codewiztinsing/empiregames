@@ -175,3 +175,27 @@ def addispay_callback(request):
         print(f"Error processing AddisPay callback: {e}")
         return JsonResponse({"message": "Error processing callback"}, status=500)
     
+
+
+@router.post("/webhook/manual/success/")
+@csrf_exempt
+def manual_success(request):
+    print("Manual success request")
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        print("Manual success data:", data)
+    except Exception as e:
+        print(f"Error processing Manual success: {e}")
+        return JsonResponse({"message": "Error processing success"}, status=500)
+
+@router.post("/webhook/manual/error/")
+@csrf_exempt
+def manual_error(request):
+    print("Manual error request")
+    try:
+
+        data = json.loads(request.body.decode('utf-8'))
+        print("Manual error data:", data)
+    except Exception as e:
+        print(f"Error processing Manual error: {e}")
+        return JsonResponse({"message": "Error processing error"}, status=500)    
