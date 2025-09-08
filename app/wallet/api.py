@@ -57,8 +57,6 @@ def chapa_callback(request):
     trx_ref = request.GET.get("trx_ref")
     status = request.GET.get("status")
     
-    print(f"Chapa callback - trx_ref: {trx_ref}, status: {status}")
-    
     if not trx_ref or not status:
         return JsonResponse({"message": "Missing required parameters"}, status=400)
     
@@ -187,22 +185,42 @@ def manual_success(request):
         data = json.loads(request.body.decode('utf-8'))
         session_id = data.get("session_id")
         status = data.get("status")
+        # Extract payer number from either top-level or nested 'data'
+        details = data.get("data") or {}
+        payer_telebirr_no = data.get("payer_telebirr_no") or details.get("payer_telebirr_no") or details.get("credited_account")
+        print("payer_telebirr_no = ", payer_telebirr_no)
+        if not payer_telebirr_no:
+            return JsonResponse({"message": "Missing payer_telebirr_no"}, status=400)
+        # Keep only digits to handle masked numbers like 2519****1912
+        digits_only = re.sub(r"\D", "", payer_telebirr_no)
+        last_payer_4_digits = digits_only[-4:]
+        print("last_payer_4_digits = ",last_payer_4_digits)
+        
         if status == "success":
-            manual_session = ManualSession.objects.get(session_id=session_id)
-            manual_session.status = "success"
-            phone_number = manual_session.phone_number
-            user = User.objects.get(phone=phone_number)
-            wallet = Wallet.objects.get(user=user)
-            wallet.balance += float(manual_session.amount)
-            wallet.save()
-            manual_session.save()
-            print("Manual success data:", data)
+            print("Manual success data:")
+            manual_session = ManualSession.objects.filter(phone_number__endswith=last_payer_4_digits).first()
+            if manual_session:
+                print("Found manual session:", manual_session)
+                # Process the successful payment
+                user = get_object_or_404(User, phone=manual_session.phone_number)
+                wallet = get_object_or_404(Wallet, user=user)
+                wallet.balance += float(manual_session.amount)
+                wallet.save()
+                manual_session.status = "success"
+                manual_session.save()
+                return JsonResponse({"message": "Manual success processed"}, status=200)
+            else:
+                print("No manual session found for phone ending with:", last_payer_4_digits)
+                return JsonResponse({"message": "No matching session found"}, status=404)
+
+            
+            
+     
         else:
-            manual_session = ManualSession.objects.get(session_id=session_id)
+            manual_session = ManualSession.objects.filter(session_id=session_id).first()
             manual_session.status = "failed"
             manual_session.save()
-         
-        print("Manual success data:", data)
+            return JsonResponse({"message": "Manual failed data"}, status=200)
     except Exception as e:
         print(f"Error processing Manual success: {e}")
         return JsonResponse({"message": "Error processing success"}, status=500)

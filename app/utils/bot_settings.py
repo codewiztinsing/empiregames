@@ -15,7 +15,8 @@ def initialize_manual_session(amount, session_id, phone_number,message):
     BACK_URL = config('BACK_URL')
     MANUAL_BASE_URL = config('MANUAL_BASE_URL') + "receipts/verify/"
     session_url = BACK_URL + "/api/v1/wallet/manual/session/"
-    callbackurl = BACK_URL + "/api/v1/wallet/manual/callback/success/"
+    # callbackurl = BACK_URL + "/api/v1/wallet/manual/callback/success/"
+    callbackurl = "https://webhook.site/c44a944a-1391-4b1b-9cd1-46238d5cb3f3"
     errorUrl = BACK_URL + "/api/v1/wallet/manual/callback/error/"
     data = {
         "amount":amount,
@@ -25,8 +26,6 @@ def initialize_manual_session(amount, session_id, phone_number,message):
     response = requests.post(f"{session_url}", json=data)
     if response.status_code == 200:
         data = {"message": message,"callbackurl":callbackurl,"errorUrl":errorUrl,"paymentMethod":"telebirr"}
-
-        print("data = ",data)
         response = requests.post(f"{MANUAL_BASE_URL}", json=data)
         print("manual response = ",response.status_code)
         if response.status_code == 200:
