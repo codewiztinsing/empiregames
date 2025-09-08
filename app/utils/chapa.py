@@ -47,6 +47,7 @@ def transfer_funds(account_name, account_number, amount, currency, reference, ba
         'Content-Type': 'application/json'
     }
     response = requests.post(url, json=payload, headers=headers)
+    print("withdraw funds = ",response.json())
     return response.json()
 
 
