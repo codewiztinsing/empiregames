@@ -197,7 +197,10 @@ def manual_success(request):
         print("last_payer_4_digits = ",last_payer_4_digits)
         
         if status == "success":
-            print("Manual success data:")
+            manual_session = ManualSession.objects.filter(transaction_number=payer_telebirr_no).first()
+            if manual_session.status == "success":
+                return JsonResponse({"message": "Already processed"}, status=200)
+        
             manual_session = ManualSession.objects.filter(phone_number__endswith=last_payer_4_digits).first()
             if manual_session:
                 print("Found manual session:", manual_session)
@@ -247,12 +250,13 @@ def manual_session(request):
         amount = data.get("amount")
         session_id = data.get("session_id")
         phone_number = data.get("phone_number")
-     
+        transaction_number = data.get("transaction_number")
         manual_session = ManualSession.objects.create(
             amount=amount,
             session_id=session_id,
             phone_number=phone_number,
-            status="pending"
+            status="pending",
+            transaction_number=transaction_number
         )
         print("manual_session = ",manual_session)
         manual_session.save()

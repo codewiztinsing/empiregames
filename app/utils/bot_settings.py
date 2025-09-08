@@ -17,14 +17,27 @@ def initialize_manual_session(amount, session_id, phone_number,message):
     session_url = BACK_URL + "/api/v1/wallet/manual/session/"
     callbackurl = BACK_URL + "/api/v1/wallet/manual/callback/success/"
     errorUrl = BACK_URL + "/api/v1/wallet/manual/callback/error/"
+    transaction_number = requests.post(f"http://pay.akerbingo.com/api/v1/get-telebirr-transaction-number/", json={
+        "message":message
+    })
+    transaction_number = transaction_number.json().get('transaction_number')
     data = {
         "amount":amount,
         "session_id":session_id,
         "phone_number":phone_number,
+        "transaction_number":transaction_number
+
     }
     response = requests.post(f"{session_url}", json=data)
+
+    print("transaction_number  from message= ",transaction_number)
     if response.status_code == 200:
-        data = {"message": message,"callbackurl":callbackurl,"errorUrl":errorUrl,"paymentMethod":"telebirr"}
+        data = {
+        "message": message,
+        "callbackurl":callbackurl,
+        "errorUrl":errorUrl,
+        "paymentMethod":"telebirr"
+        }
         response = requests.post(f"{MANUAL_BASE_URL}", json=data)
         if response.status_code == 200:
             try:

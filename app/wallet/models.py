@@ -55,6 +55,7 @@ class ManualSession(models.Model):
     session_id = models.CharField(max_length=100, blank=True, null=True)
     phone_number = models.CharField(max_length=100, blank=True, null=True)
     amount = models.FloatField()
+    transaction_number = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
     
     def __str__(self):

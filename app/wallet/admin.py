@@ -2,7 +2,8 @@ from django.contrib import admin
 from .models import (Wallet, 
             Transaction,
             ChapaSession,
-            AddisPaySession
+            AddisPaySession,
+            ManualSession
             )
 
 class WalletAdmin(admin.ModelAdmin):
@@ -41,6 +42,12 @@ class AddisPaySessionAdmin(admin.ModelAdmin):
     list_per_page = 10
     list_filter = ('status','created_at')
 
+
+class ManualSessionAdmin(admin.ModelAdmin):
+    list_display = ('session_id', 'phone_number', 'amount', 'transaction_number', 'status')
+    search_fields = ('session_id', 'phone_number', 'transaction_number')
+    list_filter = ('status',)
+    list_per_page = 10
 
 admin.site.register(Transaction, TransactionAdmin)  
 admin.site.register(ChapaSession, ChapaSessionAdmin)
