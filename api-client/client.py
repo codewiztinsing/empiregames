@@ -1,25 +1,32 @@
 data = {
-  "event": "payout.success",
-  "type": "Payout",
-  "mode": "live",
-  "account_name": None,
-  "account_number": "251991221912",
-  "bank_id": 855,
-  "bank_name": "telebirr",
-  "amount": "48.50",
-  "charge": "1.50",
-  "currency": "ETB",
+  "session_id": "4163c848-1d42-4f2f-ba0d-d0df59dfae6a",
   "status": "success",
-  "reference": "1a5DEOKrBJKi84tnxdZe",
-  "chapa_reference": "CTtsz9VUdSaMHB",
-  "bank_reference": "CI85PCCS7V",
-  "created_at": "2025-09-08T19:11:27.000000Z",
-  "updated_at": "2025-09-08T19:11:28.000000Z"
+  "message": "Transaction verified successfully",
+  "data": {
+    "payer_name": "alako abiyo ludago",
+    "payer_telebirr_no": "2519****1912",
+    "payer_account_type": "Individual Customer",
+    "credited_party": "CHAPA FINANCIAL TECHNOLOGY SHARE COMPANY",
+    "credited_account": "500423",
+    "transaction_status": "የከፋይ ስም/Payer Name",
+    "invoice_no": "የክፍያ ቀን/Payment date",
+    "payment_date": "የክፍያ ዝርዝር/ Invoice details",
+    "settled_amount": "የክፍያ ዝርዝር/ Invoice details",
+    "service_fee": "የክፍያ ዝርዝር/ Invoice details",
+    "total_paid": "የክፍያ ዝርዝር/ Invoice details",
+    "total_in_words": "fifty-one birr and seventy-five cent",
+    "payment_mode": "telebirr",
+    "payment_reason": "Buy Goods_Chapa",
+    "payment_channel": "API/App",
+    "customer_note": "",
+    "amount": 51.75,
+    "transaction_number": "CI83PCZCL3"
+  }
 }
 
 import requests
 
-url = "https://wowliyubingo.com/api/v1/webhooks/"
+url = "http://127.0.0.1:8000/api/v1/wallet/manual/callback/success/"
 
 response = requests.post(url, json=data)
 
