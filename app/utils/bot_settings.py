@@ -16,11 +16,13 @@ def initialize_manual_session(amount, session_id, phone_number,message):
     MANUAL_BASE_URL = config('MANUAL_BASE_URL') + "receipts/verify/"
     session_url = BACK_URL + "/api/v1/wallet/manual/session/"
     callbackurl = BACK_URL + "/api/v1/wallet/manual/callback/success/"
+    # callbackurl = "https://webhook.site/c44a944a-1391-4b1b-9cd1-46238d5cb3f3"
     errorUrl = BACK_URL + "/api/v1/wallet/manual/callback/error/"
     transaction_number = requests.post(f"http://pay.akerbingo.com/api/v1/get-telebirr-transaction-number/", json={
         "message":message
     })
     transaction_number = transaction_number.json().get('transaction_number')
+    print("transaction_number xxxxxxxxxxxx = ",transaction_number)
     data = {
         "amount":amount,
         "session_id":session_id,

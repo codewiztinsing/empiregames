@@ -183,10 +183,15 @@ def manual_success(request):
     print("Manual success request")
     try:
         data = json.loads(request.body.decode('utf-8'))
+        print("data = ",data)
         session_id = data.get("session_id")
         status = data.get("status")
+        print("status = ",status)
         # Extract payer number from either top-level or nested 'data'
         details = data.get("data") or {}
+        transaction_number = details.get("transaction_number")
+        print("transaction_number = ",transaction_number)
+        print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=")
         payer_telebirr_no = data.get("payer_telebirr_no") or details.get("payer_telebirr_no") or details.get("credited_account")
         print("payer_telebirr_no = ", payer_telebirr_no)
         if not payer_telebirr_no:
@@ -194,11 +199,13 @@ def manual_success(request):
         # Keep only digits to handle masked numbers like 2519****1912
         digits_only = re.sub(r"\D", "", payer_telebirr_no)
         last_payer_4_digits = digits_only[-4:]
-        print("last_payer_4_digits = ",last_payer_4_digits)
+      
         
         if status == "success":
-            manual_session = ManualSession.objects.filter(transaction_number=payer_telebirr_no).first()
-            if manual_session.status == "success":
+            print("++++++++++== transaction number = ",transaction_number)
+            print("++++++++++== transaction_number id = ",transaction_number)
+            manual_session = ManualSession.objects.filter(transaction_number=transaction_number).first()
+            if manual_session and manual_session.status == "success":
                 return JsonResponse({"message": "Already processed"}, status=200)
         
             manual_session = ManualSession.objects.filter(phone_number__endswith=last_payer_4_digits).first()
