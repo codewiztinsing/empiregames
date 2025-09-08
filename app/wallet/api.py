@@ -3,6 +3,7 @@ from ninja import NinjaAPI,Router
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from .models import ManualSession
+from decouple import config
 from .schema import (ChapaSessionSchema,
     ChapaSessionResponseSchema, 
     ChapaCallbackSchema,
@@ -190,8 +191,6 @@ def manual_success(request):
         # Extract payer number from either top-level or nested 'data'
         details = data.get("data") or {}
         transaction_number = details.get("transaction_number")
-        print("transaction_number = ",transaction_number)
-        print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=")
         payer_telebirr_no = data.get("payer_telebirr_no") or details.get("payer_telebirr_no") or details.get("credited_account")
         print("payer_telebirr_no = ", payer_telebirr_no)
         if not payer_telebirr_no:
@@ -204,14 +203,16 @@ def manual_success(request):
         if status == "success":
             manual_session = ManualSession.objects.filter(transaction_number=transaction_number).first()
             if manual_session and manual_session.status == "success":
-                telegram_id = manual_session.user.telegram_id
+                telegram_id = manual_session.phone_number
+                user = User.objects.filter(phone=telegram_id).first()
+                telegram_id = user.telegram_id
                 # Notify Telegram user that transaction is already processed
                 try:
-                    import requests
-                    from django.conf import settings
-                    
+                    import requests                    
                     # Get bot settings to send notification
-                    bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
+                    bot_token = config('BOT_TOKEN')
+                    print("bot_token = ",bot_token)
+                    print("telegram_id = ",telegram_id)
                     if bot_token and telegram_id:
                         telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
                         message = f"⚠️ Transaction already processed!\n\nTransaction: {transaction_number}\nAmount: {manual_session.amount} ETB\n\nThis payment has already been credited to your wallet."
@@ -238,29 +239,7 @@ def manual_success(request):
                 wallet.save()
                 manual_session.status = "success"
                 manual_session.save()
-                # Notify Telegram user about successful deposit
-                try:
-                    import requests
-                    from django.conf import settings
-                    
-                    # Get bot settings to send notification
-                    bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
-                    telegram_id = user.telegram_id
-                    
-                    if bot_token and telegram_id:
-                        telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                        message = f"✅ Deposit Successful!\n\nAmount: {manual_session.amount} ETB\nTransaction: {transaction_number}\nNew Balance: {wallet.balance} ETB\n\nYour wallet has been credited successfully!"
-                        
-                        telegram_payload = {
-                            'chat_id': telegram_id,
-                            'text': message,
-                            'parse_mode': 'HTML'
-                        }
-                        
-                        requests.post(telegram_url, json=telegram_payload)
-                        print(f"Notified user {telegram_id} about successful deposit")
-                except Exception as notification_error:
-                    print(f"Failed to notify user about successful deposit: {notification_error}")
+                
                 return JsonResponse({"message": "Manual success processed"}, status=200)
             else:
                 print("No manual session found for phone ending with:", last_payer_4_digits)
