@@ -15,10 +15,9 @@ def initialize_manual_session(amount, session_id, phone_number,message):
     BACK_URL = config('BACK_URL')
     MANUAL_BASE_URL = config('MANUAL_BASE_URL') + "receipts/verify/"
     session_url = BACK_URL + "/api/v1/wallet/manual/session/"
-    # callbackurl = BACK_URL + "/api/v1/wallet/webhook/manual/success/"
-    callbackurl = "https://webhook.site/c44a944a-1391-4b1b-9cd1-46238d5cb3f3"
-    # errorUrl = BACK_URL + "/api/v1/wallet/webhook/manual/error/"
-    errorUrl = "https://webhook.site/c44a944a-1391-4b1b-9cd1-46238d5cb3f3"
+    callbackurl = BACK_URL + "/api/v1/wallet/webhook/manual/success/"
+    errorUrl = BACK_URL + "/api/v1/wallet/webhook/manual/error/"
+    # errorUrl = "https://webhook.site/c44a944a-1391-4b1b-9cd1-46238d5cb3f3"
     data = {
         "amount":amount,
         "session_id":session_id,
