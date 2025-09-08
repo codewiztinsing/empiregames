@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Game,PlayerGame,GameSettings
+from wallet.models import ManualSession
 
 admin.site.site_header = "Wow Bingo Admin"
 admin.site.site_title = "Wow Bingo Admin Portal"
@@ -30,5 +31,17 @@ class GameSettingsAdmin(admin.ModelAdmin):
     list_per_page = 10
 
 
+class ManualSessionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'session_id', 'amount', 'status', 'phone_number')
+    list_filter = ('status',)
+    search_fields = ('id', 'session_id', 'amount', 'status', 'phone_number')
+    list_per_page = 10
+
+    
+    list_filter = ('status',)
+    search_fields = ('id', 'session_id', 'amount', 'status', 'phone_number')
+    list_per_page = 10
+
 admin.site.register(PlayerGame, PlayerGameAdmin)
 admin.site.register(GameSettings, GameSettingsAdmin)
+admin.site.register(ManualSession, ManualSessionAdmin)

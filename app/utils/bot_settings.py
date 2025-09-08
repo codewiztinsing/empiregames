@@ -1,3 +1,5 @@
+from utils.helpers import BACK_URL
+import requests
 from decouple import config
 
 
@@ -8,4 +10,39 @@ def get_bot_seetings():
         "bot_url":BACK_URL,
         "bot_token":BOT_TOKEN,
     }
+
+def initialize_manual_session(amount, session_id, phone_number,message):
+    BACK_URL = config('BACK_URL')
+    MANUAL_BASE_URL = config('MANUAL_BASE_URL') + "receipts/verify/"
+    session_url = BACK_URL + "/api/v1/wallet/manual/session/"
+    # callbackurl = BACK_URL + "/api/v1/wallet/webhook/manual/success/"
+    callbackurl = "https://webhook.site/c44a944a-1391-4b1b-9cd1-46238d5cb3f3"
+    # errorUrl = BACK_URL + "/api/v1/wallet/webhook/manual/error/"
+    errorUrl = "https://webhook.site/c44a944a-1391-4b1b-9cd1-46238d5cb3f3"
+    data = {
+        "amount":amount,
+        "session_id":session_id,
+        "phone_number":phone_number,
+    }
+    response = requests.post(f"{session_url}", json=data)
+    if response.status_code == 200:
+        data = {"message": message,"callbackurl":callbackurl,"errorUrl":errorUrl,"paymentMethod":"telebirr"}
+
+        print("data = ",data)
+        response = requests.post(f"{MANUAL_BASE_URL}", json=data)
+        print("manual response = ",response.status_code)
+        if response.status_code == 200:
+            try:
+                json_data = response.json()
+                print("response = ", json_data)
+                return json_data
+            except Exception:
+                print("response (non-JSON) = ", response.text)
+                return {"ok": True, "raw": response.text}
+        else:
+            return {"error": "Failed to verify manual session"}
+        return response.json()
+    else:
+        return {"error": "Failed to initialize manual session"}
+    return response.json()
 

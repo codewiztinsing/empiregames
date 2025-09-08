@@ -15,7 +15,7 @@ from telegram import (
 )
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from datetime import datetime, timedelta
-from utils import initialize_payment,get_bot_seetings   
+from utils import initialize_payment,get_bot_seetings,initialize_manual_session
 from utils.chapa import get_available_banks,transfer_funds
 from utils.addis import create_session
 from telegram.ext import (
@@ -643,8 +643,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         elif query.data == 'manual':
             await query.edit_message_text(text="Please payment method:")
             keyboard = [
-                [InlineKeyboardButton("Telebirr", callback_data='manual_telebirr')],
-                [InlineKeyboardButton("CBE", callback_data='manual_cbe')],
+                [InlineKeyboardButton("Telebirr", callback_data='manual_telebirr')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             await query.message.reply_text(text="Please select a payment method:", reply_markup=reply_markup)
@@ -742,8 +741,8 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     """.format(update.effective_user.username,phone,amount,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     inline_keyboard = [
         [
-            InlineKeyboardButton("Chapa", callback_data='chapa'),
-            InlineKeyboardButton("AddisPay", callback_data='addispay')
+            InlineKeyboardButton("Chapa", callback_data='chapa')
+            # InlineKeyboardButton("AddisPay", callback_data='addispay')
         ],
         [
             InlineKeyboardButton("Manual", callback_data='manual')
@@ -842,7 +841,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     BACK_URL = get_bot_seetings().get("bot_url")
     # Check if user is registered
-    response = requests.get(f'{BACK_URL}/accounts/filter-users/{user_id}/')
+    response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
     if response.status_code != 200:
         await update.message.reply_text(
             "You need to register first before inviting others. Use the /register command."
@@ -874,14 +873,28 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def handle_manual_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    import uuid
     payment_method = context.user_data['payment_method']
     if payment_method == 'manual_telebirr':
         message = update.message.text
-        verify_receipt(message,"Telebirr")
+        amount = context.user_data['deposit_amount']
+        session_id = f"{uuid.uuid4()}"
+        user_id = update.effective_user.id
+        BACK_URL = get_bot_seetings().get("bot_url")
+        
+        # Get user phone from database
+        response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
+        if response.status_code == 200:
+            user_data = response.json()
+            phone_number = user_data.get('phone', '')
+            initialize_manual_session(amount, session_id, phone_number,message)
+            return ConversationHandler.END
+        else:
+            await update.message.reply_text("An error occurred. Please try again.")
+            return ConversationHandler.END
         await update.message.reply_text("Telebirr payment received. Please wait for verification.")
     elif payment_method == 'manual_cbe':
         message = update.message.text
-        verify_receipt(message,"CBE")
         await update.message.reply_text("CBE payment received. Please wait for verification.")
 
 def main() -> None:

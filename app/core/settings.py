@@ -22,7 +22,7 @@ print("DEBUG = ",DEBUG)
 HANDLER404 = 'core.views.custom_404'
 
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "wowliyubingo.com", "server.wowliyubingo.com"]
+ALLOWED_HOSTS = ["*", "wowliyubingo.com", "server.wowliyubingo.com"]
 CSRF_TRUSTED_ORIGINS = ["https://wowliyubingo.com", "https://*.ngrok.app"]
 
 

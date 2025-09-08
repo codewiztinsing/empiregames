@@ -2,6 +2,7 @@ import re
 from ninja import NinjaAPI,Router
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
+from .models import ManualSession
 from .schema import (ChapaSessionSchema,
     ChapaSessionResponseSchema, 
     ChapaCallbackSchema,
@@ -176,26 +177,68 @@ def addispay_callback(request):
         return JsonResponse({"message": "Error processing callback"}, status=500)
     
 
+# /api/v1/wallet/webhook/manual/error/
 
-@router.post("/webhook/manual/success/")
+@router.post("/manual/callback/success/")
 @csrf_exempt
 def manual_success(request):
     print("Manual success request")
     try:
         data = json.loads(request.body.decode('utf-8'))
+        session_id = data.get("session_id")
+        status = data.get("status")
+        if status == "success":
+            manual_session = ManualSession.objects.get(session_id=session_id)
+            manual_session.status = "success"
+            phone_number = manual_session.phone_number
+            user = User.objects.get(phone=phone_number)
+            wallet = Wallet.objects.get(user=user)
+            wallet.balance += float(manual_session.amount)
+            wallet.save()
+            manual_session.save()
+            print("Manual success data:", data)
+        else:
+            manual_session = ManualSession.objects.get(session_id=session_id)
+            manual_session.status = "failed"
+            manual_session.save()
+         
         print("Manual success data:", data)
     except Exception as e:
         print(f"Error processing Manual success: {e}")
         return JsonResponse({"message": "Error processing success"}, status=500)
 
-@router.post("/webhook/manual/error/")
+@router.post("/manual/callback/error/")
 @csrf_exempt
 def manual_error(request):
     print("Manual error request")
     try:
 
         data = json.loads(request.body.decode('utf-8'))
+        session_id = data.get("session_id")
+        status = data.get("status")
         print("Manual error data:", data)
     except Exception as e:
         print(f"Error processing Manual error: {e}")
         return JsonResponse({"message": "Error processing error"}, status=500)    
+
+
+@router.post("/manual/session/")
+def manual_session(request):
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        amount = data.get("amount")
+        session_id = data.get("session_id")
+        phone_number = data.get("phone_number")
+     
+        manual_session = ManualSession.objects.create(
+            amount=amount,
+            session_id=session_id,
+            phone_number=phone_number,
+            status="pending"
+        )
+        print("manual_session = ",manual_session)
+        manual_session.save()
+        return JsonResponse({"message": "Session created successfully","session_id":manual_session.id}, status=200)
+    except Exception as e:
+        print(f"Error processing Manual session: {e}")
+        return JsonResponse({"message": "Error processing session"}, status=500)
