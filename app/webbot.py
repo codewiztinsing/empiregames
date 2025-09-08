@@ -134,16 +134,17 @@ def deposit_opitions_keyboard() -> InlineKeyboardMarkup:
 
 
 def withdraw_opitions_keyboard(context: ContextTypes.DEFAULT_TYPE) -> InlineKeyboardMarkup:
+    logger.info("withdraw_opitions_keyboard")
     
-    available_banks = get_available_banks().get("data",[])
+    # Only show Telebirr and CBE options
     keyboard = []
-    banks_to_bank_id = {}
-    for bank in available_banks:
-        # Create 4x4 grid of bank buttons
-        bank_id = bank.get("id")
-        bank_name = bank.get("name")
-        banks_to_bank_id[bank_id] = bank_name
-        keyboard.append([InlineKeyboardButton(bank_name, callback_data=f'withraw_with_{bank_id}')]) 
+    banks_to_bank_id = {
+        'telebirr': 'Telebirr',
+        'cbe': 'Commercial Bank of Ethiopia'
+    }
+    
+    keyboard.append([InlineKeyboardButton("Telebirr", callback_data='withraw_with_telebirr')])
+    keyboard.append([InlineKeyboardButton("Commercial Bank of Ethiopia", callback_data='withraw_with_cbe')])
     keyboard.append([InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')])
     context.user_data['banks_to_bank_id'] = banks_to_bank_id
 
