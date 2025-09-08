@@ -16,7 +16,7 @@ from telegram import (
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from datetime import datetime, timedelta
 from utils import initialize_payment,get_bot_seetings,initialize_manual_session
-from utils.chapa import get_available_banks,transfer_funds
+from utils.chapa import transfer_funds,get_available_banks
 from utils.addis import create_session
 from telegram.ext import (
     Application,
@@ -135,16 +135,17 @@ def deposit_opitions_keyboard() -> InlineKeyboardMarkup:
 
 def withdraw_opitions_keyboard(context: ContextTypes.DEFAULT_TYPE) -> InlineKeyboardMarkup:
     logger.info("withdraw_opitions_keyboard")
-    
+    banks = get_available_banks()
+    logger.info("banks = ",banks)
     # Only show Telebirr and CBE options
     keyboard = []
     banks_to_bank_id = {
-        'telebirr': 'Telebirr',
-        'cbe': 'Commercial Bank of Ethiopia'
+         'Telebirr':855,
+        'CBE': 946
     }
     
     keyboard.append([InlineKeyboardButton("Telebirr", callback_data='withraw_with_telebirr')])
-    keyboard.append([InlineKeyboardButton("Commercial Bank of Ethiopia", callback_data='withraw_with_cbe')])
+    keyboard.append([InlineKeyboardButton("CBE", callback_data='withraw_with_cbe')])
     keyboard.append([InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')])
     context.user_data['banks_to_bank_id'] = banks_to_bank_id
 
@@ -248,8 +249,11 @@ async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYP
     BACK_URL = get_bot_seetings().get("bot_url")
     try:
         withdraw_amount = float(context.user_data['withdraw_amount'])
-        transfer_funds(f"{update.effective_user.first_name} {update.effective_user.last_name}", account_number, withdraw_amount, "ETB", generate_tx_ref(), context.user_data['bank_id'])
-        await update.message.reply_text("Withdrawal successful. Please wait message from bank/telebirr/Mpesa.")
+        bank_id = context.user_data['bank_id']
+        banks_to_bank_id = context.user_data['banks_to_bank_id']
+        bank_id = banks_to_bank_id.get(f"{bank_id}".title())
+        transfer_funds(f"{update.effective_user.first_name} {update.effective_user.last_name}", account_number, withdraw_amount, "ETB", generate_tx_ref(), bank_id)
+        await update.message.reply_text("Please wait message from CBE/Telebirr. Your withdrawal will be processed within 30 minutes.")
         return ConversationHandler.END
     except Exception as e:
         print(f"Error sending message to user: {e}")

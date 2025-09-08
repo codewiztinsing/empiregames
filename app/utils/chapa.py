@@ -47,6 +47,9 @@ def transfer_funds(account_name, account_number, amount, currency, reference, ba
         'Content-Type': 'application/json'
     }
     response = requests.post(url, json=payload, headers=headers)
+    print("withdraw funds url = ",url)
+    print("withdraw funds payload = ",payload)
+    print("withdraw funds headers = ",headers)
     print("withdraw funds = ",response.json())
     return response.json()
 
@@ -60,5 +63,6 @@ def get_available_banks():
         'Authorization': f'Bearer {API_KEY}'
     }
     response = requests.get(url, headers=headers)
+    print("get available banks = ",response.json())
     return response.json()
 
