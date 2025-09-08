@@ -643,7 +643,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         elif query.data == 'manual':
             keyboard = [
-                [InlineKeyboardButton("Telebirr", callback_data='manual_telebirr')]
+                [InlineKeyboardButton("Telebirr", callback_data='manual_telebirrcc')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             await query.message.reply_text(text="Please select a payment method:", reply_markup=reply_markup)
