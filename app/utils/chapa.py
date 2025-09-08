@@ -61,7 +61,3 @@ def get_available_banks():
     response = requests.get(url, headers=headers)
     return response.json()
 
-# if __name__ == "__main__":
-#     data = get_available_banks().get("data",[])
-#     for d in data:
-#         print(d.get("name"))
