@@ -15,8 +15,8 @@ def initialize_manual_session(amount, session_id, phone_number,message):
     BACK_URL = config('BACK_URL')
     MANUAL_BASE_URL = config('MANUAL_BASE_URL') + "receipts/verify/"
     session_url = BACK_URL + "/api/v1/wallet/manual/session/"
-    callbackurl = BACK_URL + "/api/v1/wallet/manual/success/"
-    errorUrl = BACK_URL + "/api/v1/wallet/manual/error/"
+    callbackurl = BACK_URL + "/api/v1/wallet/manual/callback/success/"
+    errorUrl = BACK_URL + "/api/v1/wallet/manual/callback/error/"
     data = {
         "amount":amount,
         "session_id":session_id,
