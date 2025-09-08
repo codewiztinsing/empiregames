@@ -1,32 +1,25 @@
 data = {
-  "session_id": "488d7952-3ee3-42e4-8e1e-fefc5f2ae08e",
+  "event": "payout.success",
+  "type": "Payout",
+  "mode": "live",
+  "account_name": None,
+  "account_number": "251991221912",
+  "bank_id": 855,
+  "bank_name": "telebirr",
+  "amount": "48.50",
+  "charge": "1.50",
+  "currency": "ETB",
   "status": "success",
-  "message": "Transaction verified successfully",
-  "data": {
-    "payer_name": "alako abiyo ludago",
-    "payer_telebirr_no": "2519****1912",
-    "payer_account_type": "Individual Customer",
-    "credited_party": "ESHETU FEYISSA ABERA",
-    "credited_account": "2519****4252",
-    "transaction_status": "የከፋይ ስም/Payer Name",
-    "invoice_no": "የክፍያ ቀን/Payment date",
-    "payment_date": "የክፍያ ዝርዝር/ Invoice details",
-    "settled_amount": "የክፍያ ዝርዝር/ Invoice details",
-    "service_fee": "0.87 Birr",
-    "total_paid": "የክፍያ ዝርዝር/ Invoice details",
-    "total_in_words": "thirty-one birr and zero cent",
-    "payment_mode": "telebirr",
-    "payment_reason": "Send Money to Registered Customer",
-    "payment_channel": "API/App",
-    "customer_note": "",
-    "amount": 31,
-    "transaction_number": "CI84P8MDJW"
-  }
+  "reference": "1a5DEOKrBJKi84tnxdZe",
+  "chapa_reference": "CTtsz9VUdSaMHB",
+  "bank_reference": "CI85PCCS7V",
+  "created_at": "2025-09-08T19:11:27.000000Z",
+  "updated_at": "2025-09-08T19:11:28.000000Z"
 }
 
 import requests
 
-url = "http://localhost:8000/api/v1/wallet/manual/callback/success/"
+url = "https://wowliyubingo.com/api/v1/webhooks/"
 
 response = requests.post(url, json=data)
 

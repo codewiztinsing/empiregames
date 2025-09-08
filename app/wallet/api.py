@@ -202,10 +202,30 @@ def manual_success(request):
       
         
         if status == "success":
-            print("++++++++++== transaction number = ",transaction_number)
-            print("++++++++++== transaction_number id = ",transaction_number)
             manual_session = ManualSession.objects.filter(transaction_number=transaction_number).first()
             if manual_session and manual_session.status == "success":
+                telegram_id = manual_session.user.telegram_id
+                # Notify Telegram user that transaction is already processed
+                try:
+                    import requests
+                    from django.conf import settings
+                    
+                    # Get bot settings to send notification
+                    bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
+                    if bot_token and telegram_id:
+                        telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                        message = f"⚠️ Transaction already processed!\n\nTransaction: {transaction_number}\nAmount: {manual_session.amount} ETB\n\nThis payment has already been credited to your wallet."
+                        
+                        telegram_payload = {
+                            'chat_id': telegram_id,
+                            'text': message,
+                            'parse_mode': 'HTML'
+                        }
+                        
+                        requests.post(telegram_url, json=telegram_payload)
+                        print(f"Notified user {telegram_id} about duplicate transaction")
+                except Exception as notification_error:
+                    print(f"Failed to notify user about duplicate transaction: {notification_error}")
                 return JsonResponse({"message": "Already processed"}, status=200)
         
             manual_session = ManualSession.objects.filter(phone_number__endswith=last_payer_4_digits).first()
@@ -218,14 +238,33 @@ def manual_success(request):
                 wallet.save()
                 manual_session.status = "success"
                 manual_session.save()
+                # Notify Telegram user about successful deposit
+                try:
+                    import requests
+                    from django.conf import settings
+                    
+                    # Get bot settings to send notification
+                    bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
+                    telegram_id = user.telegram_id
+                    
+                    if bot_token and telegram_id:
+                        telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                        message = f"✅ Deposit Successful!\n\nAmount: {manual_session.amount} ETB\nTransaction: {transaction_number}\nNew Balance: {wallet.balance} ETB\n\nYour wallet has been credited successfully!"
+                        
+                        telegram_payload = {
+                            'chat_id': telegram_id,
+                            'text': message,
+                            'parse_mode': 'HTML'
+                        }
+                        
+                        requests.post(telegram_url, json=telegram_payload)
+                        print(f"Notified user {telegram_id} about successful deposit")
+                except Exception as notification_error:
+                    print(f"Failed to notify user about successful deposit: {notification_error}")
                 return JsonResponse({"message": "Manual success processed"}, status=200)
             else:
                 print("No manual session found for phone ending with:", last_payer_4_digits)
                 return JsonResponse({"message": "No matching session found"}, status=404)
-
-            
-            
-     
         else:
             manual_session = ManualSession.objects.filter(session_id=session_id).first()
             manual_session.status = "failed"

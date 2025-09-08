@@ -246,12 +246,8 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     account_number = update.message.text
     BACK_URL = get_bot_seetings().get("bot_url")
-
-    # return ConversationHandler.END
     try:
         withdraw_amount = float(context.user_data['withdraw_amount'])
-        # deduct amount from user's balance
-        # res = requests.put(f'{BACK_URL}/api/v1/wallet/player/{update.effective_user.id}/', json={'amount': withdraw_amount,"action":"withdraw"})
         transfer_funds(f"{update.effective_user.first_name} {update.effective_user.last_name}", account_number, withdraw_amount, "ETB", generate_tx_ref(), context.user_data['bank_id'])
         await update.message.reply_text("Withdrawal successful. Please wait message from bank/telebirr/Mpesa.")
         return ConversationHandler.END
