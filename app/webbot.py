@@ -402,8 +402,19 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             deposit_amount =  context.user_data.get("deposit_amount",0)
             first_name = query.from_user.first_name or query.from_user.username
             last_name = query.from_user.last_name or query.from_user.username
-            
-            initialize_chapa_direct_charges(phone_number,deposit_amount,generate_tx_ref(),first_name,last_name)
+            paymentMethod = 'telebirr'
+            initialize_chapa_direct_charges(phone_number,deposit_amount,generate_tx_ref(),first_name,last_name,paymentMethod)
+            return ConversationHandler.END
+
+        elif query.data.startswith('chapa_cbe'):
+            context.user_data['bank_id'] = 'CBE'
+            phone_number = get_user_phone(query.from_user.id)
+            print("phone_number = ",phone_number)
+            deposit_amount =  context.user_data.get("deposit_amount",0)
+            first_name = query.from_user.first_name or query.from_user.username
+            last_name = query.from_user.last_name or query.from_user.username
+            paymentMethod = 'cbe'
+            initialize_chapa_direct_charges(phone_number,deposit_amount,generate_tx_ref(),first_name,last_name,paymentMethod)
             return ConversationHandler.END
 
 

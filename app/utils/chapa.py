@@ -65,8 +65,8 @@ def get_available_banks():
     return response.json()
 
 
-def initialize_chapa_direct_charges(phone_number,amount,tx_ref,first_name,last_name):
-    url = "https://api.chapa.co/v1/charges?type=telebirr"
+def initialize_chapa_direct_charges(phone_number,amount,tx_ref,first_name,last_name,paymentMethod):
+    url = f"https://api.chapa.co/v1/charges?type={paymentMethod}"
     BACK_URL = config("BACK_URL")
     chapa_session = None
     chapa_create_session_url = f"{BACK_URL}/api/v1/wallet/chapa/create-session"
@@ -80,7 +80,6 @@ def initialize_chapa_direct_charges(phone_number,amount,tx_ref,first_name,last_n
     headers = {
         "Authorization": f"Bearer {API_KEY}"
     }
-    # POST request with form data
     response = requests.post(url, data=data, headers=headers)
     if response.status_code == 200:
         data = {
