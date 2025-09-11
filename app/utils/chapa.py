@@ -91,7 +91,7 @@ def initialize_chapa_direct_charges(phone_number,amount,tx_ref,first_name,last_n
             "phone_number": phone_number,
             "first_name":first_name,
             "last_name":last_name,
-            "email":f"{first_name@gmail.com}"
+            "email":f"{first_name}@gmail.com"
 
         }
        
