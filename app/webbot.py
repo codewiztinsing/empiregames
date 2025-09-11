@@ -404,7 +404,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             last_name = query.from_user.last_name or query.from_user.username
             
             initialize_chapa_direct_charges(phone_number,deposit_amount,generate_tx_ref(),first_name,last_name)
-            print("chapa session = ",chapa_session)
             return ConversationHandler.END
 
 
