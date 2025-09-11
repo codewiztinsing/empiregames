@@ -8,9 +8,6 @@ class ChapaSessionSchema(Schema):
     last_name: str
     phone_number: str
     tx_ref: str
-    callback_url: str
-    return_url: str
-    customization: dict
 
 
 class ChapaSessionResponseSchema(Schema):

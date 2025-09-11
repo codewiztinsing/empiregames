@@ -35,10 +35,7 @@ def create_chapa_session(request, data: ChapaSessionSchema):
         first_name=data.first_name,
         last_name=data.last_name,
         phone_number=data.phone_number,
-        tx_ref=data.tx_ref,
-        callback_url=data.callback_url,
-        return_url=data.return_url,
-        customization=data.customization
+        tx_ref=data.tx_ref
     )
        
         return JsonResponse({
