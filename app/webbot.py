@@ -15,7 +15,7 @@ from telegram import (
 )
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from datetime import datetime, timedelta
-from utils import initialize_payment,get_bot_seetings,initialize_manual_session,get_user_phone,get_user_phone
+from utils import initialize_payment,get_bot_seetings,get_user_phone,get_user_phone
 from utils.chapa import transfer_funds,get_available_banks,initialize_chapa_direct_charges   
 from utils.addis import create_session
 from telegram.ext import (
@@ -27,7 +27,8 @@ from telegram.ext import (
     CallbackQueryHandler,
     ConversationHandler,
 )
-from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player,verify_receipt
+from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player
+from utils.factory import handle_manual_payment
 from datetime import datetime
 from telegram import BotCommand
 from register import *
@@ -112,8 +113,6 @@ def play_options_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton("🎮 Play 10", callback_data='10'),
          InlineKeyboardButton("🎮 Play 20", callback_data='20')],
-        # [InlineKeyboardButton("🎮 Play 50", callback_data='50'),
-        #  InlineKeyboardButton("🎮 Play 100", callback_data='100')],
         [InlineKeyboardButton("🔙 Back to Menu", callback_data='back')]
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -338,24 +337,16 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         if query.data in ['10', '20', '50', '100']:
             user_id = query.from_user.id
-            print("user_id = ",user_id)
-            print("url = ",f'{BACK_URL}/api/v1/users/{user_id}')
-            
-            # Check if user is registered
             response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
-            print("response = ",response)
             logger.info(f"Response {response}")
             data = response.json()
             logger.info(f"Data {data}")
-            print("data = ",data.get('phone'))
             if data.get('phone') is None:
                 await query.edit_message_text(
                     text="You need to register first before playing. Use the /register command.",
                     reply_markup=instructions_options_keyboard()
                 )
                 return
-
-            # Check user's balance
             bet_amount = int(query.data)
             wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
             wallet_data = wallet_response.json()
@@ -398,7 +389,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         elif query.data.startswith('chapa_telebirr'):
             context.user_data['bank_id'] = 'Telebirr'
             phone_number = get_user_phone(query.from_user.id)
-            print("phone_number = ",phone_number)
             deposit_amount =  context.user_data.get("deposit_amount",0)
             first_name = query.from_user.first_name or query.from_user.username
             last_name = query.from_user.last_name or query.from_user.username
@@ -417,10 +407,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             initialize_chapa_direct_charges(phone_number,deposit_amount,generate_tx_ref(),first_name,last_name,paymentMethod)
             return ConversationHandler.END
 
-
         elif query.data == 'withdraw_confirm':
             return WITHDRAW_AMOUNT_CONFIRM
-
         if query.data == 'play' :
             await query.edit_message_text(
                 text="Choose a play option:",
@@ -432,18 +420,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 text="Choose a contact support:",
                 reply_markup=support_options_keyboard()
             )
-
-        
-
-            
-
-
-
         elif query.data == 'get_deposit_amount':
-          
             return DEPOSIT_AMOUNT
-
-       
         elif query.data == 'check_balance':
             BACK_URL = get_bot_seetings().get("bot_url") 
             username = query.from_user.username
@@ -454,12 +432,9 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
             print("response = ",response)
             balance = response.json().get('balance',0)
-           
-           
-
             # Create payment summary with user details
             payment_summary = (
-                    "🏦 TELE BIRR STATEMENT\n" +
+                    "🏦 WOW BINGO STATEMENT\n" +
                     f"💰  {balance} Birr\n" +
                     f"👥  {first_name} \n" +
                     f"📄 Transaction ID: {telegram_id}\n" +
@@ -467,31 +442,22 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 ) 
             await query.edit_message_text(text=payment_summary)
             return
-
-        
-                
-        
-
         elif query.data in ['10','20']:
-
             player_id = query.from_user.id
             user_id = query.from_user.id
             username = query.from_user.username or query.from_user.first_name
             bet_amount = query.data
-        
             _resp_u = requests.get(f'{BACK_URL}/users/{user_id}/')
             wallet_amount = (_resp_u.json().get('balance',0)) if _resp_u.headers.get('content-type','').startswith('application/json') else 0
-            print("wallet_amount = ",wallet_amount)
-
             web_app_url = (
                 f"https://wowliyubingo.com/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={wallet_amount}"
             )
 
             keyboard = [
                 [InlineKeyboardButton("Open Wow Bingo!", web_app=WebAppInfo(url=web_app_url))]
+                # [InlineKeyboardButton("Open Wow Bingo!", url=web_app_url)]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-
             await query.message.reply_text("Start playing Wow bingo", reply_markup=reply_markup)
 
         elif query.data == 'deposit':
@@ -665,7 +631,9 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         elif query.data == 'manual':
             keyboard = [
-                [InlineKeyboardButton("Telebirr", callback_data='manual_telebirrcc')]
+                [InlineKeyboardButton("Telebirr", callback_data='manual_telebirr')],
+                [InlineKeyboardButton("CBE", callback_data='manual_cbe')],
+                [InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             await query.message.reply_text(text="Please select a payment method:", reply_markup=reply_markup)
@@ -676,6 +644,14 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 message = file.read()
             context.user_data['payment_method'] = 'manual_telebirr'
             await query.edit_message_text(text=message, parse_mode=ParseMode.HTML)
+            return WAIT_FOR_PAYMENT
+
+        elif query.data == "manual_cbe":
+            filepath = "cbe_message.html"
+            with open(filepath, 'r') as file:
+                message = file.read()
+            await query.edit_message_text(text=message, parse_mode=ParseMode.HTML)
+            context.user_data['payment_method'] = 'manual_cbe'
             return WAIT_FOR_PAYMENT
         elif query.data == "manual_cbe":
             filepath = "cbe_message.html"
@@ -897,30 +873,6 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
-async def handle_manual_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    import uuid
-    payment_method = context.user_data['payment_method']
-    if payment_method == 'manual_telebirr':
-        message = update.message.text
-        amount = context.user_data['deposit_amount']
-        session_id = f"{uuid.uuid4()}"
-        user_id = update.effective_user.id
-        BACK_URL = get_bot_seetings().get("bot_url")
-        
-        # Get user phone from database
-        response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
-        if response.status_code == 200:
-            user_data = response.json()
-            phone_number = user_data.get('phone', '')
-            initialize_manual_session(amount, session_id, phone_number,message)
-            return ConversationHandler.END
-        else:
-            await update.message.reply_text("An error occurred. Please try again.")
-            return ConversationHandler.END
-        await update.message.reply_text("Telebirr payment received. Please wait for verification.")
-    elif payment_method == 'manual_cbe':
-        message = update.message.text
-        await update.message.reply_text("CBE payment received. Please wait for verification.")
 
 def main() -> None:
     BOT_TOKEN = get_bot_seetings().get("bot_token")
