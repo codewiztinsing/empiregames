@@ -26,6 +26,13 @@ def index():
 
 @router.post("/chapa/create-session")
 def create_chapa_session(request, data: ChapaSessionSchema):
+        # "amount": data.amount,
+        #     "currency": "ETB",
+        #     "tx_ref": tx_ref,
+        #     "phone_number": phone_number,
+        #     "first_name":first_name,
+        #     "last_name":last_name,
+        #     "email":f"{first_name}@gmail.com"
     try:
         chapa_session = ChapaSession.objects.create(
         amount=data.amount,

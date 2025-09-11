@@ -69,7 +69,7 @@ def initialize_chapa_direct_charges(phone_number,amount,tx_ref,first_name,last_n
     url = "https://api.chapa.co/v1/charges?type=telebirr"
     BACK_URL = config("BACK_URL")
     chapa_session = None
-    url = f"{BACK_URL}/api/v1/wallet/chapa/create-session"
+    chapa_create_session_url = f"{BACK_URL}/api/v1/wallet/chapa/create-session"
     # Data to send
     data = {
         "amount": amount,
@@ -85,7 +85,7 @@ def initialize_chapa_direct_charges(phone_number,amount,tx_ref,first_name,last_n
     if response.status_code == 200:
         # (amount, currency, email, first_name, last_name, phone_number, tx_ref
         data = {
-              "amount": amount,
+            "amount": amount,
             "currency": "ETB",
             "tx_ref": tx_ref,
             "phone_number": phone_number,
@@ -94,8 +94,9 @@ def initialize_chapa_direct_charges(phone_number,amount,tx_ref,first_name,last_n
             "email":f"{first_name}@gmail.com"
 
         }
+        print("data = ",data)
        
-        chapa_session = requests.post(url, json=data)
+        chapa_session = requests.post(chapa_create_session_url, json=data)
         print("chapa session = ",chapa_session.json())
         return chapa_session.json()
     else:
