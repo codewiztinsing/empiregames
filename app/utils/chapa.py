@@ -1,6 +1,6 @@
 import requests
 import json
-from app.utils.helpers import BACK_URL
+# from app.utils.helpers import BACK_URL
 from app.wallet.api import create_chapa_session
 from decouple import config
 
