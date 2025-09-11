@@ -11,6 +11,7 @@ webhooks_router = Router()
 def chapa_callback(request):
     data = json.loads(request.body.decode('utf-8'))
     event_type = data.get("event")
+    print("data from direct charges = ",data)
     if event_type == "payout.success":
         account_number = data.get("account_number")
         user = User.objects.filter(phone=account_number).first()
