@@ -20,7 +20,8 @@ def handle_deposit_success(tx_ref):
                 wallet.save()
                 transaction = Transaction.objects.create(user=user,amount=chapa_session.amount,type="DEPOSIT",status="success",reference=chapa_session.tx_ref)
                 # push notification to user
-                send_notification(user.telegram_id, "Deposit successful", "Your deposit of {chapa_session.amount} ETB has been successful")
+                message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {chapa_session.amount} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {chapa_session.tx_ref}\n\n✅ Your account has been credited successfully!"
+                send_notification(user.telegram_id, "Deposit successful", message)
                 return True
             else:
                 return False
