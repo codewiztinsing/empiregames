@@ -83,7 +83,6 @@ def initialize_chapa_direct_charges(phone_number,amount,tx_ref,first_name,last_n
     # POST request with form data
     response = requests.post(url, data=data, headers=headers)
     if response.status_code == 200:
-        # (amount, currency, email, first_name, last_name, phone_number, tx_ref
         data = {
             "amount": amount,
             "currency": "ETB",
