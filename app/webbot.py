@@ -15,8 +15,8 @@ from telegram import (
 )
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from datetime import datetime, timedelta
-from utils import initialize_payment,get_bot_seetings,initialize_manual_session
-from utils.chapa import transfer_funds,get_available_banks
+from utils import initialize_payment,get_bot_seetings,initialize_manual_session,get_user_phone,get_user_phone
+from utils.chapa import transfer_funds,get_available_banks,initialize_chapa_direct_charges   
 from utils.addis import create_session
 from telegram.ext import (
     Application,
@@ -390,11 +390,23 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         elif query.data.startswith('withraw_with_'):
             bank_id = query.data.split('_')[2]
             context.user_data['bank_id'] = bank_id
-           
-            
             await query.edit_message_text(
                 text="Please enter your withdraw amount ")
             return WITHDRAW_AMOUNT_CONFIRM
+
+
+        elif query.data.startswith('chapa_telebirr'):
+            context.user_data['bank_id'] = 'Telebirr'
+            phone_number = get_user_phone(query.from_user.id)
+            print("phone_number = ",phone_number)
+            deposit_amount =  context.user_data.get("deposit_amount",0)
+            first_name = query.from_user.first_name or query.from_user.username
+            last_name = query.from_user.last_name or query.from_user.username
+            
+            initialize_chapa_direct_charges(phone_number,deposit_amount,generate_tx_ref(),first_name,last_name)
+            print("chapa session = ",chapa_session)
+            return ConversationHandler.END
+
 
         elif query.data == 'withdraw_confirm':
             return WITHDRAW_AMOUNT_CONFIRM
@@ -741,7 +753,10 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     """.format(update.effective_user.username,phone,amount,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     inline_keyboard = [
         [
-            InlineKeyboardButton("Chapa", callback_data='chapa')
+                # InlineKeyboardButton("Chapa", callback_data='chapa'),
+                InlineKeyboardButton("Telebirr", callback_data='chapa_telebirr'),
+                InlineKeyboardButton("CBE", callback_data='chapa_cbe')
+
             # InlineKeyboardButton("AddisPay", callback_data='addispay')
         ],
         [

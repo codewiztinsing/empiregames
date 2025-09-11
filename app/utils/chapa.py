@@ -6,7 +6,7 @@ API_KEY = config("PROD_SECRET_KEY")
 ENCRYPTION_KEY = config("PROD_ENCRYPTION_KEY")
 url = "https://api.chapa.co/v1/transaction/initialize"
 
-def initialize_payment(amount, currency, email, first_name, last_name, phone_number, tx_ref, callback_url, return_url, customization):
+def initialize_payment(amount, currency, email, first_name, last_name, phone_number, tx_ref):
     print("tx_ref = ",tx_ref)
     payload = {
         "amount": amount,
@@ -65,4 +65,41 @@ def get_available_banks():
     response = requests.get(url, headers=headers)
     print("get available banks = ",response.json())
     return response.json()
+
+
+def initialize_chapa_direct_charges(phone_number,amount,tx_ref,first_name,last_name):
+    url = "https://api.chapa.co/v1/charges?type=telebirr"
+    # Data to send
+    data = {
+        "amount": amount,
+        "currency": "ETB",
+        "tx_ref": tx_ref,
+        "mobile": phone_number
+    }
+    headers = {
+        "Authorization": f"Bearer {API_KEY}"
+    }
+    # POST request with form data
+    response = requests.post(url, data=data, headers=headers)
+    print("response = ",response.json())
+    if response.status_code == 200:
+        # (amount, currency, email, first_name, last_name, phone_number, tx_ref
+        data = {
+              "amount": amount,
+            "currency": "ETB",
+            "tx_ref": tx_ref,
+            "phone_number": phone_number,
+            "first_name":first_name,
+            "last_name":last_name,
+            "email":f"{first_name@gmail.com}"
+
+        }
+       
+        chapa_session = initialize_payment(**data)
+        return chapa_session
+        print("chapa session = ",chapa_session)
+    else:
+        return {"error": "Failed to initialize chapa direct charges"}
+    return response.json()
+
 
