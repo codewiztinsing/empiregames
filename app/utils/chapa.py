@@ -1,5 +1,7 @@
 import requests
 import json
+from app.utils.helpers import BACK_URL
+from app.wallet.api import create_chapa_session
 from decouple import config
 
 API_KEY = config("PROD_SECRET_KEY")
@@ -15,10 +17,7 @@ def initialize_payment(amount, currency, email, first_name, last_name, phone_num
         "first_name": first_name,
         "last_name": last_name,
         "phone_number": phone_number,
-        "tx_ref": tx_ref,
-        "callback_url": callback_url,
-        "return_url": return_url,
-        "customization": customization
+        "tx_ref": tx_ref
     }
     headers = {
         'Authorization': f'Bearer {API_KEY}',
@@ -69,6 +68,8 @@ def get_available_banks():
 
 def initialize_chapa_direct_charges(phone_number,amount,tx_ref,first_name,last_name):
     url = "https://api.chapa.co/v1/charges?type=telebirr"
+    BACK_URL = config("BACK_URL")
+    url = f"{BACK_URL}/api/v1/wallet/chapa/create-session"
     # Data to send
     data = {
         "amount": amount,
@@ -95,9 +96,9 @@ def initialize_chapa_direct_charges(phone_number,amount,tx_ref,first_name,last_n
 
         }
        
-        chapa_session = initialize_payment(**data)
-        return chapa_session
-        print("chapa session = ",chapa_session)
+        chapa_session = requests.post(url, json=data)
+        print("chapa session = ",chapa_session.json())
+        return chapa_session.json()
     else:
         return {"error": "Failed to initialize chapa direct charges"}
     return response.json()
