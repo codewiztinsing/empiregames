@@ -93,11 +93,8 @@ def initialize_chapa_direct_charges(phone_number,amount,tx_ref,first_name,last_n
             "last_name":last_name,
             "email":f"{first_name}@gmail.com"
 
-        }
-        print("data = ",data)
-       
+        }       
         chapa_session = requests.post(chapa_create_session_url, json=data)
-        print("chapa session = ",chapa_session.json())
         return chapa_session.json()
     else:
         return {"error": "Failed to initialize chapa direct charges"}

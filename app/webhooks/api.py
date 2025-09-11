@@ -29,7 +29,7 @@ def chapa_callback(request):
     elif event_type == "charge.success":
         tx_ref = data.get("tx_ref")
         chapa_session = ChapaSession.objects.filter(tx_ref=tx_ref).first()
-        if chapa_session:
+        if chapa_session and chapa_session.status != "success":
             chapa_session.status = "success"
             chapa_session.save()
             user = User.objects.filter(phone=chapa_session.phone_number).first()
@@ -43,9 +43,7 @@ def chapa_callback(request):
                 else:
                     return JsonResponse({"message": "Wallet not found"}, status=404)
             else:
-                return JsonResponse({"message": "User not found"}, status=404)  
-            
-            return JsonResponse({"message": "Callback received"}, status=200)
+                return JsonResponse({"message": "User not found"}, status=404)    
         else:
             return JsonResponse({"message": "Chapa session not found"}, status=404)
     else:
