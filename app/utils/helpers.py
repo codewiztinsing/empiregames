@@ -57,10 +57,10 @@ def verify_receipt(message,paymentMethod,session_id):
     """
     manual_pay_url = config("MANUAL_BASE_URL")
     print("manual payment url")
-    callbackurl = BACK_URL +  "/api/v1/wallet/webhook/manual/success/"
+    callbackurl = BACK_URL +  "/api/v1/wallet/manual/callback/success/"
    
     print("callbackurl = ",callbackurl)
-    errorUrl = BACK_URL +  "/api/v1/wallet/webhook/manual/error/"
+    errorUrl = BACK_URL +  "/api/v1/wallet/manual/callback/error/"
     print("errorUrl = ",errorUrl)
     url = f"{manual_pay_url}receipts/verify/"
     data = {"message": message,"callbackurl":callbackurl,"errorUrl":errorUrl,"paymentMethod":paymentMethod,"session_id":session_id}    

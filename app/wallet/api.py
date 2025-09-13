@@ -1,4 +1,5 @@
 import re
+import requests
 from ninja import NinjaAPI,Router
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
@@ -198,49 +199,66 @@ def manual_success(request):
       
         
         if status == "success":
-            manual_session = ManualSession.objects.filter(transaction_number=transaction_number).first()
-            if manual_session and manual_session.status == "success":
-                telegram_id = manual_session.phone_number
-                user = User.objects.filter(phone=telegram_id).first()
-                telegram_id = user.telegram_id
-                # Notify Telegram user that transaction is already processed
-                try:
-                    import requests                    
-                    # Get bot settings to send notification
-                    bot_token = config('BOT_TOKEN')
-                    print("bot_token = ",bot_token)
-                    print("telegram_id = ",telegram_id)
-                    if bot_token and telegram_id:
+            manual_session = ManualSession.objects.filter(session_id=session_id).first()
+            
+            if not manual_session:
+                print("No manual session found for session id:", session_id)
+                return JsonResponse({"message": "No matching session found"}, status=404)
+            
+            print("Found manual session:", manual_session)
+            
+            if manual_session.status == "success":
+                # Transaction already processed
+                user = User.objects.filter(phone=manual_session.phone_number).first()
+                if user and user.telegram_id:
+                    try:
+                        bot_token = config('BOT_TOKEN')
                         telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                        message = f"⚠️ Transaction already processed!\n\nTransaction: {transaction_number}\nAmount: {manual_session.amount} ETB\n\nThis payment has already been credited to your wallet."
-                        
+                        message = f"⚠️ Transaction Already Processed!\n\n💰 Amount: {manual_session.amount} ETB\n🔗 Reference: {manual_session.session_id}\n\nThis payment has already been credited to your wallet."
                         telegram_payload = {
-                            'chat_id': telegram_id,
+                            'chat_id': user.telegram_id,
                             'text': message,
                             'parse_mode': 'HTML'
                         }
-                        
                         requests.post(telegram_url, json=telegram_payload)
-                        print(f"Notified user {telegram_id} about duplicate transaction")
-                except Exception as notification_error:
-                    print(f"Failed to notify user about duplicate transaction: {notification_error}")
+                        print(f"Notified user {user.telegram_id} about duplicate transaction")
+                    except Exception as notification_error:
+                        print(f"Failed to notify user about duplicate transaction: {notification_error}")
                 return JsonResponse({"message": "Already processed"}, status=200)
-        
-            manual_session = ManualSession.objects.filter(phone_number__endswith=last_payer_4_digits).first()
-            if manual_session:
-                print("Found manual session:", manual_session)
-                # Process the successful payment
-                user = get_object_or_404(User, phone=manual_session.phone_number)
-                wallet = get_object_or_404(Wallet, user=user)
-                wallet.balance += float(manual_session.amount)
-                wallet.save()
-                manual_session.status = "success"
-                manual_session.save()
-                
-                return JsonResponse({"message": "Manual success processed"}, status=200)
-            else:
-                print("No manual session found for phone ending with:", last_payer_4_digits)
-                return JsonResponse({"message": "No matching session found"}, status=404)
+            
+            # Process the successful payment
+            user = get_object_or_404(User, phone=manual_session.phone_number)
+            wallet = get_object_or_404(Wallet, user=user)
+            wallet.balance += float(manual_session.amount)
+            wallet.save()
+            manual_session.status = "success"
+            manual_session.save()
+            transaction = Transaction.objects.create(
+                user=user,
+                amount=manual_session.amount,
+                type="DEPOSIT",
+                status="success",
+                reference=manual_session.session_id
+            )
+            transaction.save()
+            
+            # Notify user about successful deposit
+            if user.telegram_id:
+                try:
+                    bot_token = config('BOT_TOKEN')
+                    telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                    message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {manual_session.amount} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {manual_session.session_id}\n\n✅ Your account has been credited successfully!"
+                    telegram_payload = {
+                        'chat_id': user.telegram_id,
+                        'text': message,
+                        'parse_mode': 'HTML'
+                    }
+                    requests.post(telegram_url, json=telegram_payload)
+                    print(f"Notified user {user.telegram_id} about successful deposit")
+                except Exception as notification_error:
+                    print(f"Failed to notify user about successful deposit: {notification_error}")
+            
+            return JsonResponse({"message": "Manual success processed"}, status=200)
         else:
             manual_session = ManualSession.objects.filter(session_id=session_id).first()
             manual_session.status = "failed"

@@ -11,47 +11,61 @@ def get_bot_seetings():
         "bot_token":BOT_TOKEN,
     }
 
-def initialize_manual_session(amount, session_id, phone_number,message):
+def initialize_manual_session(amount, session_id, phone_number):
+    print("initialize manual session")
     BACK_URL = config('BACK_URL')
-    MANUAL_BASE_URL = config('MANUAL_BASE_URL') + "receipts/verify/"
-    session_url = BACK_URL + "/api/v1/wallet/manual/session/"
-    callbackurl = BACK_URL + "/api/v1/wallet/manual/callback/success/"
-    # callbackurl = "https://webhook.site/c44a944a-1391-4b1b-9cd1-46238d5cb3f3"
-    errorUrl = BACK_URL + "/api/v1/wallet/manual/callback/error/"
-    transaction_number = requests.post(f"http://pay.akerbingo.com/api/v1/get-telebirr-transaction-number/", json={
-        "message":message
-    })
-    transaction_number = transaction_number.json().get('transaction_number')
-    print("transaction_number xxxxxxxxxxxx = ",transaction_number)
+    url = f"{BACK_URL}/api/v1/wallet/manual/session/"
     data = {
-        "amount":amount,
-        "session_id":session_id,
-        "phone_number":phone_number,
-        "transaction_number":transaction_number
-
+        "amount": amount,
+        "session_id": session_id,
+        "phone_number": phone_number,
     }
-    response = requests.post(f"{session_url}", json=data)
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
 
-    print("transaction_number  from message= ",transaction_number)
-    if response.status_code == 200:
-        data = {
-        "message": message,
-        "callbackurl":callbackurl,
-        "errorUrl":errorUrl,
-        "paymentMethod":"telebirr"
-        }
-        response = requests.post(f"{MANUAL_BASE_URL}", json=data)
+    try:
+        response = requests.post(url, json=data, headers=headers)
+        print("manual session response = ",response.json())
         if response.status_code == 200:
-            try:
-                json_data = response.json()
-                return json_data
-            except Exception:
-                print("response (non-JSON) = ", response.text)
-                return {"ok": True, "raw": response.text}
+            return response.json()
         else:
-            return {"error": "Failed to verify manual session"}
+            return {"error": f"Failed to create session: {response.status_code}"}
+    except requests.exceptions.RequestException as e:
+        print("manual session error = ",e)
+        return {"error": f"Request failed: {str(e)}"}
+
+
+
+def verify_telebirr_receipt(message,session_id):
+    print("verify telebirr receipt")
+    BACK_URL = config('BACK_URL')
+    MANUAL_API_KEY = config('MANUAL_API_KEY')
+    manual_payment_url = config("MANUAL_BASE_URL")
+    manual_payment_url = manual_payment_url + "receipts/verify/telebirr/"
+    callbackurl = config("BACK_URL") + "/api/v1/wallet/webhook/manual/success/"
+    errorUrl = config("BACK_URL") + "/api/v1/wallet/webhook/manual/error/"
+    # callbackurl = "https://webhook.site/eb5edb76-4b62-4400-9c67-fcdc7d5bc018"
+    # errorUrl = "https://webhook.site/eb5edb76-4b62-4400-9c67-fcdc7d5bc018"
+    data = {
+        "message": message,
+        "session_id": session_id,
+        "callbackurl": callbackurl,
+        "errorUrl": errorUrl
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": MANUAL_API_KEY
+    }
+    try:
+        response = requests.post(manual_payment_url, json=data, headers=headers)
+        print("verify telebirr receipt response = ",response.json())
         return response.json()
-    else:
-        return {"error": "Failed to initialize manual session"}
-    return response.json()
+    except requests.exceptions.RequestException as e:
+        print("verify telebirr receipt error = ",e)
+        return {"error": f"Request failed: {str(e)}"}
+  
+    
 
