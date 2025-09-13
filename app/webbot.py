@@ -632,7 +632,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         elif query.data == 'manual':
             keyboard = [
                 [InlineKeyboardButton("Telebirr", callback_data='manual_telebirr')],
-                [InlineKeyboardButton("CBE", callback_data='manual_cbe')],
+                # [InlineKeyboardButton("CBE", callback_data='manual_cbe')],
                 [InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
