@@ -1,0 +1,121 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Referrals - Bingo Admin{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">Referrals</h1>
+        <p class="text-gray-400 mt-1">Manage referral system and track referral activities</p>
+    </div>
+
+    <!-- Create New Voucher Section -->
+    <div class="bg-dark-card rounded-lg border border-dark-border p-6 mb-6">
+        <h2 class="text-lg font-semibold text-white mb-4">Create New Voucher</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <!-- Amount -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Amount (ETB)</label>
+                <input type="number" 
+                       class="w-full px-3 py-2 bg-dark-bg text-white border border-dark-border rounded-lg focus:ring-2 focus:ring-purple-primary focus:border-transparent" 
+                       placeholder="Enter amount">
+            </div>
+            
+            <!-- Expiration Date -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Expiration Date (Optional)</label>
+                <input type="date" 
+                       class="w-full px-3 py-2 bg-dark-bg text-white border border-dark-border rounded-lg focus:ring-2 focus:ring-purple-primary focus:border-transparent">
+            </div>
+            
+            <!-- Multi-use Voucher -->
+            <div class="flex items-center space-x-3 mt-6">
+                <input type="checkbox" 
+                       id="multiUse" 
+                       class="w-4 h-4 text-purple-primary bg-dark-bg border-dark-border rounded focus:ring-purple-primary">
+                <label for="multiUse" class="text-sm text-gray-300">
+                    Allow multiple users to claim this voucher
+                </label>
+            </div>
+        </div>
+        
+        <button class="px-6 py-2 bg-purple-primary text-white rounded-lg hover:bg-purple-hover transition-colors">
+            Create Voucher
+        </button>
+    </div>
+
+    <!-- Voucher List Section -->
+    <div class="bg-dark-card rounded-lg border border-dark-border">
+        <div class="p-6 border-b border-dark-border">
+            <h2 class="text-lg font-semibold text-white">Voucher List</h2>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-dark-bg">
+                    <tr>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Code</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Claimed By</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created At</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Claimed At</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Expires At</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-dark-border">
+                    <!-- Voucher Row 1 -->
+                    <tr class="hover:bg-dark-bg transition-colors">
+                        <td class="py-3 px-4 text-white font-mono text-sm">REF-1234567890</td>
+                        <td class="py-3 px-4 text-white">ETB 100.00</td>
+                        <td class="py-3 px-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                EXPIRED
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-white">admin</td>
+                        <td class="py-3 px-4 text-gray-300 text-sm">01/12/2024 11:00:01 AM</td>
+                        <td class="py-3 px-4 text-gray-300 text-sm">-</td>
+                        <td class="py-3 px-4 text-gray-300 text-sm">01/12/2024 11:00:01 AM</td>
+                    </tr>
+                    
+                    <!-- Voucher Row 2 -->
+                    <tr class="hover:bg-dark-bg transition-colors">
+                        <td class="py-3 px-4 text-white font-mono text-sm">REF-1234567891</td>
+                        <td class="py-3 px-4 text-white">ETB 50.00</td>
+                        <td class="py-3 px-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                EXPIRED
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-white">admin</td>
+                        <td class="py-3 px-4 text-gray-300 text-sm">01/12/2024 8:45:00 AM</td>
+                        <td class="py-3 px-4 text-gray-300 text-sm">-</td>
+                        <td class="py-3 px-4 text-gray-300 text-sm">01/12/2024 8:45:00 AM</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="flex items-center justify-between p-4 border-t border-dark-border">
+            <div class="text-sm text-gray-400">
+                Showing 1 to 2 of 2 results
+            </div>
+            <div class="flex items-center space-x-2">
+                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                    Previous
+                </button>
+                <button class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
+                    1
+                </button>
+                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

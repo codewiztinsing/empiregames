@@ -1,0 +1,165 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Contact Information Management{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white mb-2">Contact Information Management</h1>
+        <p class="text-gray-400">Manage contact information and communication settings</p>
+    </div>
+
+    <!-- Contact Information Card -->
+    <div class="bg-dark-card rounded-lg border border-dark-border p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-white">Contact Information</h2>
+            <button class="px-4 py-2 bg-purple-primary text-white rounded-lg hover:bg-purple-hover transition-colors text-sm">
+                Add New Contact
+            </button>
+        </div>
+
+        <!-- Contact Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-dark-border">
+                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Type</th>
+                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Value</th>
+                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Description</th>
+                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Status</th>
+                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Contact Row 1 -->
+                    <tr class="hover:bg-dark-bg transition-colors border-b border-dark-border">
+                        <td class="py-3 px-4 text-white">Telegram</td>
+                        <td class="py-3 px-4 text-white">@support</td>
+                        <td class="py-3 px-4 text-gray-300">Customer support channel</td>
+                        <td class="py-3 px-4">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-primary"></div>
+                            </label>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center space-x-2">
+                                <button class="text-blue-400 hover:text-blue-300 text-sm font-medium">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Contact Row 2 -->
+                    <tr class="hover:bg-dark-bg transition-colors border-b border-dark-border">
+                        <td class="py-3 px-4 text-white">Email</td>
+                        <td class="py-3 px-4 text-white">support@bingo.com</td>
+                        <td class="py-3 px-4 text-gray-300">Primary support email</td>
+                        <td class="py-3 px-4">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-primary"></div>
+                            </label>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center space-x-2">
+                                <button class="text-blue-400 hover:text-blue-300 text-sm font-medium">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Contact Row 3 -->
+                    <tr class="hover:bg-dark-bg transition-colors border-b border-dark-border">
+                        <td class="py-3 px-4 text-white">Phone</td>
+                        <td class="py-3 px-4 text-white">+251-911-123456</td>
+                        <td class="py-3 px-4 text-gray-300">Customer service hotline</td>
+                        <td class="py-3 px-4">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-primary"></div>
+                            </label>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center space-x-2">
+                                <button class="text-blue-400 hover:text-blue-300 text-sm font-medium">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Contact Row 4 -->
+                    <tr class="hover:bg-dark-bg transition-colors">
+                        <td class="py-3 px-4 text-white">Website</td>
+                        <td class="py-3 px-4 text-white">www.bingo.com</td>
+                        <td class="py-3 px-4 text-gray-300">Official website</td>
+                        <td class="py-3 px-4">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-primary"></div>
+                            </label>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center space-x-2">
+                                <button class="text-blue-400 hover:text-blue-300 text-sm font-medium">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between p-4 border-t border-dark-border mt-6">
+            <div class="text-sm text-gray-400">
+                Showing 1 to 4 of 4 results
+            </div>
+            <div class="flex items-center space-x-2">
+                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                    Previous
+                </button>
+                <button class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
+                    1
+                </button>
+                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

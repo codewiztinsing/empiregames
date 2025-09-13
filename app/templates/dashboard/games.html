@@ -1,0 +1,207 @@
+{% extends 'dashboard/base.html' %}
+
+{% block page_title %}Games{% endblock %}
+
+{% block content %}
+<div class="bg-dark-bg min-h-screen">
+    <!-- Header -->
+    <div class="flex justify-between items-center p-6 border-b border-dark-border">
+        <h1 class="text-2xl font-bold text-white">Games</h1>
+        <button class="bg-purple-primary hover:bg-purple-hover text-white px-4 py-2 rounded-lg text-sm font-medium">
+            Add New Game
+        </button>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="p-6 bg-dark-card border-b border-dark-border">
+        <h2 class="text-lg font-semibold text-white mb-4">Filters</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Date Range -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Date Range</label>
+                <select class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-primary">
+                    <option>Last 30 days</option>
+                    <option>Last 7 days</option>
+                    <option>Today</option>
+                    <option>Custom Range</option>
+                </select>
+            </div>
+            
+            <!-- Status -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                <select class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-primary">
+                    <option>All Statuses</option>
+                    <option>Completed</option>
+                    <option>In Progress</option>
+                    <option>Cancelled</option>
+                </select>
+            </div>
+            
+            <!-- Game Type -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Game Type</label>
+                <select class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-primary">
+                    <option>All Game Types</option>
+                    <option>room_10</option>
+                    <option>room_20</option>
+                    <option>room_30</option>
+                </select>
+            </div>
+            
+            <!-- User ID -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">User ID</label>
+                <input type="text" placeholder="Filter by User ID" class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-primary">
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
+                <h3 class="text-gray-400 text-sm font-medium">Total Games</h3>
+                <p class="text-2xl font-bold text-white mt-1">1,234</p>
+            </div>
+            <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
+                <h3 class="text-gray-400 text-sm font-medium">Active Games</h3>
+                <p class="text-2xl font-bold text-white mt-1">56</p>
+            </div>
+            <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
+                <h3 class="text-gray-400 text-sm font-medium">Completed Today</h3>
+                <p class="text-2xl font-bold text-white mt-1">89</p>
+            </div>
+            <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
+                <h3 class="text-gray-400 text-sm font-medium">Total Revenue</h3>
+                <p class="text-2xl font-bold text-white mt-1">ETB 12,450</p>
+            </div>
+        </div>
+
+        <!-- Games Table -->
+        <div class="bg-dark-card rounded-lg border border-dark-border overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-dark-bg border-b border-dark-border">
+                        <tr>
+                            <th class="text-left py-3 px-4 text-gray-300 font-medium">Game ID</th>
+                            <th class="text-left py-3 px-4 text-gray-300 font-medium">Room</th>
+                            <th class="text-left py-3 px-4 text-gray-300 font-medium">Status</th>
+                            <th class="text-left py-3 px-4 text-gray-300 font-medium">Stake</th>
+                            <th class="text-left py-3 px-4 text-gray-300 font-medium">Players</th>
+                            <th class="text-left py-3 px-4 text-gray-300 font-medium">Winner</th>
+                            <th class="text-left py-3 px-4 text-gray-300 font-medium">Date</th>
+                            <th class="text-left py-3 px-4 text-gray-300 font-medium">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-dark-border">
+                        <!-- Game Row 1 -->
+                        <tr class="hover:bg-dark-bg transition-colors">
+                            <td class="py-3 px-4 text-white font-mono text-sm">game_room_10_1734567890_c8f9e8a</td>
+                            <td class="py-3 px-4 text-white">room_10</td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Completed
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-white">ETB 10</td>
+                            <td class="py-3 px-4 text-white">5/5</td>
+                            <td class="py-3 px-4 text-white">user_123</td>
+                            <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 2:30 PM</td>
+                            <td class="py-3 px-4">
+                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Game Row 2 -->
+                        <tr class="hover:bg-dark-bg transition-colors">
+                            <td class="py-3 px-4 text-white font-mono text-sm">game_room_20_1734567891_d9g0f9b</td>
+                            <td class="py-3 px-4 text-white">room_20</td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Completed
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-white">ETB 20</td>
+                            <td class="py-3 px-4 text-white">3/5</td>
+                            <td class="py-3 px-4 text-white">user_456</td>
+                            <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 2:25 PM</td>
+                            <td class="py-3 px-4">
+                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Game Row 3 -->
+                        <tr class="hover:bg-dark-bg transition-colors">
+                            <td class="py-3 px-4 text-white font-mono text-sm">game_room_30_1734567892_e0h1g0c</td>
+                            <td class="py-3 px-4 text-white">room_30</td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Completed
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-white">ETB 30</td>
+                            <td class="py-3 px-4 text-white">2/2</td>
+                            <td class="py-3 px-4 text-white">user_789</td>
+                            <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 2:20 PM</td>
+                            <td class="py-3 px-4">
+                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Game Row 4 -->
+                        <tr class="hover:bg-dark-bg transition-colors">
+                            <td class="py-3 px-4 text-white font-mono text-sm">game_room_10_1734567893_f1i2h1d</td>
+                            <td class="py-3 px-4 text-white">room_10</td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Completed
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-white">ETB 10</td>
+                            <td class="py-3 px-4 text-white">4/5</td>
+                            <td class="py-3 px-4 text-white">user_101</td>
+                            <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 2:15 PM</td>
+                            <td class="py-3 px-4">
+                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between mt-6">
+            <div class="text-sm text-gray-400">
+                Showing 1 to 4 of 1,234 results
+            </div>
+            <div class="flex items-center space-x-2">
+                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                    Previous
+                </button>
+                <button class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
+                    1
+                </button>
+                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                    2
+                </button>
+                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                    3
+                </button>
+                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

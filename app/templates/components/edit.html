@@ -1,0 +1,88 @@
+<!-- Edit Modal -->
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-6 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white" id="editModalTitle">Edit Item</h3>
+                <button type="button" class="text-gray-400 hover:text-white" onclick="closeEditModal()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <form id="editForm" class="p-6">
+                <div id="editFormFields" class="space-y-4">
+                    <!-- Dynamic form fields will be inserted here -->
+                </div>
+                
+                <!-- Modal Footer -->
+                <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-700">
+                    <button type="button" class="px-4 py-2 text-gray-400 hover:text-white border border-gray-600 rounded-lg hover:border-gray-500" onclick="closeEditModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openEditModal(title, fields, data, onSubmit) {
+        // Set modal title
+        document.getElementById('editModalTitle').textContent = title;
+        
+        // Clear existing fields
+        const fieldsContainer = document.getElementById('editFormFields');
+        fieldsContainer.innerHTML = '';
+        
+        // Generate form fields
+        fields.forEach(field => {
+            const fieldDiv = document.createElement('div');
+            fieldDiv.innerHTML = `
+                <label class="block text-sm font-medium text-gray-300 mb-2">${field.label}</label>
+                <input 
+                    type="${field.type || 'text'}" 
+                    name="${field.name}" 
+                    id="edit_${field.name}"
+                    value="${data[field.name] || ''}"
+                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    ${field.required ? 'required' : ''}
+                    ${field.placeholder ? `placeholder="${field.placeholder}"` : ''}
+                >
+            `;
+            fieldsContainer.appendChild(fieldDiv);
+        });
+        
+        // Set form submit handler
+        const form = document.getElementById('editForm');
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const formObject = {};
+            formData.forEach((value, key) => {
+                formObject[key] = value;
+            });
+            onSubmit(formObject);
+        };
+        
+        // Show modal
+        document.getElementById('editModal').classList.remove('hidden');
+    }
+    
+    function closeEditModal() {
+        document.getElementById('editModal').classList.add('hidden');
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeEditModal();
+        }
+    });
+</script>

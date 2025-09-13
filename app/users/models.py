@@ -1,12 +1,14 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.crypto import get_random_string
-
 from django.contrib.auth.models import Group, Permission
+
 class User(AbstractUser):
     phone = models.CharField(max_length=15, unique=True)
     telegram_id = models.CharField(max_length=15, unique=True)
     referral_code = models.CharField(max_length=15, default=get_random_string(15))
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     groups = models.ManyToManyField(
         'auth.Group',
         related_name='wow_user_set',

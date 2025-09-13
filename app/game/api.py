@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from .models import Game, PlayerGame,GameSettings
 from .tasks import charge_player,push_transaction,update_player_balance
-from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema
+from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema,GameTypeSchema
 from ninja.errors import HttpError  # Correct import
 
 
@@ -78,4 +78,11 @@ def game_settings(request):
     if not game_settings:
         game_settings = GameSettings.objects.create(game_speed=5000,count_down_time=30)
     return GameSettingsSchema(game_speed=game_settings.game_speed,count_down_time=game_settings.count_down_time)
+
+
+@game_router.get("/game-types/",response=GameTypeSchema)
+def game_types(request):
+    logger.info(f"Game types: {request}")
+    game_types = GameType.objects.all()
+    return GameTypeSchema(game_types=game_types)
    

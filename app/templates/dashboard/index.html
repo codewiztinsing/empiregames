@@ -1,179 +1,198 @@
-{% extends 'dashboard/base.html' %}
+{% extends "dashboard/base.html" %}
 
-{% block page_title %}Dashboard Overview{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="row">
-    <!-- Welcome Card -->
-    <div class="col-12 mb-4">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h4 class="card-title">
-                    <i class="fas fa-home me-2"></i>
-                    Welcome{% if user.is_authenticated %}, {{ user.username }}{% endif %}!
-                </h4>
-                <p class="card-text">Welcome to your dashboard. Here you can manage your games and view your statistics.</p>
+<div class="bg-gray-900 min-h-screen text-white">
+    <!-- Header Section -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-white">Dashboard</h1>
+            <p class="text-gray-400 text-sm">Showing data for: Last 30 days</p>
+            <p class="text-gray-500 text-xs">6/1/2023 to 6/1/2023</p>
+        </div>
+        <div class="flex gap-3">
+            <select class="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 text-sm">
+                <option>Last 30 days</option>
+                <option>Last 7 days</option>
+                <option>Last 90 days</option>
+            </select>
+            <button class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg text-sm font-medium">
+                Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards Row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- New Users Card -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-gray-400 text-sm font-medium">New Users</h3>
+                    <div class="text-3xl font-bold text-white mt-2">{{ new_users }}</div>
+                    <div class="flex items-center mt-2">
+                        <span class="text-green-400 text-sm">+15% from last 30d</span>
+                    </div>
+                </div>
+                <div class="bg-blue-500/20 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Games Played Card -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-gray-400 text-sm font-medium">Games Played</h3>
+                    <div class="text-3xl font-bold text-white mt-2">{{ games_played }}</div>
+                    <div class="flex items-center mt-2">
+                        <span class="text-green-400 text-sm">Total Games: 6</span>
+                    </div>
+                </div>
+                <div class="bg-green-500/20 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.5a1.5 1.5 0 011.5 1.5V12a1.5 1.5 0 01-1.5 1.5H9m4.5-5.5a1.5 1.5 0 011.5-1.5H16a1.5 1.5 0 011.5 1.5V12a1.5 1.5 0 01-1.5 1.5h-1.5m-4.5 0h4.5"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Card -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-gray-400 text-sm font-medium">Revenue</h3>
+                    <div class="text-3xl font-bold text-white mt-2">ETB {{ total_winnings }}</div>
+                    <div class="flex items-center mt-2">
+                        <span class="text-gray-400 text-sm">Last 30 days</span>
+                    </div>
+                </div>
+                <div class="bg-yellow-500/20 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row">
-    <!-- Quick Stats -->
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
+    <!-- Financial Activity Section -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-white mb-6">Financial Activity</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Deposits Card -->
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div class="flex justify-between items-start mb-4">
                     <div>
-                        <h5 class="card-title">Games Played</h5>
-                        <h2 class="mb-0">{{games_played}}</h2>
+                        <h3 class="text-gray-400 text-sm font-medium">Deposits</h3>
+                        <div class="text-2xl font-bold text-white mt-2">ETB {{ total_deposits }}</div>
+                        <div class="flex items-center mt-2">
+                            <span class="text-gray-400 text-sm">Total Deposits: ETB {{ total_deposits_amount }}</span>
+                        </div>
                     </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-gamepad fa-2x"></i>
+                    <div class="bg-blue-500/20 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
+                        </svg>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
+
+            <!-- Withdrawals Card -->
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div class="flex justify-between items-start mb-4">
                     <div>
-                        <h5 class="card-title">Games Won</h5>
-                        <h2 class="mb-0">{{games_won}}</h2>
+                        <h3 class="text-gray-400 text-sm font-medium">Withdrawals</h3>
+                        <div class="text-2xl font-bold text-white mt-2">-ETB {{ total_withdrawals }}</div>
+                        <div class="flex items-center mt-2">
+                            <span class="text-gray-400 text-sm">Total Withdrawals: ETB {{ total_withdrawals_amount }}</span>
+                        </div>
                     </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-trophy fa-2x"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="card-title">Total Player Balance</h5>
-                        <h2 class="mb-0">{{wallet.total_balance}}</h2>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-wallet fa-2x"></i>
+                    <div class="bg-red-500/20 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
 
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="card-title">Total Withdrawals</h5>
-                        <h2 class="mb-0">{{wallet.totalwithdrawals}}</h2>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-money-bill-wave fa-2x"></i>
-                    </div>
-                </div>
+    <!-- Summary Section -->
+    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <h3 class="text-lg font-semibold text-white mb-4">Summary for Last 30 days</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+            <div>
+                <div class="text-2xl font-bold text-white">38</div>
+                <div class="text-gray-400 text-sm">New Users</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-white">6</div>
+                <div class="text-gray-400 text-sm">Games Played</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-green-400">ETB {{ total_deposits_amount }}</div>
+                <div class="text-gray-400 text-sm">Total Deposits</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-red-400">ETB {{ total_withdrawals_amount }}</div>
+                <div class="text-gray-400 text-sm">Total Withdrawals</div>
             </div>
         </div>
     </div>
-    
-   
-
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="card-title">Deposits</h5>
-                        <h2 class="mb-0">{{wallet.deposits}}</h2>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-money-bill-alt fa-2x"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
 
 
-    
-</div>
+        <!-- Manage Promotions section -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 mt-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Promotion Banner Management</h3>
+            <div class="space-y-4">
+                <!-- Promotion Banner Section -->
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <h4 class="text-white font-medium mb-3">Promotion Banner</h4>
+                    
+                    <!-- Banner Image Upload -->
+                    <form class="mb-4" method="post" enctype="multipart/form-data" action="{% url 'promotions:upload_banner' %}">
+                        {% csrf_token %}
+                        <label class="block text-gray-300 text-sm mb-2">Banner Image</label>
+                        <div class="flex items-center space-x-3">
+                            <input type="file" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded text-sm">
+                            <span class="text-gray-400 text-sm">No file chosen</span>
+                        </div>
+                        <div class="mt-2">
+                            <label class="flex items-center text-sm text-gray-400">
+                                <input type="checkbox" name="use_client_side" class="mr-2 rounded bg-gray-600 border-gray-500">
+                                Use client-side only (bypass server upload)
+                            </label>
+                        </div>
 
-<div class="row">
-    <!-- Quick Actions -->
-    <div class="col-lg-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-bolt me-2"></i>
-                    Quick Actions
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a href="/" class="btn btn-primary">
-                        <i class="fas fa-play me-2"></i>
-                        Start New Game
-                    </a>
-                    <button class="btn btn-outline-secondary">
-                        <i class="fas fa-users me-2"></i>
-                        Join Game Room
-                    </button>
-                    <button class="btn btn-outline-info">
-                        <i class="fas fa-history me-2"></i>
-                        View Game History
-                    </button>
+                          <!-- Upload Banner Button -->
+                    <div class="mb-4">
+                        <button  type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded font-medium">
+                            Upload Banner
+                        </button>
+                    </div>
+                    </form>
+                    
+                  
+                    
+                    <!-- Status Toggle -->
+                    <div class="flex items-center space-x-3">
+                        <div class="flex items-center">
+                            <input type="radio" id="inactive" name="banner_status" value="inactive" class="mr-2" checked>
+                            <label for="inactive" class="text-gray-300 text-sm">Inactive</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="active" name="banner_status" value="active" class="mr-2">
+                            <label for="active" class="text-gray-300 text-sm">Active</label>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Recent Activity -->
-    <div class="col-lg-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-clock me-2"></i>
-                    Recent Activity
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="text-center text-muted py-4">
-                    <i class="fas fa-inbox fa-3x mb-3"></i>
-                    <p>No recent activity to display</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <!-- Game Statistics Chart -->
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-chart-bar me-2"></i>
-                    Game Statistics
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="text-center text-muted py-5">
-                    <i class="fas fa-chart-bar fa-4x mb-3"></i>
-                    <h5>No Statistics Available</h5>
-                    <p>Start playing games to see your statistics here!</p>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}

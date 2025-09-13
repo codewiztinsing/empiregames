@@ -31,9 +31,14 @@ class Winner(models.Model):
 class GameSettings(models.Model):
     game_speed = models.IntegerField()
     count_down_time = models.IntegerField()
- 
-   
-
     def __str__(self):
         return f"{self.game_speed} - {self.count_down_time}"
+
+
+class GameType(models.Model):
+    bet_amount = models.IntegerField(default=10)
+    commission = models.IntegerField(default=10)
+
+    def __str__(self):
+        return f"{self.bet_amount}"
     

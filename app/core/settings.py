@@ -16,7 +16,6 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-print("DEBUG = ",DEBUG)
 
 # Custom 404 page settings
 HANDLER404 = 'core.views.custom_404'
@@ -24,6 +23,10 @@ HANDLER404 = 'core.views.custom_404'
 
 ALLOWED_HOSTS = ["*", "wowliyubingo.com", "server.wowliyubingo.com"]
 CSRF_TRUSTED_ORIGINS = ["https://wowliyubingo.com", "https://*.ngrok.app"]
+
+# login redirect
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 
 # Application definition
@@ -36,10 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "corsheaders",
+
+    # local apps
     'game',
     'users',
     'wallet',
-    "marketing"
+    'promotion',
 ]
 
 
@@ -141,5 +146,15 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'templates', 'build', 'static')]
+
+
+# media files
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+
+
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

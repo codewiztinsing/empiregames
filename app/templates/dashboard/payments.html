@@ -1,0 +1,68 @@
+{% extends 'dashboard/base.html' %}
+
+{% block page_title %}Payment Management{% endblock %}
+
+{% block content %}
+<div class="bg-gray-900 min-h-screen">
+    <!-- Header -->
+    <div class="flex justify-between items-center p-6 border-b border-gray-700">
+        <h1 class="text-2xl font-bold text-white">Payment Management</h1>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="px-6 pt-6">
+        <div class="flex space-x-1 bg-gray-800 p-1 rounded-lg w-fit">
+            <button class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md">
+                Withdrawal Requests
+            </button>
+            <button class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">
+                Payment Settings
+            </button>
+            <button class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">
+                Manual Deposits
+            </button>
+            <button class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">
+                Manual Withdrawals
+            </button>
+        </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="p-6">
+        <!-- Withdrawal Requests Section -->
+        <div class="bg-gray-800 rounded-lg border border-gray-700">
+            <!-- Section Header -->
+            <div class="flex justify-between items-center p-4 border-b border-gray-700">
+                <h2 class="text-lg font-semibold text-white">Withdrawal Requests</h2>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm text-gray-400">Filter by status:</label>
+                        <select class="bg-gray-700 border border-gray-600 text-white text-sm rounded px-3 py-1">
+                            <option>All</option>
+                            <option>Pending</option>
+                            <option>Approved</option>
+                            <option>Rejected</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm text-gray-400">Pending</label>
+                        <select class="bg-gray-700 border border-gray-600 text-white text-sm rounded px-3 py-1">
+                            <option>All</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="flex flex-col items-center justify-center py-16">
+                <div class="text-gray-400 text-center">
+                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                    <p class="text-lg font-medium text-gray-400">No pending withdrawal requests found.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

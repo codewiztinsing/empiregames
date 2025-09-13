@@ -1,4 +1,5 @@
 from ninja import Schema
+from .models import GameType
 
 class PlayerSchema(Schema):
     playerId: int
@@ -31,3 +32,10 @@ class GameSettingsSchema(Schema):
     game_speed: int
     count_down_time: int
     
+
+class GameType(Schema):
+    bet_amount: int
+    commission: int
+
+class GameTypeSchema(Schema):
+    game_types: list[GameType]
