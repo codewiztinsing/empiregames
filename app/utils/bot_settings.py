@@ -75,12 +75,13 @@ def verify_cbe_receipt(message,session_id):
     MANUAL_API_KEY = config('MANUAL_API_KEY')
     manual_payment_url = config("MANUAL_BASE_URL")
     manual_payment_url = manual_payment_url + "receipts/verify/cbe/"
-    callbackurl = config("BACK_URL") + "/api/v1/wallet/webhook/manual/success/"
+    callbackurl = config("BACK_URL") + "/api/v1/wallet/webhook/manual/cbe/success/"
     errorUrl = config("BACK_URL") + "/api/v1/wallet/webhook/manual/error/"
+    
     data = {
         "message": message,
         "session_id": session_id,
-        "callbackurl": callbackurl,
+        "callbackurl": callbackurl ,
         "errorUrl": errorUrl
     }
     headers = {

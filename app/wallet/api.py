@@ -312,9 +312,9 @@ def manual_session(request):
 
 
 
-@router.post("/manual/callback/telebirr/success/")
+@router.post("/manual/callback/cbe/success/")
 @csrf_exempt
-def manual_telebirr_success(request):
+def manual_cbe_success(request):
     print("Manual success request")
     try:
         data = json.loads(request.body.decode('utf-8'))
