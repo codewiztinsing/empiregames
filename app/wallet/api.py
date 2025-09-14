@@ -205,7 +205,12 @@ def manual_success(request):
                     try:
                         bot_token = config('BOT_TOKEN')
                         telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                        message = f"⚠️ Transaction Already Processed!\n\n💰 Amount: {manual_session.amount} ETB\n🔗 Reference: {manual_session.session_id}\n\nThis payment has already been credited to your wallet."
+                        message = (
+                            f"🎉 Deposit Failed! 🎉\n\n"
+                            f"📊 New Balance: {wallet.balance} ETB\n"
+                            f"🔗 Reference: {manual_session.session_id}\n\n"
+                            f"❌ Your account has been credited failed!"
+                        )
                         telegram_payload = {
                             'chat_id': user.telegram_id,
                             'text': message,
@@ -221,6 +226,7 @@ def manual_success(request):
             user = get_object_or_404(User, phone=manual_session.phone_number)
             wallet = get_object_or_404(Wallet, user=user)
             wallet.balance += float(details.get("amount").strip("ETB"))
+            print("wallet balance = ",wallet.balance)
             wallet.save()
             manual_session.status = "success"
             manual_session.save()
@@ -238,7 +244,13 @@ def manual_success(request):
                 try:
                     bot_token = config('BOT_TOKEN')
                     telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                    message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {details.get("amount").strip("ETB")} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {manual_session.session_id}\n\n✅ Your account has been credited successfully!"
+                    message = (
+                        f"🎉 Deposit Successful! 🎉\n\n"
+                        f"💰 Amount: {details.get('amount').strip('ETB')} ETB\n"
+                        f"📊 New Balance: {wallet.balance} ETB\n"
+                        f"🔗 Reference: {manual_session.session_id}\n\n"
+                        f"✅ Your account has been credited successfully!"
+                    )
                     telegram_payload = {
                         'chat_id': user.telegram_id,
                         'text': message,
