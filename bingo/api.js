@@ -75,19 +75,23 @@ const getCurrentGame = async (betAmount)=>{
 
 const gameLossWallet = async (players,betAmount)=>{
   const current_game = await getCurrentGame(betAmount)
+  console.log("current_game",current_game)
   const game_id = current_game.game_id
  
   const data = {
       players: players,
       bet_amount: betAmount,
-      game_id:game_id
+      game_id:10
   };
+
+  console.log("data loss wallet",data)
 
   try{
       if(!data.players) return null;
       const backUrl = process.env.BACK_URL
       const lossUrl = backUrl + 'game/join-game/'
       console.log("lossUrl",lossUrl)
+      console.log("data",data)
       await axios.post(lossUrl,data)
       .then(res=>{
           console.log("gameLossWallet res",res.data)

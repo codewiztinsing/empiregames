@@ -5,7 +5,7 @@ class Game(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     started = models.BooleanField(default=False)
     ended = models.BooleanField(default=False)
-    entry_fee = models.DecimalField(max_digits=10, decimal_places=2)
+    entry_fee = models.DecimalField(max_digits=10, decimal_places=2,default=0)
 
     def __str__(self):
         return f"{self.entry_fee}"
