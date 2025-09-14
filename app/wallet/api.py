@@ -376,7 +376,7 @@ def manual_telebirr_success(request):
                 try:
                     bot_token = config('BOT_TOKEN')
                     telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                    message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {details.get("Transferred Amount").strip("ETB")} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {manual_session.session_id}\n\n✅ Your account has been credited successfully!"
+                    message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {details.get('Transferred Amount').strip('ETB')} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {manual_session.session_id}\n\n✅ Your account has been credited successfully!"
                     telegram_payload = {
                         'chat_id': user.telegram_id,
                         'text': message,
