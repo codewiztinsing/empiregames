@@ -182,10 +182,8 @@ def manual_success(request):
     print("Manual success request")
     try:
         data = json.loads(request.body.decode('utf-8'))
-        print("data = ",data)
         session_id = data.get("session_id")
         status = data.get("status")
-        print("status = ",status)
         # Extract payer number from either top-level or nested 'data'
         details = data.get("data") or {}
         transaction_number = details.get("transaction_number")
@@ -193,20 +191,13 @@ def manual_success(request):
         print("payer_telebirr_no = ", payer_telebirr_no)
         if not payer_telebirr_no:
             return JsonResponse({"message": "Missing payer_telebirr_no"}, status=400)
-        # Keep only digits to handle masked numbers like 2519****1912
-        digits_only = re.sub(r"\D", "", payer_telebirr_no)
-        last_payer_4_digits = digits_only[-4:]
-      
-        
+
         if status == "success":
             manual_session = ManualSession.objects.filter(session_id=session_id).first()
-            
             if not manual_session:
                 print("No manual session found for session id:", session_id)
                 return JsonResponse({"message": "No matching session found"}, status=404)
-            
-            print("Found manual session:", manual_session)
-            
+                        
             if manual_session.status == "success":
                 # Transaction already processed
                 user = User.objects.filter(phone=manual_session.phone_number).first()
@@ -229,13 +220,13 @@ def manual_success(request):
             # Process the successful payment
             user = get_object_or_404(User, phone=manual_session.phone_number)
             wallet = get_object_or_404(Wallet, user=user)
-            wallet.balance += float(manual_session.amount)
+            wallet.balance += float(details.get("amount").strip("ETB"))
             wallet.save()
             manual_session.status = "success"
             manual_session.save()
             transaction = Transaction.objects.create(
                 user=user,
-                amount=manual_session.amount,
+                amount=float(details.get("amount").strip("ETB")),
                 type="DEPOSIT",
                 status="success",
                 reference=manual_session.session_id
@@ -247,7 +238,7 @@ def manual_success(request):
                 try:
                     bot_token = config('BOT_TOKEN')
                     telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                    message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {manual_session.amount} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {manual_session.session_id}\n\n✅ Your account has been credited successfully!"
+                    message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {details.get("amount").strip("ETB")} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {manual_session.session_id}\n\n✅ Your account has been credited successfully!"
                     telegram_payload = {
                         'chat_id': user.telegram_id,
                         'text': message,
@@ -304,3 +295,92 @@ def manual_session(request):
     except Exception as e:
         print(f"Error processing Manual session: {e}")
         return JsonResponse({"message": "Error processing session"}, status=500)
+
+
+
+
+
+@router.post("/manual/callback/telebirr/success/")
+@csrf_exempt
+def manual_telebirr_success(request):
+    print("Manual success request")
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        session_id = data.get("session_id")
+        status = data.get("status")
+        # Extract payer number from either top-level or nested 'data'
+        details = data.get("data") or {}
+        transaction_number = details.get("transaction_number")
+        customerName = data.get("Customer Name") or details.get("Customer Name") or details.get("credited_account")
+        if not customerName:
+            return JsonResponse({"message": "Missing customerName"}, status=400)
+
+        if status == "success":
+            manual_session = ManualSession.objects.filter(session_id=session_id).first()
+            if not manual_session:
+                print("No manual session found for session id:", session_id)
+                return JsonResponse({"message": "No matching session found"}, status=404)
+                        
+            if manual_session.status == "success":
+                # Transaction already processed
+                user = User.objects.filter(phone=manual_session.phone_number).first()
+                print("user = ",user)
+                if user and user.telegram_id:
+                    try:
+                        bot_token = config('BOT_TOKEN')
+                        telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                        message = f"⚠️ Transaction Already Processed!\n\n💰 Amount: {manual_session.amount} ETB\n🔗 Reference: {manual_session.session_id}\n\nThis payment has already been credited to your wallet."
+                        telegram_payload = {
+                            'chat_id': user.telegram_id,
+                            'text': message,
+                            'parse_mode': 'HTML'
+                        }
+                        requests.post(telegram_url, json=telegram_payload)
+                        print(f"Notified user {user.telegram_id} about duplicate transaction")
+                    except Exception as notification_error:
+                        print(f"Failed to notify user about duplicate transaction: {notification_error}")
+                return JsonResponse({"message": "Already processed"}, status=200)
+            
+            # Process the successful payment
+            print("phone from manual session = ",manual_session.phone_number)
+            user = get_object_or_404(User, phone=manual_session.phone_number)
+            wallet = get_object_or_404(Wallet, user=user)
+            wallet.balance += float(details.get("Transferred Amount").strip("ETB"))
+            print("wallet balance = ",wallet.balance)
+            wallet.save()
+            manual_session.status = "success"
+            manual_session.save()
+            transaction = Transaction.objects.create(
+                user=user,
+                amount=float(details.get("Transferred Amount").strip("ETB")),
+                type="DEPOSIT",
+                status="success",
+                reference=manual_session.session_id
+            )
+            transaction.save()
+            
+            # Notify user about successful deposit
+            if user.telegram_id:
+                try:
+                    bot_token = config('BOT_TOKEN')
+                    telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                    message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {details.get("Transferred Amount").strip("ETB")} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {manual_session.session_id}\n\n✅ Your account has been credited successfully!"
+                    telegram_payload = {
+                        'chat_id': user.telegram_id,
+                        'text': message,
+                        'parse_mode': 'HTML'
+                    }
+                    requests.post(telegram_url, json=telegram_payload)
+                    print(f"Notified user {user.telegram_id} about successful deposit")
+                except Exception as notification_error:
+                    print(f"Failed to notify user about successful deposit: {notification_error}")
+            
+            return JsonResponse({"message": "Manual success processed"}, status=200)
+        else:
+            manual_session = ManualSession.objects.filter(session_id=session_id).first()
+            manual_session.status = "failed"
+            manual_session.save()
+            return JsonResponse({"message": "Manual failed data"}, status=200)
+    except Exception as e:
+        print(f"Error processing Manual success: {e}")
+        return JsonResponse({"message": "Error processing success"}, status=500)

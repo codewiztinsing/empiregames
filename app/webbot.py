@@ -632,7 +632,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         elif query.data == 'manual':
             keyboard = [
                 [InlineKeyboardButton("Telebirr", callback_data='manual_telebirr')],
-                # [InlineKeyboardButton("CBE", callback_data='manual_cbe')],
+                [InlineKeyboardButton("CBE", callback_data='manual_cbe')],
                 [InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
@@ -653,16 +653,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             await query.edit_message_text(text=message, parse_mode=ParseMode.HTML)
             context.user_data['payment_method'] = 'manual_cbe'
             return WAIT_FOR_PAYMENT
-        elif query.data == "manual_cbe":
-            filepath = "cbe_message.html"
-            with open(filepath, 'r') as file:
-                message = file.read()
-            await query.edit_message_text(text=message, parse_mode=ParseMode.HTML)
-            context.user_data['payment_method'] = 'manual_cbe'
-            return WAIT_FOR_PAYMENT
-
-        
-
+    
         elif query.data == 'share_phone':
             # Fallback in case the inline button is used elsewhere
             contact_keyboard = ReplyKeyboardMarkup(

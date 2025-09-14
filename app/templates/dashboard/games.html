@@ -95,85 +95,27 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-dark-border">
+                        {% for game in games %}
                         <!-- Game Row 1 -->
                         <tr class="hover:bg-dark-bg transition-colors">
-                            <td class="py-3 px-4 text-white font-mono text-sm">game_room_10_1734567890_c8f9e8a</td>
+                            <td class="py-3 px-4 text-white font-mono text-sm">{{ game.id }}</td>
                             <td class="py-3 px-4 text-white">room_10</td>
                             <td class="py-3 px-4">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Completed
+                                    {{ game.status }}
                                 </span>
                             </td>
-                            <td class="py-3 px-4 text-white">ETB 10</td>
+                            <td class="py-3 px-4 text-white">ETB {{ game.stake }}</td>
                             <td class="py-3 px-4 text-white">5/5</td>
-                            <td class="py-3 px-4 text-white">user_123</td>
-                            <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 2:30 PM</td>
+                            <td class="py-3 px-4 text-white">{{ game.user.username }}</td>
+                            <td class="py-3 px-4 text-gray-300 text-sm">{{ game.created_at }}</td>
                             <td class="py-3 px-4">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
+                                <a class="text-purple-primary hover:text-purple-hover text-sm font-medium" href="{% url 'game:game_details' game.id %}">
                                     View Details
-                                </button>
+                                </a>
                             </td>
                         </tr>
-                        
-                        <!-- Game Row 2 -->
-                        <tr class="hover:bg-dark-bg transition-colors">
-                            <td class="py-3 px-4 text-white font-mono text-sm">game_room_20_1734567891_d9g0f9b</td>
-                            <td class="py-3 px-4 text-white">room_20</td>
-                            <td class="py-3 px-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Completed
-                                </span>
-                            </td>
-                            <td class="py-3 px-4 text-white">ETB 20</td>
-                            <td class="py-3 px-4 text-white">3/5</td>
-                            <td class="py-3 px-4 text-white">user_456</td>
-                            <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 2:25 PM</td>
-                            <td class="py-3 px-4">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View Details
-                                </button>
-                            </td>
-                        </tr>
-                        
-                        <!-- Game Row 3 -->
-                        <tr class="hover:bg-dark-bg transition-colors">
-                            <td class="py-3 px-4 text-white font-mono text-sm">game_room_30_1734567892_e0h1g0c</td>
-                            <td class="py-3 px-4 text-white">room_30</td>
-                            <td class="py-3 px-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Completed
-                                </span>
-                            </td>
-                            <td class="py-3 px-4 text-white">ETB 30</td>
-                            <td class="py-3 px-4 text-white">2/2</td>
-                            <td class="py-3 px-4 text-white">user_789</td>
-                            <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 2:20 PM</td>
-                            <td class="py-3 px-4">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View Details
-                                </button>
-                            </td>
-                        </tr>
-                        
-                        <!-- Game Row 4 -->
-                        <tr class="hover:bg-dark-bg transition-colors">
-                            <td class="py-3 px-4 text-white font-mono text-sm">game_room_10_1734567893_f1i2h1d</td>
-                            <td class="py-3 px-4 text-white">room_10</td>
-                            <td class="py-3 px-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Completed
-                                </span>
-                            </td>
-                            <td class="py-3 px-4 text-white">ETB 10</td>
-                            <td class="py-3 px-4 text-white">4/5</td>
-                            <td class="py-3 px-4 text-white">user_101</td>
-                            <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 2:15 PM</td>
-                            <td class="py-3 px-4">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View Details
-                                </button>
-                            </td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

@@ -1,31 +1,21 @@
-data = {
-  "session_id": "9a098d29-27aa-4216-9177-2a774d6dcde10",
+data ={
+  "session_id": "dbe30b2c-425c-447b-8a6e-0076685a6601",
   "status": "success",
   "message": "Transaction verified successfully",
   "data": {
-    "payer_name": "ESHETU FEYESSA ABERA",
-    "payer_telebirr_no": "2519****9495",
-    "payer_account_type": "Individual Customer",
-    "credited_party": "ESHETU FEYISSA ABERA",
-    "credited_account": "2519****4252",
-    "transaction_status": "የከፋይ ስም/Payer Name",
-    "invoice_no": "የክፍያ ቀን/Payment date",
-    "payment_date": "የክፍያ ዝርዝር/ Invoice details",
-    "settled_amount": "የክፍያ ዝርዝር/ Invoice details",
-    "service_fee": "0.87 Birr",
-    "total_paid": "የክፍያ ዝርዝር/ Invoice details",
-    "total_in_words": "fifty-one birr and zero cent",
-    "payment_mode": "telebirr",
-    "payment_reason": "Send Money to Registered Customer",
-    "payment_channel": "API/App",
-    "customer_note": "",
-    "amount": 51,
-    "ref_number": "CFJ6167JLC"
+    "Customer Name": "TINSAE ALAKO ABIYO",
+    "Receiver": "TAGESE SAMUEL ORJINO",
+    "Payer": "TINSAE ALAKO ABIYO",
+    "Payment Date & Time": "9/13/2025, 3:21:00 PM",
+    "Transferred Amount": "540.00 ETB",
+    "VAT": "0 ETB",
+    "Total Debited": "0 ETB",
+    "VAT Receipt No:": "FT252566PF9D"
   }
 }
 import requests
 
-url = "http://127.0.0.1:8000/api/v1/wallet/manual/callback/success/"
+url = "http://127.0.0.1:8000/api/v1/wallet/manual/callback/telebirr/success/"
 headers = {
   "Content-Type": "application/json",
   "Accept": "application/json"

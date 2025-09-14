@@ -67,5 +67,33 @@ def verify_telebirr_receipt(message,session_id):
         print("verify telebirr receipt error = ",e)
         return {"error": f"Request failed: {str(e)}"}
   
+
+
+def verify_cbe_receipt(message,session_id):
+    print("verify cbe receipt")
+    BACK_URL = config('BACK_URL')
+    MANUAL_API_KEY = config('MANUAL_API_KEY')
+    manual_payment_url = config("MANUAL_BASE_URL")
+    manual_payment_url = manual_payment_url + "receipts/verify/cbe/"
+    callbackurl = config("BACK_URL") + "/api/v1/wallet/webhook/manual/success/"
+    errorUrl = config("BACK_URL") + "/api/v1/wallet/webhook/manual/error/"
+    data = {
+        "message": message,
+        "session_id": session_id,
+        "callbackurl": callbackurl,
+        "errorUrl": errorUrl
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": MANUAL_API_KEY
+    }
+    try:
+        response = requests.post(manual_payment_url, json=data, headers=headers)
+        print("verify cbe receipt response = ",response.json())
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print("verify cbe receipt error = ",e)
+        return {"error": f"Request failed: {str(e)}"}
     
 

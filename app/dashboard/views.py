@@ -1,6 +1,7 @@
 from this import d
 from datetime import timedelta
 from django.db.models import Sum
+from django.core.paginator import Paginator
 from django.utils import timezone
 from users.models import User
 from game.models import Game
@@ -165,7 +166,16 @@ def game_type_detail(request, game_type_id):
 
 
 def games(request):
-    return render(request, 'dashboard/games.html')
+    games = Game.objects.all().order_by('-id')
+    paginator = Paginator(games, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'games': page_obj,
+        'page_title': 'Games',
+        'page_obj': page_obj
+    }
+    return render(request, 'dashboard/games.html',context)
 
 def payments(request):
     return render(request, 'dashboard/payments.html')
