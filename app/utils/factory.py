@@ -16,10 +16,10 @@ async def handle_manual_payment(update: Update, context: ContextTypes.DEFAULT_TY
         manual_payment_url = manual_payment_url + "receipts/verify/telebirr/"
     elif manual_payment_method == "manual_cbe":
         manual_payment_url = manual_payment_url + "receipts/verify/cbe/"
-    # callbackurl = config("BACK_URL") + "/api/v1/wallet/manual/callback/success/"
-    callbackurl = "https://webhook.site/61a691dd-df42-46b3-a4d5-f417a4d49b9d"
-    # errorUrl    = config("BACK_URL") + "/api/v1/wallet/manual/callback/error/"
-    errorUrl = "https://webhook.site/eb5edb76-4b62-4400-9c67-fcdc7d5bc018"
+    callbackurl = config("BACK_URL") + "/api/v1/wallet/manual/callback/success/"
+    # callbackurl = "https://webhook.site/61a691dd-df42-46b3-a4d5-f417a4d49b9d"
+    errorUrl    = config("BACK_URL") + "/api/v1/wallet/manual/callback/error/"
+    # errorUrl = "https://webhook.site/eb5edb76-4b62-4400-9c67-fcdc7d5bc018"
     data = {
         "message": update.message.text,
         "callbackurl": callbackurl,
