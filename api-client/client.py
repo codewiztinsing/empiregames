@@ -1,21 +1,16 @@
-data ={
-  "session_id": "dbe30b2c-425c-447b-8a6e-0076685a6601",
-  "status": "success",
-  "message": "Transaction verified successfully",
-  "data": {
-    "Customer Name": "TINSAE ALAKO ABIYO",
-    "Receiver": "TAGESE SAMUEL ORJINO",
-    "Payer": "TINSAE ALAKO ABIYO",
-    "Payment Date & Time": "9/13/2025, 3:21:00 PM",
-    "Transferred Amount": "540.00 ETB",
-    "VAT": "0 ETB",
-    "Total Debited": "0 ETB",
-    "VAT Receipt No:": "FT252566PF9D"
-  }
+data = {
+  "players": [
+    { "playerId": '7707233947', "numberOfBoards": 1 },
+    { "playerId": '7408361547', "numberOfBoards": 1 },
+    { "playerId": '6415994768', "numberOfBoards": 1 }
+  ],
+  "bet_amount": '10',
+  "game_id": 8407
 }
+
 import requests
 
-url = "http://127.0.0.1:8000/api/v1/wallet/manual/callback/telebirr/success/"
+url = "https://wowliyubingo.com/api/v1/game/join-game/"
 headers = {
   "Content-Type": "application/json",
   "Accept": "application/json"

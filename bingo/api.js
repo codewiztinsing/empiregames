@@ -81,7 +81,7 @@ const gameLossWallet = async (players,betAmount)=>{
   const data = {
       players: players,
       bet_amount: betAmount,
-      game_id:10
+      game_id:game_id
   };
 
   console.log("data loss wallet",data)
