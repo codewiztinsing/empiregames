@@ -76,6 +76,7 @@ const Selections = () => {
           'Content-Type': 'application/json'
         };
         const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
+        console.log("user wallet response = ",response)
         setBalance(response.data.balance);
         setLoading(false);
       } catch (error) {
