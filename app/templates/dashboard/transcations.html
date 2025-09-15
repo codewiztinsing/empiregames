@@ -1,5 +1,5 @@
 {% extends 'dashboard/base.html' %}
-
+{% load static %}
 {% block title %}Transactions - Bingo Admin{% endblock %}
 
 {% block content %}
@@ -89,173 +89,33 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-dark-border">
-                    <!-- Transaction Row 1 -->
+                {% for transaction in transactions %}
                     <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4 text-white font-mono text-sm">1</td>
-                        <td class="py-3 px-4 text-white">user_123</td>
+                        <td class="py-3 px-4 text-white font-mono text-sm">{{ transaction.id }}</td>
+                        <td class="py-3 px-4 text-white">{{ transaction.user.username }}</td>
                         <td class="py-3 px-4">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                Deposit
+                                {{ transaction.type }}
                             </span>
                         </td>
-                        <td class="py-3 px-4 text-green-400 font-semibold">ETB 500</td>
+                        <td class="py-3 px-4 text-green-400 font-semibold">ETB {{ transaction.amount }}</td>
                         <td class="py-3 px-4">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Completed
+                                {{ transaction.status }}
                             </span>
                         </td>
-                        <td class="py-3 px-4 text-white">Telebirr</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 10:30 AM</td>
+                        <td class="py-3 px-4 text-white">{{ transaction.reference }}</td>
+                        <td class="py-3 px-4 text-gray-300 text-sm">{{ transaction.created_at }}</td>
                         <td class="py-3 px-4">
                             <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                Details
+                                <a href="{% url 'wallet:transaction_details' transaction.id %}">
+                                    Details
+                                </a>
                             </button>
                         </td>
                     </tr>
-
-                    <!-- Transaction Row 2 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4 text-white font-mono text-sm">2</td>
-                        <td class="py-3 px-4 text-white">user_456</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Game Win
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-green-400 font-semibold">ETB 100</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Completed
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-white">Balance</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 11:15 AM</td>
-                        <td class="py-3 px-4">
-                            <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                Details
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Transaction Row 3 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4 text-white font-mono text-sm">3</td>
-                        <td class="py-3 px-4 text-white">user_789</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                Withdrawal
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-red-400 font-semibold">-ETB 50</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Pending
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-white">Telebirr</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 1:45 PM</td>
-                        <td class="py-3 px-4">
-                            <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                Approve
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Transaction Row 4 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4 text-white font-mono text-sm">4</td>
-                        <td class="py-3 px-4 text-white">user_101</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                Game Loss
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-red-400 font-semibold">-ETB 25</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Completed
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-white">Balance</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 2:20 PM</td>
-                        <td class="py-3 px-4">
-                            <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                Details
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Transaction Row 5 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4 text-white font-mono text-sm">5</td>
-                        <td class="py-3 px-4 text-white">user_202</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                Deposit
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-green-400 font-semibold">ETB 1000</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Completed
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-white">Telebirr</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 3:10 PM</td>
-                        <td class="py-3 px-4">
-                            <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                Details
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Transaction Row 6 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4 text-white font-mono text-sm">6</td>
-                        <td class="py-3 px-4 text-white">user_303</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                Withdrawal
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-red-400 font-semibold">-ETB 75</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                Failed
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-white">Telebirr</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">Dec 5, 2024, 4:05 PM</td>
-                        <td class="py-3 px-4">
-                            <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                Retry
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Transaction Row 7 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4 text-white font-mono text-sm">7</td>
-                        <td class="py-3 px-4 text-white">user_404</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                Withdrawal
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-red-400 font-semibold">-ETB 40</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Completed
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-white">Telebirr</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">Aug 30, 2024, 6:53 PM</td>
-                        <td class="py-3 px-4">
-                            <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                Details
-                            </button>
-                        </td>
-                    </tr>
+                    {% endfor %}
+                  
                 </tbody>
             </table>
         </div>
@@ -263,7 +123,7 @@
         <!-- Pagination -->
         <div class="flex items-center justify-between p-4 border-t border-dark-border">
             <div class="text-sm text-gray-400">
-                Showing 1 to 7 of 1,234 results
+                Showing 1 to {{ transactions.count }} of {{ transactions.count }} results
             </div>
             <div class="flex items-center space-x-2">
                 <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">

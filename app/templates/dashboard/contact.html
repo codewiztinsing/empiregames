@@ -33,13 +33,14 @@
                 </thead>
                 <tbody>
                     <!-- Contact Row 1 -->
+                    {% for user in users %}
                     <tr class="hover:bg-dark-bg transition-colors border-b border-dark-border">
-                        <td class="py-3 px-4 text-white">Telegram</td>
-                        <td class="py-3 px-4 text-white">@support</td>
-                        <td class="py-3 px-4 text-gray-300">Customer support channel</td>
+                        <td class="py-3 px-4 text-white">{{ user.role }}</td>
+                        <td class="py-3 px-4 text-white">{{ user.user.username }}</td>
+                        <td class="py-3 px-4 text-gray-300">{{ user.user.email }}</td>
                         <td class="py-3 px-4">
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" class="sr-only peer" checked>
+                                <input type="checkbox" class="sr-only peer" {% if user.is_active %}checked{% endif %}>
                                 <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-primary"></div>
                             </label>
                         </td>
@@ -58,87 +59,9 @@
                             </div>
                         </td>
                     </tr>
+                    {% endfor %}
 
-                    <!-- Contact Row 2 -->
-                    <tr class="hover:bg-dark-bg transition-colors border-b border-dark-border">
-                        <td class="py-3 px-4 text-white">Email</td>
-                        <td class="py-3 px-4 text-white">support@bingo.com</td>
-                        <td class="py-3 px-4 text-gray-300">Primary support email</td>
-                        <td class="py-3 px-4">
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" class="sr-only peer" checked>
-                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-primary"></div>
-                            </label>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-blue-400 hover:text-blue-300 text-sm font-medium">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                </button>
-                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Contact Row 3 -->
-                    <tr class="hover:bg-dark-bg transition-colors border-b border-dark-border">
-                        <td class="py-3 px-4 text-white">Phone</td>
-                        <td class="py-3 px-4 text-white">+251-911-123456</td>
-                        <td class="py-3 px-4 text-gray-300">Customer service hotline</td>
-                        <td class="py-3 px-4">
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" class="sr-only peer">
-                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-primary"></div>
-                            </label>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-blue-400 hover:text-blue-300 text-sm font-medium">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                </button>
-                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Contact Row 4 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4 text-white">Website</td>
-                        <td class="py-3 px-4 text-white">www.bingo.com</td>
-                        <td class="py-3 px-4 text-gray-300">Official website</td>
-                        <td class="py-3 px-4">
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" class="sr-only peer" checked>
-                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-primary"></div>
-                            </label>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-blue-400 hover:text-blue-300 text-sm font-medium">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                </button>
-                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                  
                 </tbody>
             </table>
         </div>

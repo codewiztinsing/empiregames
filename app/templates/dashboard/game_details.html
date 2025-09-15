@@ -1,0 +1,110 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Game Details - Dashboard{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-dark-bg">
+    <!-- Header -->
+    <div class="bg-dark-card border-b border-dark-border">
+        <div class="p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-white">Game Details</h1>
+                    <p class="text-gray-400 mt-1">View detailed information about this game</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <a href="{% url 'dashboard:games' %}" class="px-4 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                        Back to Games
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Details Content -->
+    <div class="p-6">
+        <!-- Game Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
+                <h3 class="text-gray-400 text-sm font-medium">Game ID</h3>
+                <p class="text-2xl font-bold text-white mt-1 font-mono">{{ game.id }}</p>
+            </div>
+            <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
+                <h3 class="text-gray-400 text-sm font-medium">Status</h3>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
+                    {{ game.status }}
+                </span>
+            </div>
+            <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
+                <h3 class="text-gray-400 text-sm font-medium">Stake Amount</h3>
+                <p class="text-2xl font-bold text-white mt-1">ETB {{ game.entry_fee }}</p>
+            </div>
+            <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
+                <h3 class="text-gray-400 text-sm font-medium">Winner</h3>
+                <p class="text-2xl font-bold text-white mt-1">{{ game.winner.username|default:"TBD" }}</p>
+            </div>
+        </div>
+
+        <!-- Main Game Information -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Game Info -->
+            <div class="bg-dark-card rounded-lg border border-dark-border p-6">
+                <h2 class="text-xl font-bold text-white mb-4">Game Information</h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-gray-400">Room</span>
+                        <span class="text-white">room_{{ game.id }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-gray-400">Created Date</span>
+                        <span class="text-white">{{ game.created_at|date:"M d, Y H:i" }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-gray-400">Game Type</span>
+                        <span class="text-white">Bingo</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-gray-400">Duration</span>
+                        <span class="text-white">15 minutes</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-gray-400">Total Players</span>
+                        <span class="text-white">5/5</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Statistics -->
+            <div class="bg-dark-card rounded-lg border border-dark-border p-6">
+                <h2 class="text-xl font-bold text-white mb-4">Game Statistics</h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-gray-400">Total Rounds</span>
+                        <span class="text-white">45</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-gray-400">Numbers Called</span>
+                        <span class="text-white">32</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-gray-400">Prize Pool</span>
+                        <span class="text-white">ETB {{ game.entry_fee|floatformat:2 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
+                        <span class="text-gray-400">Commission</span>
+                        <span class="text-white">ETB 50.00</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-gray-400">Net Payout</span>
+                        <span class="text-white font-bold">ETB {{ game.entry_fee|add:"-50"|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+     
+    </div>
+</div>
+{% endblock %}

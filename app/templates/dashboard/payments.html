@@ -12,16 +12,16 @@
     <!-- Tab Navigation -->
     <div class="px-6 pt-6">
         <div class="flex space-x-1 bg-gray-800 p-1 rounded-lg w-fit">
-            <button class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md">
+            <button onclick="showTab('withdrawal-requests')" id="tab-withdrawal-requests" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md">
                 Withdrawal Requests
             </button>
-            <button class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">
+            <button onclick="showTab('payment-settings')" id="tab-payment-settings" class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">
                 Payment Settings
             </button>
-            <button class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">
+            <button onclick="showTab('manual-deposits')" id="tab-manual-deposits" class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">
                 Manual Deposits
             </button>
-            <button class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">
+            <button onclick="showTab('manual-withdrawals')" id="tab-manual-withdrawals" class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">
                 Manual Withdrawals
             </button>
         </div>
@@ -29,40 +29,404 @@
 
     <!-- Content Area -->
     <div class="p-6">
-        <!-- Withdrawal Requests Section -->
-        <div class="bg-gray-800 rounded-lg border border-gray-700">
+        <!-- Withdrawal Requests Tab -->
+        <div id="content-withdrawal-requests" class="tab-content">
+            <!-- Withdrawal Requests Section -->
+            <div class="bg-gray-800 rounded-lg border border-gray-700">
             <!-- Section Header -->
             <div class="flex justify-between items-center p-4 border-b border-gray-700">
                 <h2 class="text-lg font-semibold text-white">Withdrawal Requests</h2>
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center space-x-2">
                         <label class="text-sm text-gray-400">Filter by status:</label>
-                        <select class="bg-gray-700 border border-gray-600 text-white text-sm rounded px-3 py-1">
-                            <option>All</option>
-                            <option>Pending</option>
-                            <option>Approved</option>
-                            <option>Rejected</option>
-                        </select>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <label class="text-sm text-gray-400">Pending</label>
-                        <select class="bg-gray-700 border border-gray-600 text-white text-sm rounded px-3 py-1">
-                            <option>All</option>
+                        <select id="statusFilter" class="bg-gray-700 border border-gray-600 text-white text-sm rounded px-3 py-1" onchange="filterByStatus()">
+                            <option value="all" {% if current_status == 'all' %}selected{% endif %}>All</option>
+                            <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="success" {% if current_status == 'success' %}selected{% endif %}>Approved</option>
+                            <option value="failed" {% if current_status == 'failed' %}selected{% endif %}>Rejected</option>
                         </select>
                     </div>
                 </div>
             </div>
 
+            <!-- Withdrawal Requests Table -->
+            {% if withdrawal_requests %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-700">
+                    <thead class="bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                User
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Amount
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Request Date
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-gray-800 divide-y divide-gray-700">
+                        {% for request in withdrawal_requests %}
+                        <tr class="hover:bg-gray-700">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
+                                            <span class="text-sm font-medium text-white">
+                                                {{ request.user.username|first|upper }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-white">{{ request.user.username }}</div>
+                                        <div class="text-sm text-gray-400">{{ request.user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-white">${{ request.amount|floatformat:2 }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                    {% if request.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                    {% elif request.status == 'success' %}bg-green-100 text-green-800
+                                    {% elif request.status == 'failed' %}bg-red-100 text-red-800
+                                    {% endif %}">
+                                    {{ request.status|title }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                {{ request.created_at|date:"M d, Y H:i" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    {% if request.status == 'pending' %}
+                                    <button onclick="approveRequest({{ request.id }})" 
+                                            class="text-green-400 hover:text-green-300 bg-green-900 hover:bg-green-800 px-3 py-1 rounded text-xs">
+                                        Approve
+                                    </button>
+                                    <button onclick="rejectRequest({{ request.id }})" 
+                                            class="text-red-400 hover:text-red-300 bg-red-900 hover:bg-red-800 px-3 py-1 rounded text-xs">
+                                        Reject
+                                    </button>
+                                    {% else %}
+                                    <span class="text-gray-500 text-xs">No actions available</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="bg-gray-700 px-4 py-3 flex items-center justify-between border-t border-gray-600 sm:px-6">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" 
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Previous
+                    </a>
+                    {% endif %}
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" 
+                       class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Next
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-300">
+                            Showing
+                            <span class="font-medium">{{ page_obj.start_index }}</span>
+                            to
+                            <span class="font-medium">{{ page_obj.end_index }}</span>
+                            of
+                            <span class="font-medium">{{ page_obj.paginator.count }}</span>
+                            results
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-500 bg-gray-800 text-sm font-medium text-gray-300 hover:bg-gray-700">
+                                <span class="sr-only">Previous</span>
+                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-500 bg-blue-600 text-sm font-medium text-white">
+                                    {{ num }}
+                                </span>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <a href="?page={{ num }}" 
+                                   class="relative inline-flex items-center px-4 py-2 border border-gray-500 bg-gray-800 text-sm font-medium text-gray-300 hover:bg-gray-700">
+                                    {{ num }}
+                                </a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-500 bg-gray-800 text-sm font-medium text-gray-300 hover:bg-gray-700">
+                                <span class="sr-only">Next</span>
+                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
             <!-- Empty State -->
             <div class="flex flex-col items-center justify-center py-16">
                 <div class="text-gray-400 text-center">
                     <svg class="w-12 h-12 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
                     </svg>
-                    <p class="text-lg font-medium text-gray-400">No pending withdrawal requests found.</p>
+                    <p class="text-lg font-medium text-gray-400">No withdrawal requests found.</p>
+                </div>
+            </div>
+            {% endif %}
+            </div>
+        </div>
+
+        <!-- Payment Settings Tab -->
+        <div id="content-payment-settings" class="tab-content hidden">
+            <div class="bg-gray-800 rounded-lg border border-gray-700">
+                <div class="flex justify-between items-center p-4 border-b border-gray-700">
+                    <h2 class="text-lg font-semibold text-white">Payment Settings</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Payment Gateway Settings -->
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <h3 class="text-lg font-medium text-white mb-4">Payment Gateway Settings</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Minimum Deposit Amount</label>
+                                    <input type="number" class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" placeholder="10.00">
+                                </div>
+                               
+                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                                    Save Settings
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Withdrawal Settings -->
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <h3 class="text-lg font-medium text-white mb-4">Withdrawal Settings</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Minimum Withdrawal Amount</label>
+                                    <input type="number" class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" placeholder="0.00">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Maximum Withdrawal Amount</label>
+                                    <input type="number" class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" placeholder="10000.00">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Withdrawal Fee (%)</label>
+                                    <input type="number" step="0.01" class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" placeholder="2.5">
+                                </div>
+                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                                    Save Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Deposits Tab -->
+        <div id="content-manual-deposits" class="tab-content hidden">
+            <div class="bg-gray-800 rounded-lg border border-gray-700">
+                <div class="flex justify-between items-center p-4 border-b border-gray-700">
+                    <h2 class="text-lg font-semibold text-white">Manual Deposits</h2>
+                    <button onclick="showAddDepositModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
+                        Add Manual Deposit
+                    </button>
+                </div>
+                <div class="p-6">
+                    <!-- Manual Deposits Table -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-700">
+                            <thead class="bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Method</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Reference</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-gray-800 divide-y divide-gray-700">
+                                <tr>
+                                    <td colspan="6" class="px-6 py-8 text-center text-gray-400">
+                                        No manual deposits found
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Withdrawals Tab -->
+        <div id="content-manual-withdrawals" class="tab-content hidden">
+            <div class="bg-gray-800 rounded-lg border border-gray-700">
+                <div class="flex justify-between items-center p-4 border-b border-gray-700">
+                    <h2 class="text-lg font-semibold text-white">Manual Withdrawals</h2>
+                    <button onclick="showAddWithdrawalModal()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm">
+                        Add Manual Withdrawal
+                    </button>
+                </div>
+                <div class="p-6">
+                    <!-- Manual Withdrawals Table -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-700">
+                            <thead class="bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Method</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Reference</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-gray-800 divide-y divide-gray-700">
+                                <tr>
+                                    <td colspan="6" class="px-6 py-8 text-center text-gray-400">
+                                        No manual withdrawals found
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Tab switching functionality
+function showTab(tabName) {
+    // Hide all tab contents
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Remove active class from all tab buttons
+    const tabButtons = document.querySelectorAll('[id^="tab-"]');
+    tabButtons.forEach(button => {
+        button.classList.remove('bg-blue-600', 'text-white');
+        button.classList.add('text-gray-300', 'hover:text-white', 'hover:bg-gray-700');
+    });
+    
+    // Show selected tab content
+    const selectedContent = document.getElementById('content-' + tabName);
+    if (selectedContent) {
+        selectedContent.classList.remove('hidden');
+    }
+    
+    // Add active class to selected tab button
+    const selectedButton = document.getElementById('tab-' + tabName);
+    if (selectedButton) {
+        selectedButton.classList.add('bg-blue-600', 'text-white');
+        selectedButton.classList.remove('text-gray-300', 'hover:text-white', 'hover:bg-gray-700');
+    }
+}
+
+function filterByStatus() {
+    const status = document.getElementById('statusFilter').value;
+    const url = new URL(window.location);
+    url.searchParams.set('status', status);
+    url.searchParams.delete('page'); // Reset to first page when filtering
+    window.location.href = url.toString();
+}
+
+function showAddDepositModal() {
+    // Placeholder for add deposit modal
+    alert('Add Manual Deposit functionality will be implemented here');
+}
+
+function showAddWithdrawalModal() {
+    // Placeholder for add withdrawal modal
+    alert('Add Manual Withdrawal functionality will be implemented here');
+}
+
+function approveRequest(requestId) {
+    if (confirm('Are you sure you want to approve this withdrawal request?')) {
+        fetch(`/dashboard/withdrawal-requests/${requestId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the request.');
+        });
+    }
+}
+
+function rejectRequest(requestId) {
+    if (confirm('Are you sure you want to reject this withdrawal request?')) {
+        fetch(`/dashboard/withdrawal-requests/${requestId}/reject/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the request.');
+        });
+    }
+}
+</script>
 {% endblock %}

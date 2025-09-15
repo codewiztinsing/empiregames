@@ -3,7 +3,7 @@ import requests
 from ninja import NinjaAPI,Router
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
-from .models import ManualSession
+from .models import ManualSession, WithdrawalRequest
 from decouple import config
 from .schema import (ChapaSessionSchema,
     ChapaSessionResponseSchema, 
@@ -396,3 +396,18 @@ def manual_cbe_success(request):
     except Exception as e:
         print(f"Error processing Manual success: {e}")
         return JsonResponse({"message": "Error processing success"}, status=500)
+
+
+@router.post("/withdrawal/request/")
+def withdrawal_request(request):
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        amount = data.get("amount")
+        user = User.objects.filter(telegram_id=data.get("telegram_id")).first()
+        withdrawal_request = WithdrawalRequest.objects.create(user=user,amount=amount,status="pending")
+        return JsonResponse({"message": "Withdrawal request created successfully"}, status=200)
+    except Exception as e:
+        print(f"Error processing Withdrawal request: {e}")
+        return JsonResponse({"message": "Error processing withdrawal request"}, status=500)
+
+

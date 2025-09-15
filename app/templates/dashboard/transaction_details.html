@@ -1,0 +1,125 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Transaction Details - Bingo Admin{% endblock %}
+
+{% block content %}
+<div class="flex-1 p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center space-x-4">
+            <a href="#" class="text-purple-primary hover:text-purple-hover">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-white mb-2">Transaction Details</h1>
+                <p class="text-gray-400">Transaction ID: {{ transaction.id }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Details Card -->
+    <div class="bg-dark-card rounded-lg border border-dark-border p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Left Column -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Transaction ID</label>
+                    <p class="text-white font-mono">{{ transaction.id }}</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">User</label>
+                    <p class="text-white">{{ transaction.user.username }}</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Transaction Type</label>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        {{ transaction.type }}
+                    </span>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Amount</label>
+                    <p class="text-2xl font-bold text-green-400">ETB {{ transaction.amount }}</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Status</label>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        {{ transaction.status }}
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Payment Method</label>
+                    <p class="text-white">{{ transaction.reference|default:"N/A" }}</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Created Date</label>
+                    <p class="text-white">{{ transaction.created_at|date:"F d, Y" }}</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Created Time</label>
+                    <p class="text-white">{{ transaction.created_at|time:"H:i:s" }}</p>
+                </div>
+                
+                {% if transaction.updated_at %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Last Updated</label>
+                    <p class="text-white">{{ transaction.updated_at|date:"F d, Y H:i:s" }}</p>
+                </div>
+                {% endif %}
+                
+                {% if transaction.description %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Description</label>
+                    <p class="text-white">{{ transaction.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- User Information Card -->
+    <div class="bg-dark-card rounded-lg border border-dark-border p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">User Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-400 mb-1">Username</label>
+                <p class="text-white">{{ transaction.user.username }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                <p class="text-white">{{ transaction.user.email|default:"N/A" }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-400 mb-1">User ID</label>
+                <p class="text-white font-mono">{{ transaction.user.id }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center space-x-4">
+        <a href="#" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded">
+            Back to Transactions
+        </a>
+        {% if transaction.status == 'pending' %}
+        <button class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded">
+            Approve Transaction
+        </button>
+        <button class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded">
+            Reject Transaction
+        </button>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

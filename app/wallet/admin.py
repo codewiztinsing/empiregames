@@ -3,7 +3,8 @@ from .models import (Wallet,
             Transaction,
             ChapaSession,
             AddisPaySession,
-            ManualSession
+            ManualSession,
+            WithdrawalRequest
             )
 
 class WalletAdmin(admin.ModelAdmin):
@@ -49,6 +50,15 @@ class ManualSessionAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     list_per_page = 10
 
+
+class WithdrawalRequestAdmin(admin.ModelAdmin):
+    list_display = ('user', 'amount', 'status', 'created_at')
+    search_fields = ('user', 'amount', 'status')
+    list_filter = ('status',)
+    list_per_page = 10
+
+
 admin.site.register(Transaction, TransactionAdmin)  
 admin.site.register(ChapaSession, ChapaSessionAdmin)
 admin.site.register(AddisPaySession, AddisPaySessionAdmin)
+admin.site.register(WithdrawalRequest, WithdrawalRequestAdmin)

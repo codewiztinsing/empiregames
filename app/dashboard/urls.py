@@ -13,7 +13,9 @@ urlpatterns = [
     path('users/', views.users, name='users'),
     path('bingo_cards/', views.bingo_cards, name='bingo_cards'),
     path('referrals/', views.referrals, name='referrals'),
-    path('messages/', views.messages, name='messages'),
+    path('messages/', views.messages_view, name='messages'),
     path('contact/', views.contact, name='contact'),
-    path('logout/', views.logout, name='logout'),
-]
+    path('logout/', views.logout_view, name='logout'),
+    path('withdrawal-requests/<int:request_id>/approve/', views.approve_withdrawal_request, name='approve_withdrawal_request'),
+    path('withdrawal-requests/<int:request_id>/reject/', views.reject_withdrawal_request, name='reject_withdrawal_request'),
+    ]

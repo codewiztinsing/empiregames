@@ -4,6 +4,13 @@ from users.models import User
 class Game(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     started = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=[
+        ('waiting', 'Waiting'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed')
+    ], default='waiting')
+    winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    players = models.JSONField(default=list)
     ended = models.BooleanField(default=False)
     entry_fee = models.DecimalField(max_digits=10, decimal_places=2,default=0)
 
@@ -15,11 +22,12 @@ class PlayerGame(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     has_bingo = models.BooleanField(default=False)
 
+    
     def __str__(self):
         return f"{self.user.username} - {self.game.entry_fee}"
 
 class Winner(models.Model):
-    player = models.ForeignKey(PlayerGame, on_delete=models.CASCADE)
+    player = models.ForeignKey(User, on_delete=models.CASCADE)
     prize = models.DecimalField(max_digits=10, decimal_places=2)
     awarded_at = models.DateTimeField(auto_now_add=True)
 

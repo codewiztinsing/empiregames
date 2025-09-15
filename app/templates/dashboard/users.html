@@ -16,7 +16,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-400 text-sm font-medium">TOTAL USERS</p>
-                    <p class="text-2xl font-bold text-white mt-1">40</p>
+                    <p class="text-2xl font-bold text-white mt-1">{{ total_users }}</p>
                 </div>
                 <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,7 +31,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-400 text-sm font-medium">ACTIVE</p>
-                    <p class="text-2xl font-bold text-white mt-1">40</p>
+                    <p class="text-2xl font-bold text-white mt-1">{{ total_users }}</p>
                 </div>
                 <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,7 +46,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-400 text-sm font-medium">SUSPENDED</p>
-                    <p class="text-2xl font-bold text-white mt-1">0</p>
+                    <p class="text-2xl font-bold text-white mt-1">{{ suspended_users }}</p>
                 </div>
                 <div class="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +61,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-400 text-sm font-medium">OFFLINE</p>
-                    <p class="text-2xl font-bold text-white mt-1">0</p>
+                    <p class="text-2xl font-bold text-white mt-1">{{ users.count }}</p>
                 </div>
                 <div class="w-12 h-12 bg-gray-500/10 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,7 +81,7 @@
                     <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
-                    <input type="text" placeholder="Search by name or email..." class="w-full pl-10 pr-4 py-2 bg-dark-bg border border-dark-border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent">
+                    <input type="text" placeholder="Search by phone..." class="w-full pl-10 pr-4 py-2 bg-dark-bg border border-dark-border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent">
                 </div>
             </div>
 
@@ -130,136 +130,45 @@
                 </thead>
                 <tbody class="divide-y divide-dark-border">
                     <!-- User Row 1 -->
+
+                    {% for user in users %}
                     <tr class="hover:bg-dark-bg transition-colors">
                         <td class="py-3 px-4">
                             <div class="flex items-center space-x-3">
                                 <div class="w-8 h-8 bg-purple-primary rounded-full flex items-center justify-center">
-                                    <span class="text-white text-sm font-medium">JD</span>
+                                    <span class="text-white text-sm font-medium">{{ user.username|slice:":2" }}</span>
                                 </div>
                                 <div>
-                                    <p class="text-white font-medium">ZEYITUNESH</p>
-                                    <p class="text-gray-400 text-sm">USER ID: 0000001</p>
+                                    <p class="text-white font-medium">{{ user.username }}</p>
+                                    <p class="text-gray-400 text-sm">USER ID: {{ user.id }}</p>
                                 </div>
                             </div>
                         </td>
-                        <td class="py-3 px-4 text-white">0791616</td>
-                        <td class="py-3 px-4 text-white">ETB 0.00</td>
-                        <td class="py-3 px-4 text-white">Sep 17, 2024 10:17 PM</td>
+                        <td class="py-3 px-4 text-white">{{ user.phone }}</td>
+                        <td class="py-3 px-4 text-white">ETB {{ user.wallet.balance }}</td>
+                        <td class="py-3 px-4 text-white">{{ user.created_at }}</td>
                         <td class="py-3 px-4">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Active
+                                {{ user.is_active }}
                             </span>
                         </td>
                         <td class="py-3 px-4">
                             <div class="flex items-center space-x-2">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View
-                                </button>
-                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
+                                <a class="text-purple-primary hover:text-purple-hover text-sm font-medium"
+                                href="{% url 'accounts:user_details' user.id %}"
+                                >
+                                    View 
+                                </a>
+                                <a class="text-red-400 hover:text-red-300 text-sm font-medium" 
+                                href="{% url 'accounts:block_user' user.id %}"
+                                >
                                     Block
-                                </button>
+                                </a>
                             </div>
                         </td>
                     </tr>
-
-                    <!-- User Row 2 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                                    <span class="text-white text-sm font-medium">AB</span>
-                                </div>
-                                <div>
-                                    <p class="text-white font-medium">ABEBE</p>
-                                    <p class="text-gray-400 text-sm">USER ID: 0000002</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 text-white">0911234567</td>
-                        <td class="py-3 px-4 text-white">ETB 150.00</td>
-                        <td class="py-3 px-4 text-white">Sep 18, 2024 2:30 PM</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Active
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View
-                                </button>
-                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
-                                    Block
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- User Row 3 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                                    <span class="text-white text-sm font-medium">MK</span>
-                                </div>
-                                <div>
-                                    <p class="text-white font-medium">MEKDES</p>
-                                    <p class="text-gray-400 text-sm">USER ID: 0000003</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 text-white">0923456789</td>
-                        <td class="py-3 px-4 text-white">ETB 75.50</td>
-                        <td class="py-3 px-4 text-white">Sep 19, 2024 9:45 AM</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Active
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View
-                                </button>
-                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
-                                    Block
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- User Row 4 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                                    <span class="text-white text-sm font-medium">DW</span>
-                                </div>
-                                <div>
-                                    <p class="text-white font-medium">DAWIT</p>
-                                    <p class="text-gray-400 text-sm">USER ID: 0000004</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 text-white">0934567890</td>
-                        <td class="py-3 px-4 text-white">ETB 200.25</td>
-                        <td class="py-3 px-4 text-white">Sep 20, 2024 4:15 PM</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Active
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View
-                                </button>
-                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
-                                    Block
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                    {% endfor %}
+                  
                 </tbody>
             </table>
         </div>
@@ -267,22 +176,32 @@
         <!-- Pagination -->
         <div class="flex items-center justify-between p-4 border-t border-dark-border">
             <div class="text-sm text-gray-400">
-                Showing 1 to 4 of 40 results
+                Showing 1 to {{ users.count }} of {{ users.count }} results
             </div>
             <div class="flex items-center space-x-2">
                 <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
                     Previous
                 </button>
                 <button class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
-                    1
+                    {% if page_obj.has_previous %}
+                    href="{% url 'accounts:users' %}?page={{ page_obj.previous_page_number }}"
+                    {% endif %}
                 </button>
                 <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    2
+                    {% if page_obj.has_next %}
+                    href="{% url 'accounts:users' %}?page={{ page_obj.next_page_number }}"
+                    {% endif %}
                 </button>
                 <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    3
+                    {% if page_obj.has_next %}
+                    href="{% url 'accounts:users' %}?page={{ page_obj.next_page_number }}"
+                    {% endif %}
                 </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg"
+                {% if page_obj.has_next %}
+                href="{% url 'accounts:users' %}?page={{ page_obj.next_page_number }}"
+                {% endif %}
+                >
                     Next
                 </button>
             </div>

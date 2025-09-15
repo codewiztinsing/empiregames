@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User
+from .models import User, SupportUser
 
 class UserAdmin(admin.ModelAdmin):
     list_display = ('id','username', 'phone', 'telegram_id')
@@ -14,4 +14,13 @@ class UserAdmin(admin.ModelAdmin):
     list_filter = ('is_active', 'is_staff')
     list_per_page = 10
 
+
+class SupportUserAdmin(admin.ModelAdmin):
+    list_display = ("id",'user', 'role')
+    search_fields = ('user', 'role')
+    list_filter = ('role',)
+    list_per_page = 10
+
+
 admin.site.register(User, UserAdmin)
+admin.site.register(SupportUser, SupportUserAdmin)

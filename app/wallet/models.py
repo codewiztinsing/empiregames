@@ -55,6 +55,10 @@ class ManualSession(models.Model):
     transaction_number = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
     
+    class Meta:
+        verbose_name = "Manual Session"
+        verbose_name_plural = "Manual Sessions"
+
     def __str__(self):
         return f"{self.session_id} - {self.status}"
 
@@ -70,5 +74,24 @@ class Transaction(models.Model):
     reference = models.CharField(max_length=100,blank=True,null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = "Transaction"
+        verbose_name_plural = "Transactions"
+
     def __str__(self):
         return f"{self.user.username} - {self.amount} - {self.type} - {self.status}"    
+
+
+
+class WithdrawalRequest(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.FloatField()
+    status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Withdrawal Request"
+        verbose_name_plural = "Withdrawal Requests"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.amount} - {self.status}"

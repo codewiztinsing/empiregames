@@ -7,10 +7,12 @@ from .main import api
 
 urlpatterns = [
     path('dashboard/',include('dashboard.urls')),
-    path('accounts/',include('users.urls')),
+    path('accounts/',include('users.urls'),name='accounts'),
     path('admin/', admin.site.urls),
     path('api/v1/', api.urls),
     path('promotions/', include('promotion.urls'), name='promotions'),
+    path('game/', include('game.urls'), name='game'),
+    path('wallet/', include('wallet.urls'), name='wallet')
 ]
 
 # Serve media files during development
