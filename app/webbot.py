@@ -103,7 +103,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             context.user_data['referrer_id'] = referrer_id
         except ValueError:
             logger.warning(f"Invalid referrer ID format: {context.args[0]}")
-    await update.message.reply_text('Welcome to Wow  Bingo! Select an option:', reply_markup=reply_markup)
+    await update.message.reply_text('Welcome to Bilen Bingo! Select an option:', reply_markup=reply_markup)
     context.job_queue.run_once(conversation_timeout, CONVERSATION_TIMEOUT, chat_id=update.effective_chat.id)
     return SOME_STATE
 
@@ -305,9 +305,7 @@ def instructions_options_keyboard() -> InlineKeyboardMarkup:
 # Function to create the play options keyboard
 def support_options_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton("📞 Support 1",  url='https://t.me/@Wowbingosupport1')],
-        [InlineKeyboardButton("📞 Support 2",  url='https://t.me/@Wowbingosupport2')],
-        [InlineKeyboardButton("📞 Support 3",  url='https://t.me/IToffice1')],
+        [InlineKeyboardButton("📞 Support",  url='https://t.me/adaa_alepo')],
         [InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')]
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -434,7 +432,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             balance = response.json().get('balance',0)
             # Create payment summary with user details
             payment_summary = (
-                    "🏦 WOW BINGO STATEMENT\n" +
+                    "🏦 BILEN BINGO STATEMENT\n" +
                     f"💰  {balance} Birr\n" +
                     f"👥  {first_name} \n" +
                     f"📄 Transaction ID: {telegram_id}\n" +
@@ -454,11 +452,11 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
 
             keyboard = [
-                [InlineKeyboardButton("Open Wow Bingo!", web_app=WebAppInfo(url=web_app_url))]
+                [InlineKeyboardButton("Open Bilen Bingo!", web_app=WebAppInfo(url=web_app_url))]
                 # [InlineKeyboardButton("Open Wow Bingo!", url=web_app_url)]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.message.reply_text("Start playing Wow bingo", reply_markup=reply_markup)
+            await query.message.reply_text("Start playing Bilen bingo", reply_markup=reply_markup)
 
         elif query.data == 'deposit':
             await query.edit_message_text(
@@ -501,8 +499,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 "tx_ref":generate_tx_ref(),
                 "return_url":f"https://t.me/wowbingobotbotbot",
                 "customization":{
-                    "title": "Wow Bingo",
-                    "description": "Deposit to Wow Bingo",
+                    "title": "Bilen Bingo",
+                    "description": "Deposit to Bilen Bingo",
                     "logo": "https://wowliyubingo.com/static/media/logo.png"
                 },
                 # "callback_url": "https://webhook.site/6bca0770-2235-4096-b8f6-41b861ec40e9"
@@ -554,8 +552,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             tax_ref, 
             f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/",
              "https://wowliyubingo.com/success", {
-                "title": "Wow Bingo",
-                "description": "Deposit to Wow Bingo",
+                "title": "Bilen Bingo",
+                "description": "Deposit to Bilen Bingo",
                 "logo": "https://wowliyubingo.com/static/media/logo.png"
             })
             if addis_session.get("status") == "success":
@@ -680,7 +678,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
               
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text("Welcome to Wow Bingo! Please select an option:", reply_markup=reply_markup)
+            await query.edit_message_text("Welcome to Bilen Bingo! Please select an option:", reply_markup=reply_markup)
             
             
  
@@ -693,7 +691,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                  InlineKeyboardButton("Register", callback_data='register_menu')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text("Welcome to Wo w Bingo! Please select an option:", reply_markup=reply_markup)
+            await query.edit_message_text("Welcome to Bilen Bingo! Please select an option:", reply_markup=reply_markup)
     except Exception as e:
         logger.error(f"Error handling query: {query.data} - {e}")
         await query.edit_message_text(text="An error occurred. Please try again.")
@@ -729,13 +727,13 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     <b>📅 Date:</b> {}
     """.format(update.effective_user.username,phone,amount,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     inline_keyboard = [
-        [
-                # InlineKeyboardButton("Chapa", callback_data='chapa'),
-                InlineKeyboardButton("Telebirr", callback_data='chapa_telebirr'),
-                InlineKeyboardButton("CBE", callback_data='chapa_cbe')
+        # [
+        #         # InlineKeyboardButton("Chapa", callback_data='chapa'),
+        #         InlineKeyboardButton("Telebirr", callback_data='chapa_telebirr'),
+        #         InlineKeyboardButton("CBE", callback_data='chapa_cbe')
 
-            # InlineKeyboardButton("AddisPay", callback_data='addispay')
-        ],
+        #     # InlineKeyboardButton("AddisPay", callback_data='addispay')
+        # ],
         [
             InlineKeyboardButton("Manual", callback_data='manual')
         ]
@@ -845,10 +843,10 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     wallet_response = _wr.json() if _wr.headers.get('content-type','').startswith('application/json') else {}
     balance = wallet_response.get('balance', 0)
 
-    invite_link = f"https://t.me/wowbingobot?start={user_id}"
+    invite_link = f"https://t.me/bilenbingobot?start={user_id}"
     
     message = (
-        f"🎮 Invite your friends to Wow Bingo!\n\n"
+        f"🎮 Invite your friends to Bilen Bingo!\n\n"
         f"Share this link with your friends:\n{invite_link}\n\n"
         f"Your current balance: {balance} ETB\n\n"
         f"Invite friends and enjoy playing together! 🎲"
