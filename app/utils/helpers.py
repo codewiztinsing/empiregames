@@ -73,3 +73,14 @@ def verify_receipt(message,paymentMethod,session_id):
         return {"error": f"Request failed: {str(e)}"}
 
 
+
+def get_game_type():
+    response = requests.get(f"{BACK_URL}/api/v1/game/game-types/")
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
+
+   
+
+

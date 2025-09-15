@@ -27,7 +27,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     ConversationHandler,
 )
-from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player
+from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player,get_game_type
 from utils.factory import handle_manual_payment
 from datetime import datetime
 from telegram import BotCommand
@@ -110,11 +110,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 # Function to create the play options keyboardF
 def play_options_keyboard() -> InlineKeyboardMarkup:
-    keyboard = [
-        [InlineKeyboardButton("🎮 Play 10", callback_data='10'),
-         InlineKeyboardButton("🎮 Play 20", callback_data='20')],
-        [InlineKeyboardButton("🔙 Back to Menu", callback_data='back')]
-    ]
+    game_types_response = get_game_type()
+    game_types = game_types_response.get('game_types', []) if game_types_response else []
+    logger.info(f"game_types = {game_types}")
+    keyboard = []
+    for game_type in game_types:
+        keyboard.append([InlineKeyboardButton(f"🎮 Play {game_type['bet_amount']}", callback_data=f'{game_type["bet_amount"]}')])
+    keyboard.append([InlineKeyboardButton("🔙 Back to Menu", callback_data='back')])
     return InlineKeyboardMarkup(keyboard)
 
 
@@ -333,7 +335,10 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
   
 
     try:
-        if query.data in ['10', '20', '50', '100']:
+        # Get game types for validation
+        game_types_response = get_game_type()
+        game_types = game_types_response.get('game_types', []) if game_types_response else []
+        if query.data in ['10', '20', '50', '100'] or query.data in [str(game_type['bet_amount']) for game_type in game_types]:
             user_id = query.from_user.id
             response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
             logger.info(f"Response {response}")

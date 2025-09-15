@@ -5,7 +5,7 @@ from users.models import User
 from wallet.models import Wallet
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from .models import Game, PlayerGame,GameSettings
+from .models import Game, PlayerGame,GameSettings,GameType
 from .tasks import charge_player,push_transaction,update_player_balance
 from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema,GameTypeSchema
 from ninja.errors import HttpError  # Correct import
@@ -83,6 +83,6 @@ def game_settings(request):
 @game_router.get("/game-types/",response=GameTypeSchema)
 def game_types(request):
     logger.info(f"Game types: {request}")
-    game_types = GameType.objects.all()
+    game_types = GameType.objects.all().order_by('-id')
     return GameTypeSchema(game_types=game_types)
    
