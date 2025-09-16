@@ -27,7 +27,15 @@ from telegram.ext import (
     CallbackQueryHandler,
     ConversationHandler,
 )
-from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player,get_game_type
+from utils.helpers import( daily_withdraw_limit,
+                numnber_of_game_played,
+                number_of_game_won,
+                is_deposited_player,
+                get_game_type
+                ,create_withdrawal_request,
+                get_manual_withdrawals_settings,
+                get_manual_deposits_settings,
+                )
 from utils.factory import handle_manual_payment
 from datetime import datetime
 from telegram import BotCommand
@@ -138,11 +146,11 @@ def withdraw_opitions_keyboard(context: ContextTypes.DEFAULT_TYPE) -> InlineKeyb
     logger.info("withdraw_opitions_keyboard")
     banks = get_available_banks()
     logger.info("banks = ",banks)
-    # Only show Telebirr and CBE options
     keyboard = []
     banks_to_bank_id = {
          'Telebirr':855,
-        'CBE': 946
+         # Only show Telebirr and CBE options
+   'CBE': 946
     }
     
     keyboard.append([InlineKeyboardButton("Telebirr", callback_data='withraw_with_telebirr')])
@@ -166,10 +174,6 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Get user's wallet balance
     telegram_id = update.effective_user.id
     BACK_URL = get_bot_seetings().get("bot_url")
-
-    logger.info(f"Back url {BACK_URL}")
-    logger.info(f"telegram_id {telegram_id}")
-    logger.info(f"amount {amount}")
  
     try:
         _resp = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
@@ -192,16 +196,14 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         number_game_played = numnber_of_game_played(telegram_id)
         number_game_won = number_of_game_won(telegram_id)
 
-        if int(number_game_played) < 5:
-            await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት")
-            return WITHDRAW_AMOUNT_CONFIRM
-
-        # if int(number_game_won) < 2:
-        #     await update.message.reply_text(f"2 ጨወታ ማሽነፍ አለብዎት")
+        # if int(number_game_played) < 5:
+        #     await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት")
         #     return WITHDRAW_AMOUNT_CONFIRM
 
-        if int(amount) > 100:
-            await update.message.reply_text(f"Withdrawal amount must be less than 100 ETB")
+        minimum_withdrawal_amount = get_manual_withdrawals_settings()
+
+        if int(amount) > minimum_withdrawal_amount:
+            await update.message.reply_text(f"Withdrawal amount must be less than {minimum_withdrawal_amount} ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
        
@@ -210,8 +212,8 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             return WITHDRAW_AMOUNT_CONFIRM
 
 
-        if int(amount) < 50:
-            await update.message.reply_text(f"Withdrawal amount must be at least 50 ETB")
+        if int(amount) < minimum_withdrawal_amount:
+            await update.message.reply_text(f"Withdrawal amount must be at least {minimum_withdrawal_amount} ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
         
@@ -253,7 +255,8 @@ async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYP
         bank_id = context.user_data['bank_id']
         banks_to_bank_id = context.user_data['banks_to_bank_id']
         bank_id = banks_to_bank_id.get(f"{bank_id}".title())
-        transfer_funds(f"{update.effective_user.first_name} {update.effective_user.last_name}", account_number, withdraw_amount, "ETB", generate_tx_ref(), bank_id)
+        # transfer_funds(f"{update.effective_user.first_name} {update.effective_user.last_name}", account_number, withdraw_amount, "ETB", generate_tx_ref(), bank_id)
+        create_withdrawal_request(update.effective_user.id, withdraw_amount)
         await update.message.reply_text("Please wait message from CBE/Telebirr. Your withdrawal will be processed within 30 minutes.")
         return ConversationHandler.END
     except Exception as e:
@@ -704,7 +707,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     amount = update.message.text
 
-    if float(amount) <=49:
+    if float(amount) <= get_manual_deposits_settings():
         await update.message.reply_text("Minimum deposit amount is 50 ETB. Please enter a higher amount.")
         return DEPOSIT_AMOUNT
 

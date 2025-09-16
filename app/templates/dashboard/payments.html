@@ -224,10 +224,12 @@
                             <div class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-300 mb-2">Minimum Deposit Amount</label>
-                                    <input type="number" class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" placeholder="10.00">
+                                    <input type="number" id="minimumDepositAmount" class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" placeholder="10.00" value="{{ payment_deposit_gateway_settings.minimumDepositAmount }}">
                                 </div>
                                
-                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm"
+                                onclick="savePaymentDepositGatewaySettings()"
+                                >
                                     Save Settings
                                 </button>
                             </div>
@@ -239,17 +241,19 @@
                             <div class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-300 mb-2">Minimum Withdrawal Amount</label>
-                                    <input type="number" class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" placeholder="0.00">
+                                    <input type="number" id="minimumWithdrawalAmount" class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" placeholder="0.00" value="{{ payment_withdrawal_gateway_settings.minimumWithdrawalAmount }}">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">Maximum Withdrawal Amount</label>
-                                    <input type="number" class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" placeholder="10000.00">
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Withdrawal Fee</label>
+                                    <input type="number" id="withdrawalFee" class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" placeholder="10000.00" value="{{ payment_withdrawal_gateway_settings.withdrawalFee }}">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-300 mb-2">Withdrawal Fee (%)</label>
                                     <input type="number" step="0.01" class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" placeholder="2.5">
                                 </div>
-                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm"
+                                onclick="savePaymentWithdrawalGatewaySettings()"
+                                >
                                     Save Settings
                                 </button>
                             </div>
@@ -264,9 +268,20 @@
             <div class="bg-gray-800 rounded-lg border border-gray-700">
                 <div class="flex justify-between items-center p-4 border-b border-gray-700">
                     <h2 class="text-lg font-semibold text-white">Manual Deposits</h2>
-                    <button onclick="showAddDepositModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
-                        Add Manual Deposit
-                    </button>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm text-gray-400">Filter by status:</label>
+                            <select id="depositStatusFilter" class="bg-gray-700 border border-gray-600 text-white text-sm rounded px-3 py-1" onchange="filterByDepositStatus()">
+                                <option value="all" {% if current_deposit_status == 'all' %}selected{% endif %}>All</option>
+                                <option value="pending" {% if current_deposit_status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="success" {% if current_deposit_status == 'success' %}selected{% endif %}>Success</option>
+                                <option value="failed" {% if current_deposit_status == 'failed' %}selected{% endif %}>Failed</option>
+                            </select>
+                        </div>
+                        <button onclick="showAddDepositModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
+                            Add Manual Deposit
+                        </button>
+                    </div>
                 </div>
                 <div class="p-6">
                     <!-- Manual Deposits Table -->
@@ -283,14 +298,92 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-gray-800 divide-y divide-gray-700">
-                                <tr>
-                                    <td colspan="6" class="px-6 py-8 text-center text-gray-400">
-                                        No manual deposits found
-                                    </td>
-                                </tr>
+                                {% if manual_deposits %}
+                                    {% for deposit in manual_deposits %}
+                                    <tr class="hover:bg-gray-700">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                            {{ deposit.phone_number|default:"N/A" }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                            {{ deposit.amount }} ETB
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                            Manual
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                            {{ deposit.session_id|default:"N/A" }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                            {{ deposit.created_at|date:"M d, Y H:i" }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            {% if deposit.status == 'success' %}
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                    Success
+                                                </span>
+                                            {% elif deposit.status == 'pending' %}
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                    Pending
+                                                </span>
+                                            {% elif deposit.status == 'failed' %}
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                    Failed
+                                                </span>
+                                            {% else %}
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                    {{ deposit.status|title }}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-8 text-center text-gray-400">
+                                            No manual deposits found
+                                        </td>
+                                    </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- Pagination for Manual Deposits -->
+                    {% if deposit_page_obj.has_other_pages %}
+                    <div class="flex items-center justify-between mt-6">
+                        <div class="text-sm text-gray-400">
+                            Showing {{ deposit_page_obj.start_index }} to {{ deposit_page_obj.end_index }} of {{ deposit_page_obj.paginator.count }} results
+                        </div>
+                        <div class="flex space-x-2">
+                            {% if deposit_page_obj.has_previous %}
+                                <a href="?deposit_page={{ deposit_page_obj.previous_page_number }}{% if current_deposit_status != 'all' %}&deposit_status={{ current_deposit_status }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}" 
+                                   class="px-3 py-2 text-sm font-medium text-gray-300 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600">
+                                    Previous
+                                </a>
+                            {% endif %}
+                            
+                            {% for num in deposit_page_obj.paginator.page_range %}
+                                {% if deposit_page_obj.number == num %}
+                                    <span class="px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md">
+                                        {{ num }}
+                                    </span>
+                                {% elif num > deposit_page_obj.number|add:'-3' and num < deposit_page_obj.number|add:'3' %}
+                                    <a href="?deposit_page={{ num }}{% if current_deposit_status != 'all' %}&deposit_status={{ current_deposit_status }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}" 
+                                       class="px-3 py-2 text-sm font-medium text-gray-300 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600">
+                                        {{ num }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if deposit_page_obj.has_next %}
+                                <a href="?deposit_page={{ deposit_page_obj.next_page_number }}{% if current_deposit_status != 'all' %}&deposit_status={{ current_deposit_status }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}" 
+                                   class="px-3 py-2 text-sm font-medium text-gray-300 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600">
+                                    Next
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -371,6 +464,14 @@ function filterByStatus() {
     window.location.href = url.toString();
 }
 
+function filterByDepositStatus() {
+    const depositStatus = document.getElementById('depositStatusFilter').value;
+    const url = new URL(window.location);
+    url.searchParams.set('deposit_status', depositStatus);
+    url.searchParams.delete('deposit_page'); // Reset to first page when filtering
+    window.location.href = url.toString();
+}
+
 function showAddDepositModal() {
     // Placeholder for add deposit modal
     alert('Add Manual Deposit functionality will be implemented here');
@@ -384,7 +485,7 @@ function showAddWithdrawalModal() {
 function approveRequest(requestId) {
     if (confirm('Are you sure you want to approve this withdrawal request?')) {
         fetch(`/dashboard/withdrawal-requests/${requestId}/approve/`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 'X-CSRFToken': '{{ csrf_token }}',
                 'Content-Type': 'application/json',
@@ -408,7 +509,7 @@ function approveRequest(requestId) {
 function rejectRequest(requestId) {
     if (confirm('Are you sure you want to reject this withdrawal request?')) {
         fetch(`/dashboard/withdrawal-requests/${requestId}/reject/`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 'X-CSRFToken': '{{ csrf_token }}',
                 'Content-Type': 'application/json',
@@ -428,5 +529,60 @@ function rejectRequest(requestId) {
         });
     }
 }
+
+function savePaymentDepositGatewaySettings() {
+    const minimumDepositAmount = document.getElementById('minimumDepositAmount').value;
+    const response = fetch(`/api/v1/wallet/save-payment-deposit-gateway-settings/`, {
+        method: 'PUT',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            minimumDepositAmount: minimumDepositAmount,
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Payment Deposit Gateway Settings saved successfully');
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving the payment deposit gateway settings.');
+    });
+}
+
+function savePaymentWithdrawalGatewaySettings() {
+    const minimumWithdrawalAmount = document.getElementById('minimumWithdrawalAmount').value;
+    const withdrawalFee = document.getElementById('withdrawalFee').value;
+    const response = fetch(`/api/v1/wallet/save-payment-withdrawal-gateway-settings/`, {
+        method: 'PUT',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            minimumWithdrawalAmount: minimumWithdrawalAmount,
+            withdrawalFee: withdrawalFee,
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Payment Withdrawal Gateway Settings saved successfully');
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving the payment withdrawal gateway settings.');
+    });
+}
+    
 </script>
 {% endblock %}

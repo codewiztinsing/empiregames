@@ -81,6 +81,31 @@ def get_game_type():
     else:
         return None
 
+
+def create_withdrawal_request(telegram_id, amount):
+    response = requests.post(f"{BACK_URL}/api/v1/wallet/withdrawal/request/", json={"telegram_id": telegram_id, "amount": amount})
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
+
    
+
+def get_manual_deposits_settings():
+    response = requests.get(f"{BACK_URL}/api/v1/wallet/manual/deposits/settings/    ")
+    if response.status_code == 200:
+        return response.json().get("minimum_deposit_amount")
+    else:
+        return 0
+
+def get_manual_withdrawals_settings():
+    response = requests.get(f"{BACK_URL}/api/v1/wallet/manual/withdrawals/settings/")
+    if response.status_code == 200:
+        return response.json().get("minimum_withdrawal_amount")
+        return response.json().get("withdrawal_fee")
+    else:
+        return response.json().get("withdrawal_fee")
+        return 0
+
 
 

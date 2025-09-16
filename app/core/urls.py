@@ -2,10 +2,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import dashboard
+from .views import dashboard, index
 from .main import api
 
 urlpatterns = [
+    path('', index, name='index'),
     path('dashboard/',include('dashboard.urls')),
     path('accounts/',include('users.urls'),name='accounts'),
     path('admin/', admin.site.urls),

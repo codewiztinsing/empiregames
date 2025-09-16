@@ -5,7 +5,7 @@ from django.core.paginator import Paginator
 from django.utils import timezone
 from users.models import User, SupportUser
 from game.models import Game
-from wallet.models import Transaction, WithdrawalRequest
+from wallet.models import Transaction, WithdrawalRequest, PaymentDepositGatewaySettings, PaymentWithdrawalGatewaySettings, ManualSession
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import logout
@@ -171,16 +171,25 @@ def games(request):
     paginator = Paginator(games, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    total_games = games.count()
+    active_games = games.filter(status="active").count()
+    completed_today = games.filter(status="completed",created_at__date=timezone.now().date()).count()
+    total_revenue = games.aggregate(Sum('entry_fee'))['entry_fee__sum'] or 0
     context = {
         'games': page_obj,
         'page_title': 'Games',
-        'page_obj': page_obj
+        'page_obj': page_obj,
+        'total_games': total_games,
+        'active_games': active_games,
+        'completed_today': completed_today,
+        'total_revenue': total_revenue
     }
     return render(request, 'dashboard/games.html',context)
 
 def payments(request):
     # Get filter parameters
     status_filter = request.GET.get('status', 'all')
+    deposit_status_filter = request.GET.get('deposit_status', 'all')
     
     # Filter withdrawal requests based on status
     withdrawal_requests = WithdrawalRequest.objects.all().order_by('-created_at')
@@ -188,16 +197,36 @@ def payments(request):
     if status_filter != 'all':
         withdrawal_requests = withdrawal_requests.filter(status=status_filter)
     
-    paginator = Paginator(withdrawal_requests, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    # Filter manual deposits based on status
+    manual_deposits = ManualSession.objects.all().order_by('-created_at')
+    
+    if deposit_status_filter != 'all':
+        manual_deposits = manual_deposits.filter(status=deposit_status_filter)
+    
+    # Pagination for withdrawal requests
+    withdrawal_paginator = Paginator(withdrawal_requests, 10)
+    withdrawal_page_number = request.GET.get('withdrawal_page')
+    withdrawal_page_obj = withdrawal_paginator.get_page(withdrawal_page_number)
+    
+    # Pagination for manual deposits
+    deposit_paginator = Paginator(manual_deposits, 10)
+    deposit_page_number = request.GET.get('deposit_page')
+    deposit_page_obj = deposit_paginator.get_page(deposit_page_number)
+    
+    payment_deposit_gateway_settings = PaymentDepositGatewaySettings.objects.first()
+    payment_withdrawal_gateway_settings = PaymentWithdrawalGatewaySettings.objects.first()
     
     context = {
-        'withdrawal_requests': page_obj,
+        'withdrawal_requests': withdrawal_page_obj,
         'page_title': 'Payments',
-        'page_obj': page_obj,
+        'withdrawal_page_obj': withdrawal_page_obj,
+        'deposit_page_obj': deposit_page_obj,
         'current_status': status_filter,
-        'status_choices': ['all', 'pending', 'success', 'failed']
+        'current_deposit_status': deposit_status_filter,
+        'status_choices': ['all', 'pending', 'success', 'failed'],
+        'payment_deposit_gateway_settings': payment_deposit_gateway_settings,
+        'payment_withdrawal_gateway_settings': payment_withdrawal_gateway_settings,
+        'manual_deposits': deposit_page_obj
     }
     return render(request, 'dashboard/payments.html', context)
 
@@ -207,11 +236,20 @@ def transcations(request):
     paginator = Paginator(transactions, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    total_transactions = transactions.count()
+    total_in = transactions.filter(type="DEPOSIT").aggregate(Sum('amount'))['amount__sum'] or 0
+    total_out = transactions.filter(type="WITHDRAW").aggregate(Sum('amount'))['amount__sum'] or 0
+    net = total_in - total_out
+    
     
     context = {
         'transactions': page_obj,
         'page_title': 'Transactions',
-        'page_obj': page_obj
+        'page_obj': page_obj,
+        'total_transactions': total_transactions,
+        'total_in': total_in,
+        'total_out': total_out,
+        'net': net
     }
     return render(request, 'dashboard/transcations.html', context)
 
@@ -249,11 +287,7 @@ def referrals(request):
     return render(request, 'dashboard/referrals.html')
 
 def messages_view(request):
-    if request.method == 'POST':
-        message = request.POST.get('message')
-        send_message_to_all_players.delay(message)
-        messages.success(request, 'Message sent successfully.')
-        return redirect('dashboard:messages')
+  
     return render(request, 'dashboard/messages.html')
 
 def contact(request):

@@ -13,7 +13,7 @@ from .schema import (ChapaSessionSchema,
     AddisPaySessionResponseSchema,
     AddisPayCallbackSchema
  )
-from .models import ChapaSession, Wallet,Transaction, AddisPaySession
+from .models import ChapaSession, Wallet,Transaction, AddisPaySession, PaymentDepositGatewaySettings, PaymentWithdrawalGatewaySettings
 from django.http import JsonResponse
 from utils import generate_reference
 from users.models import User
@@ -225,14 +225,14 @@ def manual_success(request):
             # Process the successful payment
             user = get_object_or_404(User, phone=manual_session.phone_number)
             wallet = get_object_or_404(Wallet, user=user)
-            wallet.balance += float(details.get("amount").strip("ETB"))
+            wallet.balance += float(details.get("amount"))
             print("wallet balance = ",wallet.balance)
             wallet.save()
             manual_session.status = "success"
             manual_session.save()
             transaction = Transaction.objects.create(
                 user=user,
-                amount=float(details.get("amount").strip("ETB")),
+                amount=float(details.get("amount")),
                 type="DEPOSIT",
                 status="success",
                 reference=manual_session.session_id
@@ -246,7 +246,7 @@ def manual_success(request):
                     telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
                     message = (
                         f"🎉 Deposit Successful! 🎉\n\n"
-                        f"💰 Amount: {details.get('amount').strip('ETB')} ETB\n"
+                        f"💰 Amount: {details.get('amount')} ETB\n"
                         f"📊 New Balance: {wallet.balance} ETB\n"
                         f"🔗 Reference: {manual_session.session_id}\n\n"
                         f"✅ Your account has been credited successfully!"
@@ -357,14 +357,14 @@ def manual_cbe_success(request):
             print("phone from manual session = ",manual_session.phone_number)
             user = get_object_or_404(User, phone=manual_session.phone_number)
             wallet = get_object_or_404(Wallet, user=user)
-            wallet.balance += float(details.get("Transferred Amount").strip("ETB"))
+            wallet.balance += float(details.get("Transferred Amount"))
             print("wallet balance = ",wallet.balance)
             wallet.save()
             manual_session.status = "success"
             manual_session.save()
             transaction = Transaction.objects.create(
                 user=user,
-                amount=float(details.get("Transferred Amount").strip("ETB")),
+                amount=float(details.get("Transferred Amount")),
                 type="DEPOSIT",
                 status="success",
                 reference=manual_session.session_id
@@ -409,5 +409,61 @@ def withdrawal_request(request):
     except Exception as e:
         print(f"Error processing Withdrawal request: {e}")
         return JsonResponse({"message": "Error processing withdrawal request"}, status=500)
+
+
+@router.put("/save-payment-deposit-gateway-settings/")
+def save_payment_deposit_gateway_settings(request):
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        minimumDepositAmount = data.get("minimumDepositAmount")
+        payment_deposit_gateway_settings = PaymentDepositGatewaySettings.objects.update(minimumDepositAmount=minimumDepositAmount)
+        return JsonResponse({"message": "Payment deposit gateway settings saved successfully"}, status=200)
+    except Exception as e:
+        print(f"Error processing Payment deposit gateway settings: {e}")
+        return JsonResponse({"message": "Error processing payment deposit gateway settings"}, status=500)
+
+
+@router.put("/save-payment-withdrawal-gateway-settings/")
+def save_payment_withdrawal_gateway_settings(request):
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        minimumWithdrawalAmount = data.get("minimumWithdrawalAmount")
+        withdrawalFee = data.get("withdrawalFee")
+        payment_withdrawal_gateway_settings = PaymentWithdrawalGatewaySettings.objects.update(minimumWithdrawalAmount=minimumWithdrawalAmount, withdrawalFee=withdrawalFee)
+        return JsonResponse({"message": "Payment withdrawal gateway settings saved successfully"}, status=200)
+    except Exception as e:
+        print(f"Error processing Payment withdrawal gateway settings: {e}")
+        return JsonResponse({"message": "Error processing payment withdrawal gateway settings"}, status=500)
+
+@router.get("/manual/deposits/settings/")
+def get_manual_deposits_settings(request):
+    try:
+        payment_deposit_gateway_settings = PaymentDepositGatewaySettings.objects.first()
+        if payment_deposit_gateway_settings:
+            return JsonResponse({
+                "message": "Payment deposit gateway settings retrieved successfully",
+                "minimum_deposit_amount": payment_deposit_gateway_settings.minimumDepositAmount
+            }, status=200)
+        else:
+            return JsonResponse({"message": "Payment deposit gateway settings not found"}, status=404)
+    except Exception as e:
+        print(f"Error processing Payment deposit gateway settings: {e}")
+        return JsonResponse({"message": "Error processing payment deposit gateway settings"}, status=500)
+    
+@router.get("/manual/withdrawals/settings/")
+def get_manual_withdrawals_settings(request):
+    try:
+        payment_withdrawal_gateway_settings = PaymentWithdrawalGatewaySettings.objects.first()
+        if payment_withdrawal_gateway_settings:
+            return JsonResponse({
+                "message": "Payment withdrawal gateway settings retrieved successfully",
+                "minimum_withdrawal_amount": payment_withdrawal_gateway_settings.minimumWithdrawalAmount,
+                "withdrawal_fee": payment_withdrawal_gateway_settings.withdrawalFee
+            }, status=200)
+        else:
+            return JsonResponse({"message": "Payment withdrawal gateway settings not found"}, status=404)
+    except Exception as e:
+        print(f"Error processing Payment withdrawal gateway settings: {e}")
+        return JsonResponse({"message": "Error processing payment withdrawal gateway settings"}, status=500)
 
 

@@ -25,13 +25,10 @@
             ></textarea>
         </div>
 
-        <div class="flex items-center mb-4">
-            <input type="checkbox" id="includeImage" class="mr-2 rounded">
-            <label for="includeImage" class="text-gray-300 text-sm">Include image with the message</label>
-        </div>
+      
 
         <div class="flex justify-end">
-            <button class="px-6 py-2 bg-purple-primary text-white rounded-lg hover:bg-purple-hover transition-colors">
+            <button class="px-6 py-2 bg-purple-primary text-white rounded-lg hover:bg-purple-hover transition-colors" onclick="broadcastMessage()">
                 Broadcast Message
             </button>
         </div>
@@ -183,4 +180,29 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function broadcastMessage() {
+        const message = document.getElementById("message").value;
+        const response = fetch(`/api/v1/promotion/broadcast/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script>
 {% endblock %}

@@ -54,6 +54,8 @@ class ManualSession(models.Model):
     amount = models.FloatField()
     transaction_number = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         verbose_name = "Manual Session"
@@ -95,3 +97,22 @@ class WithdrawalRequest(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.amount} - {self.status}"
+
+
+
+class PaymentDepositGatewaySettings(models.Model):
+    minimumDepositAmount = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.minimumDepositAmount}"
+
+class PaymentWithdrawalGatewaySettings(models.Model):
+    minimumWithdrawalAmount = models.FloatField()
+    withdrawalFee = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.minimumWithdrawalAmount}"

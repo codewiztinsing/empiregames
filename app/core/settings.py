@@ -22,7 +22,7 @@ HANDLER404 = 'core.views.custom_404'
 
 
 ALLOWED_HOSTS = ["*", "wowliyubingo.com", "server.wowliyubingo.com"]
-CSRF_TRUSTED_ORIGINS = ["https://wowliyubingo.com", "https://*.ngrok.app"]
+CSRF_TRUSTED_ORIGINS = ["https://bilenbingo.com", "https://*.ngrok.app"]
 
 # login redirect
 LOGIN_REDIRECT_URL = '/dashboard/'

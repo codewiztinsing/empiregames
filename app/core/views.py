@@ -44,3 +44,7 @@ def custom_404(request, exception):
 def custom_500(request):
     print("500 error")
     return render(request, '500.html', status=500)
+
+
+def index(request):
+    return render(request, 'core/index.html')

@@ -62,19 +62,19 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
                 <h3 class="text-gray-400 text-sm font-medium">Total Games</h3>
-                <p class="text-2xl font-bold text-white mt-1">1,234</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ total_games }}</p>
             </div>
             <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
                 <h3 class="text-gray-400 text-sm font-medium">Active Games</h3>
-                <p class="text-2xl font-bold text-white mt-1">56</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ active_games }}</p>
             </div>
             <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
                 <h3 class="text-gray-400 text-sm font-medium">Completed Today</h3>
-                <p class="text-2xl font-bold text-white mt-1">89</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ completed_today }}</p>
             </div>
             <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
                 <h3 class="text-gray-400 text-sm font-medium">Total Revenue</h3>
-                <p class="text-2xl font-bold text-white mt-1">ETB 12,450</p>
+                <p class="text-2xl font-bold text-white mt-1">ETB {{ total_revenue }}</p>
             </div>
         </div>
 

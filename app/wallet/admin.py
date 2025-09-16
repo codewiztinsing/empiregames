@@ -4,7 +4,9 @@ from .models import (Wallet,
             ChapaSession,
             AddisPaySession,
             ManualSession,
-            WithdrawalRequest
+            WithdrawalRequest,
+            PaymentDepositGatewaySettings,
+            PaymentWithdrawalGatewaySettings
             )
 
 class WalletAdmin(admin.ModelAdmin):
@@ -58,7 +60,21 @@ class WithdrawalRequestAdmin(admin.ModelAdmin):
     list_per_page = 10
 
 
+class PaymentDepositGatewaySettingsAdmin(admin.ModelAdmin):
+    list_display = ('minimumDepositAmount', 'created_at')
+    search_fields = ('minimumDepositAmount',)
+    list_per_page = 10
+
+class PaymentWithdrawalGatewaySettingsAdmin(admin.ModelAdmin):
+    list_display = ('minimumWithdrawalAmount', 'withdrawalFee', 'created_at')
+    search_fields = ('minimumWithdrawalAmount', 'withdrawalFee')
+    list_per_page = 10
+
+
 admin.site.register(Transaction, TransactionAdmin)  
 admin.site.register(ChapaSession, ChapaSessionAdmin)
 admin.site.register(AddisPaySession, AddisPaySessionAdmin)
+admin.site.register(ManualSession, ManualSessionAdmin)
 admin.site.register(WithdrawalRequest, WithdrawalRequestAdmin)
+admin.site.register(PaymentDepositGatewaySettings, PaymentDepositGatewaySettingsAdmin)
+admin.site.register(PaymentWithdrawalGatewaySettings, PaymentWithdrawalGatewaySettingsAdmin)
