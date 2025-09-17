@@ -93,8 +93,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
          InlineKeyboardButton("📝 Register",callback_data = "register")],
         [InlineKeyboardButton("💰 Check Balance", callback_data='check_balance'),
          InlineKeyboardButton("💳 Deposit", callback_data='deposit')],
-        [InlineKeyboardButton("📞 Contact Support", callback_data='contact_support'),
-         InlineKeyboardButton("📚 Instruction", callback_data='instructions')],
+        [InlineKeyboardButton("🎁 My Referral Code", callback_data='my_referral'),
+         InlineKeyboardButton("📞 Contact Support", callback_data='contact_support')],
+        [InlineKeyboardButton("📚 Instruction", callback_data='instructions')],
         # [InlineKeyboardButton("🔗 Join Group", url='https://t.me/wowbingos')]
     ]
     
@@ -109,9 +110,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
             # Store referrer ID in user data for later use
             context.user_data['referrer_id'] = referrer_id
+            
+            # Show special message for referred users
+            welcome_message = f"""
+🎉 **Welcome to Bilen Bingo!**
+
+You were invited by a friend! When you register, you'll both get 10 ETB bonus!
+
+Select an option below to get started:
+            """
+            await update.message.reply_text(welcome_message, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
         except ValueError:
             logger.warning(f"Invalid referrer ID format: {context.args[0]}")
-    await update.message.reply_text('Welcome to Bilen Bingo! Select an option:', reply_markup=reply_markup)
+            await update.message.reply_text('Welcome to Bilen Bingo! Select an option:', reply_markup=reply_markup)
+    else:
+        await update.message.reply_text('Welcome to Bilen Bingo! Select an option:', reply_markup=reply_markup)
     context.job_queue.run_once(conversation_timeout, CONVERSATION_TIMEOUT, chat_id=update.effective_chat.id)
     return SOME_STATE
 
@@ -196,9 +209,9 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         number_game_played = numnber_of_game_played(telegram_id)
         number_game_won = number_of_game_won(telegram_id)
 
-        # if int(number_game_played) < 5:
-        #     await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት")
-        #     return WITHDRAW_AMOUNT_CONFIRM
+        if int(number_game_played) < 5:
+            await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት")
+            return WITHDRAW_AMOUNT_CONFIRM
 
         minimum_withdrawal_amount = get_manual_withdrawals_settings()
 
@@ -346,7 +359,23 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
             logger.info(f"Response {response}")
             data = response.json()
-            logger.info(f"Data {data}")
+            logger.info(f"Data 22 {data}")
+            
+            # Check if user exists
+            if not data.get('success', False):
+                await query.edit_message_text(
+                    text="You need to register first before playing. Use the /register command.",
+                    reply_markup=instructions_options_keyboard()
+                )
+                return
+            
+            # check is active user
+            if data.get('is_active') == False:
+                await query.edit_message_text(
+                    text="You are blocked. Please contact support.",
+                    reply_markup=support_options_keyboard()
+                )
+                return ConversationHandler.END
             if data.get('phone') is None:
                 await query.edit_message_text(
                     text="You need to register first before playing. Use the /register command.",
@@ -426,6 +455,52 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 text="Choose a contact support:",
                 reply_markup=support_options_keyboard()
             )
+        elif query.data == 'my_referral':
+            user_id = query.from_user.id
+            response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
+            if response.status_code == 200:
+                user_data = response.json()
+                if user_data.get('success', False):
+                    referral_code = user_data.get('referral_code', 'N/A')
+                    
+                    # Get user's wallet balance
+                    _wr = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}/')
+                    balance = 0
+                    if _wr.status_code == 200:
+                        wallet_data = _wr.json()
+                        balance = wallet_data.get('balance', 0)
+                    
+                    invite_message = f"""
+🎉 **Your Referral Code**
+
+Your referral code: `{referral_code}`
+
+💰 **How it works:**
+• Share your referral code with friends
+• When they register using your code, you both get 10 ETB!
+• No limit on how many friends you can invite
+
+📱 **Share this message:**
+"Join me on Bilen Bingo! Use my referral code: {referral_code} and get 10 ETB bonus when you register!"
+
+Your current balance: {balance} ETB
+                    """
+                    
+                    await query.edit_message_text(invite_message, parse_mode=ParseMode.MARKDOWN)
+                else:
+                    await query.edit_message_text(
+                        "You need to register first. Use the /register command.",
+                        reply_markup=InlineKeyboardMarkup([[
+                            InlineKeyboardButton("📝 Register", callback_data="register")
+                        ]])
+                    )
+            else:
+                await query.edit_message_text(
+                    "You need to register first. Use the /register command.",
+                    reply_markup=InlineKeyboardMarkup([[
+                        InlineKeyboardButton("📝 Register", callback_data="register")
+                    ]])
+                )
         elif query.data == 'get_deposit_amount':
             return DEPOSIT_AMOUNT
         elif query.data == 'check_balance':
@@ -543,8 +618,12 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             BACK_URL = get_bot_seetings().get("bot_url")
             # check if user is registered
             response = requests.get(f"{BACK_URL}/api/v1/users/{query.from_user.id}")
-            user_from_api = response.json() if response.headers.get('content-type','').startswith('application/json') else {}            
-            if not user_from_api.get("success", False):
+            if response.status_code == 200:
+                user_from_api = response.json()
+                if not user_from_api.get("success", False):
+                    await query.edit_message_text(text="You need to register first. Use the /register command.")
+                    return ConversationHandler.END
+            else:
                 await query.edit_message_text(text="You need to register first. Use the /register command.")
                 return ConversationHandler.END
                 
@@ -720,10 +799,17 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     try:
         response_data = response.json()
         print("wow pay bot url ", response_data)
+        
+        # Check if user exists
+        if not response_data.get('success', False):
+            await update.message.reply_text("You need to register first. Use the /register command.")
+            return ConversationHandler.END
+            
         phone = response_data.get("phone")
     except requests.exceptions.JSONDecodeError:
         print("Invalid JSON response from API")
-        phone = None
+        await update.message.reply_text("You need to register first. Use the /register command.")
+        return ConversationHandler.END
     print("phone = ",phone)
     context.user_data['deposit_amount'] = amount    
 
@@ -840,7 +926,14 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     BACK_URL = get_bot_seetings().get("bot_url")
     # Check if user is registered
     response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
-    if response.status_code != 200:
+    if response.status_code == 200:
+        user_data = response.json()
+        if not user_data.get('success', False):
+            await update.message.reply_text(
+                "You need to register first before inviting others. Use the /register command."
+            )
+            return
+    else:
         await update.message.reply_text(
             "You need to register first before inviting others. Use the /register command."
         )
@@ -851,7 +944,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     wallet_response = _wr.json() if _wr.headers.get('content-type','').startswith('application/json') else {}
     balance = wallet_response.get('balance', 0)
 
-    invite_link = f"https://t.me/bilenbingobot?start={user_id}"
+    invite_link = f"https://t.me/gojobingo_bot?start={user_id}"
     
     message = (
         f"🎮 Invite your friends to Bilen Bingo!\n\n"
@@ -860,11 +953,6 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Invite friends and enjoy playing together! 🎲"
     )
 
-    # Add 20 ETB bonus for inviting
-    requests.post(f'{BACK_URL}/api/v1/wallet/player/{user_id}/', json={
-        'user_id': user_id,
-        'amount': 20
-    })
     
     await update.message.reply_text(message)
 

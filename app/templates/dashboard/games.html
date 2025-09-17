@@ -13,48 +13,87 @@
     </div>
 
     <!-- Filters Section -->
-    <div class="p-6 bg-dark-card border-b border-dark-border">
-        <h2 class="text-lg font-semibold text-white mb-4">Filters</h2>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <!-- Date Range -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Date Range</label>
-                <select class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-primary">
-                    <option>Last 30 days</option>
-                    <option>Last 7 days</option>
-                    <option>Today</option>
-                    <option>Custom Range</option>
-                </select>
+    <div class="bg-dark-card rounded-lg border border-dark-border p-4 mb-6">
+        <form method="GET" id="filterForm">
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- Search Input -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-400">Search:</label>
+                    <input type="text" name="search" value="{{ search_query }}"
+                           placeholder="Game ID, winner, phone, stake..."
+                           class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2 w-64">
+                </div>
+                
+                <!-- Status Filter -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-400">Status:</label>
+                    <select name="status" class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
+                        <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Status</option>
+                        {% for status_choice in status_choices %}
+                            {% if status_choice != 'all' %}
+                                <option value="{{ status_choice }}" {% if current_status == status_choice %}selected{% endif %}>
+                                    {{ status_choice|title }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Game Type Filter -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-400">Game Type:</label>
+                    <select name="game_type" class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
+                        <option value="all" {% if current_game_type == 'all' %}selected{% endif %}>All Types</option>
+                        {% for game_type in game_types %}
+                            <option value="room_{{ game_type }}" {% if current_game_type == 'room_'|add:game_type %}selected{% endif %}>
+                                Room {{ game_type }} ETB
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Date Range Filter -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-400">Date Range:</label>
+                    <select name="date_range" id="dateRangeSelect" class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
+                        {% for value, label in date_choices %}
+                            <option value="{{ value }}" {% if current_date_range == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Custom Date Range (hidden by default) -->
+                <div id="customDateRange" class="flex items-center space-x-2" style="display: none;">
+                    <input type="date" name="start_date" value="{{ start_date }}"
+                           class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
+                    <span class="text-gray-400">to</span>
+                    <input type="date" name="end_date" value="{{ end_date }}"
+                           class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
+                </div>
+                
+                <!-- Stake Range -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-400">Stake:</label>
+                    <input type="number" name="min_stake" value="{{ min_stake }}" placeholder="Min"
+                           class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2 w-20">
+                    <span class="text-gray-400">-</span>
+                    <input type="number" name="max_stake" value="{{ max_stake }}" placeholder="Max"
+                           class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2 w-20">
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex items-center space-x-2">
+                    <button type="submit" class="px-4 py-2 bg-purple-primary hover:bg-purple-hover text-white text-sm font-medium rounded">
+                        Apply Filters
+                    </button>
+                    <a href="{% url 'dashboard:games' %}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded">
+                        Clear
+                    </a>
+                </div>
             </div>
-            
-            <!-- Status -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
-                <select class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-primary">
-                    <option>All Statuses</option>
-                    <option>Completed</option>
-                    <option>In Progress</option>
-                    <option>Cancelled</option>
-                </select>
-            </div>
-            
-            <!-- Game Type -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Game Type</label>
-                <select class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-primary">
-                    <option>All Game Types</option>
-                    <option>room_10</option>
-                    <option>room_20</option>
-                    <option>room_30</option>
-                </select>
-            </div>
-            
-            <!-- User ID -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">User ID</label>
-                <input type="text" placeholder="Filter by User ID" class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-primary">
-            </div>
-        </div>
+        </form>
     </div>
 
     <!-- Stats Cards -->
@@ -96,23 +135,55 @@
                     </thead>
                     <tbody class="divide-y divide-dark-border">
                         {% for game in games %}
-                        <!-- Game Row 1 -->
                         <tr class="hover:bg-dark-bg transition-colors">
                             <td class="py-3 px-4 text-white font-mono text-sm">{{ game.id }}</td>
-                            <td class="py-3 px-4 text-white">room_10</td>
-                            <td class="py-3 px-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    {{ game.status }}
+                            <td class="py-3 px-4 text-white">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Room {{ game.entry_fee }} ETB
                                 </span>
                             </td>
-                            <td class="py-3 px-4 text-white">ETB {{ game.stake }}</td>
-                            <td class="py-3 px-4 text-white">5/5</td>
-                            <td class="py-3 px-4 text-white">{{ game.user.username }}</td>
-                            <td class="py-3 px-4 text-gray-300 text-sm">{{ game.created_at }}</td>
                             <td class="py-3 px-4">
-                                <a class="text-purple-primary hover:text-purple-hover text-sm font-medium" href="{% url 'game:game_details' game.id %}">
-                                    View Details
-                                </a>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if game.status == 'completed' %}bg-green-100 text-green-800
+                                    {% elif game.status == 'in_progress' %}bg-yellow-100 text-yellow-800
+                                    {% elif game.status == 'waiting' %}bg-blue-100 text-blue-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ game.status|title }}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-white font-semibold">ETB {{ game.entry_fee|floatformat:2 }}</td>
+                            <td class="py-3 px-4 text-white">
+                                <span class="text-gray-300">{{ game.players|length }}/5</span>
+                            </td>
+                            <td class="py-3 px-4 text-white">
+                                {% if game.winner %}
+                                    <div>
+                                        <div class="font-medium">{{ game.winner.username }}</div>
+                                        <div class="text-xs text-gray-400">{{ game.winner.phone|default:"N/A" }}</div>
+                                    </div>
+                                {% else %}
+                                    <span class="text-gray-500">No winner yet</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-gray-300 text-sm">{{ game.created_at|date:"M d, Y H:i" }}</td>
+                            <td class="py-3 px-4">
+                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
+                                    <a href="{% url 'game:game_details' game.id %}">
+                                        View Details
+                                    </a>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="px-6 py-8 text-center text-gray-400">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                    </svg>
+                                    <p class="text-lg font-medium text-gray-400">No games found</p>
+                                    <p class="text-sm text-gray-500 mt-1">Try adjusting your filters or search criteria</p>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -122,28 +193,63 @@
         </div>
 
         <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
         <div class="flex items-center justify-between mt-6">
             <div class="text-sm text-gray-400">
-                Showing 1 to 4 of 1,234 results
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
             </div>
             <div class="flex items-center space-x-2">
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    Previous
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
-                    1
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    2
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    3
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    Next
-                </button>
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if current_game_type != 'all' %}&game_type={{ current_game_type }}{% endif %}{% if current_date_range != '30' %}&date_range={{ current_date_range }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if min_stake %}&min_stake={{ min_stake }}{% endif %}{% if max_stake %}&max_stake={{ max_stake }}{% endif %}"
+                       class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                        Previous
+                    </a>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
+                            {{ num }}
+                        </span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if current_game_type != 'all' %}&game_type={{ current_game_type }}{% endif %}{% if current_date_range != '30' %}&date_range={{ current_date_range }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if min_stake %}&min_stake={{ min_stake }}{% endif %}{% if max_stake %}&max_stake={{ max_stake }}{% endif %}"
+                           class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                            {{ num }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if current_game_type != 'all' %}&game_type={{ current_game_type }}{% endif %}{% if current_date_range != '30' %}&date_range={{ current_date_range }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if min_stake %}&min_stake={{ min_stake }}{% endif %}{% if max_stake %}&max_stake={{ max_stake }}{% endif %}"
+                       class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                        Next
+                    </a>
+                {% endif %}
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
+
+<script>
+// Custom date range functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const dateRangeSelect = document.getElementById('dateRangeSelect');
+    const customDateRange = document.getElementById('customDateRange');
+
+    function toggleCustomDateRange() {
+        if (dateRangeSelect.value === 'custom') {
+            customDateRange.style.display = 'flex';
+        } else {
+            customDateRange.style.display = 'none';
+        }
+    }
+
+    // Initial check
+    toggleCustomDateRange();
+
+    // Listen for changes
+    dateRangeSelect.addEventListener('change', toggleCustomDateRange);
+});
+</script>
 {% endblock %}

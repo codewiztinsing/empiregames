@@ -1,121 +1,200 @@
 {% extends 'dashboard/base.html' %}
 
-{% block title %}Referrals - Bingo Admin{% endblock %}
+{% block title %}Referrals - Dashboard{% endblock %}
 
 {% block content %}
 <div class="p-6">
     <!-- Page Header -->
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-white">Referrals</h1>
-        <p class="text-gray-400 mt-1">Manage referral system and track referral activities</p>
+        <h1 class="text-2xl font-bold text-white">Referral System</h1>
+        <p class="text-gray-400 mt-1">Track referral activities and manage referral bonuses</p>
     </div>
 
-    <!-- Create New Voucher Section -->
-    <div class="bg-dark-card rounded-lg border border-dark-border p-6 mb-6">
-        <h2 class="text-lg font-semibold text-white mb-4">Create New Voucher</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <!-- Amount -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Amount (ETB)</label>
-                <input type="number" 
-                       class="w-full px-3 py-2 bg-dark-bg text-white border border-dark-border rounded-lg focus:ring-2 focus:ring-purple-primary focus:border-transparent" 
-                       placeholder="Enter amount">
-            </div>
-            
-            <!-- Expiration Date -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Expiration Date (Optional)</label>
-                <input type="date" 
-                       class="w-full px-3 py-2 bg-dark-bg text-white border border-dark-border rounded-lg focus:ring-2 focus:ring-purple-primary focus:border-transparent">
-            </div>
-            
-            <!-- Multi-use Voucher -->
-            <div class="flex items-center space-x-3 mt-6">
-                <input type="checkbox" 
-                       id="multiUse" 
-                       class="w-4 h-4 text-purple-primary bg-dark-bg border-dark-border rounded focus:ring-purple-primary">
-                <label for="multiUse" class="text-sm text-gray-300">
-                    Allow multiple users to claim this voucher
-                </label>
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-dark-card rounded-lg border border-dark-border p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-400">Total Referrals</p>
+                    <p class="text-2xl font-semibold text-white">{{ total_referrals }}</p>
+                </div>
             </div>
         </div>
-        
-        <button class="px-6 py-2 bg-purple-primary text-white rounded-lg hover:bg-purple-hover transition-colors">
-            Create Voucher
-        </button>
+
+        <div class="bg-dark-card rounded-lg border border-dark-border p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-400">Total Bonus Paid</p>
+                    <p class="text-2xl font-semibold text-white">ETB {{ total_bonus_paid|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-dark-card rounded-lg border border-dark-border p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-400">Pending Bonuses</p>
+                    <p class="text-2xl font-semibold text-white">{{ pending_bonuses }}</p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Voucher List Section -->
+    <!-- Top Referrers Section -->
+    <div class="bg-dark-card rounded-lg border border-dark-border p-6 mb-6">
+        <h2 class="text-lg font-semibold text-white mb-4">Top Referrers</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-dark-bg">
+                    <tr>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Rank</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Username</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Phone</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Referrals Made</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Referral Code</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-dark-border">
+                    {% for referrer in top_referrers %}
+                    <tr class="hover:bg-dark-bg transition-colors">
+                        <td class="py-3 px-4 text-white font-bold">{{ forloop.counter }}</td>
+                        <td class="py-3 px-4 text-white">{{ referrer.username }}</td>
+                        <td class="py-3 px-4 text-gray-300">{{ referrer.phone|default:"N/A" }}</td>
+                        <td class="py-3 px-4 text-green-400 font-semibold">{{ referrer.referral_count }}</td>
+                        <td class="py-3 px-4 text-purple-400 font-mono text-sm">{{ referrer.referral_code }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-400">
+                            <div class="flex flex-col items-center">
+                                <svg class="w-12 h-12 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <p class="text-lg font-medium text-gray-400">No referrals yet</p>
+                                <p class="text-sm text-gray-500 mt-1">Referrals will appear here once users start referring others</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Referral List Section -->
     <div class="bg-dark-card rounded-lg border border-dark-border">
         <div class="p-6 border-b border-dark-border">
-            <h2 class="text-lg font-semibold text-white">Voucher List</h2>
+            <h2 class="text-lg font-semibold text-white">All Referrals</h2>
         </div>
         
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead class="bg-dark-bg">
                     <tr>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Code</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">ID</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Referrer</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Referred User</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Referral Code</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Bonus Amount</th>
                         <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Claimed By</th>
                         <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created At</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Claimed At</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Expires At</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-dark-border">
-                    <!-- Voucher Row 1 -->
+                    {% for referral in referrals %}
                     <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4 text-white font-mono text-sm">REF-1234567890</td>
-                        <td class="py-3 px-4 text-white">ETB 100.00</td>
+                        <td class="py-3 px-4 text-white font-mono text-sm">{{ referral.id }}</td>
+                        <td class="py-3 px-4 text-white">
+                            <div>
+                                <div class="font-medium">{{ referral.referrer.username }}</div>
+                                <div class="text-xs text-gray-400">{{ referral.referrer.phone|default:"N/A" }}</div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 text-white">
+                            <div>
+                                <div class="font-medium">{{ referral.referred_user.username }}</div>
+                                <div class="text-xs text-gray-400">{{ referral.referred_user.phone|default:"N/A" }}</div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 text-purple-400 font-mono text-sm">{{ referral.referral_code_used }}</td>
+                        <td class="py-3 px-4 text-green-400 font-semibold">ETB {{ referral.bonus_amount|floatformat:2 }}</td>
                         <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                EXPIRED
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if referral.bonus_paid %}bg-green-100 text-green-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {% if referral.bonus_paid %}Paid{% else %}Pending{% endif %}
                             </span>
                         </td>
-                        <td class="py-3 px-4 text-white">admin</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">01/12/2024 11:00:01 AM</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">-</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">01/12/2024 11:00:01 AM</td>
+                        <td class="py-3 px-4 text-gray-300 text-sm">{{ referral.created_at|date:"M d, Y H:i" }}</td>
                     </tr>
-                    
-                    <!-- Voucher Row 2 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4 text-white font-mono text-sm">REF-1234567891</td>
-                        <td class="py-3 px-4 text-white">ETB 50.00</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                EXPIRED
-                            </span>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-gray-400">
+                            <div class="flex flex-col items-center">
+                                <svg class="w-12 h-12 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <p class="text-lg font-medium text-gray-400">No referrals found</p>
+                                <p class="text-sm text-gray-500 mt-1">Referrals will appear here once users start referring others</p>
+                            </div>
                         </td>
-                        <td class="py-3 px-4 text-white">admin</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">01/12/2024 8:45:00 AM</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">-</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">01/12/2024 8:45:00 AM</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
         
         <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
         <div class="flex items-center justify-between p-4 border-t border-dark-border">
             <div class="text-sm text-gray-400">
-                Showing 1 to 2 of 2 results
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
             </div>
             <div class="flex items-center space-x-2">
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    Previous
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
-                    1
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    Next
-                </button>
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                        Previous
+                    </a>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
+                            {{ num }}
+                        </span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                            {{ num }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                        Next
+                    </a>
+                {% endif %}
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

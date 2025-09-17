@@ -1,125 +1,160 @@
 {% extends 'dashboard/base.html' %}
-{% load static %}
-{% block title %}Transaction Details - Bingo Admin{% endblock %}
+
+{% block page_title %}Transaction Details{% endblock %}
 
 {% block content %}
-<div class="flex-1 p-6">
+<div class="bg-gray-900 min-h-screen">
     <!-- Header -->
-    <div class="mb-6">
-        <div class="flex items-center space-x-4">
-            <a href="#" class="text-purple-primary hover:text-purple-hover">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-            </a>
-            <div>
-                <h1 class="text-2xl font-bold text-white mb-2">Transaction Details</h1>
-                <p class="text-gray-400">Transaction ID: {{ transaction.id }}</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Transaction Details Card -->
-    <div class="bg-dark-card rounded-lg border border-dark-border p-6 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Left Column -->
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Transaction ID</label>
-                    <p class="text-white font-mono">{{ transaction.id }}</p>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">User</label>
-                    <p class="text-white">{{ transaction.user.username }}</p>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Transaction Type</label>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        {{ transaction.type }}
-                    </span>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Amount</label>
-                    <p class="text-2xl font-bold text-green-400">ETB {{ transaction.amount }}</p>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Status</label>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {{ transaction.status }}
-                    </span>
-                </div>
-            </div>
-            
-            <!-- Right Column -->
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Payment Method</label>
-                    <p class="text-white">{{ transaction.reference|default:"N/A" }}</p>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Created Date</label>
-                    <p class="text-white">{{ transaction.created_at|date:"F d, Y" }}</p>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Created Time</label>
-                    <p class="text-white">{{ transaction.created_at|time:"H:i:s" }}</p>
-                </div>
-                
-                {% if transaction.updated_at %}
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Last Updated</label>
-                    <p class="text-white">{{ transaction.updated_at|date:"F d, Y H:i:s" }}</p>
-                </div>
-                {% endif %}
-                
-                {% if transaction.description %}
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Description</label>
-                    <p class="text-white">{{ transaction.description }}</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- User Information Card -->
-    <div class="bg-dark-card rounded-lg border border-dark-border p-6 mb-6">
-        <h3 class="text-lg font-semibold text-white mb-4">User Information</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-1">Username</label>
-                <p class="text-white">{{ transaction.user.username }}</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-1">Email</label>
-                <p class="text-white">{{ transaction.user.email|default:"N/A" }}</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-1">User ID</label>
-                <p class="text-white font-mono">{{ transaction.user.id }}</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="flex items-center space-x-4">
-        <a href="#" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded">
-            Back to Transactions
+    <div class="flex justify-between items-center p-6 border-b border-gray-700">
+        <h1 class="text-2xl font-bold text-white">Transaction Details</h1>
+        <a href="{% url 'dashboard:transactions' %}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-sm">
+            ← Back to Transactions
         </a>
-        {% if transaction.status == 'pending' %}
-        <button class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded">
-            Approve Transaction
-        </button>
-        <button class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded">
-            Reject Transaction
-        </button>
-        {% endif %}
+    </div>
+
+    <!-- Transaction Details -->
+    <div class="p-6">
+        <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Transaction Information -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-semibold text-white mb-4">Transaction Information</h2>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Transaction ID:</span>
+                        <span class="text-white font-mono">{{ transaction.id }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">User:</span>
+                        <span class="text-white">{{ transaction.user.username }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Type:</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            {{ transaction.type }}
+                        </span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Amount:</span>
+                        <span class="text-green-400 font-semibold text-lg">ETB {{ transaction.amount }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Status:</span>
+                        {% if transaction.status == 'success' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {{ transaction.status|title }}
+                            </span>
+                        {% elif transaction.status == 'pending' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                {{ transaction.status|title }}
+                            </span>
+                        {% elif transaction.status == 'failed' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                {{ transaction.status|title }}
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                {{ transaction.status|title }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Reference:</span>
+                        <span class="text-white font-mono text-sm">{{ transaction.reference|default:"N/A" }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Created At:</span>
+                        <span class="text-white">{{ transaction.created_at|date:"M d, Y H:i:s" }}</span>
+                    </div>
+                </div>
+
+                <!-- User Information -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-semibold text-white mb-4">User Information</h2>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Username:</span>
+                        <span class="text-white">{{ transaction.user.username }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Email:</span>
+                        <span class="text-white">{{ transaction.user.email|default:"N/A" }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Phone:</span>
+                        <span class="text-white">{{ transaction.user.phone|default:"N/A" }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Telegram ID:</span>
+                        <span class="text-white font-mono">{{ transaction.user.telegram_id|default:"N/A" }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Account Status:</span>
+                        {% if transaction.user.is_active %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Active
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Inactive
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Joined:</span>
+                        <span class="text-white">{{ transaction.user.date_joined|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-8 pt-6 border-t border-gray-700">
+                <div class="flex space-x-4">
+                    <a href="{% url 'dashboard:users' %}?search={{ transaction.user.username }}" 
+                       class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm">
+                        View User Profile
+                    </a>
+                    
+                    {% if transaction.type == 'WITHDRAW' and transaction.status == 'pending' %}
+                        <button onclick="approveTransaction({{ transaction.id }})" 
+                                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm">
+                            Approve Transaction
+                        </button>
+                        <button onclick="rejectTransaction({{ transaction.id }})" 
+                                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm">
+                            Reject Transaction
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+function approveTransaction(transactionId) {
+    if (confirm('Are you sure you want to approve this transaction?')) {
+        // Add your approval logic here
+        alert('Transaction approval functionality will be implemented here');
+    }
+}
+
+function rejectTransaction(transactionId) {
+    if (confirm('Are you sure you want to reject this transaction?')) {
+        // Add your rejection logic here
+        alert('Transaction rejection functionality will be implemented here');
+    }
+}
+</script>
 {% endblock %}

@@ -1,20 +1,115 @@
 {% extends 'dashboard/base.html' %}
 
-{% block title %}Contact Information Management{% endblock %}
+{% block title %}Contact Management{% endblock %}
 
 {% block content %}
 <div class="p-6">
     <!-- Header -->
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-white mb-2">Contact Information Management</h1>
-        <p class="text-gray-400">Manage contact information and communication settings</p>
+        <h1 class="text-2xl font-bold text-white mb-2">Contact Management</h1>
+        <p class="text-gray-400">Manage contacts with roles for game management</p>
     </div>
 
-    <!-- Contact Information Card -->
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-dark-card rounded-lg border border-dark-border p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-400">Total Contacts</p>
+                    <p class="text-2xl font-semibold text-white">{{ total_contacts }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-dark-card rounded-lg border border-dark-border p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-400">Active Contacts</p>
+                    <p class="text-2xl font-semibold text-white">{{ active_contacts }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-dark-card rounded-lg border border-dark-border p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-400">Inactive Contacts</p>
+                    <p class="text-2xl font-semibold text-white">{{ inactive_contacts }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="bg-dark-card rounded-lg border border-dark-border p-4 mb-6">
+        <form method="GET" id="filterForm">
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- Search Input -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-400">Search:</label>
+                    <input type="text" name="search" value="{{ search_query }}"
+                           placeholder="Name, email, phone, department..."
+                           class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2 w-64">
+                </div>
+                
+                <!-- Role Filter -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-400">Role:</label>
+                    <select name="role" class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
+                        <option value="all" {% if current_role == 'all' %}selected{% endif %}>All Roles</option>
+                        {% for value, label in role_choices %}
+                            <option value="{{ value }}" {% if current_role == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Status Filter -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-400">Status:</label>
+                    <select name="status" class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex items-center space-x-2">
+                    <button type="submit" class="px-4 py-2 bg-purple-primary hover:bg-purple-hover text-white text-sm font-medium rounded">
+                        Apply Filters
+                    </button>
+                    <a href="{% url 'dashboard:contact' %}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded">
+                        Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Contact Management Card -->
     <div class="bg-dark-card rounded-lg border border-dark-border p-6">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold text-white">Contact Information</h2>
-            <button class="px-4 py-2 bg-purple-primary text-white rounded-lg hover:bg-purple-hover transition-colors text-sm">
+            <h2 class="text-xl font-semibold text-white">Contacts</h2>
+            <button onclick="openAddContactModal()" class="px-4 py-2 bg-purple-primary text-white rounded-lg hover:bg-purple-hover transition-colors text-sm">
                 Add New Contact
             </button>
         </div>
@@ -24,34 +119,51 @@
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-dark-border">
-                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Type</th>
-                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Value</th>
-                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Description</th>
+                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Name</th>
+                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Email</th>
+                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Phone</th>
+                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Role</th>
+                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Department</th>
                         <th class="text-left py-3 px-4 text-gray-300 font-medium">Status</th>
+                        <th class="text-left py-3 px-4 text-gray-300 font-medium">Created</th>
                         <th class="text-left py-3 px-4 text-gray-300 font-medium">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Contact Row 1 -->
-                    {% for user in users %}
+                    {% for contact in contacts %}
                     <tr class="hover:bg-dark-bg transition-colors border-b border-dark-border">
-                        <td class="py-3 px-4 text-white">{{ user.role }}</td>
-                        <td class="py-3 px-4 text-white">{{ user.user.username }}</td>
-                        <td class="py-3 px-4 text-gray-300">{{ user.user.email }}</td>
+                        <td class="py-3 px-4 text-white font-medium">{{ contact.name }}</td>
+                        <td class="py-3 px-4 text-white">{{ contact.email }}</td>
+                        <td class="py-3 px-4 text-gray-300">{{ contact.phone|default:"N/A" }}</td>
+                        <td class="py-3 px-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if contact.role == 'admin' %}bg-red-100 text-red-800
+                                {% elif contact.role == 'game_manager' %}bg-blue-100 text-blue-800
+                                {% elif contact.role == 'moderator' %}bg-green-100 text-green-800
+                                {% elif contact.role == 'support' %}bg-yellow-100 text-yellow-800
+                                {% elif contact.role == 'supervisor' %}bg-purple-100 text-purple-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ contact.role_display }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-gray-300">{{ contact.department }}</td>
                         <td class="py-3 px-4">
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" class="sr-only peer" {% if user.is_active %}checked{% endif %}>
+                                <input type="checkbox" class="sr-only peer" 
+                                       {% if contact.is_active %}checked{% endif %}
+                                       onchange="toggleContactStatus({{ contact.id }})">
                                 <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-primary"></div>
                             </label>
                         </td>
+                        <td class="py-3 px-4 text-gray-300 text-sm">{{ contact.created_at|date:"M d, Y" }}</td>
                         <td class="py-3 px-4">
                             <div class="flex items-center space-x-2">
-                                <button class="text-blue-400 hover:text-blue-300 text-sm font-medium">
+                                <button onclick="editContact({{ contact.id }})" class="text-blue-400 hover:text-blue-300 text-sm font-medium">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </button>
-                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
+                                <button onclick="deleteContact({{ contact.id }})" class="text-red-400 hover:text-red-300 text-sm font-medium">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
@@ -59,30 +171,278 @@
                             </div>
                         </td>
                     </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-8 text-center text-gray-400">
+                            <div class="flex flex-col items-center">
+                                <svg class="w-12 h-12 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <p class="text-lg font-medium text-gray-400">No contacts found</p>
+                                <p class="text-sm text-gray-500 mt-1">Start by adding your first contact</p>
+                            </div>
+                        </td>
+                    </tr>
                     {% endfor %}
-
-                  
                 </tbody>
             </table>
         </div>
 
         <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
         <div class="flex items-center justify-between p-4 border-t border-dark-border mt-6">
             <div class="text-sm text-gray-400">
-                Showing 1 to 4 of 4 results
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
             </div>
             <div class="flex items-center space-x-2">
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    Previous
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
-                    1
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    Next
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_role != 'all' %}&role={{ current_role }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}"
+                       class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                        Previous
+                    </a>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
+                            {{ num }}
+                        </span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_role != 'all' %}&role={{ current_role }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}"
+                           class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                            {{ num }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_role != 'all' %}&role={{ current_role }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}"
+                       class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add/Edit Contact Modal -->
+<div id="contactModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-dark-card rounded-lg border border-dark-border w-full max-w-md">
+            <div class="flex justify-between items-center p-6 border-b border-dark-border">
+                <h3 class="text-lg font-semibold text-white" id="modalTitle">Add New Contact</h3>
+                <button onclick="closeContactModal()" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
                 </button>
             </div>
+            
+            <form id="contactForm" class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Name *</label>
+                        <input type="text" id="contactName" name="name" required
+                               class="w-full bg-dark-bg border border-dark-border text-white rounded-md px-3 py-2">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Email *</label>
+                        <input type="email" id="contactEmail" name="email" required
+                               class="w-full bg-dark-bg border border-dark-border text-white rounded-md px-3 py-2">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Phone</label>
+                        <input type="tel" id="contactPhone" name="phone"
+                               class="w-full bg-dark-bg border border-dark-border text-white rounded-md px-3 py-2">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Role *</label>
+                        <select id="contactRole" name="role" required
+                                class="w-full bg-dark-bg border border-dark-border text-white rounded-md px-3 py-2">
+                            <option value="">Select Role</option>
+                            {% for value, label in role_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Department</label>
+                        <input type="text" id="contactDepartment" name="department" value="Operations"
+                               class="w-full bg-dark-bg border border-dark-border text-white rounded-md px-3 py-2">
+                    </div>
+                    
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" id="contactActive" name="is_active" checked
+                               class="w-4 h-4 text-purple-primary bg-dark-bg border-dark-border rounded focus:ring-purple-primary">
+                        <label for="contactActive" class="text-sm text-gray-300">
+                            Active
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeContactModal()"
+                            class="px-4 py-2 text-gray-300 bg-gray-600 hover:bg-gray-700 rounded-md text-sm">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-purple-primary hover:bg-purple-hover text-white rounded-md text-sm">
+                        Save Contact
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<script>
+let currentContactId = null;
+
+function openAddContactModal() {
+    currentContactId = null;
+    document.getElementById('modalTitle').textContent = 'Add New Contact';
+    document.getElementById('contactForm').reset();
+    document.getElementById('contactModal').classList.remove('hidden');
+}
+
+function editContact(contactId) {
+    currentContactId = contactId;
+    document.getElementById('modalTitle').textContent = 'Edit Contact';
+    
+    // Fetch contact details and populate form
+    fetch(`/dashboard/api/contacts/${contactId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const contact = data.contact;
+                document.getElementById('contactName').value = contact.name;
+                document.getElementById('contactEmail').value = contact.email;
+                document.getElementById('contactPhone').value = contact.phone || '';
+                document.getElementById('contactRole').value = contact.role;
+                document.getElementById('contactDepartment').value = contact.department;
+                document.getElementById('contactActive').checked = contact.is_active;
+                document.getElementById('contactModal').classList.remove('hidden');
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while fetching contact details');
+        });
+}
+
+function closeContactModal() {
+    document.getElementById('contactModal').classList.add('hidden');
+    currentContactId = null;
+}
+
+function toggleContactStatus(contactId) {
+    fetch(`/dashboard/api/contacts/${contactId}/toggle-status/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Optionally show a success message
+            console.log(data.message);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating contact status');
+    });
+}
+
+function deleteContact(contactId) {
+    if (confirm('Are you sure you want to delete this contact?')) {
+        fetch(`/dashboard/api/contacts/${contactId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Contact deleted successfully');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting contact');
+        });
+    }
+}
+
+// Handle form submission
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        name: document.getElementById('contactName').value,
+        email: document.getElementById('contactEmail').value,
+        phone: document.getElementById('contactPhone').value,
+        role: document.getElementById('contactRole').value,
+        department: document.getElementById('contactDepartment').value,
+        is_active: document.getElementById('contactActive').checked
+    };
+    
+    const url = currentContactId ? `/dashboard/api/contacts/${currentContactId}/` : '/dashboard/api/contacts/';
+    const method = currentContactId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            closeContactModal();
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving contact');
+    });
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeContactModal();
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('contactModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeContactModal();
+    }
+});
+</script>
 {% endblock %}

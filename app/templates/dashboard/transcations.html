@@ -12,36 +12,78 @@
 
     <!-- Filters Section -->
     <div class="bg-dark-card rounded-lg border border-dark-border p-4 mb-6">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4">
+        <form method="GET" id="filterForm">
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- Search Input -->
                 <div class="flex items-center space-x-2">
-                    <label class="text-sm text-gray-400">Transaction Type:</label>
-                    <select class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
-                        <option>All Types</option>
-                        <option>Deposit</option>
-                        <option>Withdrawal</option>
-                        <option>Game Win</option>
-                        <option>Game Loss</option>
+                    <label class="text-sm text-gray-400">Search:</label>
+                    <input type="text" name="search" value="{{ search_query }}" 
+                           placeholder="User, phone, reference, amount..." 
+                           class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2 w-64">
+                </div>
+                
+                <!-- Transaction Type Filter -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-400">Type:</label>
+                    <select name="type" class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
+                        <option value="all" {% if current_type == 'all' %}selected{% endif %}>All Types</option>
+                        {% for type_choice in type_choices %}
+                            {% if type_choice != 'all' %}
+                                <option value="{{ type_choice }}" {% if current_type == type_choice %}selected{% endif %}>
+                                    {{ type_choice|title }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
                     </select>
                 </div>
+                
+                <!-- Status Filter -->
                 <div class="flex items-center space-x-2">
-                    <label class="text-sm text-gray-400">Time Period:</label>
-                    <select class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
-                        <option>Last 30 days</option>
-                        <option>Last 7 days</option>
-                        <option>Today</option>
-                        <option>This month</option>
-                        <option>Custom range</option>
+                    <label class="text-sm text-gray-400">Status:</label>
+                    <select name="status" class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
+                        <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Status</option>
+                        {% for status_choice in status_choices %}
+                            {% if status_choice != 'all' %}
+                                <option value="{{ status_choice }}" {% if current_status == status_choice %}selected{% endif %}>
+                                    {{ status_choice|title }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
                     </select>
                 </div>
+                
+                <!-- Date Range Filter -->
                 <div class="flex items-center space-x-2">
-                    <input type="text" placeholder="Enter user ID" class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2 w-40">
-                    <button class="px-4 py-2 bg-purple-primary hover:bg-purple-hover text-white text-sm font-medium rounded">
-                        Search
+                    <label class="text-sm text-gray-400">Date Range:</label>
+                    <select name="date_range" id="dateRangeSelect" class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
+                        {% for value, label in date_choices %}
+                            <option value="{{ value }}" {% if current_date_range == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Custom Date Range (hidden by default) -->
+                <div id="customDateRange" class="flex items-center space-x-2" style="display: none;">
+                    <input type="date" name="start_date" value="{{ start_date }}" 
+                           class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
+                    <span class="text-gray-400">to</span>
+                    <input type="date" name="end_date" value="{{ end_date }}" 
+                           class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex items-center space-x-2">
+                    <button type="submit" class="px-4 py-2 bg-purple-primary hover:bg-purple-hover text-white text-sm font-medium rounded">
+                        Apply Filters
                     </button>
+                    <a href="{% url 'dashboard:transactions' %}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded">
+                        Clear
+                    </a>
                 </div>
             </div>
-        </div>
+        </form>
     </div>
 
     <!-- Summary Cards -->
@@ -89,33 +131,64 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-dark-border">
-                {% for transaction in transactions %}
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4 text-white font-mono text-sm">{{ transaction.id }}</td>
-                        <td class="py-3 px-4 text-white">{{ transaction.user.username }}</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                {{ transaction.type }}
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-green-400 font-semibold">ETB {{ transaction.amount }}</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                {{ transaction.status }}
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-white">{{ transaction.reference }}</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">{{ transaction.created_at }}</td>
-                        <td class="py-3 px-4">
-                            <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                <a href="{% url 'wallet:transaction_details' transaction.id %}">
-                                    Details
-                                </a>
-                            </button>
+                {% if transactions %}
+                    {% for transaction in transactions %}
+                        <tr class="hover:bg-dark-bg transition-colors">
+                            <td class="py-3 px-4 text-white font-mono text-sm">{{ transaction.id }}</td>
+                            <td class="py-3 px-4 text-white">
+                                <div>
+                                    <div class="font-medium">{{ transaction.user.username }}</div>
+                                    <div class="text-xs text-gray-400">{{ transaction.user.phone|default:"N/A" }}</div>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if transaction.type == 'DEPOSIT' %}bg-green-100 text-green-800
+                                    {% elif transaction.type == 'WITHDRAW' %}bg-red-100 text-red-800
+                                    {% elif transaction.type == 'BET' %}bg-yellow-100 text-yellow-800
+                                    {% elif transaction.type == 'WIN' %}bg-blue-100 text-blue-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ transaction.type }}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 font-semibold
+                                {% if transaction.type == 'DEPOSIT' or transaction.type == 'WIN' %}text-green-400
+                                {% else %}text-red-400{% endif %}">
+                                {% if transaction.type == 'DEPOSIT' or transaction.type == 'WIN' %}+{% else %}-{% endif %}ETB {{ transaction.amount|floatformat:2 }}
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if transaction.status == 'success' %}bg-green-100 text-green-800
+                                    {% elif transaction.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                    {% elif transaction.status == 'failed' %}bg-red-100 text-red-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ transaction.status|title }}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-white text-xs font-mono">{{ transaction.reference|default:"N/A" }}</td>
+                            <td class="py-3 px-4 text-gray-300 text-sm">{{ transaction.created_at|date:"M d, Y H:i" }}</td>
+                            <td class="py-3 px-4">
+                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
+                                    <a href="{% url 'wallet:transaction_details' transaction.id %}">
+                                        Details
+                                    </a>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-8 text-center text-gray-400">
+                            <div class="flex flex-col items-center">
+                                <svg class="w-12 h-12 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <p class="text-lg font-medium text-gray-400">No transactions found</p>
+                                <p class="text-sm text-gray-500 mt-1">Try adjusting your filters or search criteria</p>
+                            </div>
                         </td>
                     </tr>
-                    {% endfor %}
-                  
+                {% endif %}
                 </tbody>
             </table>
         </div>
@@ -123,30 +196,69 @@
         <!-- Pagination -->
         <div class="flex items-center justify-between p-4 border-t border-dark-border">
             <div class="text-sm text-gray-400">
-                Showing 1 to {{ transactions|length }} of {{ transactions|length }} results
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
             </div>
             <div class="flex items-center space-x-2">
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    Previous
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
-                    {{ transactions.number }}
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    {{ transactions.number }}
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    {{ transactions.number }}
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg"
-                {% if transactions.has_next %}
-                href="{% url 'wallet:transactions' %}?page={{ transactions.next_page_number }}"
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_type != 'all' %}&type={{ current_type }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if current_date_range != '30' %}&date_range={{ current_date_range }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                        Previous
+                    </a>
                 {% endif %}
-                >
-                    {{ transactions.number }}
-                </button>
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
+                            {{ num }}
+                        </span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_type != 'all' %}&type={{ current_type }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if current_date_range != '30' %}&date_range={{ current_date_range }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                            {{ num }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_type != 'all' %}&type={{ current_type }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if current_date_range != '30' %}&date_range={{ current_date_range }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                        Next
+                    </a>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Custom date range functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const dateRangeSelect = document.getElementById('dateRangeSelect');
+    const customDateRange = document.getElementById('customDateRange');
+    
+    function toggleCustomDateRange() {
+        if (dateRangeSelect.value === 'custom') {
+            customDateRange.style.display = 'flex';
+        } else {
+            customDateRange.style.display = 'none';
+        }
+    }
+    
+    // Initial check
+    toggleCustomDateRange();
+    
+    // Listen for changes
+    dateRangeSelect.addEventListener('change', toggleCustomDateRange);
+    
+    // Auto-submit form on filter change (optional)
+    const filterForm = document.getElementById('filterForm');
+    const typeSelect = filterForm.querySelector('select[name="type"]');
+    const statusSelect = filterForm.querySelector('select[name="status"]');
+    
+    // Optional: Auto-submit on filter change
+    // typeSelect.addEventListener('change', () => filterForm.submit());
+    // statusSelect.addEventListener('change', () => filterForm.submit());
+});
+</script>
+
 {% endblock %}

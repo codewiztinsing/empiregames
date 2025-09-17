@@ -21,9 +21,7 @@
             <button onclick="showTab('manual-deposits')" id="tab-manual-deposits" class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">
                 Manual Deposits
             </button>
-            <button onclick="showTab('manual-withdrawals')" id="tab-manual-withdrawals" class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md">
-                Manual Withdrawals
-            </button>
+          
         </div>
     </div>
 
@@ -58,6 +56,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                                 User
                             </th>
+                           
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                                 Amount
                             </th>
@@ -66,6 +65,9 @@
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                                 Request Date
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Rejection Reason
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                                 Actions
@@ -84,10 +86,12 @@
                                             </span>
                                         </div>
                                     </div>
+
                                     <div class="ml-4">
                                         <div class="text-sm font-medium text-white">{{ request.user.username }}</div>
-                                        <div class="text-sm text-gray-400">{{ request.user.email }}</div>
+                                        <div class="text-sm text-gray-400">{{ request.user.phone }}</div>
                                     </div>
+                                   
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -104,6 +108,17 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                 {{ request.created_at|date:"M d, Y H:i" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                {% if request.status == 'failed' and request.rejection_reason %}
+                                    <div class="max-w-xs">
+                                        <span class="text-red-400" title="{{ request.rejection_reason }}">
+                                            {{ request.rejection_reason|truncatechars:50 }}
+                                        </span>
+                                    </div>
+                                {% else %}
+                                    <span class="text-gray-500">-</span>
+                                {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex space-x-2">
@@ -388,41 +403,7 @@
             </div>
         </div>
 
-        <!-- Manual Withdrawals Tab -->
-        <div id="content-manual-withdrawals" class="tab-content hidden">
-            <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="flex justify-between items-center p-4 border-b border-gray-700">
-                    <h2 class="text-lg font-semibold text-white">Manual Withdrawals</h2>
-                    <button onclick="showAddWithdrawalModal()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm">
-                        Add Manual Withdrawal
-                    </button>
-                </div>
-                <div class="p-6">
-                    <!-- Manual Withdrawals Table -->
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-700">
-                            <thead class="bg-gray-700">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Method</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Reference</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-gray-800 divide-y divide-gray-700">
-                                <tr>
-                                    <td colspan="6" class="px-6 py-8 text-center text-gray-400">
-                                        No manual withdrawals found
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+      
     </div>
 </div>
 
@@ -473,8 +454,7 @@ function filterByDepositStatus() {
 }
 
 function showAddDepositModal() {
-    // Placeholder for add deposit modal
-    alert('Add Manual Deposit functionality will be implemented here');
+    document.getElementById('addDepositModal').classList.remove('hidden');
 }
 
 function showAddWithdrawalModal() {
@@ -485,7 +465,7 @@ function showAddWithdrawalModal() {
 function approveRequest(requestId) {
     if (confirm('Are you sure you want to approve this withdrawal request?')) {
         fetch(`/dashboard/withdrawal-requests/${requestId}/approve/`, {
-            method: 'PUT',
+            method: 'POST',
             headers: {
                 'X-CSRFToken': '{{ csrf_token }}',
                 'Content-Type': 'application/json',
@@ -493,6 +473,7 @@ function approveRequest(requestId) {
         })
         .then(response => response.json())
         .then(data => {
+            console.log(data);
             if (data.success) {
                 location.reload();
             } else {
@@ -507,27 +488,7 @@ function approveRequest(requestId) {
 }
 
 function rejectRequest(requestId) {
-    if (confirm('Are you sure you want to reject this withdrawal request?')) {
-        fetch(`/dashboard/withdrawal-requests/${requestId}/reject/`, {
-            method: 'PUT',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while processing the request.');
-        });
-    }
+    showRejectionModal(requestId);
 }
 
 function savePaymentDepositGatewaySettings() {
@@ -583,6 +544,254 @@ function savePaymentWithdrawalGatewaySettings() {
         alert('An error occurred while saving the payment withdrawal gateway settings.');
     });
 }
+
+// Add Manual Deposit Modal Functions
+function showAddDepositModal() {
+    document.getElementById('addDepositModal').classList.remove('hidden');
+}
+
+function closeAddDepositModal() {
+    document.getElementById('addDepositModal').classList.add('hidden');
+    document.getElementById('addDepositForm').reset();
+}
+
+// Rejection Modal Functions
+let currentRejectRequestId = null;
+
+function showRejectionModal(requestId) {
+    currentRejectRequestId = requestId;
+    document.getElementById('rejectionModal').classList.remove('hidden');
+}
+
+function closeRejectionModal() {
+    document.getElementById('rejectionModal').classList.add('hidden');
+    document.getElementById('rejectionForm').reset();
+    currentRejectRequestId = null;
+}
+
+// Handle Add Deposit Form Submission
+document.addEventListener('DOMContentLoaded', function() {
+    const addDepositForm = document.getElementById('addDepositForm');
+    if (addDepositForm) {
+        addDepositForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                phone: document.getElementById('userPhone').value,
+                amount: parseFloat(document.getElementById('depositAmount').value),
+                reference: document.getElementById('transactionRef').value,
+                notes: document.getElementById('depositNotes').value
+            };
+            
+            // Validate form data
+            if (!formData.phone || !formData.amount || !formData.reference) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            if (formData.amount <= 0) {
+                alert('Amount must be greater than 0');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Adding...';
+            submitBtn.disabled = true;
+            
+            // Submit the form
+            fetch('/api/v1/wallet/manual-deposit/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Manual deposit added successfully!');
+                    closeAddDepositModal();
+                    location.reload(); // Refresh the page to show the new deposit
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding the manual deposit.');
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    }
+
+    // Handle Rejection Form Submission
+    const rejectionForm = document.getElementById('rejectionForm');
+    if (rejectionForm) {
+        rejectionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const rejectionReason = document.getElementById('rejectionReason').value.trim();
+            
+            // Validate rejection reason
+            if (!rejectionReason) {
+                alert('Please provide a reason for rejection');
+                return;
+            }
+            
+            if (!currentRejectRequestId) {
+                alert('Error: No request ID found');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Rejecting...';
+            submitBtn.disabled = true;
+            
+            // Submit the rejection
+            fetch(`/dashboard/withdrawal-requests/${currentRejectRequestId}/reject/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    rejection_reason: rejectionReason
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                if (data.success) {
+                    alert('Withdrawal request rejected successfully!');
+                    closeRejectionModal();
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while rejecting the request.');
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    }
+});
     
 </script>
+
+<!-- Add Manual Deposit Modal -->
+<div id="addDepositModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-gray-800 rounded-lg border border-gray-700 w-full max-w-md">
+            <div class="flex justify-between items-center p-6 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white">Add Manual Deposit</h3>
+                <button onclick="closeAddDepositModal()" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="addDepositForm" class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">User Phone Number</label>
+                        <input type="tel" id="userPhone" name="phone" 
+                               class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" 
+                               placeholder="251911234567" required>
+                        <p class="text-xs text-gray-400 mt-1">Enter the user's phone number (e.g., 251911234567)</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Amount (ETB)</label>
+                        <input type="number" id="depositAmount" name="amount" step="0.01" min="0.01"
+                               class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" 
+                               placeholder="100.00" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Transaction Reference</label>
+                        <input type="text" id="transactionRef" name="reference" 
+                               class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" 
+                               placeholder="Manual deposit reference" required>
+                        <p class="text-xs text-gray-400 mt-1">Enter a reference for this manual deposit</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Notes (Optional)</label>
+                        <textarea id="depositNotes" name="notes" rows="3"
+                                  class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" 
+                                  placeholder="Additional notes about this deposit"></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeAddDepositModal()" 
+                            class="px-4 py-2 text-gray-300 bg-gray-600 hover:bg-gray-700 rounded-md text-sm">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm">
+                        Add Deposit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Rejection Reason Modal -->
+<div id="rejectionModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-gray-800 rounded-lg border border-gray-700 w-full max-w-md">
+            <div class="flex justify-between items-center p-6 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white">Reject Withdrawal Request</h3>
+                <button onclick="closeRejectionModal()" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="rejectionForm" class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Rejection Reason</label>
+                        <textarea id="rejectionReason" name="rejection_reason" rows="4"
+                                  class="w-full bg-gray-600 border border-gray-500 text-white rounded-md px-3 py-2" 
+                                  placeholder="Please provide a reason for rejecting this withdrawal request..."
+                                  required></textarea>
+                        <p class="text-xs text-gray-400 mt-1">This reason will be visible to the user</p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeRejectionModal()" 
+                            class="px-4 py-2 text-gray-300 bg-gray-600 hover:bg-gray-700 rounded-md text-sm">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm">
+                        Reject Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

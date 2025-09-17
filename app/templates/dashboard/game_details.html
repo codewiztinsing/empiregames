@@ -1,110 +1,219 @@
 {% extends 'dashboard/base.html' %}
-{% load static %}
 
-{% block title %}Game Details - Dashboard{% endblock %}
+{% block page_title %}Game Details{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-dark-bg">
+<div class="bg-gray-900 min-h-screen">
     <!-- Header -->
-    <div class="bg-dark-card border-b border-dark-border">
-        <div class="p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-white">Game Details</h1>
-                    <p class="text-gray-400 mt-1">View detailed information about this game</p>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <a href="{% url 'dashboard:games' %}" class="px-4 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                        Back to Games
-                    </a>
-                </div>
-            </div>
-        </div>
+    <div class="flex justify-between items-center p-6 border-b border-gray-700">
+        <h1 class="text-2xl font-bold text-white">Game Details</h1>
+        <a href="{% url 'dashboard:games' %}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md text-sm">
+            ← Back to Games
+        </a>
     </div>
 
-    <!-- Game Details Content -->
+    <!-- Game Details -->
     <div class="p-6">
-        <!-- Game Overview Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
-                <h3 class="text-gray-400 text-sm font-medium">Game ID</h3>
-                <p class="text-2xl font-bold text-white mt-1 font-mono">{{ game.id }}</p>
-            </div>
-            <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
-                <h3 class="text-gray-400 text-sm font-medium">Status</h3>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
-                    {{ game.status }}
-                </span>
-            </div>
-            <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
-                <h3 class="text-gray-400 text-sm font-medium">Stake Amount</h3>
-                <p class="text-2xl font-bold text-white mt-1">ETB {{ game.entry_fee }}</p>
-            </div>
-            <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
-                <h3 class="text-gray-400 text-sm font-medium">Winner</h3>
-                <p class="text-2xl font-bold text-white mt-1">{{ game.winner.username|default:"TBD" }}</p>
-            </div>
-        </div>
-
-        <!-- Main Game Information -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <!-- Game Info -->
-            <div class="bg-dark-card rounded-lg border border-dark-border p-6">
-                <h2 class="text-xl font-bold text-white mb-4">Game Information</h2>
+        <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Game Information -->
                 <div class="space-y-4">
-                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
-                        <span class="text-gray-400">Room</span>
-                        <span class="text-white">room_{{ game.id }}</span>
+                    <h2 class="text-lg font-semibold text-white mb-4">Game Information</h2>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Game ID:</span>
+                        <span class="text-white font-mono">{{ game.id }}</span>
                     </div>
-                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
-                        <span class="text-gray-400">Created Date</span>
-                        <span class="text-white">{{ game.created_at|date:"M d, Y H:i" }}</span>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Entry Fee:</span>
+                        <span class="text-green-400 font-semibold text-lg">ETB {{ game.entry_fee }}</span>
                     </div>
-                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
-                        <span class="text-gray-400">Game Type</span>
-                        <span class="text-white">Bingo</span>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Status:</span>
+                        {% if game.status == 'completed' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {{ game.status|title }}
+                            </span>
+                        {% elif game.status == 'in_progress' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {{ game.status|title }}
+                            </span>
+                        {% elif game.status == 'waiting' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                {{ game.status|title }}
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                {{ game.status|title }}
+                            </span>
+                        {% endif %}
                     </div>
-                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
-                        <span class="text-gray-400">Duration</span>
-                        <span class="text-white">15 minutes</span>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Started:</span>
+                        <span class="text-white">
+                            {% if game.started %}
+                                <span class="text-green-400">Yes</span>
+                            {% else %}
+                                <span class="text-red-400">No</span>
+                            {% endif %}
+                        </span>
                     </div>
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-gray-400">Total Players</span>
-                        <span class="text-white">5/5</span>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Ended:</span>
+                        <span class="text-white">
+                            {% if game.ended %}
+                                <span class="text-green-400">Yes</span>
+                            {% else %}
+                                <span class="text-red-400">No</span>
+                            {% endif %}
+                        </span>
                     </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Created At:</span>
+                        <span class="text-white">{{ game.created_at|date:"M d, Y H:i:s" }}</span>
+                    </div>
+                </div>
+
+                <!-- Winner Information -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-semibold text-white mb-4">Winner Information</h2>
+                    
+                    {% if game.winner %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Winner:</span>
+                            <span class="text-white">{{ game.winner.username }}</span>
+                        </div>
+                        
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Winner Email:</span>
+                            <span class="text-white">{{ game.winner.email|default:"N/A" }}</span>
+                        </div>
+                        
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Winner Phone:</span>
+                            <span class="text-white">{{ game.winner.phone|default:"N/A" }}</span>
+                        </div>
+                        
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Winner Telegram ID:</span>
+                            <span class="text-white font-mono">{{ game.winner.telegram_id|default:"N/A" }}</span>
+                        </div>
+                        
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Prize Amount:</span>
+                            <span class="text-green-400 font-semibold text-lg">ETB {{ game.entry_fee }}</span>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8">
+                            <div class="text-gray-400 text-lg mb-2">No Winner Yet</div>
+                            <div class="text-gray-500 text-sm">
+                                {% if game.status == 'waiting' %}
+                                    Game is waiting for players
+                                {% elif game.status == 'in_progress' %}
+                                    Game is in progress
+                                {% elif game.status == 'completed' %}
+                                    Game completed with no winner
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Game Statistics -->
-            <div class="bg-dark-card rounded-lg border border-dark-border p-6">
-                <h2 class="text-xl font-bold text-white mb-4">Game Statistics</h2>
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
-                        <span class="text-gray-400">Total Rounds</span>
-                        <span class="text-white">45</span>
+            <!-- Players List -->
+            <div class="mt-8 pt-6 border-t border-gray-700">
+                <h2 class="text-lg font-semibold text-white mb-4">Players ({{ game.players|length }})</h2>
+                
+                {% if game.players %}
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-700">
+                            <thead class="bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Player ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Username</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-gray-800 divide-y divide-gray-700">
+                                {% for player in game.players %}
+                                <tr class="hover:bg-gray-700">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white font-mono">
+                                        {{ player.id|default:"N/A" }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                        {{ player.username|default:"N/A" }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% if player.id == game.winner.id %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Winner
+                                            </span>
+                                        {% else %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                Player
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
-                        <span class="text-gray-400">Numbers Called</span>
-                        <span class="text-white">32</span>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="text-gray-400 text-lg mb-2">No Players Yet</div>
+                        <div class="text-gray-500 text-sm">This game doesn't have any players yet</div>
                     </div>
-                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
-                        <span class="text-gray-400">Prize Pool</span>
-                        <span class="text-white">ETB {{ game.entry_fee|floatformat:2 }}</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2 border-b border-dark-border">
-                        <span class="text-gray-400">Commission</span>
-                        <span class="text-white">ETB 50.00</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-gray-400">Net Payout</span>
-                        <span class="text-white font-bold">ETB {{ game.entry_fee|add:"-50"|floatformat:2 }}</span>
-                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-8 pt-6 border-t border-gray-700">
+                <div class="flex space-x-4">
+                    {% if game.winner %}
+                        <a href="{% url 'dashboard:users' %}?search={{ game.winner.username }}" 
+                           class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm">
+                            View Winner Profile
+                        </a>
+                    {% endif %}
+                    
+                    {% if not game.ended and game.status != 'completed' %}
+                        <button onclick="endGame({{ game.id }})" 
+                                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm">
+                            End Game
+                        </button>
+                    {% endif %}
+                    
+                    {% if game.status == 'waiting' %}
+                        <button onclick="startGame({{ game.id }})" 
+                                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm">
+                            Start Game
+                        </button>
+                    {% endif %}
                 </div>
             </div>
         </div>
-
-
-     
     </div>
 </div>
+
+<script>
+function endGame(gameId) {
+    if (confirm('Are you sure you want to end this game?')) {
+        // Add your end game logic here
+        alert('End game functionality will be implemented here');
+    }
+}
+
+function startGame(gameId) {
+    if (confirm('Are you sure you want to start this game?')) {
+        // Add your start game logic here
+        alert('Start game functionality will be implemented here');
+    }
+}
+</script>
 {% endblock %}

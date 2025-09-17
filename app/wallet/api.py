@@ -398,6 +398,84 @@ def manual_cbe_success(request):
         return JsonResponse({"message": "Error processing success"}, status=500)
 
 
+@router.post("/manual-deposit/")
+def manual_deposit(request):
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        phone = data.get('phone')
+        amount = data.get('amount')
+        reference = data.get('reference')
+        notes = data.get('notes', '')
+        
+        # Validate required fields
+        if not phone or not amount or not reference:
+            return JsonResponse({"success": False, "message": "Phone, amount, and reference are required"}, status=400)
+        
+        # Find user by phone number
+        try:
+            user = User.objects.get(phone=phone)
+        except User.DoesNotExist:
+            return JsonResponse({"success": False, "message": "User with this phone number not found"}, status=404)
+        
+        # Get or create wallet
+        wallet, created = Wallet.objects.get_or_create(user=user, defaults={'balance': 0})
+        
+        # Create manual session
+        manual_session = ManualSession.objects.create(
+            phone_number=phone,
+            amount=amount,
+            session_id=reference,
+            status='success',  # Mark as successful since it's manually added
+            transaction_number=reference
+        )
+        
+        # Update wallet balance
+        wallet.balance += float(amount)
+        wallet.save()
+        
+        # Create transaction record
+        transaction = Transaction.objects.create(
+            user=user,
+            amount=float(amount),
+            type='DEPOSIT',
+            status='success',
+            reference=reference
+        )
+        
+        # Notify user about successful deposit
+        if user.telegram_id:
+            try:
+                bot_token = config('BOT_TOKEN')
+                telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                message = (
+                    f"🎉 Manual Deposit Added! 🎉\n\n"
+                    f"💰 Amount: {amount} ETB\n"
+                    f"📊 New Balance: {wallet.balance} ETB\n"
+                    f"🔗 Reference: {reference}\n"
+                    f"📝 Notes: {notes}\n\n"
+                    f"✅ Your account has been credited by admin!"
+                )
+                telegram_payload = {
+                    'chat_id': user.telegram_id,
+                    'text': message,
+                    'parse_mode': 'HTML'
+                }
+                requests.post(telegram_url, json=telegram_payload)
+                print(f"Notified user {user.telegram_id} about manual deposit")
+            except Exception as notification_error:
+                print(f"Failed to notify user about manual deposit: {notification_error}")
+        
+        return JsonResponse({
+            "success": True, 
+            "message": "Manual deposit added successfully",
+            "transaction_id": transaction.id,
+            "new_balance": wallet.balance
+        }, status=200)
+        
+    except Exception as e:
+        print(f"Error processing manual deposit: {e}")
+        return JsonResponse({"success": False, "message": "Error processing manual deposit"}, status=500)
+
 @router.post("/withdrawal/request/")
 def withdrawal_request(request):
     try:

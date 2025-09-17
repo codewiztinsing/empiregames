@@ -12,8 +12,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', api.urls),
     path('promotions/', include('promotion.urls'), name='promotions'),
-    path('game/', include('game.urls'), name='game'),
-    path('wallet/', include('wallet.urls'), name='wallet')
+    path('dashboard/game/', include('game.urls'), name='game'),
+    path('dashboard/wallet/', include('wallet.urls'), name='wallet')
 ]
 
 # Serve media files during development

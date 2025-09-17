@@ -8,11 +8,12 @@ from django.db import IntegrityError
 from django.http import JsonResponse
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
-from users.models import User
+from users.models import User, Referral
 from datetime import datetime, timedelta
 from django.contrib.auth import authenticate
 from django.conf import settings
 from wallet.models import Transaction,ChapaSession
+from django.db import transaction
 
 
 from pydantic import BaseModel
@@ -46,13 +47,51 @@ def register(request, data: RegisterSchema):
                 "message": "Username already taken"
             }, status=400)
 
-        # Create user with hashed password
-        user = User.objects.create_user(
-            username=data.username,
-            phone=data.phone,
-            telegram_id=data.telegram_id,
-            password=make_password(data.password)
-        )
+        # Validate referral code if provided
+        referrer = None
+        if data.referral_code:
+            try:
+                referrer = User.objects.get(referral_code=data.referral_code)
+            except User.DoesNotExist:
+                return JsonResponse({
+                    "success": False,
+                    "message": "Invalid referral code"
+                }, status=400)
+
+        # Use database transaction to ensure data consistency
+        with transaction.atomic():
+            # Create user with hashed password
+            user = User.objects.create_user(
+                username=data.username,
+                phone=data.phone,
+                telegram_id=data.telegram_id,
+                password=make_password(data.password)
+            )
+            
+            # Handle referral if provided
+            if referrer:
+                # Create referral record
+                referral = Referral.objects.create(
+                    referrer=referrer,
+                    referred_user=user,
+                    referral_code_used=data.referral_code,
+                    bonus_amount=10.0,
+                    bonus_paid=False
+                )
+                
+                # Create transaction for referral bonus
+                Transaction.objects.create(
+                    user=user,
+                    amount=10.0,
+                    type='DEPOSIT',
+                    status='success',
+                    reference=f'REFERRAL_BONUS_{referral.id}',
+                    description=f'Referral bonus from {referrer.username}'
+                )
+                
+                # Mark bonus as paid
+                referral.bonus_paid = True
+                referral.save()
         
         if user:
             return JsonResponse({
@@ -60,7 +99,8 @@ def register(request, data: RegisterSchema):
                 "message": "User registered successfully",
                 "username": user.username,
                 "phone": user.phone,
-                "telegram_id": user.telegram_id
+                "telegram_id": user.telegram_id,
+                "referral_bonus": 10.0 if referrer else 0.0
             }, status=200)
         else:
             print("user registration failed")
@@ -112,7 +152,8 @@ def login(request, data: LoginSchema):
                 "user": {
                     "id": user.id,
                     "username": user.username,
-                    "phone": user.phone
+                    "phone": user.phone,
+                    "is_active": user.is_active
                 }
             }
         else:
@@ -133,7 +174,8 @@ def get_user_by_telegram_id(request,telegram_id:int):
             username=user.username,
             email=user.email,
             phone=user.phone,
-            telegram_id=user.telegram_id
+            telegram_id=user.telegram_id,
+            is_active=user.is_active
         )
     except Exception as e:
         print("error = ",e)

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'users',
     'wallet',
     'promotion',
+    'dashboard',
 ]
 
 

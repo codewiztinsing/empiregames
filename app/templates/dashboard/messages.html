@@ -17,19 +17,59 @@
         <h2 class="text-xl font-bold text-white mb-4">Broadcast Message</h2>
         <p class="text-gray-400 mb-4">Send a message to all users who have connected with the Telegram bot. Messages will be delivered through the Telegram bot.</p>
         
+        <form id="broadcastForm">
+            <div class="mb-4">
+                <label class="block text-gray-300 text-sm font-medium mb-2">Message Content</label>
+                <textarea 
+                    id="messageContent"
+                    name="message"
+                    class="w-full h-32 bg-dark-bg text-white p-4 rounded-lg border border-dark-border resize-none"
+                    placeholder="Enter your message here. You can use HTML formatting (b-bold, br-new line, etc.)"
+                    required
+                ></textarea>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" id="broadcastBtn" class="px-6 py-2 bg-purple-primary text-white rounded-lg hover:bg-purple-hover transition-colors">
+                    Broadcast Message
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Progress Section (hidden by default) -->
+    <div id="progressSection" class="bg-dark-card rounded-lg border border-dark-border p-6 mb-6" style="display: none;">
+        <h2 class="text-xl font-bold text-white mb-4">Broadcast Progress</h2>
+        
         <div class="mb-4">
-            <label class="block text-gray-300 text-sm font-medium mb-2">Message Content</label>
-            <textarea 
-                class="w-full h-32 bg-dark-bg text-white p-4 rounded-lg border border-dark-border resize-none"
-                placeholder="Enter your message here. You can use HTML formatting (b-bold, br-new line, etc.)"
-            ></textarea>
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-gray-300 text-sm">Progress</span>
+                <span id="progressText" class="text-white text-sm">0%</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-2">
+                <div id="progressBar" class="bg-purple-primary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
         </div>
-
-      
-
-        <div class="flex justify-end">
-            <button class="px-6 py-2 bg-purple-primary text-white rounded-lg hover:bg-purple-hover transition-colors" onclick="broadcastMessage()">
-                Broadcast Message
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div class="bg-dark-bg rounded-lg p-4">
+                <div class="text-gray-400 text-sm">Total Recipients</div>
+                <div id="totalRecipients" class="text-white text-xl font-bold">0</div>
+            </div>
+            <div class="bg-dark-bg rounded-lg p-4">
+                <div class="text-gray-400 text-sm">Sent</div>
+                <div id="sentCount" class="text-green-400 text-xl font-bold">0</div>
+            </div>
+            <div class="bg-dark-bg rounded-lg p-4">
+                <div class="text-gray-400 text-sm">Failed</div>
+                <div id="failedCount" class="text-red-400 text-xl font-bold">0</div>
+            </div>
+        </div>
+        
+        <div class="flex justify-between items-center">
+            <div id="statusText" class="text-gray-300 text-sm">Preparing to send...</div>
+            <button id="cancelBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors" style="display: none;">
+                Cancel
             </button>
         </div>
     </div>
@@ -52,157 +92,492 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-dark-border">
-                    <!-- Message Row 1 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4">
-                            <div class="text-white text-sm">Welcome to our new Bingo platform! Join now and get...</div>
-                            <div class="text-gray-400 text-xs mt-1">Broadcast Message</div>
-                        </td>
-                        <td class="py-3 px-4 text-white">1,247 users</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">Dec 15, 2024 2:30 PM</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Delivered
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View
-                                </button>
-                                <button class="text-blue-400 hover:text-blue-300 text-sm font-medium">
-                                    Resend
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Message Row 2 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4">
-                            <div class="text-white text-sm">System maintenance scheduled for tonight at 12:00 AM...</div>
-                            <div class="text-gray-400 text-xs mt-1">System Notification</div>
-                        </td>
-                        <td class="py-3 px-4 text-white">892 users</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">Dec 14, 2024 6:45 PM</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Delivered
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View
-                                </button>
-                                <button class="text-blue-400 hover:text-blue-300 text-sm font-medium">
-                                    Resend
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Message Row 3 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4">
-                            <div class="text-white text-sm">New game room available! Room ID: room_50 with 50 birr stake...</div>
-                            <div class="text-gray-400 text-xs mt-1">Game Announcement</div>
-                        </td>
-                        <td class="py-3 px-4 text-white">2,156 users</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">Dec 13, 2024 11:20 AM</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Pending
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View
-                                </button>
-                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
-                                    Cancel
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Message Row 4 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4">
-                            <div class="text-white text-sm">Congratulations to all winners of yesterday's games!</div>
-                            <div class="text-gray-400 text-xs mt-1">Winner Announcement</div>
-                        </td>
-                        <td class="py-3 px-4 text-white">3,421 users</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">Dec 12, 2024 9:15 AM</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                Failed
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View
-                                </button>
-                                <button class="text-blue-400 hover:text-blue-300 text-sm font-medium">
-                                    Retry
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                    {% if broadcasts %}
+                        {% for broadcast in broadcasts %}
+                        <tr class="hover:bg-dark-bg transition-colors">
+                            <td class="py-3 px-4">
+                                <div class="text-white text-sm">{{ broadcast.message|truncatechars:100 }}</div>
+                                <div class="text-gray-400 text-xs mt-1">Broadcast #{{ broadcast.id }}</div>
+                            </td>
+                            <td class="py-3 px-4 text-white">
+                                {{ broadcast.sent_count }}/{{ broadcast.total_recipients }} users
+                                {% if broadcast.failed_count > 0 %}
+                                    <div class="text-red-400 text-xs">{{ broadcast.failed_count }} failed</div>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-gray-300 text-sm">{{ broadcast.created_at|date:"M d, Y H:i" }}</td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if broadcast.status == 'completed' %}bg-green-100 text-green-800
+                                    {% elif broadcast.status == 'sending' %}bg-yellow-100 text-yellow-800
+                                    {% elif broadcast.status == 'pending' %}bg-blue-100 text-blue-800
+                                    {% elif broadcast.status == 'failed' %}bg-red-100 text-red-800
+                                    {% elif broadcast.status == 'cancelled' %}bg-gray-100 text-gray-800
+                                    {% endif %}">
+                                    {{ broadcast.status|title }}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="viewBroadcast({{ broadcast.id }})" class="text-purple-primary hover:text-purple-hover text-sm font-medium">
+                                        View
+                                    </button>
+                                    {% if broadcast.status == 'completed' %}
+                                        <button onclick="resendBroadcast({{ broadcast.id }})" class="text-blue-400 hover:text-blue-300 text-sm font-medium">
+                                            Resend
+                                        </button>
+                                    {% elif broadcast.status == 'sending' %}
+                                        <button onclick="cancelBroadcast({{ broadcast.id }})" class="text-red-400 hover:text-red-300 text-sm font-medium">
+                                            Cancel
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-400">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                    <p class="text-lg font-medium text-gray-400">No broadcast messages found</p>
+                                    <p class="text-sm text-gray-500 mt-1">Start by sending your first broadcast message</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
 
         <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
         <div class="flex items-center justify-between p-4 border-t border-dark-border">
             <div class="text-sm text-gray-400">
-                Showing 1 to 4 of 24 results
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
             </div>
             <div class="flex items-center space-x-2">
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    Previous
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                        Previous
+                    </a>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
+                            {{ num }}
+                        </span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                            {{ num }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- View Broadcast Modal -->
+<div id="viewModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-dark-card rounded-lg border border-dark-border w-full max-w-2xl">
+            <div class="flex justify-between items-center p-6 border-b border-dark-border">
+                <h3 class="text-lg font-semibold text-white">Broadcast Details</h3>
+                <button onclick="closeViewModal()" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
                 </button>
-                <button class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
-                    1
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    2
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    3
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    Next
-                </button>
+            </div>
+            
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Message Content</label>
+                        <div id="viewMessageContent" class="w-full bg-dark-bg text-white p-4 rounded-lg border border-dark-border min-h-32 whitespace-pre-wrap"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                            <span id="viewStatus" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Created By</label>
+                            <div id="viewCreatedBy" class="text-white"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Total Recipients</label>
+                            <div id="viewTotalRecipients" class="text-white"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Sent Successfully</label>
+                            <div id="viewSentCount" class="text-green-400"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Failed</label>
+                            <div id="viewFailedCount" class="text-red-400"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Progress</label>
+                            <div id="viewProgress" class="text-white"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Created At</label>
+                            <div id="viewCreatedAt" class="text-white"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Completed At</label>
+                            <div id="viewCompletedAt" class="text-white"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="viewErrorSection" class="hidden">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Error Message</label>
+                        <div id="viewErrorMessage" class="w-full bg-red-900 text-red-200 p-4 rounded-lg border border-red-700"></div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button onclick="closeViewModal()" 
+                            class="px-4 py-2 text-gray-300 bg-gray-600 hover:bg-gray-700 rounded-md text-sm">
+                        Close
+                    </button>
+                    <button id="resendFromViewBtn" onclick="resendFromView()" 
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm hidden">
+                        Resend
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-    function broadcastMessage() {
-        const message = document.getElementById("message").value;
-        const response = fetch(`/api/v1/promotion/broadcast/`, {
+let currentBroadcastId = null;
+let progressInterval = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const broadcastForm = document.getElementById('broadcastForm');
+    const progressSection = document.getElementById('progressSection');
+    const broadcastBtn = document.getElementById('broadcastBtn');
+    
+    // Handle form submission
+    broadcastForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        startBroadcast();
+    });
+});
+
+function startBroadcast() {
+    const message = document.getElementById('messageContent').value.trim();
+    
+    if (!message) {
+        alert('Please enter a message');
+        return;
+    }
+    
+    const broadcastBtn = document.getElementById('broadcastBtn');
+    const progressSection = document.getElementById('progressSection');
+    
+    // Disable form and show progress
+    broadcastBtn.disabled = true;
+    broadcastBtn.textContent = 'Starting...';
+    progressSection.style.display = 'block';
+    
+    // Scroll to progress section
+    progressSection.scrollIntoView({ behavior: 'smooth' });
+    
+    // Start broadcast
+    fetch('/dashboard/api/broadcast-message/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            message: message
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            currentBroadcastId = data.broadcast_id;
+            startProgressTracking();
+        } else {
+            alert('Error: ' + data.message);
+            resetForm();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while starting the broadcast');
+        resetForm();
+    });
+}
+
+function startProgressTracking() {
+    if (!currentBroadcastId) return;
+    
+    progressInterval = setInterval(function() {
+        fetch(`/dashboard/api/message-progress/${currentBroadcastId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateProgress(data.data);
+                    
+                    // Stop tracking if completed, failed, or cancelled
+                    if (['completed', 'failed', 'cancelled'].includes(data.data.status)) {
+                        clearInterval(progressInterval);
+                        progressInterval = null;
+                        resetForm();
+                        
+                        // Show completion message
+                        if (data.data.status === 'completed') {
+                            alert(`Broadcast completed! Sent to ${data.data.sent_count} users.`);
+                        } else if (data.data.status === 'failed') {
+                            alert(`Broadcast failed: ${data.data.error_message || 'Unknown error'}`);
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching progress:', error);
+            });
+    }, 1000); // Update every second
+}
+
+function updateProgress(data) {
+    // Update progress bar
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const totalRecipients = document.getElementById('totalRecipients');
+    const sentCount = document.getElementById('sentCount');
+    const failedCount = document.getElementById('failedCount');
+    const statusText = document.getElementById('statusText');
+    
+    progressBar.style.width = data.progress_percentage + '%';
+    progressText.textContent = data.progress_percentage + '%';
+    totalRecipients.textContent = data.total_recipients;
+    sentCount.textContent = data.sent_count;
+    failedCount.textContent = data.failed_count;
+    
+    // Update status text
+    switch(data.status) {
+        case 'pending':
+            statusText.textContent = 'Preparing to send...';
+            break;
+        case 'sending':
+            statusText.textContent = `Sending messages... (${data.sent_count + data.failed_count}/${data.total_recipients})`;
+            break;
+        case 'completed':
+            statusText.textContent = `Completed! Sent to ${data.sent_count} users`;
+            break;
+        case 'failed':
+            statusText.textContent = `Failed: ${data.error_message || 'Unknown error'}`;
+            break;
+        case 'cancelled':
+            statusText.textContent = 'Broadcast cancelled';
+            break;
+    }
+}
+
+function resetForm() {
+    const broadcastBtn = document.getElementById('broadcastBtn');
+    const progressSection = document.getElementById('progressSection');
+    
+    broadcastBtn.disabled = false;
+    broadcastBtn.textContent = 'Broadcast Message';
+    
+    // Hide progress section after a delay
+    setTimeout(() => {
+        progressSection.style.display = 'none';
+        // Reset progress values
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('progressText').textContent = '0%';
+        document.getElementById('totalRecipients').textContent = '0';
+        document.getElementById('sentCount').textContent = '0';
+        document.getElementById('failedCount').textContent = '0';
+        document.getElementById('statusText').textContent = 'Preparing to send...';
+    }, 3000);
+}
+
+let currentViewBroadcastId = null;
+
+function viewBroadcast(broadcastId) {
+    currentViewBroadcastId = broadcastId;
+    
+    // Fetch broadcast details
+    fetch(`/dashboard/api/broadcast-details/${broadcastId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                populateViewModal(data.data);
+                document.getElementById('viewModal').classList.remove('hidden');
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while fetching broadcast details');
+        });
+}
+
+function populateViewModal(data) {
+    // Populate message content
+    document.getElementById('viewMessageContent').textContent = data.message;
+    
+    // Populate status with color coding
+    const statusElement = document.getElementById('viewStatus');
+    statusElement.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+    statusElement.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
+    
+    // Add appropriate color classes based on status
+    if (data.status === 'completed') {
+        statusElement.classList.add('bg-green-100', 'text-green-800');
+    } else if (data.status === 'sending') {
+        statusElement.classList.add('bg-yellow-100', 'text-yellow-800');
+    } else if (data.status === 'pending') {
+        statusElement.classList.add('bg-blue-100', 'text-blue-800');
+    } else if (data.status === 'failed') {
+        statusElement.classList.add('bg-red-100', 'text-red-800');
+    } else if (data.status === 'cancelled') {
+        statusElement.classList.add('bg-gray-100', 'text-gray-800');
+    }
+    
+    // Populate other fields
+    document.getElementById('viewCreatedBy').textContent = data.created_by;
+    document.getElementById('viewTotalRecipients').textContent = data.total_recipients;
+    document.getElementById('viewSentCount').textContent = data.sent_count;
+    document.getElementById('viewFailedCount').textContent = data.failed_count;
+    document.getElementById('viewProgress').textContent = data.progress_percentage + '%';
+    document.getElementById('viewCreatedAt').textContent = new Date(data.created_at).toLocaleString();
+    document.getElementById('viewCompletedAt').textContent = data.completed_at ? new Date(data.completed_at).toLocaleString() : 'N/A';
+    
+    // Show/hide error section
+    const errorSection = document.getElementById('viewErrorSection');
+    const errorMessage = document.getElementById('viewErrorMessage');
+    if (data.error_message) {
+        errorMessage.textContent = data.error_message;
+        errorSection.classList.remove('hidden');
+    } else {
+        errorSection.classList.add('hidden');
+    }
+    
+    // Show/hide resend button
+    const resendBtn = document.getElementById('resendFromViewBtn');
+    if (data.status === 'completed') {
+        resendBtn.classList.remove('hidden');
+    } else {
+        resendBtn.classList.add('hidden');
+    }
+}
+
+function closeViewModal() {
+    document.getElementById('viewModal').classList.add('hidden');
+    currentViewBroadcastId = null;
+}
+
+function resendBroadcast(broadcastId) {
+    if (confirm('Are you sure you want to resend this broadcast?')) {
+        fetch(`/dashboard/api/resend-broadcast/${broadcastId}/`, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': '{{ csrf_token }}',
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                message: message
-            }),
         })
         .then(response => response.json())
         .then(data => {
-            console.log(data);
+            if (data.success) {
+                alert('Broadcast resend started successfully!');
+                // Start tracking the new broadcast
+                currentBroadcastId = data.broadcast_id;
+                startProgressTracking();
+                // Refresh the page to show the new broadcast
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } else {
+                alert('Error: ' + data.message);
+            }
         })
         .catch(error => {
             console.error('Error:', error);
+            alert('An error occurred while resending the broadcast');
         });
     }
+}
+
+function resendFromView() {
+    if (currentViewBroadcastId) {
+        closeViewModal();
+        resendBroadcast(currentViewBroadcastId);
+    }
+}
+
+function cancelBroadcast(broadcastId) {
+    if (confirm('Are you sure you want to cancel this broadcast?')) {
+        fetch(`/dashboard/api/cancel-broadcast/${broadcastId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Broadcast cancelled successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while cancelling the broadcast');
+        });
+    }
+}
+
+// Clean up interval when page is unloaded
+window.addEventListener('beforeunload', function() {
+    if (progressInterval) {
+        clearInterval(progressInterval);
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeViewModal();
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('viewModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeViewModal();
+    }
+});
 </script>
 {% endblock %}
