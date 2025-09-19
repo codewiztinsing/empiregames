@@ -66,7 +66,6 @@ click-plugins==1.1.1.2
 click-repl==0.3.0
 contextlib2==21.6.0
 cryptography==45.0.5
-Django==5.2.4
 django-cors-headers==4.7.0
 django-ninja==1.4.3
 django-ninja-extra==0.30.1
