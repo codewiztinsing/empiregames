@@ -19,7 +19,7 @@ const server = http.createServer(app);
 const getConstant = async () => {
   return {
     gameSpeed: 5000,
-    countDown: 30
+    countDown: 6
   }
 }
 
@@ -121,7 +121,7 @@ function getWaitingGames(activeGames,status="in-progress") {
 
 function startCountDown(game) {
  
-  if (game.isCountStart || !game.players || game.players.size < 2) return;
+  if (game.isCountStart || !game.players || game.players.size < 1) return;
   clearGameIntervals(game.id);
   game.countDown = game.countDown;
   game.isCountStart = true;
@@ -148,7 +148,7 @@ function startCountDown(game) {
       clearInterval(countdownInterval);
       game.isCountStart = false;
       game.status = "waiting";
-      game.countDown = game.countDown;
+      game.countDown = 30; // Reset countdown for next game
       game.currentCall = null;
       game.calledNumbers = [];
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== null);
@@ -187,16 +187,18 @@ async function startGame(game) {
 
   const gameInterval = setInterval(() => {
     const calledSet = new Set(game.calledNumbers.map(b => b.number));
+    console.log("calledSet = ",calledSet)
     let ball = generateBalls();
     while (calledSet.has(ball.number)) {
       ball = generateBalls();
     }
+    console.log("ball = ",ball)
     game.currentCall = ball;
     game.calledNumbers.push(ball);
     game.selectedNumbers = [];
     io.emit("pickedNumbers",game.selectedNumbers)
   
-    io.to(game.roomId).emit("gameState", {
+    io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers,
@@ -228,6 +230,8 @@ async function startGame(game) {
     })
    
   }, game.gameSpeed);
+
+
 
 
 
@@ -351,7 +355,7 @@ io.on('connection', (socket) => {
       players: playersList
     });
 
-    if (!game.isCountStart && game.players && game.players.size >= 2) {
+    if (!game.isCountStart && game.players && game.players.size >= 1) {
       startCountDown(game);
     }
 
@@ -370,20 +374,21 @@ io.on('connection', (socket) => {
   
 
   socket.on("bingo", async (data) => {
+    console.log("bingo",data)
+    
     const game = activeGames.get(data.gameId);
     if (!game || game.status !== 'in-progress') return;
-
-
     const playerCards = game.players.get(data.playerId);
+    console.log("playerCards",playerCards)
     if (!playerCards || !Array.isArray(playerCards)) return;
     const board = data.board
     const boardNumber = data.boardNumber
-    console.log("boardNumber ",boardNumber)
     const markedSingleCard = markPlayerCard(board, game.calledNumbers)
+    console.log("markedSingleCard",markedSingleCard)
     const isSingleBingo = checkSingleCardBingo(markedSingleCard)
+    console.log("isSingleBingo",isSingleBingo)
     if(isSingleBingo){
-
-      io.to(game.roomId).emit("winBingo", {
+      io.emit("winBingo", {
             isBingo: true,
             playerId: data.playerId,
             markedCells: markedSingleCard,
@@ -400,7 +405,7 @@ io.on('connection', (socket) => {
             roomId: data.roomId
       })
 
-      io.emit("bingoWinner", {
+    io.emit("bingoWinner", {
         isBingo: true,
         playerId: data.playerId,
         markedCells: markedSingleCard,
@@ -415,7 +420,6 @@ io.on('connection', (socket) => {
 
       try {
         const response = await gameWinWallet(data.playerId, game.roomId, game.total_winAmount);
-        console.log("response",response)
       } catch (error) {
         console.error("Error processing win wallet:", error);
       }
@@ -424,7 +428,7 @@ io.on('connection', (socket) => {
     }
 
     else{
-      io.to(game.roomId).emit("falseBingo", {
+      io.emit("falseBingo", {
         isBingo: false,
         playerId: data.playerId,
         losser_board: boardNumber,
@@ -456,7 +460,7 @@ io.on('connection', (socket) => {
 
 
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
-    io.to(game.roomId).emit("gameState", {
+    io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers,
@@ -481,7 +485,6 @@ io.on('connection', (socket) => {
   socket.on("disconnect", () => {
    
     const user = users.get(socket.id);
-    console.log("user",user)
     if (user) {
       const game = activeGames.get(user.gameId);
       const playerId = user.playerId
@@ -495,7 +498,6 @@ io.on('connection', (socket) => {
      
  
       if (game?.players.has(user.playerId)) {
-        console.log("game.status",game.status)
         if(game.status === "waiting") {
           game.players.delete(user.playerId);
           let selectedNumber = null;
@@ -514,7 +516,7 @@ io.on('connection', (socket) => {
           }
     
     
-          io.to(game.roomId).emit("gameState", {
+          io.emit("gameState", {
             message: `User ${user.playerId} disconnected`,
             gameId: game.id,
             roomId: game.roomId,

@@ -60,27 +60,7 @@ const Selections = () => {
     setPlayerId(queryParams.get('playerId'));
     setRoomId(queryParams.get('betAmount'));
     setPlayerName(queryParams.get('playerName'));
-
-
     socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
-
-    const fetchBalance = async () => {
-      const apiUrl = process.env.REACT_APP_API_URL;
-      try {
-        const headers = {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json'
-        };
-        const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
-        setBalance(response.data.balance);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching balance:', error);
-      }
-    };
-
-    fetchBalance();
-
     socket.on('gameState', handleGameState);
     socket.on('pickedNumbers', handlePickedNumbers);
     socket.on("gameStatus", handleGameStatus)
@@ -99,20 +79,44 @@ const Selections = () => {
     };
   }, [socket, gameId, gameStatus, choosenNumbers]);
 
+  // Fetch balance when playerId is available
+  useEffect(() => {
+    if (playerId) {
+      const fetchBalance = async () => {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        try {
+          const headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json'
+          };
+          
+          const response = await axios.get(`${apiUrl}wallet/player/${playerId}`);
+          setBalance(response.data.balance);
+          setLoading(false);
+        } catch (error) {
+          console.error('Error fetching balance:', error);
+          setLoading(false);
+        }
+      };
+      
+      fetchBalance();
+    }
+  }, [playerId]);
+
   // Countdown redirect logic - only navigate when countdown reaches exactly 00
   useEffect(() => {
-    // Only navigate if countdown is exactly 0, user has selected a number, and game is waiting
-    if (countDown === 0 && selectedNumber && gameStatus === "waiting") {
+    // Navigate when countdown reaches 0 and user has selected a number
+    if (countDown === 0 && selectedNumber) {
       console.log("countDown",countDown)
       console.log("selectedNumber",selectedNumber)
       console.log("gameStatus",gameStatus)
       // Navigate to play section when countdown reaches 00
       setToast("Game starting! Redirecting to play section...");
       setIsToast(true);
-      navigate('/play');
+      navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
     }
     // If countdown is not 0, stay on selection page (no navigation)
-  }, [countDown, selectedNumber, gameStatus]);
+  }, [countDown, selectedNumber]);
 
 
   const handlePlaySound = async (calledNumber) => {

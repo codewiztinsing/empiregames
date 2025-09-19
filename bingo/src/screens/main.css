@@ -754,6 +754,8 @@ body {
   position: relative;
   cursor: pointer;
   touch-action: manipulation;
+  pointer-events: auto;
+  user-select: none;
 }
 
 .board-cell:hover {

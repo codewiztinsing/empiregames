@@ -11,17 +11,22 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 const PlayingBoard = () => {
   const {
     selectedNumber,
+    setSelectedNumber,
     selectBoard,
+    setSelectBoard,
     playersLength,
     countDown,
     setCountDown,
     roomId,
+    setRoomId,
     playerId,
+    setPlayerId,
     gameId,
     setGameId,
     setToast,
     setIsToast,
     playerName,
+    setPlayerName,
   } = useContext(BingoContext);
 
   const [calledNumbers, setCalledNumbers] = useState([]);
@@ -29,12 +34,55 @@ const PlayingBoard = () => {
   const [totalCalledNumbers, setTotalCalledNumbers] = useState(0);
   const [selectedCell, setSelectedCell] = useState(new Set());
   const [isBingo, setIsBingo] = useState(false);
-  const [winningCard, setWinningCard] = useState([]);
-  const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
-  const [winner, setWinner] = useState('');
-  const [winnerCardNumber, setWinnerCardNumber] = useState(0);
-  const [winnerPlayerName, setWinnerPlayerName] = useState('');
+  const [winningCard, setWinningCard] = useState(null);
+  const [winner, setWinner] = useState(null);
+  const [winnerCardNumber, setWinnerCardNumber] = useState(null);
+  const [winnerPlayerName, setWinnerPlayerName] = useState(null);
+  const [markedCells, setMarkedCells] = useState([]);
   const [firstBoardLost, setFirstBoardLost] = useState(false);
+  const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
+
+  // Generate Bingo board function
+  const generateCombination = () => {
+    const numbers = [];
+    for (let i = 0; i < 5; i++) {
+      const column = [];
+      for (let j = 0; j < 5; j++) {
+        if (i === 2 && j === 2) {
+          column.push('FREE');
+        } else {
+          let num;
+          do {
+            num = Math.floor(Math.random() * 15) + (i * 15) + 1;
+          } while (column.includes(num));
+          column.push(num);
+        }
+      }
+      numbers.push(column);
+    }
+    return numbers;
+  };
+
+  // Read URL parameters on component mount
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const urlPlayerId = queryParams.get('playerId');
+    const urlRoomId = queryParams.get('betAmount');
+    const urlPlayerName = queryParams.get('playerName');
+    const urlSelectedNumber = queryParams.get('selectedNumber');
+    
+    if (urlPlayerId) setPlayerId(urlPlayerId);
+    if (urlRoomId) setRoomId(parseInt(urlRoomId));
+    if (urlPlayerName && urlPlayerName !== 'null') setPlayerName(urlPlayerName);
+    if (urlSelectedNumber) {
+      const selectedNum = parseInt(urlSelectedNumber);
+      setSelectedNumber(selectedNum);
+      // Generate selectBoard for the selected number
+      setSelectBoard(generateCombination());
+    }
+    
+    console.log('PlayingBoard - URL params:', { urlPlayerId, urlRoomId, urlPlayerName, urlSelectedNumber });
+  }, []);
 
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -60,10 +108,23 @@ const PlayingBoard = () => {
       setGameId(data.gameId);
     };
 
-    const handleFalseBingo = (data) => {
-      const loserBoard = data.losser_board;
-      if (loserBoard === selectedNumber) setFirstBoardLost(true);
-    };
+  const handleFalseBingo = (data) => {
+    const loserBoard = data.losser_board;
+    if (loserBoard === selectedNumber) setFirstBoardLost(true);
+  };
+
+  const handleBingoWinner = (data) => {
+    console.log('Bingo winner received:', data);
+    if (data.isBingo) {
+      setIsBingo(true);
+      setWinningCard(data.winningCard);
+      setWinner(data.winner);
+      setWinnerCardNumber(data.winnerCardNumber);
+      setWinnerPlayerName(data.winnerPlayerName);
+      setMarkedCells(data.markedCells);
+      toast.success(`${data.winnerPlayerName} won with Bingo!`);
+    }
+  };
 
     const handleGameOver = (data) => {
       if (data.roomId === roomId) {
@@ -144,6 +205,7 @@ const PlayingBoard = () => {
     socket.on('gameOver', handleGameOver);
     socket.on('winBingo', handleWinBingo);
     socket.on('falseBingo', handleFalseBingo);
+    socket.on('bingoWinner', handleBingoWinner);
     socket.on('joinError', handleJoinError);
     socket.on('playerLeft', handlePlayerLeft);
 
@@ -172,10 +234,27 @@ const PlayingBoard = () => {
   }, [lastBall]);
 
   const handleBingo = (board, boardNumber) => {
+    console.log('Bingo button clicked!', {
+      totalCalledNumbers,
+      gameId,
+      roomId,
+      playerId,
+      markedCells: Array.from(selectedCell),
+      playerName,
+      board,
+      boardNumber
+    });
+    
     if (totalCalledNumbers === 0) {
       toast.error('Game is not started yet');
       return;
     }
+    
+    if (selectedCell.size === 0) {
+      toast.error('Please select some numbers first!');
+      return;
+    }
+    
     socket.emit('bingo', {
       gameId,
       roomId,
@@ -185,6 +264,8 @@ const PlayingBoard = () => {
       board,
       boardNumber,
     });
+    
+    toast('Checking Bingo...', { icon: '🔍' });
   };
 
 
@@ -214,9 +295,14 @@ const PlayingBoard = () => {
   const handleCellClick = (cell) => {
     setSelectedCell((prev) => {
       const updated = new Set(prev);
-      if (updated.has(cell)) updated.delete(cell);
-      else updated.add(cell);
-      return new Set(updated);
+      if (updated.has(cell)) {
+        updated.delete(cell);
+        console.log('Removed cell:', cell, 'Selected cells:', Array.from(updated));
+      } else {
+        updated.add(cell);
+        console.log('Added cell:', cell, 'Selected cells:', Array.from(updated));
+      }
+      return updated;
     });
   };
 
@@ -334,7 +420,7 @@ const PlayingBoard = () => {
       <div className="stats-bar">
         <div className="stat-item">
           <span>ደራሽ</span>
-          <span>{roomId * playersLength * 0.8}</span>
+          <span>{isNaN(roomId * playersLength * 0.8) ? 0 : (roomId * playersLength * 0.8)}</span>
         </div>
         <div className="stat-item">
           <span>ብዛት</span>
@@ -541,13 +627,16 @@ const PlayingBoard = () => {
                       {selectBoard.map((row, rowIndex) => (
                         <div key={rowIndex}
                           className={`board-cell`}
-
                           // if cell is * it should always be green, selected cells should be yellow
-                          style={{ backgroundColor: row[colIndex] === '*' ? '#75cbfb' : selectedCell.has(row[colIndex]) ? '#FFD700' : '#ffffff',zIndex:1000 }}
+                          style={{ 
+                            background: row[colIndex] === '*' ? '#75cbfb' : selectedCell.has(row[colIndex]) ? 'orange' : '#ffffff',
+                            border: selectedCell.has(row[colIndex]) ? '2px solid #ff6600' : '1px solid #34495e'
+                          }}
                           id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             handleCellClick(row[colIndex]);
-
                           }}
                         >
                           {row[colIndex]}
