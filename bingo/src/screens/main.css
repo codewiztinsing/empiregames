@@ -19,7 +19,7 @@ body {
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #1a237e 100%);
+  background-color: #16223a;
 }
 
 .middle-container {
@@ -319,7 +319,7 @@ body {
   /* padding: 0 4px; */
 }
 .called-numbers {
-  background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #1a237e 100%);
+  background-color: #16223a;
   padding: 8px;
   margin: 0;
   border-radius: 8px;
@@ -600,23 +600,7 @@ body {
 }
 
 .bingo-board {
-  padding: 6px;
-  border-radius: 6px;
-  border: 2px solid #2c3e50;
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  background: linear-gradient(145deg, #ffffff, #f8f9fa);
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.15),
-    0 1px 4px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  position: relative;
-  overflow: visible;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  height: fit-content;
+
 }
 
 .bingo-board::before {
