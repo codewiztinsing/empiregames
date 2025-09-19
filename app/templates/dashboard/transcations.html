@@ -12,36 +12,39 @@
 
     <!-- Filters Section -->
     <div class="bg-dark-card rounded-lg border border-dark-border p-4 mb-6">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center space-x-2">
-                    <label class="text-sm text-gray-400">Transaction Type:</label>
-                    <select class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
-                        <option>All Types</option>
-                        <option>Deposit</option>
-                        <option>Withdrawal</option>
-                        <option>Game Win</option>
-                        <option>Game Loss</option>
-                    </select>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <label class="text-sm text-gray-400">Time Period:</label>
-                    <select class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2">
-                        <option>Last 30 days</option>
-                        <option>Last 7 days</option>
-                        <option>Today</option>
-                        <option>This month</option>
-                        <option>Custom range</option>
-                    </select>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <input type="text" placeholder="Enter user ID" class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2 w-40">
-                    <button class="px-4 py-2 bg-purple-primary hover:bg-purple-hover text-white text-sm font-medium rounded">
-                        Search
-                    </button>
+        <form method="GET" id="filterForm">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm text-gray-400">Transaction Type:</label>
+                        <select name="type" class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2" onchange="this.form.submit()">
+                            <option value="">All Types</option>
+                            <option value="DEPOSIT" {% if current_type == 'DEPOSIT' %}selected{% endif %}>Deposit</option>
+                            <option value="WITHDRAW" {% if current_type == 'WITHDRAW' %}selected{% endif %}>Withdrawal</option>
+                            <option value="WIN" {% if current_type == 'WIN' %}selected{% endif %}>Game Win</option>
+                            <option value="BET" {% if current_type == 'BET' %}selected{% endif %}>Game Bet</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm text-gray-400">Limit:</label>
+                        <select name="limit" class="bg-dark-bg border border-dark-border text-white text-sm rounded px-3 py-2" onchange="this.form.submit()">
+                            <option value="10" {% if request.GET.limit == '10' %}selected{% endif %}>10</option>
+                            <option value="20" {% if request.GET.limit == '20' %}selected{% endif %}>20</option>
+                            <option value="50" {% if request.GET.limit == '50' %}selected{% endif %}>50</option>
+                            <option value="100" {% if request.GET.limit == '100' %}selected{% endif %}>100</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button type="button" onclick="refreshData()" class="px-4 py-2 bg-purple-primary hover:bg-purple-hover text-white text-sm font-medium rounded">
+                            Refresh
+                        </button>
+                        <button type="button" onclick="clearFilters()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded">
+                            Clear
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </form>
     </div>
 
     <!-- Summary Cards -->
@@ -49,21 +52,26 @@
         <div class="bg-green-600 rounded-lg p-4">
             <div class="text-white">
                 <div class="text-sm opacity-90">Total In</div>
-                <div class="text-2xl font-bold">ETB 1,600</div>
+                <div class="text-2xl font-bold">ETB {{ total_deposits_amount|floatformat:2 }}</div>
             </div>
         </div>
         <div class="bg-red-600 rounded-lg p-4">
             <div class="text-white">
                 <div class="text-sm opacity-90">Total Out</div>
-                <div class="text-2xl font-bold">ETB 190</div>
+                <div class="text-2xl font-bold">ETB {{ total_withdrawals_amount|floatformat:2 }}</div>
             </div>
         </div>
         <div class="bg-blue-600 rounded-lg p-4">
             <div class="text-white">
                 <div class="text-sm opacity-90">Net</div>
-                <div class="text-2xl font-bold">ETB 1,410</div>
+                <div class="text-2xl font-bold">ETB {{ net_amount|floatformat:2 }}</div>
             </div>
         </div>
+    </div>
+    
+    <!-- Data Source Indicator -->
+    <div class="mb-4">
+        <span class="text-blue-400 text-sm">Data source: {{ data_source|default:"Database" }}</span>
     </div>
 
     <!-- Transactions Table -->
@@ -92,26 +100,68 @@
                 {% for transaction in transactions %}
                     <tr class="hover:bg-dark-bg transition-colors">
                         <td class="py-3 px-4 text-white font-mono text-sm">{{ transaction.id }}</td>
-                        <td class="py-3 px-4 text-white">{{ transaction.user.username }}</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                {{ transaction.type }}
-                            </span>
+                        <td class="py-3 px-4 text-white">
+                            {% if transaction.user.username %}
+                                {{ transaction.user.username }}
+                            {% elif transaction.user.phone %}
+                                {{ transaction.user.phone }}
+                            {% else %}
+                                User #{{ transaction.user.id }}
+                            {% endif %}
                         </td>
-                        <td class="py-3 px-4 text-green-400 font-semibold">ETB {{ transaction.amount }}</td>
                         <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                {{ transaction.status }}
-                            </span>
+                            {% if transaction.type == 'DEPOSIT' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    {{ transaction.type }}
+                                </span>
+                            {% elif transaction.type == 'WITHDRAW' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    {{ transaction.type }}
+                                </span>
+                            {% elif transaction.type == 'WIN' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {{ transaction.type }}
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    {{ transaction.type }}
+                                </span>
+                            {% endif %}
                         </td>
-                        <td class="py-3 px-4 text-white">{{ transaction.reference }}</td>
-                        <td class="py-3 px-4 text-gray-300 text-sm">{{ transaction.created_at }}</td>
+                        <td class="py-3 px-4 text-green-400 font-semibold">ETB {{ transaction.amount|floatformat:2 }}</td>
+                        <td class="py-3 px-4">
+                            {% if transaction.status == 'success' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    {{ transaction.status }}
+                                </span>
+                            {% elif transaction.status == 'pending' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    {{ transaction.status }}
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    {{ transaction.status }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-white">{{ transaction.reference|default:"N/A" }}</td>
+                        <td class="py-3 px-4 text-gray-300 text-sm">
+                            {% if transaction.created_at %}
+                                {{ transaction.created_at|date:"M d, Y H:i" }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
                         <td class="py-3 px-4">
                             <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                <a href="{% url 'wallet:transaction_details' transaction.id %}">
-                                    Details
-                                </a>
+                                Details
                             </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="py-8 px-4 text-center text-gray-400">
+                            No transactions found
                         </td>
                     </tr>
                     {% endfor %}
@@ -145,4 +195,24 @@
         </div>
     </div>
 </div>
+
+<script>
+function refreshData() {
+    // Reload the page to refresh data
+    window.location.reload();
+}
+
+function clearFilters() {
+    // Clear all filters and reload
+    window.location.href = window.location.pathname;
+}
+
+// Auto-refresh every 30 seconds
+setInterval(function() {
+    // Only auto-refresh if no filters are applied
+    if (!document.querySelector('select[name="type"]').value && !document.querySelector('select[name="limit"]').value) {
+        refreshData();
+    }
+}, 30000);
+</script>
 {% endblock %}

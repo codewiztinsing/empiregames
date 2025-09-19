@@ -91,7 +91,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     ]
     
     reply_markup = InlineKeyboardMarkup(keyboard)
-    # https://t.me/bilanbingobot?start=1464395537
+    # https://t.me/akerbingobot?start=1464395537
     # Extract referral info from deep link if present
     referrer_id = None
     if context.args and len(context.args) > 0:
@@ -103,19 +103,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             context.user_data['referrer_id'] = referrer_id
         except ValueError:
             logger.warning(f"Invalid referrer ID format: {context.args[0]}")
-    await update.message.reply_text('Welcome to Bilen Bingo! Select an option:', reply_markup=reply_markup)
+    await update.message.reply_text('Welcome to Aker Bingo! Select an option:', reply_markup=reply_markup)
     context.job_queue.run_once(conversation_timeout, CONVERSATION_TIMEOUT, chat_id=update.effective_chat.id)
     return SOME_STATE
 
 
 # Function to create the play options keyboardF
-def play_options_keyboard() -> InlineKeyboardMarkup:
+def play_options_keyboard(update: Update) -> InlineKeyboardMarkup:
     game_types_response = get_game_type()
     game_types = game_types_response.get('game_types', []) if game_types_response else []
     logger.info(f"game_types = {game_types}")
     keyboard = []
     for game_type in game_types:
-        keyboard.append([InlineKeyboardButton(f"🎮 Play {game_type['bet_amount']}", callback_data=f'{game_type["bet_amount"]}')])
+        keyboard.append([InlineKeyboardButton(f"🎮 Play {game_type['bet_amount']}", web_app=WebAppInfo(url=f"https://akerbingo.com/?playerId={update.effective_user.id}&betAmount={game_type['bet_amount']}&playerName={update.effective_user.username}"))])
     keyboard.append([InlineKeyboardButton("🔙 Back to Menu", callback_data='back')])
     return InlineKeyboardMarkup(keyboard)
 
@@ -254,31 +254,36 @@ async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYP
         banks_to_bank_id = context.user_data['banks_to_bank_id']
         bank_id = banks_to_bank_id.get(f"{bank_id}".title())
         transfer_funds(f"{update.effective_user.first_name} {update.effective_user.last_name}", account_number, withdraw_amount, "ETB", generate_tx_ref(), bank_id)
-        await update.message.reply_text("Please wait message from CBE/Telebirr. Your withdrawal will be processed within 30 minutes.")
+        await update.message.reply_text("Please wait message from CBE/Aker. Your withdrawal will be processed within 30 minutes.")
         return ConversationHandler.END
     except Exception as e:
         print(f"Error sending message to user: {e}")
 
 
 
-  
+async def get_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    username = update.effective_user.username
+    BACK_URL = get_bot_seetings().get("bot_url")
+    res = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
+    balance = res.json().get('balance', 0)
+    return balance
 
 
 async def play_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    reply_markup = play_options_keyboard() 
-    user_id = update.effective_user.id
-    username = update.effective_user.username
+    reply_markup = play_options_keyboard(update) 
+    balance = get_balance(update, context)
     try:
         BACK_URL = get_bot_seetings().get("bot_url")
         logger.info(f"Back url {BACK_URL}")
-        res = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
+        res = requests.get(f'{BACK_URL}/api/v1/wallet/player/{update.effective_user.id}')
         logger.info(f"Res {res}")
         if res.status_code == 200:
             balance = res.json().get('balance', 0)
-            logger.info(f"User {username} balance: {balance}")
+            logger.info(f"User {update.effective_user.username} balance: {balance}")
         else:
             balance = 0
-            logger.error(f"Failed to get balance for user {username}")
+            logger.error(f"Failed to get balance for user {update.effective_user.username}")
     except Exception as e:
         print(f"Error getting wallet balance: {e}")
   
@@ -415,7 +420,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if query.data == 'play' :
             await query.edit_message_text(
                 text="Choose a play option:",
-                reply_markup=play_options_keyboard()
+                reply_markup=play_options_keyboard(update)
             )
 
         elif query.data == 'contact_support':
@@ -437,7 +442,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             balance = response.json().get('balance',0)
             # Create payment summary with user details
             payment_summary = (
-                    "🏦 BILEN BINGO STATEMENT\n" +
+                    "🏦 Aker BINGO STATEMENT\n" +
                     f"💰  {balance} Birr\n" +
                     f"👥  {first_name} \n" +
                     f"📄 Transaction ID: {telegram_id}\n" +
@@ -453,15 +458,15 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             _resp_u = requests.get(f'{BACK_URL}/users/{user_id}/')
             wallet_amount = (_resp_u.json().get('balance',0)) if _resp_u.headers.get('content-type','').startswith('application/json') else 0
             web_app_url = (
-                f"https://wowliyubingo.com/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={wallet_amount}"
+                f"https://akerbingo.com/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={wallet_amount}"
             )
 
             keyboard = [
-                [InlineKeyboardButton("Open Bilen Bingo!", web_app=WebAppInfo(url=web_app_url))]
+                [InlineKeyboardButton("Open Aker Bingo!", web_app=WebAppInfo(url=web_app_url))]
                 # [InlineKeyboardButton("Open Wow Bingo!", url=web_app_url)]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.message.reply_text("Start playing Bilen bingo", reply_markup=reply_markup)
+            await query.message.reply_text("Start playing Aker bingo", reply_markup=reply_markup)
 
         elif query.data == 'deposit':
             await query.edit_message_text(
@@ -502,11 +507,11 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 "email": f"{query.from_user.username}@gmail.com",
                 "phone_number": phone_number,
                 "tx_ref":generate_tx_ref(),
-                "return_url":f"https://t.me/wowbingobotbotbot",
+                "return_url":f"https://t.me/akerbingobotbotbot",
                 "customization":{
-                    "title": "Bilen Bingo",
-                    "description": "Deposit to Bilen Bingo",
-                    "logo": "https://wowliyubingo.com/static/media/logo.png"
+                    "title": "Aker Bingo",
+                    "description": "Deposit to Aker Bingo",
+                    "logo": "https://akerbingo.com/static/media/logo.png"
                 },
                 # "callback_url": "https://webhook.site/6bca0770-2235-4096-b8f6-41b861ec40e9"
                 "callback_url": f"{BACK_URL}/api/v1/wallet/webhook/chapa/callback/"
@@ -556,10 +561,10 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             phone_number, 
             tax_ref, 
             f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/",
-             "https://wowliyubingo.com/success", {
-                "title": "Bilen Bingo",
-                "description": "Deposit to Bilen Bingo",
-                "logo": "https://wowliyubingo.com/static/media/logo.png"
+             "https://akerbingo.com/success", {
+                "title": "Aker Bingo",
+                "description": "Deposit to Aker Bingo",
+                "logo": "https://akerbingo.com/static/media/logo.png"
             })
             if addis_session.get("status") == "success":
                 data = addis_session.get("data")
@@ -683,7 +688,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
               
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text("Welcome to Bilen Bingo! Please select an option:", reply_markup=reply_markup)
+            await query.edit_message_text("Welcome to Aker Bingo! Please select an option:", reply_markup=reply_markup)
             
             
  
@@ -696,7 +701,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                  InlineKeyboardButton("Register", callback_data='register_menu')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text("Welcome to Bilen Bingo! Please select an option:", reply_markup=reply_markup)
+            await query.edit_message_text("Welcome to Aker Bingo! Please select an option:", reply_markup=reply_markup)
     except Exception as e:
         logger.error(f"Error handling query: {query.data} - {e}")
         await query.edit_message_text(text="An error occurred. Please try again.")
@@ -796,17 +801,17 @@ async def get_transcation_details(update: Update, context: ContextTypes.DEFAULT_
 all_public_commands_descriptions = [
     BotCommand(
         "start", 
-        "start the bot"
+        "start"
     ),
 
     BotCommand(
         "play", 
-        "start playing"
+        "start"
         ),
 
     BotCommand(
         "instructions", 
-        "instructions to play game"
+        "instructions"
         ),
 
       BotCommand(
@@ -816,11 +821,11 @@ all_public_commands_descriptions = [
 
     BotCommand(
         "withdraw", 
-        "withdraw funds"
+        "withdraw"
         ),
     BotCommand(
         "invite", 
-        "Invite your friends"
+        "Invite"
         )
     ]
 
@@ -851,7 +856,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     invite_link = f"https://t.me/bilenbingobot?start={user_id}"
     
     message = (
-        f"🎮 Invite your friends to Bilen Bingo!\n\n"
+        f"🎮 Invite your friends to Aker Bingo!\n\n"
         f"Share this link with your friends:\n{invite_link}\n\n"
         f"Your current balance: {balance} ETB\n\n"
         f"Invite friends and enjoy playing together! 🎲"

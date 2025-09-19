@@ -14,47 +14,51 @@
 
     <!-- Filters Section -->
     <div class="p-6 bg-dark-card border-b border-dark-border">
-        <h2 class="text-lg font-semibold text-white mb-4">Filters</h2>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <!-- Date Range -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Date Range</label>
-                <select class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-primary">
-                    <option>Last 30 days</option>
-                    <option>Last 7 days</option>
-                    <option>Today</option>
-                    <option>Custom Range</option>
-                </select>
+        <form method="GET" id="filterForm">
+            <h2 class="text-lg font-semibold text-white mb-4">Filters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                    <select name="status" class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-primary" onchange="this.form.submit()">
+                        <option value="">All Statuses</option>
+                        <option value="waiting" {% if current_status == 'waiting' %}selected{% endif %}>Waiting</option>
+                        <option value="in_progress" {% if current_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Completed</option>
+                    </select>
+                </div>
+                
+                <!-- Limit -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Limit</label>
+                    <select name="limit" class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-primary" onchange="this.form.submit()">
+                        <option value="10" {% if request.GET.limit == '10' %}selected{% endif %}>10</option>
+                        <option value="20" {% if request.GET.limit == '20' %}selected{% endif %}>20</option>
+                        <option value="50" {% if request.GET.limit == '50' %}selected{% endif %}>50</option>
+                        <option value="100" {% if request.GET.limit == '100' %}selected{% endif %}>100</option>
+                    </select>
+                </div>
+                
+                <!-- User ID -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">User ID</label>
+                    <input type="text" name="user_id" placeholder="Filter by User ID" value="{{ current_user_id }}" class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-primary">
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex items-end space-x-2">
+                    <button type="submit" class="px-4 py-2 bg-purple-primary hover:bg-purple-hover text-white text-sm font-medium rounded">
+                        Filter
+                    </button>
+                    <button type="button" onclick="clearFilters()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded">
+                        Clear
+                    </button>
+                    <button type="button" onclick="refreshData()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded">
+                        Refresh
+                    </button>
+                </div>
             </div>
-            
-            <!-- Status -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
-                <select class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-primary">
-                    <option>All Statuses</option>
-                    <option>Completed</option>
-                    <option>In Progress</option>
-                    <option>Cancelled</option>
-                </select>
-            </div>
-            
-            <!-- Game Type -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Game Type</label>
-                <select class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-primary">
-                    <option>All Game Types</option>
-                    <option>room_10</option>
-                    <option>room_20</option>
-                    <option>room_30</option>
-                </select>
-            </div>
-            
-            <!-- User ID -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">User ID</label>
-                <input type="text" placeholder="Filter by User ID" class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-primary">
-            </div>
-        </div>
+        </form>
     </div>
 
     <!-- Stats Cards -->
@@ -62,20 +66,25 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
                 <h3 class="text-gray-400 text-sm font-medium">Total Games</h3>
-                <p class="text-2xl font-bold text-white mt-1">1,234</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ total_games|default:"0" }}</p>
             </div>
             <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
                 <h3 class="text-gray-400 text-sm font-medium">Active Games</h3>
-                <p class="text-2xl font-bold text-white mt-1">56</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ active_games|default:"0" }}</p>
             </div>
             <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
                 <h3 class="text-gray-400 text-sm font-medium">Completed Today</h3>
-                <p class="text-2xl font-bold text-white mt-1">89</p>
+                <p class="text-2xl font-bold text-white mt-1">{{ completed_today|default:"0" }}</p>
             </div>
             <div class="bg-dark-card rounded-lg p-4 border border-dark-border">
                 <h3 class="text-gray-400 text-sm font-medium">Total Revenue</h3>
-                <p class="text-2xl font-bold text-white mt-1">ETB 12,450</p>
+                <p class="text-2xl font-bold text-white mt-1">ETB {{ total_revenue|floatformat:2|default:"0.00" }}</p>
             </div>
+        </div>
+        
+        <!-- Data Source Indicator -->
+        <div class="mb-4">
+            <span class="text-blue-400 text-sm">Data source: {{ data_source|default:"Database" }}</span>
         </div>
 
         <!-- Games Table -->
@@ -96,23 +105,72 @@
                     </thead>
                     <tbody class="divide-y divide-dark-border">
                         {% for game in games %}
-                        <!-- Game Row 1 -->
                         <tr class="hover:bg-dark-bg transition-colors">
                             <td class="py-3 px-4 text-white font-mono text-sm">{{ game.id }}</td>
-                            <td class="py-3 px-4 text-white">room_10</td>
-                            <td class="py-3 px-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    {{ game.status }}
-                                </span>
+                            <td class="py-3 px-4 text-white">
+                                {% if game.entry_fee %}
+                                    room_{{ game.entry_fee|floatformat:0 }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
                             </td>
-                            <td class="py-3 px-4 text-white">ETB {{ game.stake }}</td>
-                            <td class="py-3 px-4 text-white">5/5</td>
-                            <td class="py-3 px-4 text-white">{{ game.user.username }}</td>
-                            <td class="py-3 px-4 text-gray-300 text-sm">{{ game.created_at }}</td>
+                            <td class="py-3 px-4">
+                                {% if game.status == 'completed' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ game.status }}
+                                    </span>
+                                {% elif game.status == 'in_progress' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        {{ game.status }}
+                                    </span>
+                                {% elif game.status == 'waiting' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        {{ game.status }}
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ game.status }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-white">ETB {{ game.entry_fee|floatformat:2|default:"0.00" }}</td>
+                            <td class="py-3 px-4 text-white">
+                                {% if game.player_count %}
+                                    {{ game.player_count }}/5
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-white">
+                                {% if game.winner %}
+                                    {% if game.winner.username %}
+                                        {{ game.winner.username }}
+                                    {% elif game.winner.phone %}
+                                        {{ game.winner.phone }}
+                                    {% else %}
+                                        User #{{ game.winner.id }}
+                                    {% endif %}
+                                {% else %}
+                                    No winner
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-gray-300 text-sm">
+                                {% if game.created_at %}
+                                    {{ game.created_at|date:"M d, Y H:i" }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
                             <td class="py-3 px-4">
                                 <a class="text-purple-primary hover:text-purple-hover text-sm font-medium" href="{% url 'game:game_details' game.id %}">
                                     View Details
                                 </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="py-8 px-4 text-center text-gray-400">
+                                No games found
                             </td>
                         </tr>
                         {% endfor %}
@@ -146,4 +204,25 @@
         </div>
     </div>
 </div>
+
+<script>
+function refreshData() {
+    // Reload the page to refresh data
+    window.location.reload();
+}
+
+function clearFilters() {
+    // Clear all filters and reload
+    window.location.href = window.location.pathname;
+}
+
+// Auto-refresh every 30 seconds
+setInterval(function() {
+    // Only auto-refresh if no filters are applied
+    if (!document.querySelector('select[name="status"]').value && 
+        !document.querySelector('input[name="user_id"]').value) {
+        refreshData();
+    }
+}, 30000);
+</script>
 {% endblock %}

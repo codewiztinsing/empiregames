@@ -9,7 +9,8 @@
         <div>
             <h1 class="text-2xl font-bold text-white">Dashboard</h1>
             <p class="text-gray-400 text-sm">Showing data for: Last 30 days</p>
-            <p class="text-gray-500 text-xs">6/1/2023 to 6/1/2023</p>
+            <p class="text-gray-500 text-xs">{{ thirty_days_ago }} to {{ today }}</p>
+            <p class="text-blue-400 text-xs">Data source: {{ data_source|default:"Database" }}</p>
         </div>
         <div class="flex gap-3">
             <select class="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 text-sm">
@@ -24,7 +25,7 @@
     </div>
 
     <!-- Stats Cards Row -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <!-- New Users Card -->
         <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
             <div class="flex justify-between items-start mb-4">
@@ -32,7 +33,7 @@
                     <h3 class="text-gray-400 text-sm font-medium">New Users</h3>
                     <div class="text-3xl font-bold text-white mt-2">{{ new_users }}</div>
                     <div class="flex items-center mt-2">
-                        <span class="text-green-400 text-sm">+15% from last 30d</span>
+                        <span class="text-green-400 text-sm">+{{ user_growth }}% from last 30d</span>
                     </div>
                 </div>
                 <div class="bg-blue-500/20 p-3 rounded-lg">
@@ -50,7 +51,7 @@
                     <h3 class="text-gray-400 text-sm font-medium">Games Played</h3>
                     <div class="text-3xl font-bold text-white mt-2">{{ games_played }}</div>
                     <div class="flex items-center mt-2">
-                        <span class="text-green-400 text-sm">Total Games: 6</span>
+                        <span class="text-green-400 text-sm">Total Games: {{ total_games }}</span>
                     </div>
                 </div>
                 <div class="bg-green-500/20 p-3 rounded-lg">
@@ -68,12 +69,30 @@
                     <h3 class="text-gray-400 text-sm font-medium">Revenue</h3>
                     <div class="text-3xl font-bold text-white mt-2">ETB {{ total_winnings }}</div>
                     <div class="flex items-center mt-2">
-                        <span class="text-gray-400 text-sm">Last 30 days</span>
+                        <span class="text-green-400 text-sm">+{{ revenue_growth }}% from last 30d</span>
                     </div>
                 </div>
                 <div class="bg-yellow-500/20 p-3 rounded-lg">
                     <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Users Card -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-gray-400 text-sm font-medium">Active Users</h3>
+                    <div class="text-3xl font-bold text-white mt-2">{{ active_users }}</div>
+                    <div class="flex items-center mt-2">
+                        <span class="text-gray-400 text-sm">Total Users: {{ total_users }}</span>
+                    </div>
+                </div>
+                <div class="bg-purple-500/20 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
                 </div>
             </div>
@@ -84,15 +103,15 @@
     <div class="mb-8">
         <h2 class="text-xl font-bold text-white mb-6">Financial Activity</h2>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Deposits Card -->
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <h3 class="text-gray-400 text-sm font-medium">Deposits</h3>
-                        <div class="text-2xl font-bold text-white mt-2">ETB {{ total_deposits }}</div>
+                        <div class="text-2xl font-bold text-white mt-2">{{ total_deposits }}</div>
                         <div class="flex items-center mt-2">
-                            <span class="text-gray-400 text-sm">Total Deposits: ETB {{ total_deposits_amount }}</span>
+                            <span class="text-gray-400 text-sm">ETB {{ total_deposits_amount }}</span>
                         </div>
                     </div>
                     <div class="bg-blue-500/20 p-2 rounded-lg">
@@ -108,14 +127,50 @@
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <h3 class="text-gray-400 text-sm font-medium">Withdrawals</h3>
-                        <div class="text-2xl font-bold text-white mt-2">-ETB {{ total_withdrawals }}</div>
+                        <div class="text-2xl font-bold text-white mt-2">{{ total_withdrawals }}</div>
                         <div class="flex items-center mt-2">
-                            <span class="text-gray-400 text-sm">Total Withdrawals: ETB {{ total_withdrawals_amount }}</span>
+                            <span class="text-gray-400 text-sm">ETB {{ total_withdrawals_amount }}</span>
                         </div>
                     </div>
                     <div class="bg-red-500/20 p-2 rounded-lg">
                         <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Wallet Balance Card -->
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-gray-400 text-sm font-medium">Total Balance</h3>
+                        <div class="text-2xl font-bold text-white mt-2">ETB {{ total_wallet_balance }}</div>
+                        <div class="flex items-center mt-2">
+                            <span class="text-gray-400 text-sm">All Wallets</span>
+                        </div>
+                    </div>
+                    <div class="bg-green-500/20 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Withdrawals Card -->
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-gray-400 text-sm font-medium">Pending</h3>
+                        <div class="text-2xl font-bold text-white mt-2">{{ pending_withdrawals }}</div>
+                        <div class="flex items-center mt-2">
+                            <span class="text-gray-400 text-sm">ETB {{ pending_withdrawals_amount }}</span>
+                        </div>
+                    </div>
+                    <div class="bg-orange-500/20 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
                 </div>
@@ -128,11 +183,11 @@
         <h3 class="text-lg font-semibold text-white mb-4">Summary for Last 30 days</h3>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
             <div>
-                <div class="text-2xl font-bold text-white">38</div>
+                <div class="text-2xl font-bold text-white">{{ new_users }}</div>
                 <div class="text-gray-400 text-sm">New Users</div>
             </div>
             <div>
-                <div class="text-2xl font-bold text-white">6</div>
+                <div class="text-2xl font-bold text-white">{{ games_played }}</div>
                 <div class="text-gray-400 text-sm">Games Played</div>
             </div>
             <div>

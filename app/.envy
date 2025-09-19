@@ -1,0 +1,11 @@
+
+# Django Settings
+DJANGO_SECRET_KEY=your-secret-key-here
+DEBUG=True
+PROD_SECRET_KEY=sdakfnjnasdjfio149u2134u293u4923u49u
+# Database Settings
+POSTGRES_DB=bingo_db
+POSTGRES_USER=bingo_User
+POSTGRES_PASSWORD=your-password-here
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432

@@ -17,6 +17,9 @@ from .models import ChapaSession, Wallet,Transaction, AddisPaySession
 from django.http import JsonResponse
 from utils import generate_reference
 from users.models import User
+from django.db.models import Sum
+from django.utils import timezone
+from datetime import timedelta
 import sys
 import json
 router = Router()
@@ -409,5 +412,115 @@ def withdrawal_request(request):
     except Exception as e:
         print(f"Error processing Withdrawal request: {e}")
         return JsonResponse({"message": "Error processing withdrawal request"}, status=500)
+
+
+# Transaction Statistics API Endpoints
+@router.get("/transactions/stats/")
+def get_transaction_stats(request):
+    """Get transaction statistics for dashboard"""
+    try:
+        # Get data for last 30 days
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        
+        # Transaction statistics
+        total_deposits = Transaction.objects.filter(type="DEPOSIT", created_at__gte=thirty_days_ago).count()
+        total_withdrawals = Transaction.objects.filter(type="WITHDRAW", created_at__gte=thirty_days_ago).count()
+        total_withdrawals_amount = Transaction.objects.filter(type="WITHDRAW", created_at__gte=thirty_days_ago).aggregate(Sum('amount'))['amount__sum'] or 0
+        total_deposits_amount = Transaction.objects.filter(type="DEPOSIT", created_at__gte=thirty_days_ago).aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        # Wallet statistics
+        total_wallet_balance = Wallet.objects.aggregate(Sum('balance'))['balance__sum'] or 0
+        pending_withdrawals = WithdrawalRequest.objects.filter(status='pending').count()
+        pending_withdrawals_amount = WithdrawalRequest.objects.filter(status='pending').aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        # Calculate growth percentages (comparing with previous 30 days)
+        previous_period_start = timezone.now() - timedelta(days=60)
+        previous_deposits_amount = Transaction.objects.filter(type="DEPOSIT", created_at__gte=previous_period_start, created_at__lt=thirty_days_ago).aggregate(Sum('amount'))['amount__sum'] or 0
+        revenue_growth = ((total_deposits_amount - previous_deposits_amount) / previous_deposits_amount * 100) if previous_deposits_amount > 0 else 0
+        
+        return JsonResponse({
+            "total_deposits": total_deposits,
+            "total_withdrawals": total_withdrawals,
+            "total_withdrawals_amount": float(total_withdrawals_amount),
+            "total_deposits_amount": float(total_deposits_amount),
+            "total_wallet_balance": float(total_wallet_balance),
+            "pending_withdrawals": pending_withdrawals,
+            "pending_withdrawals_amount": float(pending_withdrawals_amount),
+            "revenue_growth": round(revenue_growth, 1),
+            "period": "last_30_days",
+            "date_range": {
+                "from": thirty_days_ago.strftime('%m/%d/%Y'),
+                "to": timezone.now().strftime('%m/%d/%Y')
+            }
+        }, status=200)
+    except Exception as e:
+        print(f"Error getting transaction stats: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@router.get("/transactions/recent/")
+def get_recent_transactions(request, limit: int = 10):
+    """Get recent transactions"""
+    try:
+        transactions = Transaction.objects.select_related('user').order_by('-created_at')[:limit]
+        
+        transaction_list = []
+        for transaction in transactions:
+            transaction_list.append({
+                "id": transaction.id,
+                "user": {
+                    "username": transaction.user.username,
+                    "phone": transaction.user.phone,
+                    "telegram_id": transaction.user.telegram_id
+                },
+                "amount": float(transaction.amount),
+                "type": transaction.type,
+                "status": transaction.status,
+                "reference": transaction.reference,
+                "created_at": transaction.created_at.isoformat()
+            })
+        
+        return JsonResponse({
+            "transactions": transaction_list,
+            "count": len(transaction_list)
+        }, status=200)
+    except Exception as e:
+        print(f"Error getting recent transactions: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@router.get("/transactions/by-type/")
+def get_transactions_by_type(request, transaction_type: str = None):
+    """Get transactions filtered by type (DEPOSIT, WITHDRAW, BET, WIN)"""
+    try:
+        if transaction_type:
+            transactions = Transaction.objects.filter(type=transaction_type).select_related('user').order_by('-created_at')
+        else:
+            transactions = Transaction.objects.select_related('user').order_by('-created_at')
+        
+        transaction_list = []
+        for transaction in transactions:
+            transaction_list.append({
+                "id": transaction.id,
+                "user": {
+                    "username": transaction.user.username,
+                    "phone": transaction.user.phone,
+                    "telegram_id": transaction.user.telegram_id
+                },
+                "amount": float(transaction.amount),
+                "type": transaction.type,
+                "status": transaction.status,
+                "reference": transaction.reference,
+                "created_at": transaction.created_at.isoformat()
+            })
+        
+        return JsonResponse({
+            "transactions": transaction_list,
+            "count": len(transaction_list),
+            "type": transaction_type or "all"
+        }, status=200)
+    except Exception as e:
+        print(f"Error getting transactions by type: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
 
 
