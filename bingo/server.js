@@ -111,7 +111,7 @@ function getWaitingGames(activeGames,status="in-progress") {
       waitingGames.push({
         id: game.id,
         betAmount: game.roomId,
-        players: game.players.size,
+        players: game.players ? game.players.size : 0,
         status: game.status
       });
     }
@@ -121,7 +121,7 @@ function getWaitingGames(activeGames,status="in-progress") {
 
 function startCountDown(game) {
  
-  if (game.isCountStart || game.players.size < 2) return;
+  if (game.isCountStart || !game.players || game.players.size < 2) return;
   clearGameIntervals(game.id);
   game.countDown = game.countDown;
   game.isCountStart = true;
@@ -202,7 +202,7 @@ async function startGame(game) {
       pickedNumbers: game.selectedNumbers,
       game_status: game.status,
       count_down: game.countDown,
-      win_amount: game.roomId * game.players.size * 0.8,
+      win_amount: game.roomId * (game.players ? game.players.size : 0) * 0.8,
       lastBall: ball,
       called_numbers: game.calledNumbers,
       total_called_numbers: game.calledNumbers.length
@@ -221,7 +221,7 @@ async function startGame(game) {
       lastBall: game.currentCall,
       calledNumbers: game.calledNumbers,
       totalCalledNumbers: game.calledNumbers.length,
-      totalPlayers: game.players.size,
+      totalPlayers: game.players ? game.players.size : 0,
       totalWinAmount: game.total_winAmount,
       totalPlayers: game.total_players,
   
@@ -256,11 +256,24 @@ function handleRefresh(data){
 
 
 io.on('connection', (socket) => {
-  socket.on("playerJoined", (data) => {
-    let game = activeGames.get(data.roomId) || createGame(data.roomId);
+  socket.on("playerJoined", async (data) => {
+    let game = activeGames.get(data.roomId);
+    if (!game) {
+      game = await createGame(data.roomId);
+      activeGames.set(data.roomId, game);
+    }
     const inProgressGames = [...activeGames.values()].filter(g => g.status === 'in-progress');
     socket.emit("activeGames", { activeGames: inProgressGames });
     socket.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
+    socket.emit("gameState", {
+      gameId: game.id,
+      roomId: game.roomId,
+      pickedNumbers: game.selectedNumbers,
+      game_status: game.status,
+      count_down: game.countDown
+    });
+    
+   
   });
 
   
@@ -275,7 +288,6 @@ io.on('connection', (socket) => {
   socket.emit("waitingGames", waitingGames);
 
   socket.on("joinGame", (data) => {
-
     const game = activeGames.get(data.roomId);
     if (!data.playerId || !game) return;
 
@@ -304,7 +316,7 @@ io.on('connection', (socket) => {
 
     game.numberOfBoardsToPlayer.set(data.playerId,data.numberOfBoards)
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
-    if (game.players.size >= 100) {
+    if (game.players && game.players.size >= 100) {
       socket.emit('joinError', {
         message: 'Room is full (max 100 players).'
       });
@@ -318,7 +330,7 @@ io.on('connection', (socket) => {
     game.total_players = total_players
 
 
-    socket.join(data.roomId);
+    // socket.join(data.roomId);
 
     const boards = [data.selectBoard];
     if (data.selectBoard2) {
@@ -339,7 +351,7 @@ io.on('connection', (socket) => {
       players: playersList
     });
 
-    if (!game.isCountStart && game.players.size >= 2) {
+    if (!game.isCountStart && game.players && game.players.size >= 2) {
       startCountDown(game);
     }
 
@@ -486,19 +498,31 @@ io.on('connection', (socket) => {
         console.log("game.status",game.status)
         if(game.status === "waiting") {
           game.players.delete(user.playerId);
+          let selectedNumber = null;
+          let selectedNumber2 = null;
+          
           if(game.selectedNumbersToPlayer.has(playerId)){
-            const selectedNumber = game.selectedNumbersToPlayer.get(playerId)[0]
-            const selectedNumber2 = game.selectedNumbersToPlayer.get(playerId)[1]
+            selectedNumber = game.selectedNumbersToPlayer.get(playerId)[0]
+            selectedNumber2 = game.selectedNumbersToPlayer.get(playerId)[1]
           }
-          game.selectedNumbers = game?.selectedNumbers?.filter(num => num !== selectedNumber);
-          game.selectedNumbers = game?.selectedNumbers?.filter(num => num !== selectedNumber2);
+          
+          if (selectedNumber) {
+            game.selectedNumbers = game?.selectedNumbers?.filter(num => num !== selectedNumber);
+          }
+          if (selectedNumber2) {
+            game.selectedNumbers = game?.selectedNumbers?.filter(num => num !== selectedNumber2);
+          }
     
     
           io.to(game.roomId).emit("gameState", {
             message: `User ${user.playerId} disconnected`,
             gameId: game.id,
             roomId: game.roomId,
-            pickedNumbers: game.selectedNumbers.filter(num => num !== selectedNumber && num !== selectedNumber2),
+            pickedNumbers: game.selectedNumbers.filter(num => {
+              if (selectedNumber && num === selectedNumber) return false;
+              if (selectedNumber2 && num === selectedNumber2) return false;
+              return true;
+            }),
             total_players: game.selectedNumbers.length,
             game_status: game.status,
             count_down: game.countDown

@@ -72,7 +72,6 @@ const Selections = () => {
           'Content-Type': 'application/json'
         };
         const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
-        console.log("user wallet response = ",response)
         setBalance(response.data.balance);
         setLoading(false);
       } catch (error) {
@@ -99,6 +98,21 @@ const Selections = () => {
       socket.off('gameState', handleGameState);
     };
   }, [socket, gameId, gameStatus, choosenNumbers]);
+
+  // Countdown redirect logic - only navigate when countdown reaches exactly 00
+  useEffect(() => {
+    // Only navigate if countdown is exactly 0, user has selected a number, and game is waiting
+    if (countDown === 0 && selectedNumber && gameStatus === "waiting") {
+      console.log("countDown",countDown)
+      console.log("selectedNumber",selectedNumber)
+      console.log("gameStatus",gameStatus)
+      // Navigate to play section when countdown reaches 00
+      setToast("Game starting! Redirecting to play section...");
+      setIsToast(true);
+      navigate('/play');
+    }
+    // If countdown is not 0, stay on selection page (no navigation)
+  }, [countDown, selectedNumber, gameStatus]);
 
 
   const handlePlaySound = async (calledNumber) => {
@@ -157,10 +171,9 @@ const handleGlobals = (state) => {
   }
 
   const handleGameState = (state) => {
-    console.log("gameState",state)
     const gameRoom = state.roomId
     if (roomId == gameRoom) {
-      if (state.pickedNumbers !== null) {
+      if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
         setPickedNumbers(state.pickedNumbers.numbers);
       }
       if (state.game_status == "in-progress") {
@@ -194,7 +207,7 @@ const handleGlobals = (state) => {
 
   socket.on('gameState', (state) => {
     if (state.roomId == roomId) {
-      if (state.pickedNumbers !== null) {
+      if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
         setPickedNumbers(state.pickedNumbers.numbers);
       }
 
@@ -260,36 +273,6 @@ const handleGlobals = (state) => {
     window.location.reload();
   };
 
-  const handleStartGame = async () => {
-    if (!selectedNumber || !playerId || !gameId) return;
-    // setIsLoading(true);
-    if (gameStatus == "in-progress") {
-      setToast("Game is already in progress");
-      setIsToast(true);
-      return;
-    }
-
-    if (balance < parseInt(roomId) || balance == 0) {
-      setToast("Insufficient balance");
-      setIsToast(true);
-      return;
-    }
-    if (balance < parseInt(roomId) * choosenBoards.length) {
-      setToast("Insufficient balance");
-      setIsToast(true);
-      return;
-    }
-
-    try {
-      socket.emit('joinGame', { playerId, gameId, selectedNumber, roomId, selectBoard, numberOfBoards: choosenBoards.length })
-
-      navigate('/play');
-    } catch (error) {
-      console.error('Error starting game:', error);
-    } finally {
-      // setIsLoading(false);
-    }
-  };
 
   socket.on('joinError', (error) => {
     setToast(error.message);
@@ -297,12 +280,20 @@ const handleGlobals = (state) => {
     setJoinError(true);
     return;
   })
-  const handleNumberClick = (number) => {
+  const handleNumberClick = async (number) => {
+    console.log("handleNumberClick",number)
     if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) {
       return;
     }
   
-    // If number is already chosen, remove it
+    // Check balance before allowing selection
+    if (balance < parseInt(roomId)) {
+      setToast("Insufficient balance to select this number");
+      setIsToast(true);
+      return;
+    }
+  
+    // If number is already chosen, remove it and leave game
     if (choosenNumbers.includes(number)) {
       const index = choosenNumbers.indexOf(number);
       if (index > -1) {
@@ -310,10 +301,10 @@ const handleGlobals = (state) => {
         const newBoards = [...choosenBoards];
         newNumbers.splice(index, 1);
         newBoards.splice(index, 1);
-  
+
         setChoosenNumbers(newNumbers);
         setChooseBoards(newBoards);
-  
+
         // Reset card after removal
         if (newNumbers.length === 0) {
           setSelectedNumber(null);
@@ -324,11 +315,16 @@ const handleGlobals = (state) => {
           setSelectBoard(newBoards[0]);
         }
       }
+      
+      // Leave game when removing selection
+      handleLeaveGame();
       return;
     }
-  
+   
     // Only allow selecting 1 number (one card)
     if (choosenNumbers.length >= 1) {
+      setToast("You can only select one card");
+      setIsToast(true);
       return;
     }
   
@@ -343,6 +339,85 @@ const handleGlobals = (state) => {
     // Set the single card
     setSelectedNumber(newNumbers[0]);
     setSelectBoard(newBoards[0]);
+    
+    // Join game immediately with the selected number
+    await handleJoinGame(newNumbers[0], newBoards[0]);
+  };
+
+  // Handle double click to leave game
+  const handleNumberDoubleClick = (number) => {
+    if (choosenNumbers.includes(number)) {
+      handleLeaveGame();
+    }
+  };
+
+  // Join game function - NEVER navigates, only joins and waits for countdown
+  const handleJoinGame = async (selectedNum = selectedNumber, selectBoardData = selectBoard) => {
+    console.log("handleJoinGame", "selectedNum:", selectedNum, "selectedNumber:", selectedNumber)
+    if (!selectedNum || !playerId || !gameId) {
+      console.log("Missing required data:", { selectedNum, playerId, gameId });
+      return;
+    }
+    
+    if (gameStatus === "in-progress") {
+      console.log("Game is already in progress")
+      setToast("Game is already in progress");
+      setIsToast(true);
+      return;
+    }
+
+    if (balance < parseInt(roomId) || balance === 0) {
+      console.log("Insufficient balance")
+      setToast("Insufficient balance");
+      setIsToast(true);
+      return;
+    }
+
+    try {
+      console.log("Joining game...")
+      setToast("Joining game...");
+      setIsToast(true);
+
+      const data = {
+        playerId,
+        gameId,
+        selectedNumber: selectedNum,
+        roomId,
+        selectBoard: selectBoardData,
+        numberOfBoards: choosenBoards.length 
+      }
+      console.log("data",data)
+      
+      socket.emit('joinGame', data);
+
+      setToast(`Card ${selectedNum} selected! Waiting for countdown to reach 00...`);
+      setIsToast(true);
+    } catch (error) {
+      console.error('Error joining game:', error);
+      setToast("Error joining game");
+      setIsToast(true);
+    }
+  };
+
+  // Leave game function
+  const handleLeaveGame = () => {
+    if (selectedNumber) {
+      socket.emit('leave', { 
+        playerId, 
+        roomId, 
+        selectedNumber, 
+        reason: 'user_left' 
+      });
+      
+      // Reset selection
+      setChoosenNumbers([]);
+      setChooseBoards([]);
+      setSelectedNumber(null);
+      setSelectBoard([]);
+      
+      setToast("Left the game");
+      setIsToast(true);
+    }
   };
   
 
@@ -357,9 +432,6 @@ const handleGlobals = (state) => {
   }
 
 
-  socket.on('pickedNumbers', handlePickedNumbers);
-  socket.on('gameStatus', handleGameStatus);
-  socket.on("gameState", handleGameState);
 
 
 
@@ -496,9 +568,15 @@ const handleGlobals = (state) => {
           <div className="globals-container">
 
           {gameStatus == "waiting" && (
-            
-            <div className="game-info-text">
-              countDown {countDown}
+            <div className="countdown-container">
+              <div className="countdown-text">
+                {selectedNumber ? `Game starts in: ${countDown}` : `Select a card number to join the game`}
+              </div>
+              {selectedNumber && (
+                <div className="selected-card-info">
+                  Selected Card: #{selectedNumber} - Game will start automatically when countdown reaches 00
+                </div>
+              )}
             </div>
             )}
 
@@ -546,6 +624,7 @@ const handleGlobals = (state) => {
                   ${isChoosen ? 'choosen' : ''}
                 `}
                   onClick={() => handleNumberClick(number)}
+                  onDoubleClick={() => handleNumberDoubleClick(number)}
                   disabled={isPicked}
                   aria-label={isPicked ? `Number ${number} already picked` : `Select number ${number}`}
                 >
@@ -595,9 +674,10 @@ const handleGlobals = (state) => {
 
               </div>
 
-              <button className="start-game-button" onClick={handleStartGame}>
-                {isLoading ? 'Starting...' : 'Start Game'}
-              </button>
+              <div className="game-status-info">
+                <p>Joined! Waiting for countdown to reach 00...</p>
+                <p>Double-click your card number to leave the game</p>
+              </div>
             </div>
           )}
 
