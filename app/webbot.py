@@ -481,7 +481,7 @@ Your referral code: `{referral_code}`
 • No limit on how many friends you can invite
 
 📱 **Share this message:**
-"Join me on Bilen Bingo! Use my referral code: {referral_code} and get 10 ETB bonus when you register!"
+"Join me on Gojo Bingo! Use my referral code: {referral_code} and get 10 ETB bonus when you register!"
 
 Your current balance: {balance} ETB
                     """
@@ -515,7 +515,7 @@ Your current balance: {balance} ETB
             balance = response.json().get('balance',0)
             # Create payment summary with user details
             payment_summary = (
-                    "🏦 BILEN BINGO STATEMENT\n" +
+                    "🏦 GOJO BINGO STATEMENT\n" +
                     f"💰  {balance} Birr\n" +
                     f"👥  {first_name} \n" +
                     f"📄 Transaction ID: {telegram_id}\n" +
@@ -531,11 +531,11 @@ Your current balance: {balance} ETB
             _resp_u = requests.get(f'{BACK_URL}/users/{user_id}/')
             wallet_amount = (_resp_u.json().get('balance',0)) if _resp_u.headers.get('content-type','').startswith('application/json') else 0
             web_app_url = (
-                f"https://wowliyubingo.com/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={wallet_amount}"
+                f"https://bilenbingo.com/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={wallet_amount}"
             )
 
             keyboard = [
-                [InlineKeyboardButton("Open Bilen Bingo!", web_app=WebAppInfo(url=web_app_url))]
+                [InlineKeyboardButton("Open Gojo Bingo!", web_app=WebAppInfo(url=web_app_url))]
                 # [InlineKeyboardButton("Open Wow Bingo!", url=web_app_url)]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
