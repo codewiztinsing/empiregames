@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback, use } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { SocketContext } from '../contexts/socket';
@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
 import checkPlayerBalance from '../api';
 import axios from 'axios';
+import config from '../config/api';
 const Selections = () => {
   const {
     selectedNumber,
@@ -57,49 +58,85 @@ const Selections = () => {
   // Socket listeners with cleanup
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
-    setPlayerId(queryParams.get('playerId'));
-    setRoomId(queryParams.get('betAmount'));
-    setPlayerName(queryParams.get('playerName'));
-    socket.emit("playerJoined", { playerId: queryParams.get('playerId'), roomId: queryParams.get('betAmount') })
+    const urlPlayerId = queryParams.get('playerId');
+    const urlRoomId = queryParams.get('betAmount');
+    const urlPlayerName = queryParams.get('playerName');
+    
+    console.log('URL Parameters:', {
+      playerId: urlPlayerId,
+      roomId: urlRoomId,
+      playerName: urlPlayerName,
+      fullURL: window.location.href
+    });
+    
+    setPlayerId(urlPlayerId);
+    setRoomId(urlRoomId);
+    setPlayerName(urlPlayerName);
+    
+    if (urlPlayerId && urlRoomId) {
+      socket.emit("playerJoined", { playerId: urlPlayerId, roomId: urlRoomId });
+    }
+    
     socket.on('gameState', handleGameState);
     socket.on('pickedNumbers', handlePickedNumbers);
-    socket.on("gameStatus", handleGameStatus)
-    socket.on("bingoWinner", handleBingoWinner)
+    socket.on("gameStatus", handleGameStatus);
+    socket.on("bingoWinner", handleBingoWinner);
 
-     if (isBingo) {
+    return () => {
+      socket.off('gameState', handleGameState);
+      socket.off('pickedNumbers', handlePickedNumbers);
+      socket.off("gameStatus", handleGameStatus);
+      socket.off("bingoWinner", handleBingoWinner);
+    };
+  }, [socket]);
+
+  // Handle bingo winner timeout
+  useEffect(() => {
+    if (isBingo) {
       const timer = setTimeout(() => {
         setIsBingo(false);
       }, 5000);
       return () => clearTimeout(timer);
-     }
-
-    return () => {
-      // socket.off('pickedNumbers', handlePickedNumbers);
-      socket.off('gameState', handleGameState);
-    };
-  }, [socket, gameId, gameStatus, choosenNumbers]);
+    }
+  }, [isBingo]);
 
   // Fetch balance when playerId is available
   useEffect(() => {
+    console.log('Balance useEffect triggered, playerId:', playerId);
+    
     if (playerId) {
       const fetchBalance = async () => {
-        const apiUrl = process.env.REACT_APP_API_URL;
+        const apiUrl = config.API_BASE_URL;
+        console.log('Fetching balance from:', `${apiUrl}/wallet/player/${playerId}`);
+        
         try {
-          const headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json'
-          };
-          
-          const response = await axios.get(`${apiUrl}wallet/player/${playerId}`);
+          const response = await axios.get(`${apiUrl}/wallet/player/${parseInt(playerId)}`);
+          console.log('Balance response:', response.data);
           setBalance(response.data.balance);
           setLoading(false);
         } catch (error) {
           console.error('Error fetching balance:', error);
+          console.error('Error details:', {
+            message: error.message,
+            status: error.response?.status,
+            data: error.response?.data,
+            playerId: playerId,
+            parsedPlayerId: parseInt(playerId),
+            url: `${apiUrl}/wallet/player/${parseInt(playerId)}`
+          });
           setLoading(false);
         }
       };
       
       fetchBalance();
+    } else {
+      // If no playerId, still set loading to false after a short delay
+      console.log('No playerId available, setting loading to false');
+      const timer = setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
     }
   }, [playerId]);
 
@@ -552,7 +589,9 @@ const handleGlobals = (state) => {
 
 
       {!loading && (
-        <div className="selections-container">
+        <>
+      
+          <div className="selections-container">
           <div className="balance-container">
 
             <div className="balance-text">
@@ -688,6 +727,7 @@ const handleGlobals = (state) => {
 
 
         </div>
+        </>
       )}
 
 

@@ -6,6 +6,64 @@
   padding: 0;
 }
 
+/* Referral Navigation Header */
+.referral-nav-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.referral-nav-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.referral-nav-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  min-width: 120px;
+}
+
+.referral-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.referral-nav-btn:active {
+  transform: translateY(0);
+}
+
+/* Mobile responsive for referral nav */
+@media (max-width: 768px) {
+  .referral-nav-header {
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+  
+  .referral-nav-buttons {
+    gap: 8px;
+  }
+  
+  .referral-nav-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-width: 100px;
+  }
+}
+
 html {
   font-size: 16px;
 }

@@ -308,7 +308,7 @@ const PlayingBoard = () => {
 
   const handleCloseWinner = () => {
     setIsBingo(false);
-    navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+    navigate(`/selection?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
   };
 
   return (
@@ -537,7 +537,6 @@ const PlayingBoard = () => {
 
       </div>
 
-      
 
       <div className="bingo-content">
 
@@ -573,7 +572,7 @@ const PlayingBoard = () => {
 
           
 
-          <div className="recent-called-numbers-container">
+          {/* <div className="recent-called-numbers-container">
               {countDown > 0  && countDown != 29 ? (
                 // Show countdown when greater than 0
                 <div className='game-starting-container'>
@@ -598,7 +597,7 @@ const PlayingBoard = () => {
                   </div>
                 </div>
               )}
-            </div>
+            </div> */}
 
           <div className='boards-container'>
 
@@ -661,6 +660,8 @@ const PlayingBoard = () => {
 
         </div>
       </div>
+
+    
 </div>
       
     </div>
