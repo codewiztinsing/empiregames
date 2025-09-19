@@ -11,13 +11,9 @@ import axios from 'axios';
 const Selections = () => {
   const {
     selectedNumber,
-    selectedNumber2,
     setSelectedNumber,
-    setSelectedNumber2,
     selectBoard,
     setSelectBoard,
-    selectBoard2,
-    setSelectBoard2,
     choosenNumbers,
     setChoosenNumbers,
     gameId,
@@ -285,7 +281,7 @@ const handleGlobals = (state) => {
     }
 
     try {
-      socket.emit('joinGame', { playerId, gameId, selectedNumber, selectedNumber2, roomId, selectBoard, selectBoard2, numberOfBoards: choosenBoards.length })
+      socket.emit('joinGame', { playerId, gameId, selectedNumber, roomId, selectBoard, numberOfBoards: choosenBoards.length })
 
       navigate('/play');
     } catch (error) {
@@ -318,31 +314,21 @@ const handleGlobals = (state) => {
         setChoosenNumbers(newNumbers);
         setChooseBoards(newBoards);
   
-        // Rebalance cards after removal
+        // Reset card after removal
         if (newNumbers.length === 0) {
           setSelectedNumber(null);
           setSelectBoard([]);
-          setSelectedNumber2(null);
-          setSelectBoard2([]);
-        } else if (newNumbers.length === 1) {
-          // Only one card left → it becomes the first
-          setSelectedNumber(newNumbers[0]);
-          setSelectBoard(newBoards[0]);
-          setSelectedNumber2(null);
-          setSelectBoard2([]);
         } else {
-          // Two cards remain → reset both
+          // One card remains
           setSelectedNumber(newNumbers[0]);
           setSelectBoard(newBoards[0]);
-          setSelectedNumber2(newNumbers[1]);
-          setSelectBoard2(newBoards[1]);
         }
       }
       return;
     }
   
-    // Only allow selecting up to 2 numbers
-    if (choosenNumbers.length >= 2) {
+    // Only allow selecting 1 number (one card)
+    if (choosenNumbers.length >= 1) {
       return;
     }
   
@@ -354,16 +340,9 @@ const handleGlobals = (state) => {
     setChoosenNumbers(newNumbers);
     setChooseBoards(newBoards);
   
-    // Rebalance after adding
-    if (newNumbers.length === 1) {
-      setSelectedNumber(newNumbers[0]);
-      setSelectBoard(newBoards[0]);
-    } else if (newNumbers.length === 2) {
-      setSelectedNumber(newNumbers[0]);
-      setSelectBoard(newBoards[0]);
-      setSelectedNumber2(newNumbers[1]);
-      setSelectBoard2(newBoards[1]);
-    }
+    // Set the single card
+    setSelectedNumber(newNumbers[0]);
+    setSelectBoard(newBoards[0]);
   };
   
 
@@ -577,48 +556,42 @@ const handleGlobals = (state) => {
             })}
           </div>
 
-          {choosenNumbers.length > 0 && (selectedNumber || selectedNumber2) && (
+          {choosenNumbers.length > 0 && selectedNumber && (
             <div className='combination-boards-container-parent'>
               <div className="combination-board-container">
                
+                {/* Single Bingo Card Component */}
+                <div className="combination-board">
+                  <div className='card-number-container'>
+                    <div className='card-number'># Card {selectedNumber}</div>
+                    <div className="combination-bingo-header">
+                      {['B', 'I', 'N', 'G', 'O'].map((letter, i) => (
+                        <div key={i} className="combination-bingo-header-text">{letter}</div>
+                      ))}
+                    </div>
+                  </div>
 
-                {/* Reusable Bingo Card Component */}
-                {[{ number: selectedNumber, board: selectBoard }, { number: selectedNumber2, board: selectBoard2 }]
-                  .filter(item => item.number) // render only if number exists
-                  .map((item, idx) => (
-                    <div key={idx} className="combination-board">
-                      <div className='card-number-container'>
-                        <div className='card-number'># Card {item.number}</div>
-                        <div className="combination-bingo-header">
-                          {['B', 'I', 'N', 'G', 'O'].map((letter, i) => (
-                            <div key={i} className="combination-bingo-header-text">{letter}</div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="board-grid-selections">
-                        {item.board.map((row, rowIndex) => (
-                          <div key={rowIndex} className="board-row-selections">
-                            {row.map((num, colIndex) => (
-                              <div
-                                key={colIndex}
-                                className={`combination-number-cell ${pickedNumbers?.length > 1 && pickedNumbers.includes(num)
-                                    ? 'picked-on-board'
-                                    : ''
-                                  }`}
-                              >
-                                {num}
-                                {pickedNumbers?.length > 1 && pickedNumbers.includes(num) && (
-                                  <span className="picked-indicator">✓</span>
-                                )}
-                              </div>
-                            ))}
+                  <div className="board-grid-selections">
+                    {selectBoard.map((row, rowIndex) => (
+                      <div key={rowIndex} className="board-row-selections">
+                        {row.map((num, colIndex) => (
+                          <div
+                            key={colIndex}
+                            className={`combination-number-cell ${pickedNumbers?.length > 1 && pickedNumbers.includes(num)
+                                ? 'picked-on-board'
+                                : ''
+                              }`}
+                          >
+                            {num}
+                            {pickedNumbers?.length > 1 && pickedNumbers.includes(num) && (
+                              <span className="picked-indicator">✓</span>
+                            )}
                           </div>
                         ))}
                       </div>
-                    </div>
-                  ))
-                }
+                    ))}
+                  </div>
+                </div>
 
               </div>
 

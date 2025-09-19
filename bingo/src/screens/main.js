@@ -11,9 +11,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 const PlayingBoard = () => {
   const {
     selectedNumber,
-    selectedNumber2,
     selectBoard,
-    selectBoard2,
     playersLength,
     countDown,
     setCountDown,
@@ -37,7 +35,6 @@ const PlayingBoard = () => {
   const [winnerCardNumber, setWinnerCardNumber] = useState(0);
   const [winnerPlayerName, setWinnerPlayerName] = useState('');
   const [firstBoardLost, setFirstBoardLost] = useState(false);
-  const [secondBoardLost, setSecondBoardLost] = useState(false);
 
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -66,7 +63,6 @@ const PlayingBoard = () => {
     const handleFalseBingo = (data) => {
       const loserBoard = data.losser_board;
       if (loserBoard === selectedNumber) setFirstBoardLost(true);
-      if (loserBoard === selectedNumber2) setSecondBoardLost(true);
     };
 
     const handleGameOver = (data) => {
@@ -163,7 +159,7 @@ const PlayingBoard = () => {
       socket.off('playerLeft', handlePlayerLeft);
       socket.off('disconnect');
     };
-  }, [socket, roomId, playerId, playerName, selectedNumber, selectedNumber2, setCountDown, setGameId, setToast, setIsToast, navigate]);
+  }, [socket, roomId, playerId, playerName, selectedNumber, setCountDown, setGameId, setToast, setIsToast, navigate]);
 
   // ✅ Track recent balls
   useEffect(() => {
@@ -200,7 +196,6 @@ const PlayingBoard = () => {
       roomId,
       gameId,
       selectedNumber,
-      selectedNumber2,
       markedCells: Array.from(selectedCell),
       reason: 'disconnect'
     });
@@ -213,7 +208,7 @@ const PlayingBoard = () => {
   };
 
   const handleLeave = (reason) => {
-    socket.emit('leave', { playerId, roomId, selectedNumber, selectedNumber2, reason });
+    socket.emit('leave', { playerId, roomId, selectedNumber, reason });
   };
 
   const handleCellClick = (cell) => {
@@ -376,7 +371,7 @@ const PlayingBoard = () => {
           
           <div className="column">
             <div className="column-header called-number-col" style={{
-              backgroundColor: "rgb(202, 83, 83)",
+              backgroundColor: "#d32f2f", /* Red for B */
               color: "white"
             }}>B</div>
             {Array.from({ length: 15 }, (_, i) => (
@@ -390,8 +385,8 @@ const PlayingBoard = () => {
           </div>
           <div className="column">
             <div className="column-header called-number-col" style={{
-              backgroundColor: "rgb(247, 190, 3)",
-              color: "white"
+              backgroundColor: "#FFD700", /* Yellow for I */
+              color: "#000"
             }}>I</div>
             {Array.from({ length: 15 }, (_, i) => (
             <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'last-called' : ''} ${selectedNumber == i + 16 ? 'selected' : ''}`}
@@ -404,7 +399,7 @@ const PlayingBoard = () => {
           </div>
           <div className="column">
             <div className="column-header called-number-col" style={{
-              backgroundColor: "rgb(50, 14, 150)",
+              backgroundColor: "#4CAF50", /* Green for N */
               color: "white"
             }}>N</div>
             {Array.from({ length: 15 }, (_, i) => (
@@ -418,7 +413,7 @@ const PlayingBoard = () => {
           </div>
           <div className="column">
             <div className="column-header called-number-col" style={{
-              backgroundColor: "rgb(29, 160, 12)",
+              backgroundColor: "#2196F3", /* Blue for G */
               color: "white"
             }}>G</div>
             {Array.from({ length: 15 }, (_, i) => (
@@ -432,7 +427,7 @@ const PlayingBoard = () => {
           </div>
           <div className="column">
             <div className="column-header called-number-col" style={{
-              backgroundColor: "rgb(148, 17, 137)",
+              backgroundColor: "#9C27B0", /* Purple for O */
               color: "white"
             }}>O</div>
             {Array.from({ length: 15 }, (_, i) => (
@@ -547,8 +542,8 @@ const PlayingBoard = () => {
                         <div key={rowIndex}
                           className={`board-cell`}
 
-                          // if cell is * it should always be green
-                          style={{ backgroundColor: row[colIndex] === '*' ? '#75cbfb' : selectedCell.has(row[colIndex]) ? '#75cbfb' : '#2c2856',zIndex:1000 }}
+                          // if cell is * it should always be green, selected cells should be yellow
+                          style={{ backgroundColor: row[colIndex] === '*' ? '#75cbfb' : selectedCell.has(row[colIndex]) ? '#FFD700' : '#ffffff',zIndex:1000 }}
                           id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
                           onClick={() => {
                             handleCellClick(row[colIndex]);
@@ -561,94 +556,24 @@ const PlayingBoard = () => {
                     </div>
                   ))}
 
-          
-
                 </div>
             
-        <button className={`bingo-button-card-${selectedNumber}`} 
-              onClick={() => handleBingo(selectBoard,selectedNumber)} 
-              disabled={firstBoardLost}
-              style={{
-                backgroundColor: firstBoardLost ? "red" : "orange"
-              }}
-          
-          >
-             {firstBoardLost ? "You made Faul" : "BINGO!"}
-          </button>
-
-          <div className='line'>
-
-          </div>
-
-         
-        
-          {selectedNumber2 !== null && (
-          <div className="bingo-header">
-            <div className='selected-number'>
-              <p className='selected-number-label'>የካርቴላ ቁጥር :-</p>
-              <p className='selected-number-value'>{selectedNumber2}</p>
-            </div>
-            <div className="bingo-letters">
-              <span className='bingo-letter-text'>B</span>
-              <span className='bingo-letter-text'>I</span>
-              <span className='bingo-letter-text'>N</span>
-              <span className='bingo-letter-text'>G</span>
-              <span className='bingo-letter-text'>O</span>
-            </div>
-          </div>
-          )
-
-}
-
-          <div className="bingo-board">
-            {selectBoard2[0] && !isBingo && selectBoard2[0].map((_, colIndex) => (
-              <div key={colIndex} className="board-row">
-                {selectBoard2.map((row, rowIndex) => (
-                  <div key={rowIndex}
-                    className={`board-cell`}
-
-                    // if cell is * it should always be green
-                    style={{ backgroundColor: row[colIndex] === '*' ? '#75cbfb' : selectedCell.has(row[colIndex]) ? '#75cbfb' : '#2c2856' }}
-                    id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
-                    onClick={() => {
-                      handleCellClick(row[colIndex]);
-                    }}
-                  >
-                    {row[colIndex]}
-                  </div>
-                ))}
-              </div>
-            ))}
-
-          
-
-          </div>
-
-
-          </div>
-
-        
-       
-
-       {selectedNumber2 !== null && (
-          <div className="game-controls">
-            <button className={`bingo-button-card-${selectedNumber2}`} 
-                  onClick={() => handleBingo(selectBoard2,selectedNumber2)} 
-                  disabled={secondBoardLost}
+            <button className={`bingo-button-card-${selectedNumber}`} 
+                  onClick={() => handleBingo(selectBoard,selectedNumber)} 
+                  disabled={firstBoardLost}
                   style={{
-                    backgroundColor: secondBoardLost ? "red" : "orange"
+                    backgroundColor: firstBoardLost ? "red" : "orange"
                   }}
             >
-             {secondBoardLost ? "You made Faul" : "BINGO!"}
+               {firstBoardLost ? "You made Faul" : "BINGO!"}
             </button>
+
           </div>
-       )}
 
         </div>
       </div>
 </div>
       
-
     </div>
   );
 };
