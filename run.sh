@@ -17,7 +17,7 @@ mkdir -p templates/build
 # Remove all files from /templates/build directory
 rm -rf templates/build/*
 # Copy the new build files to /templates/build
-cp -r ../bingo/build/* templates/build/
+cp -r ../bingo/build/* /var/www/bingo.bilen.com
 
 mkdir -p /var/www/static/sounds
 cp -r ../bingo/build/assets/sounds/* /var/www/static/sounds/
