@@ -20,7 +20,7 @@ const Landing = () => {
   const navigate = useNavigate();
 
   // API base URL
-  const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+  const API_BASE_URL = process.env.REACT_APP_API_URL;
 
   // Fetch rooms from backend
   const fetchRooms = async () => {
@@ -28,7 +28,7 @@ const Landing = () => {
       setLoading(true);
       setError(null);
       
-      const response = await axios.get(`${API_BASE_URL}/game/game-types/`);
+      const response = await axios.get(`${API_BASE_URL}game/game-types/`);
       console.log("Fetched game types:", response.data);
       
       if (response.data && response.data.game_types) {
