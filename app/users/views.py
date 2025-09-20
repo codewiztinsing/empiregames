@@ -1,7 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect
 from .models import User, SupportUser
+from .services import UserStatsService
 
 
 
@@ -20,8 +21,18 @@ def login_view(request):
 
 
 def user_details(request, user_id):
-    user = User.objects.get(id=user_id)
-    return render(request, 'dashboard/user_details.html', {'user': user})
+    user = get_object_or_404(User, id=user_id)
+    
+    # Get comprehensive user statistics
+    stats_service = UserStatsService(user)
+    user_stats = stats_service.get_comprehensive_stats()
+    
+    context = {
+        'user': user,
+        'stats': user_stats,
+    }
+    
+    return render(request, 'dashboard/user_details.html', context)
 
 def block_user(request, user_id):
     user = User.objects.get(id=user_id)

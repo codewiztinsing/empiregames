@@ -13,6 +13,7 @@ class BroadcastMessage(models.Model):
     ]
     
     message = models.TextField()
+    image = models.ImageField(upload_to='broadcast_images/', blank=True, null=True, help_text="Optional image to include with the message")
     total_recipients = models.IntegerField(default=0)
     sent_count = models.IntegerField(default=0)
     failed_count = models.IntegerField(default=0)

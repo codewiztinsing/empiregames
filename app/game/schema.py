@@ -29,7 +29,7 @@ class GameSchema(Schema):
 
 
 class WinGameSchema(Schema):
-    player: int
+    playerId: int
     game_id: int
     win_amount: float
 
@@ -51,3 +51,18 @@ class GameType(Schema):
 
 class GameTypeSchema(Schema):
     game_types: list[GameType]
+
+class PlayerGameSchema(Schema):
+    id: int
+    username: str
+    has_bingo: bool
+
+class GameDetailsSchema(Schema):
+    game_id: int
+    bet_amount: int
+    status: str
+    winner: str = None
+    players: list[PlayerGameSchema] = []
+    total_players: int = 0
+    created_at: str
+    ended: bool

@@ -1,6 +1,6 @@
 from this import d
 from datetime import timedelta
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.core.paginator import Paginator
 from django.utils import timezone
 from users.models import User, SupportUser, Referral, Contact
@@ -600,28 +600,71 @@ def transcations(request):
     return render(request, 'dashboard/transcations.html', context)
 
 def users(request):
-    users = User.objects.all()
+    
+    # Get filter parameters
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', 'all')
+    date_filter = request.GET.get('date_range', 'all')
+    
+    # Start with all users
+    users = User.objects.select_related('wallet').all().order_by('-created_at')
+    
+    # Apply search filter
+    if search_query:
+        users = users.filter(
+            Q(username__icontains=search_query) |
+            Q(phone__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(telegram_id__icontains=search_query)
+        )
+    
+    # Apply status filter
+    if status_filter == 'active':
+        users = users.filter(is_active=True)
+    elif status_filter == 'suspended':
+        users = users.filter(is_active=False)
+    
+    # Apply date filter
+    if date_filter == 'today':
+        users = users.filter(created_at__date=timezone.now().date())
+    elif date_filter == '7':
+        users = users.filter(created_at__gte=timezone.now() - timedelta(days=7))
+    elif date_filter == '30':
+        users = users.filter(created_at__gte=timezone.now() - timedelta(days=30))
+    
+    # Pagination
     paginator = Paginator(users, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    total_users = users.count()
-    suspended_users = users.filter(is_active=False).count()
-    # handle next and previous page
-    has_next = page_obj.has_next()
-    has_previous = page_obj.has_previous()
-    next_page = page_obj.next_page_number() if has_next else None
-    previous_page = page_obj.previous_page_number() if has_previous else None
+    
+    # Calculate statistics based on filtered data
+    total_users = User.objects.count()  # Total users in system
+    filtered_users_count = users.count()  # Users matching current filters
+    suspended_users = User.objects.filter(is_active=False).count()
+    active_users = User.objects.filter(is_active=True).count()
     
     context = {
         'users': page_obj,
         'page_title': 'Users',
         'page_obj': page_obj,
         'total_users': total_users,
+        'filtered_users_count': filtered_users_count,
         'suspended_users': suspended_users,
-        'next_page': next_page,
-        'previous_page': previous_page,
-        'has_next': has_next,
-        'has_previous': has_previous
+        'active_users': active_users,
+        'search_query': search_query,
+        'current_status': status_filter,
+        'current_date_range': date_filter,
+        'status_choices': [
+            ('all', 'All Users'),
+            ('active', 'Active'),
+            ('suspended', 'Suspended')
+        ],
+        'date_choices': [
+            ('all', 'All Time'),
+            ('today', 'Today'),
+            ('7', 'Last 7 days'),
+            ('30', 'Last 30 days')
+        ]
     }
     return render(request, 'dashboard/users.html', context)
 
@@ -989,8 +1032,20 @@ def broadcast_message_api(request):
     """API endpoint to start broadcasting a message"""
     if request.method == 'POST':
         try:
-            data = json.loads(request.body.decode('utf-8'))
-            message = data.get('message', '').strip()
+            print(f"Content-Type: {request.content_type}")
+            print(f"POST data: {request.POST}")
+            print(f"FILES data: {request.FILES}")
+            
+            # Handle both JSON and form data
+            if request.content_type == 'application/json':
+                data = json.loads(request.body.decode('utf-8'))
+                message = data.get('message', '').strip()
+                image = None
+            else:
+                # Handle multipart form data
+                message = request.POST.get('message', '').strip()
+                image = request.FILES.get('image')
+                print(f"Image file: {image}")
             
             if not message:
                 return JsonResponse({'success': False, 'message': 'Message cannot be empty'})
@@ -998,9 +1053,12 @@ def broadcast_message_api(request):
             # Create broadcast message record
             broadcast = BroadcastMessage.objects.create(
                 message=message,
+                image=image,
                 created_by_id=request.user.id,
                 status='pending'
             )
+            
+            print(f"Created broadcast {broadcast.id} with image: {broadcast.image}")
             
             # Start the broadcast task
             broadcast_message_with_progress.delay(broadcast.id)
@@ -1014,6 +1072,7 @@ def broadcast_message_api(request):
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
         except Exception as e:
+            print(f"Error in broadcast_message_api: {str(e)}")
             return JsonResponse({'success': False, 'message': str(e)})
     
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
@@ -1062,6 +1121,7 @@ def broadcast_details_api(request, broadcast_id):
                 'data': {
                     'id': broadcast.id,
                     'message': broadcast.message,
+                    'image': broadcast.image.url if broadcast.image else None,
                     'status': broadcast.status,
                     'total_recipients': broadcast.total_recipients,
                     'sent_count': broadcast.sent_count,

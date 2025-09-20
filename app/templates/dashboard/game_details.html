@@ -12,22 +12,90 @@
         </a>
     </div>
 
-    <!-- Game Details -->
+    <!-- Statistics Overview -->
     <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <!-- Total Players -->
+            <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span class="text-white text-sm font-bold">👥</span>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-400">Total Players</p>
+                        <p class="text-2xl font-bold text-white">{{ total_players }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Bet Amount -->
+            <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                            <span class="text-white text-sm font-bold">💰</span>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-400">Total Bet</p>
+                        <p class="text-2xl font-bold text-white">ETB {{ total_bet_amount|floatformat:2 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prize Pool -->
+            <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                            <span class="text-white text-sm font-bold">🏆</span>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-400">Prize Pool</p>
+                        <p class="text-2xl font-bold text-white">ETB {{ game.prize_pool|floatformat:2 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Boards -->
+            <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                            <span class="text-white text-sm font-bold">🎯</span>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-400">Total Boards</p>
+                        <p class="text-2xl font-bold text-white">{{ total_boards }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Details -->
         <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Game Information -->
                 <div class="space-y-4">
                     <h2 class="text-lg font-semibold text-white mb-4">Game Information</h2>
                     
                     <div class="flex justify-between">
                         <span class="text-gray-400">Game ID:</span>
-                        <span class="text-white font-mono">{{ game.id }}</span>
+                        <span class="text-white font-mono">#{{ game.id }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Room:</span>
+                        <span class="text-white font-semibold">{{ game.room_name|default:"N/A" }}</span>
                     </div>
                     
                     <div class="flex justify-between">
                         <span class="text-gray-400">Entry Fee:</span>
-                        <span class="text-green-400 font-semibold text-lg">ETB {{ game.entry_fee }}</span>
+                        <span class="text-green-400 font-semibold text-lg">ETB {{ game.entry_fee|floatformat:2 }}</span>
                     </div>
                     
                     <div class="flex justify-between">
@@ -44,6 +112,10 @@
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                 {{ game.status|title }}
                             </span>
+                        {% elif game.status == 'cancelled' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                {{ game.status|title }}
+                            </span>
                         {% else %}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                                 {{ game.status|title }}
@@ -52,31 +124,58 @@
                     </div>
                     
                     <div class="flex justify-between">
-                        <span class="text-gray-400">Started:</span>
-                        <span class="text-white">
-                            {% if game.started %}
-                                <span class="text-green-400">Yes</span>
-                            {% else %}
-                                <span class="text-red-400">No</span>
-                            {% endif %}
-                        </span>
-                    </div>
-                    
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">Ended:</span>
-                        <span class="text-white">
-                            {% if game.ended %}
-                                <span class="text-green-400">Yes</span>
-                            {% else %}
-                                <span class="text-red-400">No</span>
-                            {% endif %}
-                        </span>
-                    </div>
-                    
-                    <div class="flex justify-between">
                         <span class="text-gray-400">Created At:</span>
                         <span class="text-white">{{ game.created_at|date:"M d, Y H:i:s" }}</span>
                     </div>
+                    
+                    {% if game.started_at %}
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Started At:</span>
+                        <span class="text-white">{{ game.started_at|date:"M d, Y H:i:s" }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if game.ended_at %}
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Ended At:</span>
+                        <span class="text-white">{{ game.ended_at|date:"M d, Y H:i:s" }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if game.game_duration %}
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Duration:</span>
+                        <span class="text-white">{{ game.game_duration }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Financial Information -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-semibold text-white mb-4">Financial Details</h2>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Prize Pool:</span>
+                        <span class="text-green-400 font-semibold">ETB {{ game.prize_pool|floatformat:2 }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Commission (10%):</span>
+                        <span class="text-red-400">ETB {{ game.commission_amount|floatformat:2 }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Winner Payout:</span>
+                        <span class="text-yellow-400 font-semibold">ETB {{ game.winner_payout|floatformat:2 }}</span>
+                    </div>
+                    
+                    {% if game_type %}
+                    <hr class="border-gray-600">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Commission Rate:</span>
+                        <span class="text-white">{{ game_type.commission }}%</span>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <!-- Winner Information -->
@@ -86,27 +185,27 @@
                     {% if game.winner %}
                         <div class="flex justify-between">
                             <span class="text-gray-400">Winner:</span>
-                            <span class="text-white">{{ game.winner.username }}</span>
+                            <span class="text-white font-semibold">{{ game.winner.username }}</span>
                         </div>
                         
                         <div class="flex justify-between">
-                            <span class="text-gray-400">Winner Email:</span>
+                            <span class="text-gray-400">Email:</span>
                             <span class="text-white">{{ game.winner.email|default:"N/A" }}</span>
                         </div>
                         
                         <div class="flex justify-between">
-                            <span class="text-gray-400">Winner Phone:</span>
+                            <span class="text-gray-400">Phone:</span>
                             <span class="text-white">{{ game.winner.phone|default:"N/A" }}</span>
                         </div>
                         
                         <div class="flex justify-between">
-                            <span class="text-gray-400">Winner Telegram ID:</span>
+                            <span class="text-gray-400">Telegram ID:</span>
                             <span class="text-white font-mono">{{ game.winner.telegram_id|default:"N/A" }}</span>
                         </div>
                         
                         <div class="flex justify-between">
-                            <span class="text-gray-400">Prize Amount:</span>
-                            <span class="text-green-400 font-semibold text-lg">ETB {{ game.entry_fee }}</span>
+                            <span class="text-gray-400">Win Amount:</span>
+                            <span class="text-green-400 font-semibold text-lg">ETB {{ game.winner_payout|floatformat:2 }}</span>
                         </div>
                     {% else %}
                         <div class="text-center py-8">
@@ -124,53 +223,97 @@
                     {% endif %}
                 </div>
             </div>
+        </div>
 
-            <!-- Players List -->
-            <div class="mt-8 pt-6 border-t border-gray-700">
-                <h2 class="text-lg font-semibold text-white mb-4">Players ({{ game.players|length }})</h2>
-                
-                {% if game.players %}
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-700">
-                            <thead class="bg-gray-700">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Player ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Username</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-gray-800 divide-y divide-gray-700">
-                                {% for player in game.players %}
-                                <tr class="hover:bg-gray-700">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white font-mono">
-                                        {{ player.id|default:"N/A" }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
-                                        {{ player.username|default:"N/A" }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        {% if player.id == game.winner.id %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                Winner
-                                            </span>
-                                        {% else %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                Player
-                                            </span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <div class="text-center py-8">
-                        <div class="text-gray-400 text-lg mb-2">No Players Yet</div>
-                        <div class="text-gray-500 text-sm">This game doesn't have any players yet</div>
-                    </div>
+        <!-- Players List -->
+        <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-white">Players ({{ total_players }})</h2>
+                {% if winner_count > 0 %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        {{ winner_count }} Winner{{ winner_count|pluralize }}
+                    </span>
                 {% endif %}
             </div>
+            
+            {% if player_stats %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Player</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Boards</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Total Bet</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Joined At</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Player Stats</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-gray-800 divide-y divide-gray-700">
+                            {% for stat in player_stats %}
+                            <tr class="hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-8 w-8">
+                                            <div class="h-8 w-8 rounded-full bg-gray-600 flex items-center justify-center">
+                                                <span class="text-white text-sm font-medium">{{ stat.user.username|first|upper }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-white">{{ stat.user.username }}</div>
+                                            <div class="text-sm text-gray-400">{{ stat.user.phone|default:"N/A" }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                    {{ stat.player_game.boards_count }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                    ETB {{ stat.player_game.total_bet|floatformat:2 }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    {{ stat.player_game.joined_at|date:"M d, H:i" }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if stat.player_game.has_bingo %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            🏆 Winner
+                                        </span>
+                                    {% elif game.status == 'completed' %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            Player
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            Playing
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    <div class="text-xs">
+                                        <div>{{ stat.total_games }} games</div>
+                                        <div>{{ stat.wins }} wins ({{ stat.win_rate }}%)</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{% url 'accounts:user_details' stat.user.id %}" 
+                                       class="text-purple-400 hover:text-purple-300">
+                                        View Profile
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <div class="text-gray-400 text-lg mb-2">No Players Yet</div>
+                    <div class="text-gray-500 text-sm">This game doesn't have any players yet</div>
+                </div>
+            {% endif %}
+        </div>
 
             <!-- Actions -->
             <div class="mt-8 pt-6 border-t border-gray-700">

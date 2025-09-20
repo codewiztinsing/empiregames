@@ -128,7 +128,9 @@
                             <th class="text-left py-3 px-4 text-gray-300 font-medium">Status</th>
                             <th class="text-left py-3 px-4 text-gray-300 font-medium">Stake</th>
                             <th class="text-left py-3 px-4 text-gray-300 font-medium">Players</th>
+                            <th class="text-left py-3 px-4 text-gray-300 font-medium">Prize Pool</th>
                             <th class="text-left py-3 px-4 text-gray-300 font-medium">Winner</th>
+                            <th class="text-left py-3 px-4 text-gray-300 font-medium">Duration</th>
                             <th class="text-left py-3 px-4 text-gray-300 font-medium">Date</th>
                             <th class="text-left py-3 px-4 text-gray-300 font-medium">Actions</th>
                         </tr>
@@ -153,16 +155,26 @@
                             </td>
                             <td class="py-3 px-4 text-white font-semibold">ETB {{ game.entry_fee|floatformat:2 }}</td>
                             <td class="py-3 px-4 text-white">
-                                <span class="text-gray-300">{{ game.players|length }}/5</span>
+                                <span class="text-gray-300">{{ game.player_count }}</span>
+                            </td>
+                            <td class="py-3 px-4 text-white">
+                                <span class="text-green-400 font-semibold">ETB {{ game.prize_pool|floatformat:2 }}</span>
                             </td>
                             <td class="py-3 px-4 text-white">
                                 {% if game.winner %}
                                     <div>
                                         <div class="font-medium">{{ game.winner.username }}</div>
-                                        <div class="text-xs text-gray-400">{{ game.winner.phone|default:"N/A" }}</div>
+                                        <div class="text-xs text-gray-400">ETB {{ game.winner_payout|floatformat:2 }}</div>
                                     </div>
                                 {% else %}
                                     <span class="text-gray-500">No winner yet</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-gray-300 text-sm">
+                                {% if game.game_duration %}
+                                    {{ game.game_duration }}
+                                {% else %}
+                                    <span class="text-gray-500">-</span>
                                 {% endif %}
                             </td>
                             <td class="py-3 px-4 text-gray-300 text-sm">{{ game.created_at|date:"M d, Y H:i" }}</td>
@@ -176,7 +188,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="8" class="px-6 py-8 text-center text-gray-400">
+                            <td colspan="10" class="px-6 py-8 text-center text-gray-400">
                                 <div class="flex flex-col items-center">
                                     <svg class="w-12 h-12 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>

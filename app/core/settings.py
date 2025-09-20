@@ -17,6 +17,9 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
+# Base URL for constructing absolute URLs
+BASE_URL = os.getenv('BASE_URL', 'http://localhost:8000')
+
 # Custom 404 page settings
 HANDLER404 = 'core.views.custom_404'
 

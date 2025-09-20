@@ -31,7 +31,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-400 text-sm font-medium">ACTIVE</p>
-                    <p class="text-2xl font-bold text-white mt-1">{{ total_users }}</p>
+                    <p class="text-2xl font-bold text-white mt-1">{{ active_users }}</p>
                 </div>
                 <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,16 +56,16 @@
             </div>
         </div>
 
-        <!-- Offline Users -->
+        <!-- Filtered Results -->
         <div class="bg-dark-card border border-dark-border rounded-lg p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-400 text-sm font-medium">OFFLINE</p>
-                    <p class="text-2xl font-bold text-white mt-1">{{ users.count }}</p>
+                    <p class="text-gray-400 text-sm font-medium">FILTERED</p>
+                    <p class="text-2xl font-bold text-white mt-1">{{ filtered_users_count }}</p>
                 </div>
                 <div class="w-12 h-12 bg-gray-500/10 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-12.728 12.728m0 0L18.364 18.364M5.636 18.364l12.728-12.728"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                     </svg>
                 </div>
             </div>
@@ -74,44 +74,47 @@
 
     <!-- Filters and Search -->
     <div class="bg-dark-card border border-dark-border rounded-lg p-4 mb-6">
-        <div class="flex flex-wrap items-center gap-4">
+        <form method="get" class="flex flex-wrap items-center gap-4">
             <!-- Search -->
             <div class="flex-1 min-w-64">
                 <div class="relative">
                     <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
-                    <input type="text" placeholder="Search by phone..." class="w-full pl-10 pr-4 py-2 bg-dark-bg border border-dark-border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent">
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Search by username, phone, email..." class="w-full pl-10 pr-4 py-2 bg-dark-bg border border-dark-border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent">
                 </div>
             </div>
 
             <!-- Status Filter -->
             <div class="flex items-center space-x-2">
                 <label class="text-sm text-gray-400">Status:</label>
-                <select class="bg-dark-bg border border-dark-border text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-primary">
-                    <option>All Users</option>
-                    <option>Active</option>
-                    <option>Suspended</option>
-                    <option>Offline</option>
+                <select name="status" class="bg-dark-bg border border-dark-border text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-primary">
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
             <!-- Date Range Filter -->
             <div class="flex items-center space-x-2">
                 <label class="text-sm text-gray-400">Joined:</label>
-                <input type="date" class="bg-dark-bg border border-dark-border text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-primary">
+                <select name="date_range" class="bg-dark-bg border border-dark-border text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-primary">
+                    {% for value, label in date_choices %}
+                        <option value="{{ value }}" {% if current_date_range == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <!-- Reset and Create User Buttons -->
             <div class="flex items-center space-x-2">
-                <button class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white border border-dark-border rounded-lg hover:bg-dark-bg transition-colors">
+                <a href="{% url 'dashboard:users' %}" class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white border border-dark-border rounded-lg hover:bg-dark-bg transition-colors">
                     Reset
-                </button>
-                <button class="px-4 py-2 text-sm font-medium text-white bg-purple-primary hover:bg-purple-hover rounded-lg transition-colors">
-                    Create User
+                </a>
+                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-purple-primary hover:bg-purple-hover rounded-lg transition-colors">
+                    Search
                 </button>
             </div>
-        </div>
+        </form>
     </div>
 
     <!-- Users Table -->
@@ -176,34 +179,46 @@
         <!-- Pagination -->
         <div class="flex items-center justify-between p-4 border-t border-dark-border">
             <div class="text-sm text-gray-400">
-                Showing 1 to {{ users.count }} of {{ users.count }} results
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
             </div>
             <div class="flex items-center space-x-2">
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    Previous
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
-                    {% if page_obj.has_previous %}
-                    href="{% url 'accounts:users' %}?page={{ page_obj.previous_page_number }}"
-                    {% endif %}
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    {% if page_obj.has_next %}
-                    href="{% url 'accounts:users' %}?page={{ page_obj.next_page_number }}"
-                    {% endif %}
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    {% if page_obj.has_next %}
-                    href="{% url 'accounts:users' %}?page={{ page_obj.next_page_number }}"
-                    {% endif %}
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg"
-                {% if page_obj.has_next %}
-                href="{% url 'accounts:users' %}?page={{ page_obj.next_page_number }}"
+                <!-- Previous Button -->
+                {% if page_obj.has_previous %}
+                    <a href="{% url 'dashboard:users' %}?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if current_date_range != 'all' %}&date_range={{ current_date_range }}{% endif %}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg hover:text-white transition-colors">
+                        Previous
+                    </a>
+                {% else %}
+                    <span class="px-3 py-2 text-sm font-medium text-gray-600 bg-dark-card border border-dark-border rounded-lg cursor-not-allowed">
+                        Previous
+                    </span>
                 {% endif %}
-                >
-                    Next
-                </button>
+
+                <!-- Page Numbers -->
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
+                            {{ num }}
+                        </span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="{% url 'dashboard:users' %}?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if current_date_range != 'all' %}&date_range={{ current_date_range }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg hover:text-white transition-colors">
+                            {{ num }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Next Button -->
+                {% if page_obj.has_next %}
+                    <a href="{% url 'dashboard:users' %}?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if current_date_range != 'all' %}&date_range={{ current_date_range }}{% endif %}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg hover:text-white transition-colors">
+                        Next
+                    </a>
+                {% else %}
+                    <span class="px-3 py-2 text-sm font-medium text-gray-600 bg-dark-card border border-dark-border rounded-lg cursor-not-allowed">
+                        Next
+                    </span>
+                {% endif %}
             </div>
         </div>
     </div>

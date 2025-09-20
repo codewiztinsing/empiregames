@@ -17,7 +17,7 @@
         <h2 class="text-xl font-bold text-white mb-4">Broadcast Message</h2>
         <p class="text-gray-400 mb-4">Send a message to all users who have connected with the Telegram bot. Messages will be delivered through the Telegram bot.</p>
         
-        <form id="broadcastForm">
+        <form id="broadcastForm" enctype="multipart/form-data">
         <div class="mb-4">
             <label class="block text-gray-300 text-sm font-medium mb-2">Message Content</label>
             <textarea 
@@ -27,6 +27,42 @@
                 placeholder="Enter your message here. You can use HTML formatting (b-bold, br-new line, etc.)"
                     required
             ></textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-300 text-sm font-medium mb-2">Image (Optional)</label>
+                <div class="relative">
+                    <input type="file" 
+                           id="imageInput" 
+                           name="image" 
+                           accept="image/*" 
+                           class="hidden"
+                           onchange="handleImageSelect(event)">
+                    <button type="button" 
+                            onclick="document.getElementById('imageInput').click()"
+                            class="w-full p-4 border-2 border-dashed border-gray-600 rounded-lg text-center hover:border-purple-primary transition-colors">
+                        <div id="imageUploadArea">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-400">Click to upload an image</p>
+                            <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                    </button>
+                </div>
+                
+                <!-- Image Preview -->
+                <div id="imagePreview" class="mt-4 hidden">
+                    <div class="relative inline-block">
+                        <img id="previewImg" src="" alt="Preview" class="max-w-xs max-h-48 rounded-lg border border-dark-border">
+                        <button type="button" 
+                                onclick="removeImage()"
+                                class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-700">
+                            ×
+                        </button>
+                    </div>
+                    <p id="imageInfo" class="text-sm text-gray-400 mt-2"></p>
+                </div>
             </div>
 
             <div class="flex justify-end">
@@ -97,6 +133,12 @@
                     <tr class="hover:bg-dark-bg transition-colors">
                         <td class="py-3 px-4">
                                 <div class="text-white text-sm">{{ broadcast.message|truncatechars:100 }}</div>
+                                {% if broadcast.image %}
+                                    <div class="mt-2">
+                                        <img src="{{ broadcast.image.url }}" alt="Broadcast Image" class="w-16 h-16 object-cover rounded border border-dark-border">
+                                        <span class="text-xs text-gray-400 ml-2">📷 Image included</span>
+                                    </div>
+                                {% endif %}
                                 <div class="text-gray-400 text-xs mt-1">Broadcast #{{ broadcast.id }}</div>
                         </td>
                             <td class="py-3 px-4 text-white">
@@ -211,6 +253,13 @@
                         <div id="viewMessageContent" class="w-full bg-dark-bg text-white p-4 rounded-lg border border-dark-border min-h-32 whitespace-pre-wrap"></div>
                     </div>
                     
+                    <div id="viewImageSection" class="hidden">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Image</label>
+                        <div class="bg-dark-bg rounded-lg border border-dark-border p-4">
+                            <img id="viewImage" src="" alt="Broadcast Image" class="max-w-full max-h-64 rounded-lg">
+                        </div>
+                    </div>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
@@ -288,6 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function startBroadcast() {
     const message = document.getElementById('messageContent').value.trim();
+    const imageInput = document.getElementById('imageInput');
     
     if (!message) {
         alert('Please enter a message');
@@ -305,16 +355,29 @@ function startBroadcast() {
     // Scroll to progress section
     progressSection.scrollIntoView({ behavior: 'smooth' });
     
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('message', message);
+    if (imageInput.files[0]) {
+        formData.append('image', imageInput.files[0]);
+        console.log('Image file added:', imageInput.files[0].name, imageInput.files[0].size);
+    } else {
+        console.log('No image file selected');
+    }
+    
+    // Debug: Log form data contents
+    console.log('Form data contents:');
+    for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+    }
+    
     // Start broadcast
     fetch('/dashboard/api/broadcast-message/', {
             method: 'POST',
             headers: {
                 'X-CSRFToken': '{{ csrf_token }}',
-                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                message: message
-            }),
+            body: formData,
         })
         .then(response => response.json())
         .then(data => {
@@ -406,6 +469,10 @@ function resetForm() {
     broadcastBtn.disabled = false;
     broadcastBtn.textContent = 'Broadcast Message';
     
+    // Reset form fields
+    document.getElementById('messageContent').value = '';
+    removeImage();
+    
     // Hide progress section after a delay
     setTimeout(() => {
         progressSection.style.display = 'none';
@@ -417,6 +484,48 @@ function resetForm() {
         document.getElementById('failedCount').textContent = '0';
         document.getElementById('statusText').textContent = 'Preparing to send...';
     }, 3000);
+}
+
+// Image handling functions
+function handleImageSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file');
+            return;
+        }
+        
+        // Validate file size (10MB limit)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('Image size must be less than 10MB');
+            return;
+        }
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').classList.remove('hidden');
+            document.getElementById('imageInfo').textContent = `${file.name} (${formatFileSize(file.size)})`;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeImage() {
+    document.getElementById('imageInput').value = '';
+    document.getElementById('imagePreview').classList.add('hidden');
+    document.getElementById('previewImg').src = '';
+    document.getElementById('imageInfo').textContent = '';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 let currentViewBroadcastId = null;
@@ -444,6 +553,16 @@ function viewBroadcast(broadcastId) {
 function populateViewModal(data) {
     // Populate message content
     document.getElementById('viewMessageContent').textContent = data.message;
+    
+    // Handle image display
+    const imageSection = document.getElementById('viewImageSection');
+    const viewImage = document.getElementById('viewImage');
+    if (data.image) {
+        viewImage.src = data.image;
+        imageSection.classList.remove('hidden');
+    } else {
+        imageSection.classList.add('hidden');
+    }
     
     // Populate status with color coding
     const statusElement = document.getElementById('viewStatus');

@@ -52,8 +52,71 @@
         </div>
     </div>
 
+    <!-- Statistics Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <!-- Current Balance -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <span class="text-white text-sm font-bold">$</span>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-400">Current Balance</p>
+                    <p class="text-2xl font-bold text-white">${{ stats.financial.current_balance|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Games Played -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span class="text-white text-sm font-bold">🎮</span>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-400">Games Played</p>
+                    <p class="text-2xl font-bold text-white">{{ stats.gaming.total_games_played }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Win Rate -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                        <span class="text-white text-sm font-bold">🏆</span>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-400">Win Rate</p>
+                    <p class="text-2xl font-bold text-white">{{ stats.gaming.win_rate }}%</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Deposits -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                        <span class="text-white text-sm font-bold">💰</span>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-400">Total Deposits</p>
+                    <p class="text-2xl font-bold text-white">${{ stats.financial.total_deposits|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- User Details Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <!-- Personal Information -->
         <div class="bg-dark-card border border-dark-border rounded-lg p-6">
             <h3 class="text-lg font-semibold text-white mb-4">Personal Information</h3>
@@ -67,84 +130,352 @@
                     <p class="text-white">{{ user.email }}</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">First Name</label>
-                    <p class="text-white">{{ user.first_name|default:"Not provided" }}</p>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Phone</label>
+                    <p class="text-white">{{ user.phone }}</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Last Name</label>
-                    <p class="text-white">{{ user.last_name|default:"Not provided" }}</p>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Telegram ID</label>
+                    <p class="text-white">{{ user.telegram_id }}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Referral Code</label>
+                    <p class="text-white font-mono">{{ user.referral_code }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-400 mb-1">Date Joined</label>
                     <p class="text-white">{{ user.date_joined|date:"M d, Y H:i" }}</p>
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Account Age</label>
+                    <p class="text-white">{{ stats.activity.account_age_days }} days</p>
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-400 mb-1">Last Login</label>
-                    <p class="text-white">{{ user.last_login|date:"M d, Y H:i"|default:"Never" }}</p>
+                    <p class="text-white">
+                        {% if stats.activity.last_login %}
+                            {{ stats.activity.last_login|date:"M d, Y H:i" }}
+                            {% if stats.activity.days_since_login %}
+                                ({{ stats.activity.days_since_login }} days ago)
+                            {% endif %}
+                        {% else %}
+                            Never
+                        {% endif %}
+                    </p>
                 </div>
             </div>
         </div>
 
-        <!-- Account Status -->
+        <!-- Gaming Statistics -->
         <div class="bg-dark-card border border-dark-border rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-white mb-4">Account Status</h3>
+            <h3 class="text-lg font-semibold text-white mb-4">Gaming Statistics</h3>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Account Status</label>
-                    <div class="flex items-center">
-                        {% if user.is_active %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Active
-                            </span>
-                        {% else %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                Suspended
-                            </span>
-                        {% endif %}
-                    </div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Total Games Played</label>
+                    <p class="text-white text-xl font-bold">{{ stats.gaming.total_games_played }}</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Staff Status</label>
-                    <div class="flex items-center">
-                        {% if user.is_staff %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Staff
-                            </span>
-                        {% else %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                Regular User
-                            </span>
-                        {% endif %}
-                    </div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Games Won</label>
+                    <p class="text-white text-xl font-bold">{{ stats.gaming.games_won }}</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Superuser Status</label>
-                    <div class="flex items-center">
-                        {% if user.is_superuser %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                Superuser
-                            </span>
-                        {% else %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                Regular User
-                            </span>
-                        {% endif %}
-                    </div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Bingo Games</label>
+                    <p class="text-white text-xl font-bold">{{ stats.gaming.bingo_games }}</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">User ID</label>
-                    <p class="text-white">#{{ user.id }}</p>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Win Rate</label>
+                    <p class="text-white text-xl font-bold">{{ stats.gaming.win_rate }}%</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Recent Games (30 days)</label>
+                    <p class="text-white text-lg">{{ stats.gaming.recent_games }}</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Recent Activity Section (placeholder for future implementation) -->
-    <div class="bg-dark-card border border-dark-border rounded-lg p-6 mt-6">
-        <h3 class="text-lg font-semibold text-white mb-4">Recent Activity</h3>
-        <div class="text-center py-8">
-            <p class="text-gray-400">No recent activity data available</p>
+    <!-- Financial Information -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Financial Overview -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Financial Overview</h3>
+            <div class="space-y-4">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Current Balance:</span>
+                    <span class="text-white font-bold">${{ stats.financial.current_balance|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Total Deposits:</span>
+                    <span class="text-green-400 font-bold">${{ stats.financial.total_deposits|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Total Withdrawals:</span>
+                    <span class="text-red-400 font-bold">${{ stats.financial.total_withdrawals|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Total Bets:</span>
+                    <span class="text-yellow-400 font-bold">${{ stats.financial.total_bets|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Total Winnings:</span>
+                    <span class="text-green-400 font-bold">${{ stats.financial.total_winnings|floatformat:2 }}</span>
+                </div>
+                <hr class="border-dark-border">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Net Result:</span>
+                    <span class="font-bold {% if stats.financial.net_result >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                        ${{ stats.financial.net_result|floatformat:2 }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Financial Activity -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Recent Activity (30 days)</h3>
+            <div class="space-y-4">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Recent Deposits:</span>
+                    <span class="text-green-400">${{ stats.financial.recent_deposits|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Recent Withdrawals:</span>
+                    <span class="text-red-400">${{ stats.financial.recent_withdrawals|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Recent Bets:</span>
+                    <span class="text-yellow-400">${{ stats.financial.recent_bets|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Recent Winnings:</span>
+                    <span class="text-green-400">${{ stats.financial.recent_winnings|floatformat:2 }}</span>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Transaction Statistics -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Transaction Overview -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Transaction Statistics</h3>
+            <div class="space-y-4">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Total Transactions:</span>
+                    <span class="text-white font-bold">{{ stats.transactions.total_transactions }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Deposits:</span>
+                    <span class="text-green-400">{{ stats.transactions.deposit_count }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Withdrawals:</span>
+                    <span class="text-red-400">{{ stats.transactions.withdrawal_count }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Bets:</span>
+                    <span class="text-yellow-400">{{ stats.transactions.bet_count }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Wins:</span>
+                    <span class="text-green-400">{{ stats.transactions.win_count }}</span>
+                </div>
+                <hr class="border-dark-border">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Pending Deposits:</span>
+                    <span class="text-yellow-400">{{ stats.transactions.pending_deposits }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Pending Withdrawals:</span>
+                    <span class="text-yellow-400">{{ stats.transactions.pending_withdrawals }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Failed Transactions:</span>
+                    <span class="text-red-400">{{ stats.transactions.failed_transactions }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Withdrawal Requests -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Withdrawal Requests</h3>
+            <div class="space-y-4">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Total Requests:</span>
+                    <span class="text-white font-bold">{{ stats.withdrawals.total_requests }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Pending:</span>
+                    <span class="text-yellow-400">{{ stats.withdrawals.pending_requests }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Successful:</span>
+                    <span class="text-green-400">{{ stats.withdrawals.successful_requests }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Failed:</span>
+                    <span class="text-red-400">{{ stats.withdrawals.failed_requests }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referral Statistics -->
+    <div class="bg-dark-card border border-dark-border rounded-lg p-6 mb-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Referral Statistics</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-400">Total Referrals:</span>
+                    <span class="text-white font-bold">{{ stats.referrals.total_referrals }}</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-400">Paid Referrals:</span>
+                    <span class="text-green-400">{{ stats.referrals.paid_referrals }}</span>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-400">Total Bonus Earned:</span>
+                    <span class="text-green-400 font-bold">${{ stats.referrals.total_referral_bonus|floatformat:2 }}</span>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-400">Referral Code:</span>
+                    <span class="text-white font-mono">{{ stats.referrals.referral_code }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="bg-dark-card border border-dark-border rounded-lg p-6 mt-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Recent Transactions</h3>
+        {% if stats.transactions.recent_transactions %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-dark-border">
+                    <thead class="bg-dark-bg">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Reference</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-dark-card divide-y divide-dark-border">
+                        {% for transaction in stats.transactions.recent_transactions %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                {{ transaction.created_at|date:"M d, Y H:i" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if transaction.type == 'DEPOSIT' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Deposit
+                                    </span>
+                                {% elif transaction.type == 'WITHDRAW' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        Withdraw
+                                    </span>
+                                {% elif transaction.type == 'BET' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        Bet
+                                    </span>
+                                {% elif transaction.type == 'WIN' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Win
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ transaction.type }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                ${{ transaction.amount|floatformat:2 }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if transaction.status == 'success' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Success
+                                    </span>
+                                {% elif transaction.status == 'pending' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        Pending
+                                    </span>
+                                {% elif transaction.status == 'failed' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        Failed
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ transaction.status }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                                {{ transaction.reference|default:"-" }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-8">
+                <p class="text-gray-400">No recent transactions found</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Withdrawal Requests -->
+    {% if stats.withdrawals.recent_requests %}
+    <div class="bg-dark-card border border-dark-border rounded-lg p-6 mt-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Recent Withdrawal Requests</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-dark-border">
+                <thead class="bg-dark-bg">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Account</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-dark-card divide-y divide-dark-border">
+                    {% for request in stats.withdrawals.recent_requests %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                            {{ request.created_at|date:"M d, Y H:i" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                            ${{ request.amount|floatformat:2 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if request.status == 'success' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Success
+                                </span>
+                            {% elif request.status == 'pending' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Pending
+                                </span>
+                            {% elif request.status == 'failed' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    Failed
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                            {{ request.acc_number|default:"Not provided" }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
