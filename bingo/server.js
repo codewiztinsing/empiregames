@@ -18,7 +18,7 @@ const server = http.createServer(app);
 
 const getConstant = async () => {
   return {
-    gameSpeed: 5000,
+    gameSpeed: 500,
     countDown: 30
   }
 }
@@ -89,7 +89,10 @@ async  function endGame(game) {
   game.status = "waiting";
   game.gameOver = false;
   game.winner = null;
-  game.countDown = 30;
+  
+  // Get countdown from constants
+  const constants = await getConstant();
+  game.countDown = constants.countDown;
   game.isCountStart = false;
 
   for (const [socketId, user] of users.entries()) {
@@ -108,6 +111,19 @@ async  function endGame(game) {
     status: "waiting",
     roomId: game.roomId,
     gameId: game.id
+  });
+
+  // Emit room update for landing page
+  console.log("Emitting roomUpdate after game end for room:", game.roomId);
+  io.emit("roomUpdate", {
+    roomId: game.roomId,
+    roomCountDown: constants.countDown,
+    gameStatus: "waiting",
+    playersCount: 0,
+    countDown: constants.countDown,
+    pickedNumbers: [],
+    totalWinAmount: 0,
+    totalPlayers: 0
   });
 
   // Emit updated global stats
@@ -132,11 +148,14 @@ function getWaitingGames(activeGames,status="in-progress") {
   return waitingGames;
 }
 
-function startCountDown(game) {
+async function startCountDown(game) {
  
   if (game.isCountStart || game.players.size < 1) return;
   clearGameIntervals(game.id);
-  game.countDown = game.countDown;
+  
+  // Get countdown from constants
+  const constants = await getConstant();
+  game.countDown = constants.countDown;
   game.isCountStart = true;
 
   const countdownInterval = setInterval(() => {
@@ -164,6 +183,7 @@ function startCountDown(game) {
     console.log("Countdown roomUpdate for room:", game.roomId, "countdown:", game.countDown);
     io.emit("roomUpdate", {
       roomId: game.roomId,
+      roomCountDown: game.countDown,
       gameStatus: game.status,
       playersCount: game.players.size,
       countDown: game.countDown,
@@ -187,18 +207,20 @@ function startCountDown(game) {
 
   
 
-    if (game.countDown === 0) {
+    // Decrement countdown
+    game.countDown--;
+    
+    if (game.countDown <= 0) {
       clearInterval(countdownInterval);
       game.isCountStart = false;
       game.status = "waiting";
-      game.countDown = game.countDown;
+      game.countDown = constants.countDown; // Reset to initial value
       game.currentCall = null;
       game.calledNumbers = [];
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== null);
       game.win_amount = game.roomId * game.selectedNumbers.length * 0.8
       startGame(game);
     }
-    game.countDown--;
   }, 1000);
  
   gameIntervals.set(game.id, [countdownInterval]);
@@ -397,6 +419,7 @@ io.on('connection', (socket) => {
     console.log("Emitting roomUpdate for room:", game.roomId, "players:", game.players.size);
     io.emit("roomUpdate", {
       roomId: game.roomId,
+      roomCountDown: game.countDown,
       gameStatus: game.status,
       playersCount: game.players.size,
       countDown: game.countDown,
@@ -543,9 +566,12 @@ socket.on("leave",(data) => {
   });
 
   // Handle rooms overview requests
-  socket.on("getAllRooms", () => {
+  socket.on("getAllRooms", async () => {
     const roomsData = [];
     let totalPlayersOnline = 0;
+    
+    // Get countdown from constants
+    const constants = await getConstant();
     
     // Always ensure we have all default rooms (10, 20, 50, 100)
     const defaultRooms = [10, 20, 50, 100];
@@ -557,9 +583,10 @@ socket.on("leave",(data) => {
       
       roomsData.push({
         roomId: roomId,
+        roomCountDown: game ? game.countDown : constants.countDown,
         gameStatus: game ? game.status : 'waiting',
         playersCount: playersCount,
-        countDown: game ? game.countDown : 30,
+        countDown: game ? game.countDown : constants.countDown,
         pickedNumbers: game ? (game.calledNumbers || []) : [],
         totalWinAmount: game ? (game.total_winAmount || 0) : 0,
         totalPlayers: game ? (game.total_players || 0) : 0

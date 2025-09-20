@@ -273,6 +273,15 @@ const handleGlobals = (state) => {
       return;
     }
 
+    socket.on("joinError", (error) => {
+      setToast(error.message);
+      setIsToast(true);
+      return;
+    })
+
+    // check for join error
+    
+
     if (balance < parseInt(roomId) || balance == 0) {
       setToast("Insufficient balance");
       setIsToast(true);
