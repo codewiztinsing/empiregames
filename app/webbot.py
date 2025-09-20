@@ -268,8 +268,9 @@ async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYP
         bank_id = context.user_data['bank_id']
         banks_to_bank_id = context.user_data['banks_to_bank_id']
         bank_id = banks_to_bank_id.get(f"{bank_id}".title())
+        account_number = account_number.strip()
         # transfer_funds(f"{update.effective_user.first_name} {update.effective_user.last_name}", account_number, withdraw_amount, "ETB", generate_tx_ref(), bank_id)
-        create_withdrawal_request(update.effective_user.id, withdraw_amount)
+        create_withdrawal_request(update.effective_user.id, withdraw_amount,account_number)
         await update.message.reply_text("Please wait message from CBE/Telebirr. Your withdrawal will be processed within 30 minutes.")
         return ConversationHandler.END
     except Exception as e:

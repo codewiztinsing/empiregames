@@ -18,15 +18,15 @@
         <p class="text-gray-400 mb-4">Send a message to all users who have connected with the Telegram bot. Messages will be delivered through the Telegram bot.</p>
         
         <form id="broadcastForm">
-            <div class="mb-4">
-                <label class="block text-gray-300 text-sm font-medium mb-2">Message Content</label>
-                <textarea 
+        <div class="mb-4">
+            <label class="block text-gray-300 text-sm font-medium mb-2">Message Content</label>
+            <textarea 
                     id="messageContent"
                     name="message"
-                    class="w-full h-32 bg-dark-bg text-white p-4 rounded-lg border border-dark-border resize-none"
-                    placeholder="Enter your message here. You can use HTML formatting (b-bold, br-new line, etc.)"
+                class="w-full h-32 bg-dark-bg text-white p-4 rounded-lg border border-dark-border resize-none"
+                placeholder="Enter your message here. You can use HTML formatting (b-bold, br-new line, etc.)"
                     required
-                ></textarea>
+            ></textarea>
             </div>
 
             <div class="flex justify-end">
@@ -50,7 +50,7 @@
                 <div id="progressBar" class="bg-purple-primary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
             </div>
         </div>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div class="bg-dark-bg rounded-lg p-4">
                 <div class="text-gray-400 text-sm">Total Recipients</div>
@@ -94,19 +94,19 @@
                 <tbody class="divide-y divide-dark-border">
                     {% if broadcasts %}
                         {% for broadcast in broadcasts %}
-                        <tr class="hover:bg-dark-bg transition-colors">
-                            <td class="py-3 px-4">
+                    <tr class="hover:bg-dark-bg transition-colors">
+                        <td class="py-3 px-4">
                                 <div class="text-white text-sm">{{ broadcast.message|truncatechars:100 }}</div>
                                 <div class="text-gray-400 text-xs mt-1">Broadcast #{{ broadcast.id }}</div>
-                            </td>
+                        </td>
                             <td class="py-3 px-4 text-white">
                                 {{ broadcast.sent_count }}/{{ broadcast.total_recipients }} users
                                 {% if broadcast.failed_count > 0 %}
                                     <div class="text-red-400 text-xs">{{ broadcast.failed_count }} failed</div>
                                 {% endif %}
-                            </td>
+                        </td>
                             <td class="py-3 px-4 text-gray-300 text-sm">{{ broadcast.created_at|date:"M d, Y H:i" }}</td>
-                            <td class="py-3 px-4">
+                        <td class="py-3 px-4">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                     {% if broadcast.status == 'completed' %}bg-green-100 text-green-800
                                     {% elif broadcast.status == 'sending' %}bg-yellow-100 text-yellow-800
@@ -115,25 +115,25 @@
                                     {% elif broadcast.status == 'cancelled' %}bg-gray-100 text-gray-800
                                     {% endif %}">
                                     {{ broadcast.status|title }}
-                                </span>
-                            </td>
-                            <td class="py-3 px-4">
-                                <div class="flex items-center space-x-2">
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center space-x-2">
                                     <button onclick="viewBroadcast({{ broadcast.id }})" class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                        View
-                                    </button>
+                                    View
+                                </button>
                                     {% if broadcast.status == 'completed' %}
                                         <button onclick="resendBroadcast({{ broadcast.id }})" class="text-blue-400 hover:text-blue-300 text-sm font-medium">
-                                            Resend
-                                        </button>
+                                    Resend
+                                </button>
                                     {% elif broadcast.status == 'sending' %}
                                         <button onclick="cancelBroadcast({{ broadcast.id }})" class="text-red-400 hover:text-red-300 text-sm font-medium">
-                                            Cancel
-                                        </button>
+                                    Cancel
+                                </button>
                                     {% endif %}
-                                </div>
-                            </td>
-                        </tr>
+                            </div>
+                        </td>
+                    </tr>
                         {% endfor %}
                     {% else %}
                         <tr>
@@ -144,9 +144,9 @@
                                     </svg>
                                     <p class="text-lg font-medium text-gray-400">No broadcast messages found</p>
                                     <p class="text-sm text-gray-500 mt-1">Start by sending your first broadcast message</p>
-                                </div>
-                            </td>
-                        </tr>
+                            </div>
+                        </td>
+                    </tr>
                     {% endif %}
                 </tbody>
             </table>
@@ -162,7 +162,7 @@
                 {% if page_obj.has_previous %}
                     <a href="?page={{ page_obj.previous_page_number }}" 
                        class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                        Previous
+                    Previous
                     </a>
                 {% endif %}
                 
@@ -307,17 +307,17 @@ function startBroadcast() {
     
     // Start broadcast
     fetch('/dashboard/api/broadcast-message/', {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            message: message
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
         if (data.success) {
             currentBroadcastId = data.broadcast_id;
             startProgressTracking();

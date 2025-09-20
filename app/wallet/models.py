@@ -90,6 +90,7 @@ class WithdrawalRequest(models.Model):
     amount = models.FloatField()
     status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
     rejection_reason = models.TextField(blank=True, null=True, help_text="Reason for rejection if status is failed")
+    acc_number = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

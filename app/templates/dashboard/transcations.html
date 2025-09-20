@@ -87,23 +87,33 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <div class="bg-green-600 rounded-lg p-4">
             <div class="text-white">
                 <div class="text-sm opacity-90">Total In</div>
-                <div class="text-2xl font-bold">ETB {{ total_in }}</div>
+                <div class="text-2xl font-bold">ETB {{ total_in|floatformat:2 }}</div>
+                <div class="text-xs opacity-75 mt-1">{{ total_in_count }} transactions</div>
             </div>
         </div>
         <div class="bg-red-600 rounded-lg p-4">
             <div class="text-white">
                 <div class="text-sm opacity-90">Total Out</div>
-                <div class="text-2xl font-bold">ETB {{ total_out }}</div>
+                <div class="text-2xl font-bold">ETB {{ total_out|floatformat:2 }}</div>
+                <div class="text-xs opacity-75 mt-1">{{ total_out_count }} transactions</div>
             </div>
         </div>
         <div class="bg-blue-600 rounded-lg p-4">
             <div class="text-white">
-                <div class="text-sm opacity-90">Net</div>
-                <div class="text-2xl font-bold">ETB {{ net }}</div>
+                <div class="text-sm opacity-90">Net Balance</div>
+                <div class="text-2xl font-bold {% if net >= 0 %}text-green-200{% else %}text-red-200{% endif %}">ETB {{ net|floatformat:2 }}</div>
+                <div class="text-xs opacity-75 mt-1">{{ total_transactions }} total</div>
+            </div>
+        </div>
+        <div class="bg-purple-600 rounded-lg p-4">
+            <div class="text-white">
+                <div class="text-sm opacity-90">Pending</div>
+                <div class="text-2xl font-bold">{{ pending_count }}</div>
+                <div class="text-xs opacity-75 mt-1">awaiting approval</div>
             </div>
         </div>
     </div>
@@ -112,7 +122,25 @@
     <div class="bg-dark-card rounded-lg border border-dark-border">
         <!-- Table Header -->
         <div class="p-4 border-b border-dark-border">
-            <h2 class="text-lg font-semibold text-white">All Transactions</h2>
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-semibold text-white">All Transactions</h2>
+                    <p class="text-sm text-gray-400 mt-1">
+                        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
+                        {% if search_query or current_type != 'all' or current_status != 'all' or current_date_range != '30' %}
+                            (filtered)
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="exportTransactions()" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded">
+                        Export CSV
+                    </button>
+                    <button onclick="refreshData()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded">
+                        Refresh
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Table -->
@@ -137,8 +165,9 @@
                             <td class="py-3 px-4 text-white font-mono text-sm">{{ transaction.id }}</td>
                             <td class="py-3 px-4 text-white">
                                 <div>
-                                    <div class="font-medium">{{ transaction.user.username }}</div>
+                                    <div class="font-medium">{{ transaction.user.username|default:"Unknown" }}</div>
                                     <div class="text-xs text-gray-400">{{ transaction.user.phone|default:"N/A" }}</div>
+                                    <div class="text-xs text-gray-500">ID: {{ transaction.user.id }}</div>
                                 </div>
                             </td>
                             <td class="py-3 px-4">
@@ -151,10 +180,15 @@
                                     {{ transaction.type }}
                                 </span>
                             </td>
-                            <td class="py-3 px-4 font-semibold
-                                {% if transaction.type == 'DEPOSIT' or transaction.type == 'WIN' %}text-green-400
-                                {% else %}text-red-400{% endif %}">
-                                {% if transaction.type == 'DEPOSIT' or transaction.type == 'WIN' %}+{% else %}-{% endif %}ETB {{ transaction.amount|floatformat:2 }}
+                            <td class="py-3 px-4">
+                                <div class="font-semibold
+                                    {% if transaction.type == 'DEPOSIT' or transaction.type == 'WIN' %}text-green-400
+                                    {% else %}text-red-400{% endif %}">
+                                    {% if transaction.type == 'DEPOSIT' or transaction.type == 'WIN' %}+{% else %}-{% endif %}ETB {{ transaction.amount|floatformat:2 }}
+                                </div>
+                                <div class="text-xs text-gray-400 mt-1">
+                                    {% if transaction.type == 'BET' %}Game Entry{% elif transaction.type == 'WIN' %}Prize{% else %}{{ transaction.type|title }}{% endif %}
+                                </div>
                             </td>
                             <td class="py-3 px-4">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
@@ -165,14 +199,36 @@
                                     {{ transaction.status|title }}
                                 </span>
                             </td>
-                            <td class="py-3 px-4 text-white text-xs font-mono">{{ transaction.reference|default:"N/A" }}</td>
-                            <td class="py-3 px-4 text-gray-300 text-sm">{{ transaction.created_at|date:"M d, Y H:i" }}</td>
+                            <td class="py-3 px-4 text-white">
+                                <div class="text-xs font-mono">{{ transaction.reference|default:"N/A" }}</div>
+                                <div class="text-xs text-gray-400 mt-1">
+                                    {% if transaction.payment_method %}{{ transaction.payment_method|title }}{% else %}Manual{% endif %}
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 text-gray-300">
+                                <div class="text-sm">{{ transaction.created_at|date:"M d, Y" }}</div>
+                                <div class="text-xs text-gray-400">{{ transaction.created_at|date:"H:i:s" }}</div>
+                                <div class="text-xs text-gray-500">{{ transaction.created_at|timesince }} ago</div>
+                            </td>
                             <td class="py-3 px-4">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    <a href="{% url 'wallet:transaction_details' transaction.id %}">
+                                <div class="flex items-center space-x-2">
+                                    <a href="{% url 'wallet:transaction_details' transaction.id %}" 
+                                       class="text-purple-primary hover:text-purple-hover text-sm font-medium">
                                         Details
                                     </a>
-                                </button>
+                                    {% if transaction.status == 'pending' and transaction.type == 'WITHDRAW' %}
+                                        <button data-transaction-id="{{ transaction.id }}" 
+                                                data-action="approve"
+                                                class="text-green-400 hover:text-green-300 text-xs transaction-action">
+                                            Approve
+                                        </button>
+                                        <button data-transaction-id="{{ transaction.id }}" 
+                                                data-action="reject"
+                                                class="text-red-400 hover:text-red-300 text-xs transaction-action">
+                                            Reject
+                                        </button>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}
@@ -258,7 +314,105 @@ document.addEventListener('DOMContentLoaded', function() {
     // Optional: Auto-submit on filter change
     // typeSelect.addEventListener('change', () => filterForm.submit());
     // statusSelect.addEventListener('change', () => filterForm.submit());
+    
+    // Handle transaction action buttons
+    const actionButtons = document.querySelectorAll('.transaction-action');
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const transactionId = this.getAttribute('data-transaction-id');
+            const action = this.getAttribute('data-action');
+            
+            if (action === 'approve') {
+                approveTransaction(transactionId);
+            } else if (action === 'reject') {
+                rejectTransaction(transactionId);
+            }
+        });
+    });
 });
+
+// Export transactions to CSV
+function exportTransactions() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'csv');
+    window.open('?' + params.toString(), '_blank');
+}
+
+// Refresh data
+function refreshData() {
+    window.location.reload();
+}
+
+// Approve transaction
+function approveTransaction(transactionId) {
+    if (confirm('Are you sure you want to approve this withdrawal?')) {
+        fetch(`/api/transactions/${transactionId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while approving the transaction.');
+        });
+    }
+}
+
+// Reject transaction
+function rejectTransaction(transactionId) {
+    const reason = prompt('Please enter a reason for rejection:');
+    if (reason && reason.trim()) {
+        fetch(`/api/transactions/${transactionId}/reject/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ reason: reason.trim() })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while rejecting the transaction.');
+        });
+    }
+}
+
+// Real-time updates (optional)
+function startRealTimeUpdates() {
+    setInterval(() => {
+        // Update pending count
+        fetch('/api/transactions/pending-count/')
+            .then(response => response.json())
+            .then(data => {
+                const pendingElement = document.querySelector('.bg-purple-600 .text-2xl');
+                if (pendingElement && data.pending_count !== undefined) {
+                    pendingElement.textContent = data.pending_count;
+                }
+            })
+            .catch(error => console.error('Error updating pending count:', error));
+    }, 30000); // Update every 30 seconds
+}
+
+// Start real-time updates if enabled
+// startRealTimeUpdates();
 </script>
 
 {% endblock %}

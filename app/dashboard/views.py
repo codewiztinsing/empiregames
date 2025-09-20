@@ -27,27 +27,197 @@ from .models import BroadcastMessage
 
 @admin_or_support_required
 def dashboard(request):
-    new_users = User.objects.filter(created_at__gte=timezone.now() - timedelta(days=30)).count()
-    games_played = Game.objects.filter(created_at__gte=timezone.now() - timedelta(days=30)).count()
-    # get all games that have ended
-    games_ended = Game.objects.filter(ended=True, created_at__gte=timezone.now() - timedelta(days=30))
+    # Get filter parameters
+    period = request.GET.get('period', '30')  # Default to 30 days
+    search_query = request.GET.get('search', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
+    # Calculate date range based on period
+    if period == '7':
+        days = 7
+    elif period == '90':
+        days = 90
+    elif period == '365':
+        days = 365
+    else:
+        days = 30
+    
+    # Base date filter
+    date_filter = timezone.now() - timedelta(days=days)
+    
+    # Apply custom date range if provided
+    if date_from and date_to:
+        try:
+            from datetime import datetime
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            # Convert to timezone-aware datetime
+            date_from_obj = timezone.make_aware(datetime.combine(date_from_obj, datetime.min.time()))
+            date_to_obj = timezone.make_aware(datetime.combine(date_to_obj, datetime.max.time()))
+        except ValueError:
+            date_from_obj = date_filter
+            date_to_obj = timezone.now()
+    else:
+        date_from_obj = date_filter
+        date_to_obj = timezone.now()
+    
+    # User Statistics
+    total_users = User.objects.count()
+    new_users = User.objects.filter(created_at__gte=date_from_obj, created_at__lte=date_to_obj).count()
+    active_users = User.objects.filter(last_login__gte=date_from_obj).count()
+    
+    # Apply search filter to users if provided
+    if search_query:
+        users_query = User.objects.filter(
+            username__icontains=search_query
+        ).filter(created_at__gte=date_from_obj, created_at__lte=date_to_obj)
+    else:
+        users_query = User.objects.filter(created_at__gte=date_from_obj, created_at__lte=date_to_obj)
+    
+    # Game Statistics
+    total_games = Game.objects.count()
+    games_played = Game.objects.filter(created_at__gte=date_from_obj, created_at__lte=date_to_obj).count()
+    games_ended = Game.objects.filter(ended=True, created_at__gte=date_from_obj, created_at__lte=date_to_obj)
+    games_active = Game.objects.filter(ended=False, created_at__gte=date_from_obj, created_at__lte=date_to_obj).count()
+    
+    # Calculate total winnings and commission
     total_winnings = sum(game.entry_fee for game in games_ended)
-    last_30_days_commission = float(total_winnings) * 0.2
-    total_deposits = Transaction.objects.filter(type="DEPOSIT", created_at__gte=timezone.now() - timedelta(days=30)).count()
-    total_withdrawals = Transaction.objects.filter(type="WITHDRAW", created_at__gte=timezone.now() - timedelta(days=30)).count()
-    total_withdrawals_amount = Transaction.objects.filter(type="WITHDRAW", created_at__gte=timezone.now() - timedelta(days=30)).aggregate(Sum('amount'))['amount__sum'] or 0
-    total_deposits_amount = Transaction.objects.filter(type="DEPOSIT", created_at__gte=timezone.now() - timedelta(days=30)).aggregate(Sum('amount'))['amount__sum'] or 0
-   
-
+    commission_rate = 0.2  # 20% commission
+    total_commission = float(total_winnings) * commission_rate
+    net_revenue = float(total_winnings) - total_commission
+    
+    # Transaction Statistics
+    deposits_query = Transaction.objects.filter(type="DEPOSIT", created_at__gte=date_from_obj, created_at__lte=date_to_obj)
+    withdrawals_query = Transaction.objects.filter(type="WITHDRAW", created_at__gte=date_from_obj, created_at__lte=date_to_obj)
+    
+    total_deposits_count = deposits_query.count()
+    total_withdrawals_count = withdrawals_query.count()
+    total_deposits_amount = deposits_query.aggregate(Sum('amount'))['amount__sum'] or 0
+    total_withdrawals_amount = withdrawals_query.aggregate(Sum('amount'))['amount__sum'] or 0
+    
+    # Withdrawal Requests Statistics
+    pending_withdrawals = WithdrawalRequest.objects.filter(status="pending").count()
+    approved_withdrawals = WithdrawalRequest.objects.filter(status="success", created_at__gte=date_from_obj, created_at__lte=date_to_obj).count()
+    rejected_withdrawals = WithdrawalRequest.objects.filter(status="failed", created_at__gte=date_from_obj, created_at__lte=date_to_obj).count()
+    
+    # Referral Statistics
+    total_referrals = Referral.objects.count()
+    new_referrals = Referral.objects.filter(created_at__gte=date_from_obj, created_at__lte=date_to_obj).count()
+    referral_bonus_paid = Referral.objects.filter(bonus_paid=True, created_at__gte=date_from_obj, created_at__lte=date_to_obj).aggregate(Sum('bonus_amount'))['bonus_amount__sum'] or 0
+    
+    # Financial Summary
+    net_balance = total_deposits_amount - total_withdrawals_amount
+    profit_margin = (total_commission / total_deposits_amount * 100) if total_deposits_amount > 0 else 0
+    
+    # Recent Activity (last 10 items)
+    recent_users = User.objects.filter(created_at__gte=date_from_obj, created_at__lte=date_to_obj).order_by('-created_at')[:10]
+    recent_games = Game.objects.filter(created_at__gte=date_from_obj, created_at__lte=date_to_obj).order_by('-created_at')[:10]
+    recent_transactions = Transaction.objects.filter(created_at__gte=date_from_obj, created_at__lte=date_to_obj).order_by('-created_at')[:10]
+    
+    # Game Type Statistics
+    game_types = GameType.objects.all()
+    game_type_stats = []
+    for game_type in game_types:
+        games_count = Game.objects.filter(
+            entry_fee=game_type.bet_amount,
+            created_at__gte=date_from_obj,
+            created_at__lte=date_to_obj
+        ).count()
+        game_type_stats.append({
+            'bet_amount': game_type.bet_amount,
+            'commission': game_type.commission,
+            'games_count': games_count,
+            'revenue': games_count * game_type.bet_amount * (game_type.commission / 100)
+        })
+    
+    # Daily statistics for charts (last 7 days)
+    daily_stats = []
+    for i in range(7):
+        day = timezone.now() - timedelta(days=i)
+        day_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        daily_users = User.objects.filter(created_at__gte=day_start, created_at__lte=day_end).count()
+        daily_games = Game.objects.filter(created_at__gte=day_start, created_at__lte=day_end).count()
+        daily_deposits = Transaction.objects.filter(
+            type="DEPOSIT", 
+            created_at__gte=day_start, 
+            created_at__lte=day_end
+        ).aggregate(Sum('amount'))['amount__sum'] or 0
+        daily_withdrawals = Transaction.objects.filter(
+            type="WITHDRAW", 
+            created_at__gte=day_start, 
+            created_at__lte=day_end
+        ).aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        daily_stats.append({
+            'date': day.strftime('%Y-%m-%d'),
+            'day_name': day.strftime('%a'),
+            'users': daily_users,
+            'games': daily_games,
+            'deposits': float(daily_deposits),
+            'withdrawals': float(daily_withdrawals),
+            'net': float(daily_deposits - daily_withdrawals)
+        })
+    
+    daily_stats.reverse()  # Show oldest to newest
+    
     context = {
         'page_title': 'Dashboard',
+        'period': period,
+        'search_query': search_query,
+        'date_from': date_from,
+        'date_to': date_to,
+        
+        # User Statistics
+        'total_users': total_users,
         'new_users': new_users,
+        'active_users': active_users,
+        
+        # Game Statistics
+        'total_games': total_games,
         'games_played': games_played,
-        'last_30_days_commission': last_30_days_commission,
-        'total_deposits': total_deposits,
-        'total_withdrawals': total_withdrawals,
+        'games_active': games_active,
+        'total_winnings': total_winnings,
+        'total_commission': total_commission,
+        'net_revenue': net_revenue,
+        
+        # Transaction Statistics
+        'total_deposits_count': total_deposits_count,
+        'total_withdrawals_count': total_withdrawals_count,
+        'total_deposits_amount': total_deposits_amount,
         'total_withdrawals_amount': total_withdrawals_amount,
-        'total_deposits_amount': total_deposits_amount
+        
+        # Withdrawal Request Statistics
+        'pending_withdrawals': pending_withdrawals,
+        'approved_withdrawals': approved_withdrawals,
+        'rejected_withdrawals': rejected_withdrawals,
+        
+        # Referral Statistics
+        'total_referrals': total_referrals,
+        'new_referrals': new_referrals,
+        'referral_bonus_paid': referral_bonus_paid,
+        
+        # Financial Summary
+        'net_balance': net_balance,
+        'profit_margin': profit_margin,
+        
+        # Recent Activity
+        'recent_users': recent_users,
+        'recent_games': recent_games,
+        'recent_transactions': recent_transactions,
+        
+        # Game Type Statistics
+        'game_type_stats': game_type_stats,
+        
+        # Chart Data
+        'daily_stats': daily_stats,
+        
+        # Legacy fields for backward compatibility
+        'last_30_days_commission': total_commission,
+        'total_deposits': total_deposits_count,
+        'total_withdrawals': total_withdrawals_count,
     }
     return render(request, 'dashboard/index.html', context)
 
@@ -385,7 +555,12 @@ def transcations(request):
     total_transactions = transactions.count()
     total_in = transactions.filter(type="DEPOSIT").aggregate(Sum('amount'))['amount__sum'] or 0
     total_out = transactions.filter(type="WITHDRAW").aggregate(Sum('amount'))['amount__sum'] or 0
-    net = total_in - total_out
+    net = float(total_in) - float(total_out)
+    
+    # Additional counts for enhanced display
+    total_in_count = transactions.filter(type="DEPOSIT").count()
+    total_out_count = transactions.filter(type="WITHDRAW").count()
+    pending_count = transactions.filter(status="pending").count()
     
     has_next = page_obj.has_next()
     has_previous = page_obj.has_previous()
@@ -400,6 +575,9 @@ def transcations(request):
         'total_in': total_in,
         'total_out': total_out,
         'net': net,
+        'total_in_count': total_in_count,
+        'total_out_count': total_out_count,
+        'pending_count': pending_count,
         'has_next': has_next,
         'has_previous': has_previous,
         'next_page': next_page,

@@ -481,8 +481,9 @@ def withdrawal_request(request):
     try:
         data = json.loads(request.body.decode('utf-8'))
         amount = data.get("amount")
+        acc_number = data.get("acc_number")
         user = User.objects.filter(telegram_id=data.get("telegram_id")).first()
-        withdrawal_request = WithdrawalRequest.objects.create(user=user,amount=amount,status="pending")
+        withdrawal_request = WithdrawalRequest.objects.create(user=user,amount=amount,status="pending",acc_number=acc_number)
         return JsonResponse({"message": "Withdrawal request created successfully"}, status=200)
     except Exception as e:
         print(f"Error processing Withdrawal request: {e}")
