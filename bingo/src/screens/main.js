@@ -492,7 +492,7 @@ const PlayingBoard = () => {
 
           
 
-          <div className="recent-called-numbers-container">
+          {/* <div className="recent-called-numbers-container">
               {countDown > 0  && countDown != 29 ? (
                 // Show countdown when greater than 0
                 <div className='game-starting-container'>
@@ -517,7 +517,7 @@ const PlayingBoard = () => {
                   </div>
                 </div>
               )}
-            </div>
+            </div> */}
 
           <div className='boards-container'>
 

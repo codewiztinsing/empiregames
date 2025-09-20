@@ -10,6 +10,8 @@
   padding: 10px 0 20px 0;
   position: relative;
   box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Loading and Error States */
@@ -203,7 +205,6 @@
   width: 100%;
   gap: 12px;
   flex: 1;
-  overflow-y: auto;
   padding: 0 5%;
   box-sizing: border-box;
 }
