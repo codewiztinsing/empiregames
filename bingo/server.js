@@ -18,8 +18,8 @@ const server = http.createServer(app);
 
 const getConstant = async () => {
   return {
-    gameSpeed: 5000,
-    countDown: 30
+    gameSpeed: 500,
+    countDown: 3
   }
 }
 

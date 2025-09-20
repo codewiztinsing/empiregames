@@ -2,22 +2,25 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const gameWinWallet = async (player,bet_amount,win_amount)=>{
+const gameWinWallet = async (playerId,bet_amount,win_amount)=>{
   const current_game = await getCurrentGame(bet_amount)
   const game_id = current_game.game_id
   const data = {
-      player,
+      playerId,
       win_amount ,
-      game_id
+      game_id,
   };
 
-  if(!data.player || !data.win_amount || !data.game_id) return null;
+  console.log("data win wallet",data)
+
+  if(!data.playerId || !data.win_amount || !data.game_id) return null;
   
   try{
     const backUrl = process.env.BACK_URL
     console.log("backUrl",backUrl)
     const winUrl = backUrl + 'game/win-game/'
     console.log("winUrl",winUrl)
+    console.log("data win wallet",data)
     await axios.post(winUrl,data)
               .then(res=>{
                   console.log("gameWinWallet res",res.data)
