@@ -39,11 +39,16 @@ let activeGames = new Map();
 const gameIntervals = new Map();
 const users = new Map();
 const winners = [];
+const globalStats = {
+  totalGamesPlayed: 0,
+  totalWinnings: 0,
+  totalPlayersOnline: 0,
+  lastCalledNumber: null,
+  globalCountdown: 30
+};
 
 async function createGame(roomId) {
   const gameSettings = await getConstant();
- 
-
   const game = {
     id: roomId,
     players: new Map(), // Map<playerId, Board[]>
@@ -92,6 +97,11 @@ async  function endGame(game) {
   }
 
   const data = await updateLastGame(game.roomId);
+  
+  // Update global stats
+  globalStats.totalGamesPlayed += 1;
+  globalStats.totalWinnings += game.total_winAmount || 0;
+  
   startCountDown(game);
 
   io.emit("gameStatus", {
@@ -99,6 +109,9 @@ async  function endGame(game) {
     roomId: game.roomId,
     gameId: game.id
   });
+
+  // Emit updated global stats
+  io.emit("globalStats", globalStats);
 }
 
 function getWaitingGames(activeGames,status="in-progress") {
@@ -121,12 +134,13 @@ function getWaitingGames(activeGames,status="in-progress") {
 
 function startCountDown(game) {
  
-  if (game.isCountStart || game.players.size < 2) return;
+  if (game.isCountStart || game.players.size < 1) return;
   clearGameIntervals(game.id);
   game.countDown = game.countDown;
   game.isCountStart = true;
 
   const countdownInterval = setInterval(() => {
+    // Emit to specific room for players in that room
     io.to(game.roomId).emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
@@ -136,10 +150,39 @@ function startCountDown(game) {
       count_down: game.countDown
     });
 
+    // Emit globally for landing page and other overview pages
+    io.emit("gameState", {
+      gameId: game.id,
+      roomId: game.roomId,
+      pickedNumbers: game.selectedNumbers.filter(num => num !== null),
+      total_players: game.selectedNumbers.filter(num => num !== null).length,
+      game_status: game.status,
+      count_down: game.countDown
+    });
+
+    // Emit room update for rooms overview
+    console.log("Countdown roomUpdate for room:", game.roomId, "countdown:", game.countDown);
+    io.emit("roomUpdate", {
+      roomId: game.roomId,
+      gameStatus: game.status,
+      playersCount: game.players.size,
+      countDown: game.countDown,
+      pickedNumbers: game.calledNumbers || [],
+      totalWinAmount: game.total_winAmount,
+      totalPlayers: game.total_players
+    });
+
+    // Update global stats
+    globalStats.globalCountdown = game.countDown;
+    
     io.emit("globals", {
       roomId: game.roomId,
-      countDown: game.countDown
-    })
+      countDown: game.countDown,
+      totalPlayers: globalStats.totalPlayersOnline,
+      totalGamesPlayed: globalStats.totalGamesPlayed,
+      totalWinnings: globalStats.totalWinnings,
+      lastBall: globalStats.lastCalledNumber
+    });
   
 
   
@@ -216,6 +259,11 @@ async function startGame(game) {
       })
       endGame(game);
     }
+    // Update global stats
+    globalStats.lastCalledNumber = game.currentCall;
+    globalStats.totalWinnings += game.total_winAmount || 0;
+    globalStats.totalGamesPlayed += 1;
+    
     io.emit("globals", {
       roomId: game.roomId,
       lastBall: game.currentCall,
@@ -224,8 +272,9 @@ async function startGame(game) {
       totalPlayers: game.players.size,
       totalWinAmount: game.total_winAmount,
       totalPlayers: game.total_players,
-  
-    })
+      totalGamesPlayed: globalStats.totalGamesPlayed,
+      totalWinnings: globalStats.totalWinnings
+    });
    
   }, game.gameSpeed);
 
@@ -263,16 +312,21 @@ io.on('connection', (socket) => {
     socket.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   });
 
+  // Send initial room data for all default rooms
+  const defaultRooms = [10, 20, 50, 100];
+  const initialWaitingGames = defaultRooms.map(roomId => {
+    const game = activeGames.get(roomId);
+    return {
+      id: roomId,
+      betAmount: roomId,
+      players: game ? game.players.size : 0,
+      status: game ? game.status : 'waiting'
+    };
+  });
   
-  const waitingGames = getWaitingGames(activeGames, "waiting");
-  const inProgressGames = getWaitingGames(activeGames, "in-progress");
-  socket.emit("waitingGames", [...waitingGames, ...inProgressGames]);
+  socket.emit("waitingGames", initialWaitingGames);
 
   socket.on("handleRefresh",handleRefresh)
-  
-
-
-  socket.emit("waitingGames", waitingGames);
 
   socket.on("joinGame", (data) => {
 
@@ -339,7 +393,27 @@ io.on('connection', (socket) => {
       players: playersList
     });
 
-    if (!game.isCountStart && game.players.size >= 2) {
+    // Emit room update for rooms overview
+    console.log("Emitting roomUpdate for room:", game.roomId, "players:", game.players.size);
+    io.emit("roomUpdate", {
+      roomId: game.roomId,
+      gameStatus: game.status,
+      playersCount: game.players.size,
+      countDown: game.countDown,
+      pickedNumbers: game.calledNumbers || [],
+      totalWinAmount: game.total_winAmount,
+      totalPlayers: game.total_players
+    });
+
+    // Update global stats
+    let totalPlayersOnline = 0;
+    for (const g of activeGames.values()) {
+      totalPlayersOnline += g.players ? g.players.size : 0;
+    }
+    globalStats.totalPlayersOnline = totalPlayersOnline;
+    io.emit("globalStats", globalStats);
+
+    if (!game.isCountStart && game.players.size >= 1) {
       startCountDown(game);
     }
 
@@ -351,7 +425,7 @@ io.on('connection', (socket) => {
 
 
     const waitingGames = getWaitingGames(activeGames,"waiting");
-    io.emit("waitingGames",waitingGames)
+    io.emit("waitingGames",waitingGames);
    
 
   });
@@ -417,16 +491,10 @@ io.on('connection', (socket) => {
         playerId: data.playerId,
         losser_board: boardNumber,
       })
-    }
-      
-
-  
-    
+    }  
 });
   
-
-
-  socket.on("leave",(data) => {
+socket.on("leave",(data) => {
     const game = activeGames.get(data.roomId);
     if (!game) return;
   
@@ -458,12 +526,52 @@ io.on('connection', (socket) => {
       playerId: data.playerId,
       selectedNumber: data.selectedNumber,
       selectedNumber2: data.selectedNumber2
-    })
+    });
+
+    // Update global stats after player leaves
+    let totalPlayersOnline = 0;
+    for (const g of activeGames.values()) {
+      totalPlayersOnline += g.players ? g.players.size : 0;
+    }
+    globalStats.totalPlayersOnline = totalPlayersOnline;
+    io.emit("globalStats", globalStats);
     
   })
 
   socket.on("getWinners", () => {
     socket.emit("winners", winners);
+  });
+
+  // Handle rooms overview requests
+  socket.on("getAllRooms", () => {
+    const roomsData = [];
+    let totalPlayersOnline = 0;
+    
+    // Always ensure we have all default rooms (10, 20, 50, 100)
+    const defaultRooms = [10, 20, 50, 100];
+    
+    for (const roomId of defaultRooms) {
+      const game = activeGames.get(roomId);
+      const playersCount = game && game.players ? game.players.size : 0;
+      totalPlayersOnline += playersCount;
+      
+      roomsData.push({
+        roomId: roomId,
+        gameStatus: game ? game.status : 'waiting',
+        playersCount: playersCount,
+        countDown: game ? game.countDown : 30,
+        pickedNumbers: game ? (game.calledNumbers || []) : [],
+        totalWinAmount: game ? (game.total_winAmount || 0) : 0,
+        totalPlayers: game ? (game.total_players || 0) : 0
+      });
+    }
+    
+    // Update global stats
+    globalStats.totalPlayersOnline = totalPlayersOnline;
+    
+    // Send room data and global stats
+    socket.emit("allRoomsData", roomsData);
+    socket.emit("globalStats", globalStats);
   });
 
   socket.on("disconnect", () => {
@@ -512,6 +620,14 @@ io.on('connection', (socket) => {
           users.delete(socket.id);
           users.delete(socket.id);
           users.delete(socket.id);
+
+          // Update global stats after disconnect
+          let totalPlayersOnline = 0;
+          for (const g of activeGames.values()) {
+            totalPlayersOnline += g.players ? g.players.size : 0;
+          }
+          globalStats.totalPlayersOnline = totalPlayersOnline;
+          io.emit("globalStats", globalStats);
 
         }
        

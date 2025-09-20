@@ -645,6 +645,8 @@ const PlayingBoard = () => {
        )}
 
         </div>
+
+      
       </div>
 </div>
       
