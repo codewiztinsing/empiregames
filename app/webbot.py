@@ -88,14 +88,31 @@ async def conversation_timeout(context):
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    BACK_URL = get_bot_seetings().get("bot_url")
+    player_id = update.effective_user.id
+    bet_amount = 0
+    player_name = update.effective_user.username
+    web_app_url = f"{BACK_URL}?playerId={player_id}&betAmount={bet_amount}&playerName={player_name}"
+    logger.info(f"web_app_url = {web_app_url}")
     keyboard = [
-        [InlineKeyboardButton("🎮 Play", callback_data='play'),
-         InlineKeyboardButton("📝 Register",callback_data = "register")],
-        [InlineKeyboardButton("💰 Check Balance", callback_data='check_balance'),
-         InlineKeyboardButton("💳 Deposit", callback_data='deposit')],
+        # Row 1: Play (single button)
+        [InlineKeyboardButton("🎮 Play", web_app=WebAppInfo(url=web_app_url))],
+        
+        # Row 2: Deposit and Withdraw (side by side)
+        [InlineKeyboardButton("💳 Deposit", callback_data='deposit'),
+         InlineKeyboardButton("💰 Withdraw", callback_data='withdraw')],
+        
+        # Row 3: Check Balance (single button)
+        [InlineKeyboardButton("💰 Check Balance", callback_data='check_balance')],
+        
+        # Row 4: Invite and How To Play (side by side)
         [InlineKeyboardButton("🎁 My Referral Code", callback_data='my_referral'),
-         InlineKeyboardButton("📞 Contact Support", callback_data='contact_support')],
-        [InlineKeyboardButton("📚 Instruction", callback_data='instructions')],
+         InlineKeyboardButton("📚 Instruction", callback_data='instructions')],
+        
+        # Row 5: Contact Us and Join Us (side by side)
+        [InlineKeyboardButton("📞 Contact Support", callback_data='contact_support'),
+         InlineKeyboardButton("📝 Register", callback_data='register')],
+        
         # [InlineKeyboardButton("🔗 Join Group", url='https://t.me/wowbingos')]
     ]
     
@@ -548,6 +565,10 @@ Your current balance: {balance} ETB
             )
             context.user_data['deposit_amount'] = query.data
             return DEPOSIT_AMOUNT
+            
+        elif query.data == 'withdraw':
+            reply_markup = withdraw_opitions_keyboard(context) 
+            await query.edit_message_text("Choose a withdraw method", reply_markup=reply_markup)
            
         elif query.data == 'get_deposit_amount_of_telebirr':
 
@@ -772,8 +793,11 @@ Your current balance: {balance} ETB
  
         else:
 
+            # Handle unrecognized callback data - show main menu with proper ordering
+
             keyboard = [
-                [InlineKeyboardButton("Play Game", callback_data='play'),
+                [InlineKeyboardButton("Play Game", callback_data='play')],
+                [
                  InlineKeyboardButton("Check Balance", callback_data='check_balance')],
                 [InlineKeyboardButton("Deposit", callback_data='deposit'),
                  InlineKeyboardButton("Register", callback_data='register_menu')]
