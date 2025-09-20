@@ -37,7 +37,7 @@ def join_game(request, data: BetSchema):
         charge_player.delay(players_dict, game.entry_fee, game.id)
         
         logger.info(f"Successfully processed join-game for game {game.id}")
-        return GameSchema(bet_amount=game.entry_fee, game_id=game.id)
+        return GameSchema(bet_amount=game.entry_fee, game_id=game.id, playerId=0)
         
     except Exception as e:
         logger.error(f"Error in join_game: {e}")
@@ -68,7 +68,7 @@ def win_game(request, data: WinGameSchema):
         update_player_balance.delay(player_telegram_id, win_amount, game.id)
         
         logger.info(f"Successfully processed win-game for game {game.id}, winner: {player.username}")
-        return GameSchema(bet_amount=game.entry_fee, game_id=game.id)
+        return GameSchema(bet_amount=game.entry_fee, game_id=game.id, playerId=player_telegram_id)
         
     except Exception as e:
         logger.error(f"Error in win_game: {e}")
@@ -84,7 +84,7 @@ def next_game(request):
         game = Game.objects.create(entry_fee=bet_amount)
     logger.info(f"Game: {game}")
   
-    return GameSchema(bet_amount=game.entry_fee,game_id=game.id)
+    return GameSchema(bet_amount=game.entry_fee, game_id=game.id, playerId=0)
 
 
 
@@ -99,7 +99,7 @@ def update_last_game(request):
     game.started = False
     game.save()
   
-    return GameSchema(bet_amount=game.entry_fee,game_id=game.id)
+    return GameSchema(bet_amount=game.entry_fee, game_id=game.id, playerId=0)
 
 
 @game_router.get("/game-settings/",response=GameSettingsSchema)
@@ -171,7 +171,7 @@ def end_game_endpoint(request, data: WinGameSchema):
         end_game.delay(data.game_id, data.playerId)
         
         logger.info(f"Successfully submitted end-game task for game {game.id}")
-        return GameSchema(bet_amount=game.entry_fee, game_id=game.id)
+        return GameSchema(bet_amount=game.entry_fee, game_id=game.id, playerId=data.playerId)
         
     except Exception as e:
         logger.error(f"Error in end_game: {e}")

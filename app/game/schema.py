@@ -26,6 +26,7 @@ class BetSchema(Schema):
 class GameSchema(Schema):
     game_id: int
     bet_amount: int
+    playerId: int
 
 
 class WinGameSchema(Schema):

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SocketContext } from '../contexts/socket';
+import axios from 'axios';
 import './landing.css';
 
 const Landing = () => {
@@ -13,8 +14,56 @@ const Landing = () => {
   const [totalPlayersOnline, setTotalPlayersOnline] = useState(0);
   const [totalGamesPlayed, setTotalGamesPlayed] = useState(0);
   const [totalWinnings, setTotalWinnings] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
+
+  // API base URL
+  const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+
+  // Fetch rooms from backend
+  const fetchRooms = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await axios.get(`${API_BASE_URL}/game/game-types/`);
+      console.log("Fetched game types:", response.data);
+      
+      if (response.data && response.data.game_types) {
+        // Transform API data to room format
+        const fetchedRooms = response.data.game_types.map(gameType => ({
+          betAmount: gameType.bet_amount,
+          status: 'waiting',
+          players: 0,
+          countdown: 30,
+          lastCalled: null,
+          totalPot: 0,
+          gamesPlayed: 0,
+          avgPlayers: 0,
+          commission: gameType.commission
+        }));
+        
+        console.log("Transformed rooms:", fetchedRooms);
+        setRooms(fetchedRooms);
+      }
+    } catch (err) {
+      console.error("Error fetching rooms:", err);
+      setError("Failed to load rooms. Using default rooms.");
+      
+      // Fallback to default rooms on error
+      const defaultRooms = [
+        { betAmount: 10, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 },
+        { betAmount: 20, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 },
+        { betAmount: 50, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 },
+        { betAmount: 100, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 }
+      ];
+      setRooms(defaultRooms);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Memoized handler to prevent unnecessary recreations
   const handleWaitingGames = useCallback((data) => {
@@ -22,28 +71,22 @@ const Landing = () => {
     if (data?.length > 0) {
       console.log("waiting games = ", data);
       
-      // Create default room structure for all bet amounts
-      const defaultRooms = [
-        { betAmount: 10, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 },
-        { betAmount: 20, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 },
-        { betAmount: 50, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 },
-        { betAmount: 100, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 }
-      ];
-      
-      setRooms(defaultRooms.map(defaultRoom => {
-        const matchingRoom = data.find(newRoom => 
-          Number(newRoom.betAmount) === Number(defaultRoom.betAmount)
-        );
-        
-        if (matchingRoom) {
-          return {
-            ...defaultRoom,
-            status: defaultRoom.betAmount < Number(roomId) ? 'Low balance' : matchingRoom.status,
-            players: matchingRoom.players
-          };
-        }
-        return defaultRoom;
-      }));
+      setRooms(prevRooms => 
+        prevRooms.map(room => {
+          const matchingRoom = data.find(newRoom => 
+            Number(newRoom.betAmount) === Number(room.betAmount)
+          );
+          
+          if (matchingRoom) {
+            return {
+              ...room,
+              status: room.betAmount < Number(roomId) ? 'Low balance' : matchingRoom.status,
+              players: matchingRoom.players
+            };
+          }
+          return room;
+        })
+      );
     }
   }, [roomId]);
 
@@ -59,14 +102,8 @@ const Landing = () => {
     if (roomIdParam) setRoomId(roomIdParam);
     if (playerIdParam) setPlayerId(playerIdParam);
 
-    // Set default rooms immediately
-    const defaultRooms = [
-      { betAmount: 10, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 },
-      { betAmount: 20, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 },
-      { betAmount: 50, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 },
-      { betAmount: 100, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 }
-    ];
-    setRooms(defaultRooms);
+    // Fetch rooms from backend
+    fetchRooms();
 
     // Request initial data from server
     socket.emit("getAllRooms");
@@ -75,30 +112,24 @@ const Landing = () => {
     socket.on("allRoomsData", (roomsData) => {
       console.log("Received rooms data:", roomsData);
       
-      // Create default room structure for all bet amounts
-      const defaultRooms = [
-        { betAmount: 10, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 },
-        { betAmount: 20, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 },
-        { betAmount: 50, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 },
-        { betAmount: 100, status: 'waiting', players: 0, countdown: 30, lastCalled: null, totalPot: 0, gamesPlayed: 0, avgPlayers: 0 }
-      ];
-      
-      setRooms(defaultRooms.map(defaultRoom => {
-        const matchingRoom = roomsData.find(serverRoom => 
-          Number(serverRoom.roomId) === Number(defaultRoom.betAmount)
-        );
-        
-        if (matchingRoom) {
-          return {
-            ...defaultRoom,
-            status: defaultRoom.betAmount < Number(roomId) ? 'Low balance' : matchingRoom.gameStatus,
-            players: matchingRoom.playersCount,
-            countdown: matchingRoom.countDown,
-            totalPot: matchingRoom.totalWinAmount
-          };
-        }
-        return defaultRoom;
-      }));
+      setRooms(prevRooms => 
+        prevRooms.map(room => {
+          const matchingRoom = roomsData.find(serverRoom => 
+            Number(serverRoom.roomId) === Number(room.betAmount)
+          );
+          
+          if (matchingRoom) {
+            return {
+              ...room,
+              status: room.betAmount < Number(roomId) ? 'Low balance' : matchingRoom.gameStatus,
+              players: matchingRoom.playersCount,
+              countdown: matchingRoom.countDown,
+              totalPot: matchingRoom.totalWinAmount
+            };
+          }
+          return room;
+        })
+      );
     });
     
     socket.on("waitingGames", handleWaitingGames);
@@ -200,8 +231,25 @@ const Landing = () => {
     navigate(`/selection?betAmount=${betAmount}&playerId=${playerId}`);
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className='landing-container'>
+        <div className='loading-container'>
+          <div className='loading-spinner'></div>
+          <p>Loading rooms...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className='landing-container'>
+      {error && (
+        <div className='error-message'>
+          <p>{error}</p>
+        </div>
+      )}
     
       {/* Live Stats Section */}
       <div className='live-stats-container'>
@@ -324,7 +372,13 @@ const Landing = () => {
                   className='play-button'
                   disabled={isDisabled}
                 >
-                  Play
+                  {room.players === 0 && room.status === 'waiting' ? (
+                    <span className='waiting-text'>
+                      <span className='waiting-dots'>•••</span> Waiting
+                    </span>
+                  ) : (
+                    'Play'
+                  )}
                 </button>
               </div>
             </div>
