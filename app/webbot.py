@@ -128,6 +128,8 @@ async def get_phone_number(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 def deposit_opitions_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
+        [InlineKeyboardButton("💳 Deposit with Telebirr", callback_data='manual_telebirr')],
+        [InlineKeyboardButton("💳 Deposit with CBE", callback_data='manual_cbe')],
         [InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -630,7 +632,11 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 resize_keyboard=True,
                 one_time_keyboard=True
             )
-            await query.edit_message_text(text="📱 Please share your phone number to register:")
+            # get notice message from file notice_message.txt
+            with open('notice.txt', 'r') as file:
+                notice_message = file.read()
+            await query.edit_message_text(text=notice_message)
+            # await query.edit_message_text(text="📱 Please share your phone number to register:")
             await query.message.reply_text(
                 text="Tap the button below to share your phone number.",
                 reply_markup=contact_keyboard
@@ -806,7 +812,27 @@ all_public_commands_descriptions = [
 
     BotCommand(
         "play", 
-        "start"
+        "play"
+        ),
+
+    BotCommand(
+        "register", 
+        "register"
+        ),
+
+    BotCommand(
+        "check_balance", 
+        "check_balance"
+        ),
+
+    BotCommand(
+        "deposit", 
+        "deposit"
+        ),
+
+    BotCommand(
+        "withdraw", 
+        "withdraw"
         ),
 
     BotCommand(
@@ -853,7 +879,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     wallet_response = _wr.json() if _wr.headers.get('content-type','').startswith('application/json') else {}
     balance = wallet_response.get('balance', 0)
 
-    invite_link = f"https://t.me/bilenbingobot?start={user_id}"
+    invite_link = f"https://t.me/akerbingobot?start={user_id}"
     
     message = (
         f"🎮 Invite your friends to Aker Bingo!\n\n"
@@ -870,6 +896,52 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await update.message.reply_text(message)
 
+
+
+async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Please register to play the game.")
+    return REGISTER
+
+async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    BACK_URL = get_bot_seetings().get("bot_url")
+    telegram_id = update.effective_user.id
+    wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
+    wallet_data = wallet_response.json() if wallet_response.headers.get('content-type','').startswith('application/json') else {}
+    balance = wallet_data.get('balance', 0)
+    
+    # Get user info for personalization
+    user_name = update.effective_user.first_name or update.effective_user.username or "Player"
+    
+    # Create appealing balance message
+    if balance > 0:
+        message = (
+            f"💰 Hey {user_name}! Your current balance is:\n\n"
+            f"🎯 **{balance} ETB**\n\n"
+            f"🎮 Ready to play some exciting Bingo games?\n"
+            f"💎 Your luck is waiting! Good luck! 🍀"
+        )
+    else:
+        message = (
+            f"💰 Hey {user_name}! Your current balance is:\n\n"
+            f"🎯 **{balance} ETB**\n\n"
+            f"💳 Time to fuel up your gaming adventure!\n"
+            f"🚀 Deposit now and start winning big! 🎲"
+        )
+    
+    await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
+   
+    return ConversationHandler.END
+
+async def deposit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Please deposit to play the game.")
+    reply_markup = deposit_opitions_keyboard()
+    await update.message.reply_text("Choose a deposit option:", reply_markup=reply_markup)
+    
+    return ConversationHandler.END
+
+# async def withdraw_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     await update.message.reply_text("Please withdraw to play the game.")
+#     return WITHDRAW_AMOUNT_CONFIRM
 
 
 
@@ -900,6 +972,10 @@ def main() -> None:
     application.add_handler(CommandHandler('play', play_command))
     application.add_handler(CommandHandler('instructions', instruction_command))
     application.add_handler(CommandHandler('support', support_command))
+    application.add_handler(CommandHandler('withdraw', withdraw_command))
+    application.add_handler(CommandHandler('register', register_command))
+    application.add_handler(CommandHandler('check_balance', check_balance_command))
+    application.add_handler(CommandHandler('deposit', deposit_command))
     application.add_handler(CommandHandler('withdraw', withdraw_command))
     application.add_handler(conversation_handler)
     application.add_handler(CommandHandler('invite', handle_invite))  
