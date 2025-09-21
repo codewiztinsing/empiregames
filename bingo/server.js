@@ -205,7 +205,7 @@ async function startGame(game) {
       game_status: game.status,
       count_down: game.countDown,
       win_amount: game.roomId * (game.players ? game.players.size : 0) * 0.8,
-      total_players: game.total_players,
+      total_players: game.players,
       lastBall: ball,
       called_numbers: game.calledNumbers,
       total_called_numbers: game.calledNumbers.length
@@ -351,7 +351,7 @@ io.on('connection', (socket) => {
       game_status: game.status,
       count_down: game.countDown,
       players: playersList,
-      total_players: game.total_players
+      total_players: 5
     });
 
     if (!game.isCountStart && game.players && game.players.size >= 1) {

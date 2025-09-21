@@ -27,8 +27,6 @@ const PlayingBoard = () => {
     setIsToast,
     playerName,
     setPlayerName,
-    winAmount,
-    totalPlayers,
     betAmount,
   } = useContext(BingoContext);
 
@@ -43,6 +41,9 @@ const PlayingBoard = () => {
   const [winnerPlayerName, setWinnerPlayerName] = useState(null);
   const [markedCells, setMarkedCells] = useState([]);
   const [firstBoardLost, setFirstBoardLost] = useState(false);
+  const [winAmount, setWinAmount] = useState(0);
+  const [totalWinAmount, setTotalWinAmount] = useState(0);
+  const [totalPlayers,setTotalPlayers] = useState(0);
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
 
   // Generate Bingo board function
@@ -96,7 +97,10 @@ const PlayingBoard = () => {
 
     const handleGameState = (data) => {
       const calledNumber = data?.lastBall?.combined.split("-")[1]
-      console.log("calledNumber",calledNumber)
+      if(data.win_amount) {
+        setWinAmount(data.win_amount)
+        setTotalPlayers(data.total_players)
+      }
       if(calledNumber){
         calledNumbers.push(parseInt(calledNumber))
         setCalledNumbers(calledNumbers)
@@ -224,7 +228,7 @@ const PlayingBoard = () => {
       socket.off('playerLeft', handlePlayerLeft);
       socket.off('disconnect');
     };
-  }, [socket, roomId, playerId, playerName, selectedNumber, setCountDown, setGameId, setToast, setIsToast, navigate, winAmount, totalPlayers, betAmount]);
+  }, [socket, roomId, playerId, playerName, selectedNumber, setCountDown, setGameId, setToast, setIsToast, navigate, winAmount, totalPlayers, betAmount, setWinAmount, setTotalWinAmount]);
 
   // ✅ Track recent balls
   useEffect(() => {
@@ -423,7 +427,7 @@ const PlayingBoard = () => {
       <div className="stats-bar">
         <div className="stat-item">
           <span>ደራሽ</span>
-          <span>{isNaN(winAmount) ? 0 : (winAmount)}</span>
+          <span>{isNaN(totalWinAmount) ? 0 : (totalWinAmount)}</span>
         </div>
         <div className="stat-item">
           <span>ብዛት</span>
