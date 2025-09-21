@@ -27,6 +27,9 @@ const PlayingBoard = () => {
     setIsToast,
     playerName,
     setPlayerName,
+    winAmount,
+    totalPlayers,
+    betAmount,
   } = useContext(BingoContext);
 
   const [calledNumbers, setCalledNumbers] = useState([]);
@@ -221,7 +224,7 @@ const PlayingBoard = () => {
       socket.off('playerLeft', handlePlayerLeft);
       socket.off('disconnect');
     };
-  }, [socket, roomId, playerId, playerName, selectedNumber, setCountDown, setGameId, setToast, setIsToast, navigate]);
+  }, [socket, roomId, playerId, playerName, selectedNumber, setCountDown, setGameId, setToast, setIsToast, navigate, winAmount, totalPlayers, betAmount]);
 
   // ✅ Track recent balls
   useEffect(() => {
@@ -420,31 +423,21 @@ const PlayingBoard = () => {
       <div className="stats-bar">
         <div className="stat-item">
           <span>ደራሽ</span>
-          <span>{isNaN(roomId * playersLength * 0.8) ? 0 : (roomId * playersLength * 0.8)}</span>
+          <span>{isNaN(winAmount) ? 0 : (winAmount)}</span>
         </div>
         <div className="stat-item">
           <span>ብዛት</span>
           
-          <span>{playersLength}</span>
+          <span>{totalPlayers}</span>
         </div>
         <div className="stat-item">
           <span>መደብ </span>
         
-          <span>{roomId}</span>
+          <span>{betAmount}</span>
         </div>
         <div className="stat-item">
           <span>ጥሪ </span>
           <span>{totalCalledNumbers}</span>
-        </div>
-
-
-        <div className="stat-item">
-          <span>ድምጽ </span>
-          <select className='language-select'>
-            <option value="1">Amh</option>
-            <option value="3">Oromo</option>
-            <option value="4">Tigrigna</option>
-          </select>
         </div>
       </div>
 
@@ -477,7 +470,6 @@ const PlayingBoard = () => {
             {Array.from({ length: 15 }, (_, i) => (
             <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'last-called' : ''} ${selectedNumber == i + 16 ? 'selected' : ''}`}
                 id={`I${i + 16}`}
-
               >
                 {i + 16}
               </div>
@@ -570,34 +562,7 @@ const PlayingBoard = () => {
             </div>
           </div>
 
-          
-
-          {/* <div className="recent-called-numbers-container">
-              {countDown > 0  && countDown != 29 ? (
-                // Show countdown when greater than 0
-                <div className='game-starting-container'>
-                  <p className='game-starting'>00</p>
-                  <p className='game-starting'>:</p>
-                  <p className='game-countdown'>{countDown}</p>
-                </div>
-              ) : countDown === 0 ? (
-                <div className="recent-called-numbers">
-                  <div className="recent-called-numbers-grid">
-                    {recentCalledNumbers.map((number, index) => (
-                      <div key={index} className="recent-called-number">{number}</div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="recent-called-numbers">
-                  <div className="recent-called-numbers-grid">
-                    {recentCalledNumbers.map((number, index) => (
-                      <div key={index} className="recent-called-number">{number}</div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div> */}
+        
 
           <div className='boards-container'>
 
@@ -626,9 +591,9 @@ const PlayingBoard = () => {
                       {selectBoard.map((row, rowIndex) => (
                         <div key={rowIndex}
                           className={`board-cell`}
-                          // if cell is * it should always be green, selected cells should be yellow
+                          // if cell is * it should always be golden, selected cells should be yellow
                           style={{ 
-                            background: row[colIndex] === '*' ? '#75cbfb' : selectedCell.has(row[colIndex]) ? 'orange' : '#ffffff',
+                            background: row[colIndex] === 'FREE' ? '#ff6600' : selectedCell.has(row[colIndex]) ? 'orange' : '#ffffff',
                             border: selectedCell.has(row[colIndex]) ? '2px solid #ff6600' : '1px solid #34495e'
                           }}
                           id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
@@ -648,9 +613,10 @@ const PlayingBoard = () => {
             
             <button className={`bingo-button-card-${selectedNumber}`} 
                   onClick={() => handleBingo(selectBoard,selectedNumber)} 
-                  disabled={firstBoardLost}
+                  disabled={firstBoardLost || !selectedNumber}
                   style={{
-                    backgroundColor: firstBoardLost ? "red" : "orange"
+                    backgroundColor: firstBoardLost ? "red" : "orange",
+                    cursor: firstBoardLost || !selectedNumber ? "not-allowed" : "pointer"
                   }}
             >
                {firstBoardLost ? "You made Faul" : "BINGO!"}

@@ -93,7 +93,7 @@ body {
 .middle-container {
   display: flex;
   flex-direction: row;
-  gap: 4px;
+  gap: 0;
   width: 100%;
   padding: 0 4px;
   align-items: flex-start;
@@ -233,11 +233,13 @@ body {
 }
 
   .stat-item:first-child {
-    background-color: #2ba7f7;
+    background-color:  #efefef;
+    color:black;
   }
 
   .stat-item:nth-child(2) {
-    background-color: #2bd587;
+    background-color:  #efefef;
+    color:black;
   }
 
   .stat-item:nth-child(3) {
@@ -253,11 +255,13 @@ body {
 
 
   .stat-item:nth-child(4) {
-    background-color:  #5c4be7;
+    background-color:  #efefef;
+    color:black;
   }
 
   .stat-item:nth-child(5) {
-    background-color:  #5c4be7;
+    background-color:  #efefef;
+    color:black;
   }
   .language-select {
     background-color: #706c8b;
@@ -345,7 +349,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 0;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -747,36 +751,20 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
+
 .last-called {
-  animation: blink 5s;
-  background-color: #33ccf8;
-  
+  background-color: red !important;
+  color: white !important;
+  /* animation: blinkScale 5s ease-in-out forwards;
+  transform-origin: center; */
 }
 
-@keyframes blink {
-  0% {
-    box-shadow: 0 0 5px #fff,
-                0 0 10px #fff,
-                0 0 15px #fff;
-    background-color: red;
-    color: white;
-  }
-  50% {
-    box-shadow: 0 0 20px #fff,
-                0 0 35px #fff,
-                0 0 50px #fff;
-                background-color: red;
-
-    color: #fff;
-  }
-  100% {
-    box-shadow: 0 0 5px #fff,
-                0 0 10px #fff,
-                0 0 15px #fff;
-    color: white;
-    background-color: red;
-  }
+/* Ensure red background persists after animation */
+.last-called:not(:hover) {
+  background-color: red !important;
+  color: white !important;
 }
+
 .board-row {
   display: flex;
   gap: 4px;

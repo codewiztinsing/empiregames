@@ -13,10 +13,10 @@ function App() {
       <Router>
         <Routes>
           <Route path="/play" element={<PlayingBoard />} />
-          <Route path="/referrals" element={<ReferralDashboard />} />
-          <Route path="/referral-setup" element={<ReferralCodeInput />} />
-          <Route path="/selection" element={<SelectionScreen />} />
-          <Route path="/" element={<ReferralLanding />} />
+          {/* <Route path="/referrals" element={<ReferralDashboard />} /> */}
+          {/* <Route path="/referral-setup" element={<ReferralCodeInput />} /> */}
+          <Route path="/" element={<SelectionScreen />} />
+          {/* <Route path="/" element={<ReferralLanding />} /> */}
           {/* <Route path="/" element={<Landing />} /> */}
         </Routes>
       </Router>

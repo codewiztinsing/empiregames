@@ -205,6 +205,7 @@ async function startGame(game) {
       game_status: game.status,
       count_down: game.countDown,
       win_amount: game.roomId * (game.players ? game.players.size : 0) * 0.8,
+      total_players: game.total_players,
       lastBall: ball,
       called_numbers: game.calledNumbers,
       total_called_numbers: game.calledNumbers.length
@@ -231,10 +232,6 @@ async function startGame(game) {
    
   }, game.gameSpeed);
 
-
-
-
-
   gameIntervals.set(game.id, [gameInterval]);
 }
 
@@ -253,7 +250,8 @@ function handleRefresh(data){
     win_amount: game.total_winAmount,
     lastBall: game.currentCall,
     called_numbers: game.calledNumbers,
-    total_called_numbers: game.calledNumbers.length
+    total_called_numbers: game.calledNumbers.length,
+    total_players: game.total_players
   });
 
 }
@@ -352,7 +350,8 @@ io.on('connection', (socket) => {
       total_players: game.total_players,
       game_status: game.status,
       count_down: game.countDown,
-      players: playersList
+      players: playersList,
+      total_players: game.total_players
     });
 
     if (!game.isCountStart && game.players && game.players.size >= 1) {
@@ -527,7 +526,8 @@ io.on('connection', (socket) => {
             }),
             total_players: game.selectedNumbers.length,
             game_status: game.status,
-            count_down: game.countDown
+            count_down: game.countDown,
+            total_players: game.total_players
           });
 
 

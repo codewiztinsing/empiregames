@@ -87,7 +87,9 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     # Check if the message contains a contact
+    print("DEBUG: Checking for contact in message")
     if update.message.contact:
+        print("DEBUG: Contact found in message")
         phone_number = update.message.contact.phone_number
         user_data["phone"] = phone_number
         print("phone_number = ",phone_number)
@@ -110,10 +112,15 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         response = requests.post(f"{BACK_URL}/api/v1/users/register", json=user_data)
         if response.status_code == 200:  # Assume 201 means success
             await update.message.reply_text("Registration completed successfully!")
-            await update.message.reply_text("Please click the button below to proceed to the next step:", reply_markup=play_options_keyboard())
+            await update.message.reply_text("Please user /play to start playing.")
+            return ConversationHandler.END
         else:
             print(f"Registration failed: {response.json()}")
             await update.message.reply_text(response.json().get('message'))
+            return ConversationHandler.END
+    else:
+        await update.message.reply_text("Please user /register to register.")
+        return REGISTER
 
       
 

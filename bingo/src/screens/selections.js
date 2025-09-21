@@ -61,14 +61,7 @@ const Selections = () => {
     const urlPlayerId = queryParams.get('playerId');
     const urlRoomId = queryParams.get('betAmount');
     const urlPlayerName = queryParams.get('playerName');
-    
-    console.log('URL Parameters:', {
-      playerId: urlPlayerId,
-      roomId: urlRoomId,
-      playerName: urlPlayerName,
-      fullURL: window.location.href
-    });
-    
+      
     setPlayerId(urlPlayerId);
     setRoomId(urlRoomId);
     setPlayerName(urlPlayerName);
@@ -103,14 +96,14 @@ const Selections = () => {
   // Fetch balance when playerId is available
   useEffect(() => {
     console.log('Balance useEffect triggered, playerId:', playerId);
-    
+
     if (playerId) {
       const fetchBalance = async () => {
         const apiUrl = config.API_BASE_URL;
-        console.log('Fetching balance from:', `${apiUrl}/wallet/player/${playerId}`);
+        console.log('Fetching balance from:', `${apiUrl}wallet/player/${playerId}`);
         
         try {
-          const response = await axios.get(`${apiUrl}/wallet/player/${parseInt(playerId)}`);
+          const response = await axios.get(`${apiUrl}wallet/player/${parseInt(playerId)}`);
           console.log('Balance response:', response.data);
           setBalance(response.data.balance);
           setLoading(false);
@@ -142,18 +135,19 @@ const Selections = () => {
 
   // Countdown redirect logic - only navigate when countdown reaches exactly 00
   useEffect(() => {
+
+    if(gameStatus == "in-progress") {
+      navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
+    }
     // Navigate when countdown reaches 0 and user has selected a number
     if (countDown === 0 && selectedNumber) {
-      console.log("countDown",countDown)
-      console.log("selectedNumber",selectedNumber)
-      console.log("gameStatus",gameStatus)
       // Navigate to play section when countdown reaches 00
       setToast("Game starting! Redirecting to play section...");
       setIsToast(true);
       navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
     }
     // If countdown is not 0, stay on selection page (no navigation)
-  }, [countDown, selectedNumber]);
+  }, [countDown, selectedNumber,gameStatus]);
 
 
   const handlePlaySound = async (calledNumber) => {
@@ -624,7 +618,7 @@ const handleGlobals = (state) => {
             )}
 
         
-          {gameStatus == "in-progress" && (
+          {/* {gameStatus == "in-progress" && (
             
            <>
            <div className="global-ball-container">
@@ -637,12 +631,10 @@ const handleGlobals = (state) => {
 
             </div>
 
-           
-           
            </>
 
             
-            )}
+          )} */}
           </div>
 
           <div className="numbers-grid">
@@ -717,10 +709,10 @@ const handleGlobals = (state) => {
 
               </div>
 
-              <div className="game-status-info">
+              {/* <div className="game-status-info">
                 <p>Joined! Waiting for countdown to reach 00...</p>
                 <p>Double-click your card number to leave the game</p>
-              </div>
+              </div> */}
             </div>
           )}
 

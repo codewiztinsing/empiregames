@@ -899,7 +899,35 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Please register to play the game.")
+    print("DEBUG: register_command function called")
+    user_id = update.effective_user.id
+    BACK_URL = get_bot_seetings().get("bot_url")
+    
+    # Check if user is already registered
+    response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
+    if response.status_code == 200:
+        user_data = response.json()
+        if user_data.get('phone'):
+            await update.message.reply_text(
+                "✅ You are already registered!\n\n"
+                "🎮 You can now play games, check your balance, and make deposits.\n"
+                "Use the menu to explore all available options."
+            )
+            return ConversationHandler.END
+    
+    contact_keyboard = ReplyKeyboardMarkup(
+                [[KeyboardButton(text="📞 Share Phone Number", request_contact=True)]],
+                resize_keyboard=True,
+                one_time_keyboard=True
+            )
+            # get notice message from file notice_message.txt
+    with open('notice.txt', 'r') as file:
+                notice_message = file.read()
+    await update.message.reply_text(text=notice_message)
+    await update.message.reply_text(
+                text="Tap the button below to share your phone number.",
+                reply_markup=contact_keyboard
+            )
     return REGISTER
 
 async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -951,7 +979,7 @@ def main() -> None:
  
 
     conversation_handler = ConversationHandler(
-        entry_points=[CallbackQueryHandler(button)],
+        entry_points=[CallbackQueryHandler(button), CommandHandler('register', register_command)],
         states={
             # get_deposit_amount
             DEPOSIT_AMOUNT          : [MessageHandler(filters.TEXT & ~filters.COMMAND, deposit_amount)],
@@ -973,7 +1001,6 @@ def main() -> None:
     application.add_handler(CommandHandler('instructions', instruction_command))
     application.add_handler(CommandHandler('support', support_command))
     application.add_handler(CommandHandler('withdraw', withdraw_command))
-    application.add_handler(CommandHandler('register', register_command))
     application.add_handler(CommandHandler('check_balance', check_balance_command))
     application.add_handler(CommandHandler('deposit', deposit_command))
     application.add_handler(CommandHandler('withdraw', withdraw_command))
