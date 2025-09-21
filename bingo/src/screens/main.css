@@ -337,6 +337,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  margin-left: -20px;
   margin-top: -20px;
 }
 .called-numbers {
@@ -352,8 +353,10 @@ body {
   display: flex;
   justify-content: flex-start;
   gap: 0;
-  background-color: #00a085;
-  width: 200px !important;
+  width: 180px !important;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #2a2a3e 0%, #1e1e2f 100%);
+ 
 }
 
 
@@ -606,7 +609,7 @@ body {
 
 }
 [class^="bingo-button-card"] {
-  margin-top: 15px;
+  margin-top: 8px;
   width: 180px;
   height: 45px;
   background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
@@ -753,6 +756,7 @@ body {
   border-radius: 15px;
   padding: 5px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  margin-top: 25px;
   width: 200px;
 }
 
@@ -1001,7 +1005,7 @@ body {
 /* Enhanced number styling for called numbers */
 .number {
   padding: 14px;
-  max-width: 40px;
+  max-width: 35px;
   height: 15px;
   display: flex;
   align-items: center;

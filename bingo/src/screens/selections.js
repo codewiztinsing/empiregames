@@ -518,7 +518,7 @@ const handleGlobals = (state) => {
             </div>
           </div>
 
-          <div className="globals-container">
+          {/* <div className="globals-container">
 
           {gameStatus == "waiting" && (
             
@@ -547,7 +547,7 @@ const handleGlobals = (state) => {
 
             
             )}
-          </div>
+          </div> */}
 
           <div className="numbers-grid">
 
