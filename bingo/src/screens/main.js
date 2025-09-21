@@ -42,8 +42,8 @@ const PlayingBoard = () => {
   const [markedCells, setMarkedCells] = useState([]);
   const [firstBoardLost, setFirstBoardLost] = useState(false);
   const [winAmount, setWinAmount] = useState(0);
-  const [totalWinAmount, setTotalWinAmount] = useState(0);
-  const [totalPlayers,setTotalPlayers] = useState(0);
+  // const [totalWinAmount, setTotalWinAmount] = useState(0);
+  // const [totalPlayers,setTotalPlayers] = useState(0);
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
 
   // Generate Bingo board function
@@ -98,8 +98,8 @@ const PlayingBoard = () => {
     const handleGameState = (data) => {
       const calledNumber = data?.lastBall?.combined.split("-")[1]
       if(data.win_amount) {
-        setWinAmount(data.win_amount)
-        setTotalPlayers(data.total_players)
+        // setWinAmount(data.win_amount)
+        // setTotalPlayers(data.total_players)
       }
       if(calledNumber){
         calledNumbers.push(parseInt(calledNumber))
@@ -228,7 +228,7 @@ const PlayingBoard = () => {
       socket.off('playerLeft', handlePlayerLeft);
       socket.off('disconnect');
     };
-  }, [socket, roomId, playerId, playerName, selectedNumber, setCountDown, setGameId, setToast, setIsToast, navigate, winAmount, totalPlayers, betAmount, setWinAmount, setTotalWinAmount]);
+  }, [socket, roomId, playerId, playerName, selectedNumber, setCountDown, setGameId, setToast, setIsToast, navigate, winAmount, betAmount, setWinAmount]);
 
   // ✅ Track recent balls
   useEffect(() => {
@@ -427,17 +427,17 @@ const PlayingBoard = () => {
       <div className="stats-bar">
         <div className="stat-item">
           <span>ደራሽ</span>
-          <span>{isNaN(totalWinAmount) ? 0 : (totalWinAmount)}</span>
+          <span>{isNaN(8) ? 0 : (8)}</span>
         </div>
         <div className="stat-item">
           <span>ብዛት</span>
           
-          <span>{totalPlayers}</span>
+          <span>2</span>
         </div>
         <div className="stat-item">
           <span>መደብ </span>
         
-          <span>{betAmount}</span>
+          <span>10</span>
         </div>
         <div className="stat-item">
           <span>ጥሪ </span>

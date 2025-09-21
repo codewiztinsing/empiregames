@@ -609,11 +609,7 @@ const handleGlobals = (state) => {
               <div className="countdown-text">
                 {selectedNumber ? `Game starts in: ${countDown}` : `Select a card number to join the game`}
               </div>
-              {selectedNumber && (
-                <div className="selected-card-info">
-                  Selected Card: #{selectedNumber} - Game will start automatically when countdown reaches 00
-                </div>
-              )}
+             
             </div>
             )}
 

@@ -1001,7 +1001,7 @@ def main() -> None:
     application.add_handler(CommandHandler('instructions', instruction_command))
     application.add_handler(CommandHandler('support', support_command))
     application.add_handler(CommandHandler('withdraw', withdraw_command))
-    application.add_handler(CommandHandler('check_balance', check_balance_command))
+    application.add_handler(CommandHandler('balance', check_balance_command))
     application.add_handler(CommandHandler('deposit', deposit_command))
     application.add_handler(CommandHandler('withdraw', withdraw_command))
     application.add_handler(conversation_handler)

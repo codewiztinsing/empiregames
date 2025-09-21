@@ -221,7 +221,7 @@ body {
   align-items: center;
   justify-content: center;
   width: 50px;
-  height: 35px;
+  height: 40px;
   border-radius: 8px;
   padding: 4px;
   margin: 2px;
@@ -753,7 +753,7 @@ body {
 
 
 .last-called {
-  background: red !important;
+  background: goldenrod !important;
   color: white !important;
    animation: blink 5s ease-in-out forwards;
   transform-origin: center;
@@ -763,22 +763,27 @@ body {
   0% {
     opacity: 1;
     transform: scale(1);
+    background: red;
   }
   25% {
     opacity: 0.7;
     transform: scale(1.05);
+    background: red;
   }
   50% {
     opacity: 0.4;
     transform: scale(1.1);
+    
   }
   75% {
     opacity: 0.7;
     transform: scale(1.05);
+    background: red;
   }
   100% {
     opacity: 1;
     transform: scale(1);
+    background: red;
   }
 }
 
@@ -1171,7 +1176,7 @@ body {
   
   .stat-item {
     width: 60px;
-    height: 40px;
+    min-height: 45px;
     font-size: 14px;
     padding: 5px;
     margin: 5px;
