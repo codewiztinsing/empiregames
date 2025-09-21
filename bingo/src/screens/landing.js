@@ -324,13 +324,7 @@ const Landing = () => {
           </div>
         </div>
         
-        <div className='stat-card'>
-          <div className='stat-icon'>🎯</div>
-          <div className='stat-content'>
-            <div className='stat-value'>{lastCalledNumber ? lastCalledNumber.number : '--'}</div>
-            <div className='stat-label'>Last Called</div>
-          </div>
-        </div>
+      
         
         <div className='stat-card'>
           <div className='stat-icon'>👥</div>
@@ -340,13 +334,7 @@ const Landing = () => {
           </div>
         </div>
         
-        <div className='stat-card'>
-          <div className='stat-icon'>🏆</div>
-          <div className='stat-content'>
-            <div className='stat-value'>{totalGamesPlayed.toLocaleString()}</div>
-            <div className='stat-label'>Games Played</div>
-          </div>
-        </div>
+      
       </div>
 
       <div className='rooms-container'>

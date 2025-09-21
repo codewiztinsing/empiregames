@@ -96,7 +96,7 @@ body {
 }
 
 .recent-called-numbers-grid{
-  min-width: 150px;
+  min-width: 100px;
   display: flex;
   flex-direction: row;
   gap: 5px;
@@ -323,7 +323,7 @@ body {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: 0;
 }
 
 .called {
@@ -345,13 +345,15 @@ body {
   margin-left: -12px;
   border-radius: 10px;
   width: 100%;
-  max-width: 600px;
+  max-width: 210px;
 }
 
 .called-numbers-grid {
   display: flex;
   justify-content: flex-start;
   gap: 0;
+  background-color: #00a085;
+  width: 200px !important;
 }
 
 
@@ -359,7 +361,6 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   border-radius: 10px;
  
@@ -482,7 +483,8 @@ body {
 .current-call {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   width: 180px;
-  height: 80px;
+  height: 45px;
+  margin-top: 10px;
   border-radius: 20px;
   object-fit: contain;
   display: flex;
@@ -700,7 +702,7 @@ body {
 
 /* Ensure inline styles override CSS background */
 .board-cell[style*="background-color"] {
-  background: none !important;
+  /* background: none !important; */
 }
 
 .board-cell:hover {
@@ -743,20 +745,19 @@ body {
 }
 
 .action-buttons {
-  margin-top: 15px;
   display: flex;
-  gap: 10px;
   justify-content: space-around;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 15px;
-  padding: 10px;
+  padding: 5px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  width: 200px;
 }
 
 .refresh-button {
-  max-width: 120px;
+  max-width: 100px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
@@ -777,7 +778,8 @@ body {
 }
 
 .leave-button {
-  width: 100px;
+  width:  /* gap: 10px; */
+  100px;
   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
   color: white;
   border: none;
@@ -999,7 +1001,7 @@ body {
 /* Enhanced number styling for called numbers */
 .number {
   padding: 14px;
-  /* width: 15px; */
+  max-width: 40px;
   height: 15px;
   display: flex;
   align-items: center;

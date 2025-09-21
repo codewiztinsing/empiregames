@@ -542,7 +542,7 @@ const PlayingBoard = () => {
                           className={`board-cell`}
 
                           // if cell is * it should always be green
-                          style={{ backgroundColor: row[colIndex] === '*' ? '#75cbfb' : selectedCell.has(row[colIndex]) ? 'orange' : '#2c2856', zIndex: 1000 }}
+                          style={{ backgroundColor: row[colIndex] === '*' ? '#75cbfb' : selectedCell.has(row[colIndex]) ? 'orange' : '#2c2856' }}
                           id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
                           onClick={() => {
                             handleCellClick(row[colIndex]);
