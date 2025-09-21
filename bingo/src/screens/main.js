@@ -48,7 +48,6 @@ const PlayingBoard = () => {
 
     const handleGameState = (data) => {
       const calledNumber = data?.lastBall?.combined.split("-")[1]
-      console.log("calledNumber",calledNumber)
       if(calledNumber){
         calledNumbers.push(parseInt(calledNumber))
         setCalledNumbers(calledNumbers)
@@ -89,7 +88,6 @@ const PlayingBoard = () => {
         // Clone the audio to allow multiple simultaneous plays
         const audio = cachedAudio.cloneNode();
         audio.play().catch(error => {
-          console.log('Cached audio play failed:', error);
         });
         return;
       }
@@ -97,7 +95,6 @@ const PlayingBoard = () => {
       const soundUrl = `${SOUND_URL}/${calledNumber}.mp3`
       const audio = new Audio(soundUrl);
       audio.play().catch(error => {
-        console.log('Audio play failed:', error);
       });
 
       // Cache the audio file
@@ -107,10 +104,8 @@ const PlayingBoard = () => {
     const handlePlayWinSound = async () => {
       const SOUND_URL = process.env.REACT_APP_SOUND_URL
       const soundUrl = `${SOUND_URL}/win.mp3`
-      console.log("win soundUrl",soundUrl)
       const audio = new Audio(soundUrl);
       audio.play().catch(error => {
-        console.log('Audio play failed:', error);
       });
     };
 
@@ -193,7 +188,6 @@ const PlayingBoard = () => {
 
 
   socket.on('disconnect', () => {
-    console.log('Socket disconnected, sending user and game data');
     socket.emit('userDisconnect', {
       playerId,
       playerName,
@@ -217,6 +211,7 @@ const PlayingBoard = () => {
   };
 
   const handleCellClick = (cell) => {
+    console.log("cell",cell)
     setSelectedCell((prev) => {
       const updated = new Set(prev);
       if (updated.has(cell)) updated.delete(cell);
@@ -370,9 +365,7 @@ const PlayingBoard = () => {
 <div className='middle-container'>
 <div className="called-numbers">
         
-        <div className="called-numbers-grid" style={{
-          gap:"2px"
-        }}>
+        <div className="called-numbers-grid">
           
           <div className="column">
             <div className="column-header called-number-col" style={{
@@ -544,16 +537,20 @@ const PlayingBoard = () => {
                   { selectBoard[0] && !isBingo && selectBoard[0].map((_, colIndex) => (
                     <div key={colIndex} className="board-row">
                       {selectBoard.map((row, rowIndex) => (
+                        
                         <div key={rowIndex}
                           className={`board-cell`}
 
                           // if cell is * it should always be green
-                          style={{ backgroundColor: row[colIndex] === '*' ? '#75cbfb' : selectedCell.has(row[colIndex]) ? '#75cbfb' : '#2c2856',zIndex:1000 }}
+                          style={{ backgroundColor: row[colIndex] === '*' ? '#75cbfb' : selectedCell.has(row[colIndex]) ? 'orange' : '#2c2856', zIndex: 1000 }}
                           id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
                           onClick={() => {
                             handleCellClick(row[colIndex]);
+                          
+
 
                           }}
+                          
                         >
                           {row[colIndex]}
                         </div>
@@ -608,7 +605,7 @@ const PlayingBoard = () => {
                     className={`board-cell`}
 
                     // if cell is * it should always be green
-                    style={{ backgroundColor: row[colIndex] === '*' ? '#75cbfb' : selectedCell.has(row[colIndex]) ? '#75cbfb' : '#2c2856' }}
+                    style={{ backgroundColor: row[colIndex] === '*' ? '#75cbfb' : selectedCell.has(row[colIndex]) ? 'orange' : '#2c2856' }}
                     id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
                     onClick={() => {
                       handleCellClick(row[colIndex]);

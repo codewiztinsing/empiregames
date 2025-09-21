@@ -435,7 +435,7 @@ const Landing = () => {
                 >
                   {room.players === 0 && room.status === 'waiting' ? (
                     <span className='waiting-text'>
-                      <span className='waiting-dots'>•••</span> Waiting
+                      <span className='waiting-dots'>•••</span> Play
                     </span>
                   ) : (
                     'Play'

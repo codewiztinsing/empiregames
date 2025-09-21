@@ -76,7 +76,6 @@ const Selections = () => {
           'Content-Type': 'application/json'
         };
         const response = await axios.get(`${apiUrl}wallet/player/${queryParams.get('playerId')}`);
-        console.log("user wallet response = ",response)
         setBalance(response.data.balance);
         setLoading(false);
       } catch (error) {
@@ -119,7 +118,6 @@ const Selections = () => {
       // Clone the audio to allow multiple simultaneous plays
       const audio = cachedAudio.cloneNode();
       audio.play().catch(error => {
-        console.log('Cached audio play failed:', error);
       });
       return;
     }
@@ -127,7 +125,6 @@ const Selections = () => {
     const soundUrl = `${SOUND_URL}/${calledNumber}.mp3`
     const audio = new Audio(soundUrl);
     audio.play().catch(error => {
-      console.log('Audio play failed:', error);
     });
 
     // Cache the audio file
@@ -161,7 +158,6 @@ const handleGlobals = (state) => {
   }
 
   const handleGameState = (state) => {
-    console.log("gameState",state)
     const gameRoom = state.roomId
     if (roomId == gameRoom) {
       if (state.pickedNumbers !== null) {
@@ -378,7 +374,6 @@ const handleGlobals = (state) => {
 
 
   const handleGameStatus = (state) => {
-    console.log("gameStatus", state)
     const gameRoom = state.roomId
     if (roomId == gameRoom) {
       setGameStatus(state.status);
