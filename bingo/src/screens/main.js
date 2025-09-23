@@ -42,8 +42,8 @@ const PlayingBoard = () => {
   const [markedCells, setMarkedCells] = useState([]);
   const [firstBoardLost, setFirstBoardLost] = useState(false);
   const [winAmount, setWinAmount] = useState(0);
-  // const [totalWinAmount, setTotalWinAmount] = useState(0);
-  // const [totalPlayers,setTotalPlayers] = useState(0);
+  const [totalWinAmount, setTotalWinAmount] = useState(0);
+  const [totalPlayers,setTotalPlayers] = useState(0);
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
 
   // Generate Bingo board function
@@ -98,8 +98,8 @@ const PlayingBoard = () => {
     const handleGameState = (data) => {
       const calledNumber = data?.lastBall?.combined.split("-")[1]
       if(data.win_amount) {
-        // setWinAmount(data.win_amount)
-        // setTotalPlayers(data.total_players)
+        setWinAmount(data.win_amount)
+        setTotalPlayers(data.total_players)
       }
       if(calledNumber){
         calledNumbers.push(parseInt(calledNumber))
@@ -228,7 +228,7 @@ const PlayingBoard = () => {
       socket.off('playerLeft', handlePlayerLeft);
       socket.off('disconnect');
     };
-  }, [socket, roomId, playerId, playerName, selectedNumber, setCountDown, setGameId, setToast, setIsToast, navigate, winAmount, betAmount, setWinAmount]);
+  }, [socket, roomId, playerId, playerName, selectedNumber, setCountDown, setGameId, setToast, setIsToast, navigate, winAmount, betAmount]);
 
   // ✅ Track recent balls
   useEffect(() => {
@@ -315,7 +315,7 @@ const PlayingBoard = () => {
 
   const handleCloseWinner = () => {
     setIsBingo(false);
-    navigate(`/selection?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+    navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
   };
 
   return (
@@ -427,17 +427,17 @@ const PlayingBoard = () => {
       <div className="stats-bar">
         <div className="stat-item">
           <span>ደራሽ</span>
-          <span>{isNaN(8) ? 0 : (8)}</span>
+          <span>{isNaN(winAmount.toFixed(2)) ? 0 : (winAmount.toFixed(2))}</span>
         </div>
         <div className="stat-item">
           <span>ብዛት</span>
           
-          <span>2</span>
+          <span>{totalPlayers}</span>
         </div>
         <div className="stat-item">
           <span>መደብ </span>
         
-          <span>10</span>
+          <span>{roomId}</span>
         </div>
         <div className="stat-item">
           <span>ጥሪ </span>
@@ -572,10 +572,7 @@ const PlayingBoard = () => {
 
           {selectBoard && (
           <div className="bingo-header">
-            <div className='selected-number'>
-              <p className='selected-number-label'>የካርቴላ ቁጥር :-</p>
-              <p className='selected-number-value'>{selectedNumber}</p>
-            </div>
+          
             <div className="bingo-letters">
               <span className='bingo-letter-text'>B</span>
               <span className='bingo-letter-text'>I</span>
@@ -594,10 +591,10 @@ const PlayingBoard = () => {
                     <div key={colIndex} className="board-row">
                       {selectBoard.map((row, rowIndex) => (
                         <div key={rowIndex}
-                          className={`board-cell`}
+                          className={`board-cell-main`}
                           // if cell is * it should always be golden, selected cells should be yellow
                           style={{ 
-                            background: row[colIndex] === 'FREE' ? '#ff6600' : selectedCell.has(row[colIndex]) ? 'orange' : '#ffffff',
+                            background: row[colIndex] === 'FREE' ? 'goldenrod' : selectedCell.has(row[colIndex]) ? 'orange' : '#ffffff',
                             border: selectedCell.has(row[colIndex]) ? '2px solid #ff6600' : '1px solid #34495e'
                           }}
                           id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
@@ -614,6 +611,11 @@ const PlayingBoard = () => {
                   ))}
 
                 </div>
+
+            <div className='selected-number'>
+              <p className='selected-number-label'>የካርቴላ ቁጥር :-</p>
+              <p className='selected-number-value'>{selectedNumber}</p>
+            </div>
             
             <button className={`bingo-button-card-${selectedNumber}`} 
                   onClick={() => handleBingo(selectBoard,selectedNumber)} 

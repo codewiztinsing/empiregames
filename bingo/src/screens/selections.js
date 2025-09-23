@@ -150,34 +150,6 @@ const Selections = () => {
   }, [countDown, selectedNumber,gameStatus]);
 
 
-  const handlePlaySound = async (calledNumber) => {
-    const SOUND_URL = process.env.REACT_APP_SOUND_URL
-    
-    // Cache audio files to improve performance and reduce loading timegl
-    if (!window.audioCache) {
-      window.audioCache = new Map();
-    }
-    
-    // Check if audio is already cached
-    if (window.audioCache.has(calledNumber)) {
-      const cachedAudio = window.audioCache.get(calledNumber);
-      // Clone the audio to allow multiple simultaneous plays
-      const audio = cachedAudio.cloneNode();
-      audio.play().catch(error => {
-        console.log('Cached audio play failed:', error);
-      });
-      return;
-    }
-
-    const soundUrl = `${SOUND_URL}/${calledNumber}.mp3`
-    const audio = new Audio(soundUrl);
-    audio.play().catch(error => {
-      console.log('Audio play failed:', error);
-    });
-
-    // Cache the audio file
-    window.audioCache.set(calledNumber, audio);
-  };
 
 
 const handleGlobals = (state) => {
@@ -301,12 +273,6 @@ const handleGlobals = (state) => {
 
   }
 
-  const handleBack = () => {
-
-    navigate(`/?playerId=${playerId}&&betAmount=${roomId}`);
-
-    window.location.reload();
-  };
 
 
   socket.on('joinError', (error) => {
@@ -625,7 +591,7 @@ const handleGlobals = (state) => {
           {gameStatus == "waiting" && (
             <div className="countdown-container">
               <div className="countdown-text">
-                {countDown !== 0 ? `Game starts in: ${countDown}` : ``}
+                {selectedNumber ? `Game starts in: ${countDown}` : ``}
               </div>
              
             </div>
@@ -691,7 +657,7 @@ const handleGlobals = (state) => {
                 {/* Single Bingo Card Component */}
                 <div className="combination-board">
                   <div className='card-number-container'>
-                    <div className='card-number'># Card {selectedNumber}</div>
+                    {/* <div className='card-number'># Card {selectedNumber}</div> */}
                     <div className="combination-bingo-header">
                       {['B', 'I', 'N', 'G', 'O'].map((letter, i) => (
                         <div key={i} className="combination-bingo-header-text">{letter}</div>

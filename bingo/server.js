@@ -152,7 +152,8 @@ function startCountDown(game) {
       game.currentCall = null;
       game.calledNumbers = [];
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== null);
-      game.win_amount = game.roomId * game.selectedNumbers.length * 0.8
+      game.win_amount = game.roomId * game.players.size * 0.78
+      game.total_players = game.players.size
       startGame(game);
     }
     game.countDown--;
@@ -187,12 +188,10 @@ async function startGame(game) {
 
   const gameInterval = setInterval(() => {
     const calledSet = new Set(game.calledNumbers.map(b => b.number));
-    console.log("calledSet = ",calledSet)
     let ball = generateBalls();
     while (calledSet.has(ball.number)) {
       ball = generateBalls();
     }
-    console.log("ball = ",ball)
     game.currentCall = ball;
     game.calledNumbers.push(ball);
     game.selectedNumbers = [];
@@ -204,13 +203,16 @@ async function startGame(game) {
       pickedNumbers: game.selectedNumbers,
       game_status: game.status,
       count_down: game.countDown,
-      win_amount: game.roomId * (game.players ? game.players.size : 0) * 0.8,
-      total_players: game.players,
+      win_amount: game.win_amount,
+      total_players: game.total_players,
       lastBall: ball,
       called_numbers: game.calledNumbers,
       total_called_numbers: game.calledNumbers.length
     });
    
+
+    console.log("game.win_amount = ",game.win_amount)
+    console.log("game.total_players = ",game.total_players)
 
     if (game.calledNumbers.length >= 75) {
       io.emit("gameStatus", {
@@ -219,16 +221,7 @@ async function startGame(game) {
       })
       endGame(game);
     }
-    io.emit("globals", {
-      roomId: game.roomId,
-      lastBall: game.currentCall,
-      calledNumbers: game.calledNumbers,
-      totalCalledNumbers: game.calledNumbers.length,
-      totalPlayers: game.players ? game.players.size : 0,
-      totalWinAmount: game.total_winAmount,
-      totalPlayers: game.total_players,
-  
-    })
+    
    
   }, game.gameSpeed);
 
@@ -351,7 +344,7 @@ io.on('connection', (socket) => {
       game_status: game.status,
       count_down: game.countDown,
       players: playersList,
-      total_players: 5
+  
     });
 
     if (!game.isCountStart && game.players && game.players.size >= 1) {
@@ -551,7 +544,7 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, './build', 'index.html'));
 });
 
-const PORT = 6000
+const PORT = 5000
 const IP = ip.address();
 server.listen(PORT, () => console.log(`Server running on port ${PORT} and IP ${IP}`));
 
