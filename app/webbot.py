@@ -586,7 +586,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         elif query.data == 'menu':
             keyboard = [
                 [InlineKeyboardButton("Play Game", callback_data='play'),
-                 InlineKeyboardButton("Check Balance", callback_data='check_balance')],
+                 InlineKeyboardButton("Check Balance", callback_data='check_balance'),
+                 InlineKeyboardButton("Withdraw", callback_data='withdraw')],
                 [InlineKeyboardButton("Deposit", callback_data='deposit'),
                  InlineKeyboardButton("Register", callback_data='register_menu')]
 
@@ -839,19 +840,15 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
     # Create appealing balance message
     if balance > 0:
         message = (
-            f"💰 Hey {user_name}! Your current balance is:\n\n"
-            f"🎯 **{balance} ETB**\n\n"
-            f"🎮 Ready to play some exciting Bingo games?\n"
-            f"💎 Your luck is waiting! Good luck! 🍀"
+        f"💰 Hey {user_name}! Your Current Account Balance!\n\n"
+        f"👤 **Name:** {user_name}\n"
+        f"📱 **Phone Number:** {telegram_id}\n"
+        f"💵 **Withdrawable Balance:** {balance} ETB\n"
+        f"🔒 **Non-Withdrawable Balance:** 0.0 ETB\n"
+        f"🎯 **Total Balance:** {balance} ETB\n\n"
+        f"🎮 Ready to play? Your balance looks great!"
         )
-    else:
-        message = (
-            f"💰 Hey {user_name}! Your current balance is:\n\n"
-            f"🎯 **{balance} ETB**\n\n"
-            f"💳 Time to fuel up your gaming adventure!\n"
-            f"🚀 Deposit now and start winning big! 🎲"
-        )
-    
+
     await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
    
     return ConversationHandler.END
@@ -891,7 +888,7 @@ def main() -> None:
     application.add_handler(CommandHandler('instructions', instruction_command))
     application.add_handler(CommandHandler('support', support_command))
     application.add_handler(CommandHandler('withdraw', withdraw_command))
-    application.add_handler(CommandHandler('balance', check_balance_command))
+    application.add_handler(CommandHandler('check_balance', check_balance_command))
     application.add_handler(CommandHandler('deposit', deposit_command))
     application.add_handler(CommandHandler('withdraw', withdraw_command))
     application.add_handler(conversation_handler)
