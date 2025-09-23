@@ -750,10 +750,11 @@ body {
 }
 
 
-.last-called {
+.number.last-called {
   background: goldenrod !important;
   color: white !important;
-  animation: lastcalledgolden 5s ease-in-out infinite;
+  animation: lastcalledgolden 5s ease-in-out forwards;
+  transition: none !important;
 }
 
 
@@ -769,7 +770,7 @@ body {
     background: goldenrod !important;
   }
   100% {
-    background: red !important;
+    background: goldenrod !important;
   }
 }
 

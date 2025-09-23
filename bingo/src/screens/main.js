@@ -96,14 +96,24 @@ const PlayingBoard = () => {
     if (!socket) return;
 
     const handleGameState = (data) => {
-      const calledNumber = data?.lastBall?.combined.split("-")[1]
+      console.log('Received gameState data:', data);
+      console.log('lastBall:', data?.lastBall);
+      console.log('lastBall.combined:', data?.lastBall?.combined);
+      
+      const calledNumber = data?.lastBall?.combined?.split("-")[1]
+      console.log('Extracted calledNumber:', calledNumber);
+      
       if(data.win_amount) {
         setWinAmount(data.win_amount)
         setTotalPlayers(data.total_players)
       }
       if(calledNumber){
-        calledNumbers.push(parseInt(calledNumber))
-        setCalledNumbers(calledNumbers)
+        console.log('Adding called number:', calledNumber, 'to calledNumbers array');
+        setCalledNumbers(prevCalledNumbers => {
+          const newArray = [...prevCalledNumbers, parseInt(calledNumber)];
+          console.log('Updated calledNumbers:', newArray);
+          return newArray;
+        })
       }
       setLastBall(data.lastBall);
       handlePlaySound(calledNumber)
@@ -457,14 +467,18 @@ const PlayingBoard = () => {
               backgroundColor: "#00022E", /* Red for B */
               color: "white"
             }}>B</div>
-            {Array.from({ length: 15 }, (_, i) => (
-              <div key={i} className={`number ${calledNumbers?.includes(i + 1) ? 'last-called' : ''} ${selectedNumber == i + 1 ? 'selected' : ''}`}
-                id={`B${i + 1}`}
-
-              >
-                {i + 1}
-              </div>
-            ))}
+            {Array.from({ length: 15 }, (_, i) => {
+              const isCalled = calledNumbers?.includes(i + 1);
+              const className = `number ${isCalled ? 'last-called' : ''} ${selectedNumber == i + 1 ? 'selected' : ''}`;
+              if (isCalled) {
+                console.log(`Number ${i + 1} is called, className:`, className);
+              }
+              return (
+                <div key={i} className={className} id={`B${i + 1}`}>
+                  {i + 1}
+                </div>
+              );
+            })}
           </div>
           <div className="column">
             <div className="column-header called-number-col" style={{

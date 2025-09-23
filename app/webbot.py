@@ -784,13 +784,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Your current balance: {balance} ETB\n\n"
         f"Invite friends and enjoy playing together! 🎲"
     )
-
-    # Add 20 ETB bonus for inviting
-    requests.post(f'{BACK_URL}/api/v1/wallet/player/{user_id}/', json={
-        'user_id': user_id,
-        'amount': 20
-    })
-    
+  
     await update.message.reply_text(message)
 
 
@@ -840,7 +834,7 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
     # Create appealing balance message
     if balance > 0:
         message = (
-        f"💰 Hey {user_name}! Your Current Account Balance!\n\n"
+        f"💰 Hey {user_name}! Your Current Account Balance!\n"
         f"👤 **Name:** {user_name}\n"
         f"📱 **Phone Number:** {telegram_id}\n"
         f"💵 **Withdrawable Balance:** {balance} ETB\n"
