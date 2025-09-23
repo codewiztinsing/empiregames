@@ -382,40 +382,13 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             
            
             return ConversationHandler.END
-            
-           
-
-
-
-
+    
         elif query.data.startswith('withraw_with_'):
             bank_id = query.data.split('_')[2]
             context.user_data['bank_id'] = bank_id
             await query.edit_message_text(
                 text="Please enter your withdraw amount ")
             return WITHDRAW_AMOUNT_CONFIRM
-
-
-        elif query.data.startswith('chapa_telebirr'):
-            context.user_data['bank_id'] = 'Telebirr'
-            phone_number = get_user_phone(query.from_user.id)
-            deposit_amount =  context.user_data.get("deposit_amount",0)
-            first_name = query.from_user.first_name or query.from_user.username
-            last_name = query.from_user.last_name or query.from_user.username
-            paymentMethod = 'telebirr'
-            initialize_chapa_direct_charges(phone_number,deposit_amount,generate_tx_ref(),first_name,last_name,paymentMethod)
-            return ConversationHandler.END
-
-        elif query.data.startswith('chapa_cbe'):
-            context.user_data['bank_id'] = 'CBE'
-            phone_number = get_user_phone(query.from_user.id)
-            print("phone_number = ",phone_number)
-            deposit_amount =  context.user_data.get("deposit_amount",0)
-            first_name = query.from_user.first_name or query.from_user.username
-            last_name = query.from_user.last_name or query.from_user.username
-            paymentMethod = 'cbe'
-            initialize_chapa_direct_charges(phone_number,deposit_amount,generate_tx_ref(),first_name,last_name,paymentMethod)
-            return ConversationHandler.END
 
         elif query.data == 'withdraw_confirm':
             return WITHDRAW_AMOUNT_CONFIRM
@@ -542,82 +515,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             else:
                 await query.edit_message_text(text="An error occurred. Please try again.")
                 return ConversationHandler.END
-           
-        elif query.data == "addispay":
-            BACK_URL = get_bot_seetings().get("bot_url")
-            # check if user is registered
-            response = requests.get(f"{BACK_URL}/api/v1/users/{query.from_user.id}")
-            user_from_api = response.json() if response.headers.get('content-type','').startswith('application/json') else {}            
-            if not user_from_api.get("success", False):
-                await query.edit_message_text(text="You need to register first. Use the /register command.")
-                return ConversationHandler.END
-                
-            phone_number = user_from_api.get("phone")
-            tax_ref = generate_tx_ref()
-            addis_session = create_session(
-            float(context.user_data['deposit_amount']), 
-            "ETB",
-            f"{query.from_user.username}@gmail.com", 
-            query.from_user.first_name,
-             query.from_user.last_name,
-            phone_number, 
-            tax_ref, 
-            f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/",
-             "https://akerbingo.com/success", {
-                "title": "Aker Bingo",
-                "description": "Deposit to Aker Bingo",
-                "logo": "https://akerbingo.com/static/media/logo.png"
-            })
-            if addis_session.get("status") == "success":
-                data = addis_session.get("data")
-                # create session in database
-                session_data = {
-                    "amount": float(context.user_data['deposit_amount']),
-                    "currency": "ETB",
-                    "email": f"{query.from_user.username}@gmail.com",
-                    "first_name": query.from_user.first_name or "User",
-                    "last_name": query.from_user.last_name or "Name",
-                    "phone_number": phone_number,
-                    "tx_ref": tax_ref,
-                    "callback_url": f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/",
-                    "session_id": data.get("uuid")
-                }
-                print("session_data = ",session_data)
-                session_creating_response = requests.post(f"{BACK_URL}/api/v1/wallet/addispay/create-session", json=session_data)
-                if session_creating_response.status_code == 200:
-                    checkout_url = data.get("checkout_url") + "/" + data.get("uuid")
-                else:
-                    await query.edit_message_text(text="Failed to create payment session. Please try again.")
-                    return ConversationHandler.END
-            else:
-                await query.edit_message_text(text="An error occurred. Please try again.")
-                return ConversationHandler.END
-            keyboard = [
-                [InlineKeyboardButton("Pay with AddisPay", url=checkout_url)]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text(
-                text="Click the button below to complete your payment:",
-                reply_markup=reply_markup
-            )
-
-            return ConversationHandler.END
-           
-
-      
-
-        elif query.data == 'withraw_with_chapa':
-            await query.edit_message_text(
-                text="how much do you want to withdraw?"
-            )
-            context.user_data['withdraw_amount'] = query.data
-            context.user_data['payment_method'] = 'chapa'
-            return DEPOSIT_AMOUNT
-            # return ConversationHandler.END
-
-          
-            
-            
+    
+ 
         
         elif query.data == 'cancel':
             await query.edit_message_text(text="Withdrawal request cancelled.")
@@ -807,37 +706,37 @@ async def get_transcation_details(update: Update, context: ContextTypes.DEFAULT_
 all_public_commands_descriptions = [
     BotCommand(
         "start", 
-        "start"
+        "Start"
     ),
 
     BotCommand(
         "play", 
-        "play"
+        "Play"
         ),
 
     BotCommand(
         "register", 
-        "register"
+        "Register"
         ),
 
     BotCommand(
         "check_balance", 
-        "check_balance"
+        "Balance"
         ),
 
     BotCommand(
         "deposit", 
-        "deposit"
+        "Deposit"
         ),
 
     BotCommand(
         "withdraw", 
-        "withdraw"
+        "Withdraw"
         ),
 
     BotCommand(
         "instructions", 
-        "instructions"
+        "Instructions"
         ),
 
       BotCommand(
@@ -845,10 +744,7 @@ all_public_commands_descriptions = [
         "Contact us"
         ),
 
-    BotCommand(
-        "withdraw", 
-        "withdraw"
-        ),
+
     BotCommand(
         "invite", 
         "Invite"
@@ -910,7 +806,7 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if user_data.get('phone'):
             await update.message.reply_text(
                 "✅ You are already registered!\n\n"
-                "🎮 You can now play games, check your balance, and make deposits.\n"
+                "🎮 Click /play to start the game"
                 "Use the menu to explore all available options."
             )
             return ConversationHandler.END
@@ -967,9 +863,6 @@ async def deposit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     return ConversationHandler.END
 
-# async def withdraw_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     await update.message.reply_text("Please withdraw to play the game.")
-#     return WITHDRAW_AMOUNT_CONFIRM
 
 
 
@@ -993,10 +886,7 @@ def main() -> None:
         allow_reentry=True
     )
 
-  
- 
-
-    application.add_handler(CommandHandler('start', start))
+    # application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('play', play_command))
     application.add_handler(CommandHandler('instructions', instruction_command))
     application.add_handler(CommandHandler('support', support_command))

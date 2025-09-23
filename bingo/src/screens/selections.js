@@ -356,14 +356,30 @@ const handleGlobals = (state) => {
       return;
     }
    
-    // Only allow selecting 1 number (one card)
+    // If user already has a card selected, replace it with new one
     if (choosenNumbers.length >= 1) {
-      setToast("You can only select one card");
+      // Leave current game first (but don't reset selection)
+      handleLeaveGame(true);
+      
+      // Generate new board for the new number
+      const newBoard = generateCombination();
+      
+      // Replace the existing selection
+      setChoosenNumbers([number]);
+      setChooseBoards([newBoard]);
+      setSelectedNumber(number);
+      setSelectBoard(newBoard);
+      
+      // Join game with new card
+      await handleJoinGame(number, newBoard);
+      
+      // Show toast for card switch
+      setToast(`Switched to Card ${number}! Waiting for countdown...`);
       setIsToast(true);
       return;
     }
   
-    // Add new number and generate new board
+    // Add new number and generate new board (for first selection)
     const newNumbers = [...choosenNumbers, number];
     const newBoard = generateCombination();
     const newBoards = [...choosenBoards, newBoard];
@@ -435,23 +451,25 @@ const handleGlobals = (state) => {
   };
 
   // Leave game function
-  const handleLeaveGame = () => {
+  const handleLeaveGame = (isSwitchingCard = false) => {
     if (selectedNumber) {
       socket.emit('leave', { 
         playerId, 
         roomId, 
         selectedNumber, 
-        reason: 'user_left' 
+        reason: isSwitchingCard ? 'switching_card' : 'user_left' 
       });
       
-      // Reset selection
-      setChoosenNumbers([]);
-      setChooseBoards([]);
-      setSelectedNumber(null);
-      setSelectBoard([]);
-      
-      setToast("Left the game");
-      setIsToast(true);
+      // Only reset selection if not switching cards
+      if (!isSwitchingCard) {
+        setChoosenNumbers([]);
+        setChooseBoards([]);
+        setSelectedNumber(null);
+        setSelectBoard([]);
+        
+        setToast("Left the game");
+        setIsToast(true);
+      }
     }
   };
   
