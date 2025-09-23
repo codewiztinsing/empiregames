@@ -958,34 +958,7 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Responsive action buttons */
-@media screen and (min-width: 768px) {
-  .action-buttons {
-    margin-top: 10px;
-    gap: 10px;
-    padding: 0 6px;
-  }
-  
-  .refresh-button,
-  .leave-button {
-    padding: 10px 16px;
-    font-size: 14px;
-  }
-}
 
-@media screen and (min-width: 1024px) {
-  .action-buttons {
-    margin-top: 12px;
-    gap: 12px;
-    padding: 0 8px;
-  }
-  
-  .refresh-button,
-  .leave-button {
-    padding: 12px 20px;
-    font-size: 16px;
-  }
-}
 
 /* Back Container and Button Styles */
 .back-container {
@@ -1528,6 +1501,56 @@ body {
   
   .bingo-letters {
     gap: 1px;
+  }
+}
+
+@media screen and (max-width: 350px) and (max-height: 740px) {
+  .middle-container {
+    gap: 0;
+    padding: 0;
+  }
+  
+  .playing-section {
+    width: 60%;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .called-numbers {
+    width: 40%;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .boards-container {
+    gap: 0;
+    padding: 0;
+  }
+  
+  .bingo-header {
+    margin: 0;
+    padding: 2px;
+  }
+  
+  .bingo-letters {
+    gap: 1px;
+  }
+  
+  .bingo-letter-text {
+    padding: 5px;
+    font-size: 8px;
+  }
+  
+  .board-cell {
+    min-width: 20px;
+    min-height: 20px;
+    font-size: 8px;
+    padding: 1px;
+  }
+  
+  .board-row {
+    gap: 1px;
+    margin-bottom: 1px;
   }
 }
 
