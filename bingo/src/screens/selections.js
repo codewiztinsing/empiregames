@@ -625,7 +625,7 @@ const handleGlobals = (state) => {
           {gameStatus == "waiting" && (
             <div className="countdown-container">
               <div className="countdown-text">
-                {selectedNumber ? `Game starts in: ${countDown}` : `Select a card number to join the game`}
+                {countDown !== 0 ? `Game starts in: ${countDown}` : ``}
               </div>
              
             </div>
