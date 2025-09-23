@@ -360,23 +360,8 @@ body {
   color: white;
 }
 
-.playing-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  width: 70%;
-  flex: 1;
-  min-width: 200px;
-  height: fit-content;
-  justify-content: flex-start;
-  overflow: visible;
-  padding: 0;
-}
 
 .boards-container {
-  display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0;
@@ -1384,11 +1369,7 @@ body {
     min-width: 250px;
   }
   
-  .playing-section {
-    width: 75%;
-    gap: 15px;
-    padding: 0;
-  }
+ 
   
   .boards-container {
     gap: 0;
@@ -1510,11 +1491,7 @@ body {
     padding: 0;
   }
   
-  .playing-section {
-    width: 60%;
-    padding: 0;
-    margin: 0;
-  }
+ 
   
   .called-numbers {
     width: 40%;
