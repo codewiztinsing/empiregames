@@ -395,7 +395,6 @@ body {
   border-radius: 8px;
   width: 40%;
   max-width: 250px;
-  min-width: 200px;
   height: fit-content;
   flex-shrink: 0;
   overflow-y: visible;
@@ -508,8 +507,8 @@ body {
   padding: 4px;
   border-radius: 6px;
   border: 2px solid #2c3e50;
-  width: 190px;
-  margin-left: -80px;
+  width: 180px;
+  margin-left: -100px;
   background: linear-gradient(145deg, #ffffff, #f8f9fa);
   box-shadow: 
     0 2px 8px rgba(0, 0, 0, 0.12),
@@ -616,7 +615,7 @@ body {
   display: flex;
   justify-content: space-between;
   width: 100%;
-  gap: 2px;
+  gap: 1px;
 }
 
 
