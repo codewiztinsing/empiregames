@@ -755,35 +755,23 @@ body {
 .last-called {
   background: goldenrod !important;
   color: white !important;
-   animation: blink 5s ease-in-out forwards;
-  transform-origin: center;
+  animation: lastcalledgolden 5s ease-in-out infinite;
 }
 
-@keyframes blink {
+
+
+@keyframes lastcalledgolden {
   0% {
-    opacity: 1;
-    transform: scale(1);
-    background: red;
-  }
-  25% {
-    opacity: 0.7;
-    transform: scale(1.05);
-    background: red;
+    background: red !important;
   }
   50% {
-    opacity: 0.4;
-    transform: scale(1.1);
-    
+    background: goldenrod !important;
   }
   75% {
-    opacity: 0.7;
-    transform: scale(1.05);
-    background: red;
+    background: goldenrod !important;
   }
   100% {
-    opacity: 1;
-    transform: scale(1);
-    background: red;
+    background: red !important;
   }
 }
 
