@@ -1131,7 +1131,6 @@ body {
   .called-numbers {
     width: 35%;
     max-width: 250px;
-    min-width: 200px;
     padding: 10px;
     height: fit-content;
   }
