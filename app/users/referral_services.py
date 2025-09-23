@@ -63,7 +63,7 @@ class ReferralService:
     @staticmethod
     def _create_bonus(referrer, winner, win_amount, game_id, bonus_type, percentage, generation_level):
         """Create a referral bonus record"""
-        bonus_amount = win_amount * percentage
+        bonus_amount = Decimal(str(win_amount)) * percentage
         
         bonus = ReferralBonus.objects.create(
             referrer=referrer,

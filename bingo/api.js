@@ -84,7 +84,6 @@ const gameLossWallet = async (players,betAmount)=>{
       game_id:game_id
   };
 
-  console.log("data loss wallet",data)
 
   try{
       if(!data.players) return null;

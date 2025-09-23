@@ -26,7 +26,7 @@ class ReferralService:
             return
         
         # First generation bonus (4%)
-        first_gen_bonus = win_amount * (settings.first_generation_bonus / 100)
+        first_gen_bonus = Decimal(str(win_amount)) * (settings.first_generation_bonus / 100)
         ReferralBonus.objects.create(
             user=sponsor,
             from_user=winner_user,
@@ -44,7 +44,7 @@ class ReferralService:
         # Second generation bonus (1%)
         grand_sponsor = sponsor.sponsor
         if grand_sponsor:
-            second_gen_bonus = win_amount * (settings.second_generation_bonus / 100)
+            second_gen_bonus = Decimal(str(win_amount)) * (settings.second_generation_bonus / 100)
             ReferralBonus.objects.create(
                 user=grand_sponsor,
                 from_user=winner_user,
