@@ -429,7 +429,6 @@ body {
   min-width: 25px;
   background: linear-gradient(145deg, #ffffff, #f8f9fa);
   padding: 3px;
-  margin: 2px;
   height: fit-content;
   overflow-y: visible;
   justify-content: flex-start;
@@ -509,9 +508,8 @@ body {
   padding: 4px;
   border-radius: 6px;
   border: 2px solid #2c3e50;
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
+  width: 190px;
+  margin-left: -80px;
   background: linear-gradient(145deg, #ffffff, #f8f9fa);
   box-shadow: 
     0 2px 8px rgba(0, 0, 0, 0.12),
@@ -893,8 +891,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 40px;
-  min-height: 40px;
+  max-width: 35px;
   font-size: 14px;
   font-weight: 700;
   font-family: 'Arial', 'Helvetica', sans-serif;
