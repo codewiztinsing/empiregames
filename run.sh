@@ -19,8 +19,8 @@ rm -rf templates/build/*
 # Copy the new build files to /templates/build
 cp -r ../bingo/build/* templates/build/
 
-mkdir -p /var/www/static/sounds
-cp -r ../bingo/build/assets/sounds/* /var/www/static/sounds/
+mkdir -p /var/www/akbot_static/sounds
+cp -r ../bingo/build/assets/sounds/* /var/www/aker_static/sounds/
 
 echo "Build completed"
 

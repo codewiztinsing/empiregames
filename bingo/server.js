@@ -551,7 +551,7 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, './build', 'index.html'));
 });
 
-const PORT = process.env.SERVER_PORT || 5000
+const PORT = process.env.SERVER_PORT || 6000
 const IP = ip.address();
 server.listen(PORT, () => console.log(`Server running on port ${PORT} and IP ${IP}`));
 
