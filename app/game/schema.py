@@ -12,12 +12,7 @@ class BetSchema(Schema):
     players: list[PlayerSchema]
     game_id: int
     bet_amount: float
-
-    # incoming data
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        print("kwargs",kwargs)
-        self.incoming_data = kwargs.get("incoming_data", {})
+    total_players: int = None
     
 
     

@@ -18,7 +18,7 @@ const server = http.createServer(app);
 
 const getConstant = async () => {
   return {
-    gameSpeed: 5000,
+    gameSpeed: 1000,
     countDown: 30
   }
 }
@@ -177,11 +177,11 @@ async function startGame(game) {
     numberOfBoards: 1
   }));
 
-  game.total_players = game.total_players
+  game.total_players = game.players.size
   game.total_winAmount = game.selectedNumbers.length * game.roomId * 0.8
 
   try {
-    await gameLossWallet(players, game.id);
+    await gameLossWallet(players, game.id, game.total_players);
   } catch (error) {
     console.error('Error charging players:', error);
   }

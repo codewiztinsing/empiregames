@@ -73,7 +73,7 @@ const getCurrentGame = async (betAmount)=>{
 }
 
 
-const gameLossWallet = async (players,betAmount)=>{
+const gameLossWallet = async (players, betAmount, totalPlayers = null)=>{
   const current_game = await getCurrentGame(betAmount)
   console.log("current_game",current_game)
   const game_id = current_game.game_id
@@ -81,7 +81,8 @@ const gameLossWallet = async (players,betAmount)=>{
   const data = {
       players: players,
       bet_amount: betAmount,
-      game_id:game_id
+      game_id: game_id,
+      total_players: totalPlayers
   };
 
 
@@ -96,7 +97,7 @@ const gameLossWallet = async (players,betAmount)=>{
           console.log("gameLossWallet res",res.data)
       })
   }catch(e){
-    console.log("gameLossWallet error")
+    console.log("gameLossWallet error", e)
   }
   
 }

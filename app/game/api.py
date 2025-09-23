@@ -30,6 +30,12 @@ def join_game(request, data: BetSchema):
     
     logger.info(f"Players dict: {players_dict}")
     
+    # Update game with total_players if provided
+    if data.total_players is not None:
+        game.total_players = data.total_players
+        game.save()
+        logger.info(f"Updated game {game.id} with total_players: {data.total_players}")
+    
     charge_player.delay(players_dict,game.entry_fee,game.id)
     return GameSchema(bet_amount=game.entry_fee,game_id=game.id)    
     
