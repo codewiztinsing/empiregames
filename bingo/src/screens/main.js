@@ -454,7 +454,7 @@ const PlayingBoard = () => {
           
           <div className="column">
             <div className="column-header called-number-col" style={{
-              backgroundColor: "#d32f2f", /* Red for B */
+              backgroundColor: "#00022E", /* Red for B */
               color: "white"
             }}>B</div>
             {Array.from({ length: 15 }, (_, i) => (
@@ -468,8 +468,8 @@ const PlayingBoard = () => {
           </div>
           <div className="column">
             <div className="column-header called-number-col" style={{
-              backgroundColor: "#FFD700", /* Yellow for I */
-              color: "#000"
+              backgroundColor: "#00022E", /* Yellow for I */
+              color: "white"
             }}>I</div>
             {Array.from({ length: 15 }, (_, i) => (
             <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'last-called' : ''} ${selectedNumber == i + 16 ? 'selected' : ''}`}
@@ -481,7 +481,7 @@ const PlayingBoard = () => {
           </div>
           <div className="column">
             <div className="column-header called-number-col" style={{
-              backgroundColor: "#4CAF50", /* Green for N */
+              backgroundColor: "#00022E", /* Green for N */
               color: "white"
             }}>N</div>
             {Array.from({ length: 15 }, (_, i) => (
@@ -495,7 +495,7 @@ const PlayingBoard = () => {
           </div>
           <div className="column">
             <div className="column-header called-number-col" style={{
-              backgroundColor: "#2196F3", /* Blue for G */
+              backgroundColor: "#00022E", /* Blue for G */
               color: "white"
             }}>G</div>
             {Array.from({ length: 15 }, (_, i) => (
@@ -509,7 +509,7 @@ const PlayingBoard = () => {
           </div>
           <div className="column">
             <div className="column-header called-number-col" style={{
-              backgroundColor: "#9C27B0", /* Purple for O */
+              backgroundColor: "#00022E", /* Purple for O */
               color: "white"
             }}>O</div>
             {Array.from({ length: 15 }, (_, i) => (
@@ -594,7 +594,7 @@ const PlayingBoard = () => {
                           className={`board-cell-main`}
                           // if cell is * it should always be golden, selected cells should be yellow
                           style={{ 
-                            background: row[colIndex] === 'FREE' ? 'goldenrod' : selectedCell.has(row[colIndex]) ? 'orange' : '#ffffff',
+                            background: row[colIndex] === 'FREE' ? '#ffa500' : selectedCell.has(row[colIndex]) ? 'orange' : '#ffffff',
                             border: selectedCell.has(row[colIndex]) ? '2px solid #ff6600' : '1px solid #34495e'
                           }}
                           id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
