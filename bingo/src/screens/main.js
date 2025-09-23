@@ -571,9 +571,9 @@ const PlayingBoard = () => {
           <div className='boards-container'>
 
           {selectBoard && (
-          <div className="bingo-header">
+          <div className="board-row">
           
-            <div className="bingo-letters">
+            <div className="bingo-letters-main">
               <span className='bingo-letter-text'>B</span>
               <span className='bingo-letter-text'>I</span>
               <span className='bingo-letter-text'>N</span>
