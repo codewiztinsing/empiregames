@@ -315,7 +315,7 @@ const Landing = () => {
       )}
     
       {/* Live Stats Section */}
-      <div className='live-stats-container'>
+      {/* <div className='live-stats-container'>
         <div className='stat-card'>
           <div className='stat-icon'>⏱️</div>
           <div className='stat-content'>
@@ -335,7 +335,7 @@ const Landing = () => {
         </div>
         
       
-      </div>
+      </div> */}
 
       <div className='rooms-container'>
         {rooms.map((room, index) => {

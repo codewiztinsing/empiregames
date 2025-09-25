@@ -157,11 +157,22 @@ const RoomsOverview = () => {
             <div key={room.roomId} className="room-card">
               <div className="room-header">
                 <div className="room-id">Room {room.roomId}</div>
-                <div 
-                  className="room-status"
-                  style={{ backgroundColor: getStatusColor(room.gameStatus) }}
-                >
-                  {getStatusText(room.gameStatus)}
+                <div className="room-header-right">
+                  <div 
+                    className="room-status"
+                    style={{ backgroundColor: getStatusColor(room.gameStatus) }}
+                  >
+                    {getStatusText(room.gameStatus)}
+                  </div>
+                  {room.gameStatus !== 'in-progress' && (
+                    <button 
+                      className="join-room-btn-header"
+                      onClick={() => handleJoinRoom(room.roomId)}
+                      disabled={room.gameStatus === 'finished'}
+                    >
+                      {room.gameStatus === 'finished' ? 'Game Over' : 'Play'}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -209,15 +220,6 @@ const RoomsOverview = () => {
                 )}
               </div>
 
-              <div className="room-actions">
-                <button 
-                  className="join-room-btn"
-                  onClick={() => handleJoinRoom(room.roomId)}
-                  disabled={room.gameStatus === 'finished'}
-                >
-                  {room.gameStatus === 'finished' ? 'Game Over' : 'Join Room'}
-                </button>
-              </div>
             </div>
           ))
         )}

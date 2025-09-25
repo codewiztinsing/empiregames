@@ -202,9 +202,6 @@ const PlayingBoard = () => {
   });
   
 
-  const handleRefresh = () => {
-    socket.emit('handleRefresh', { gameId, roomId, playerId });
-  };
 
   const handleLeave = (reason) => {
     socket.emit('leave', { playerId, roomId, selectedNumber, selectedNumber2, reason });
@@ -432,9 +429,6 @@ const PlayingBoard = () => {
           </div>
         </div>
         <div className="action-buttons">
-              <button className="refresh-button" onClick={handleRefresh}>
-                Refresh
-              </button>
               <button className="leave-button" onClick={() => handleLeave("leave")}>
                 Leave
               </button>
@@ -485,7 +479,7 @@ const PlayingBoard = () => {
           {selectBoard && (
           <div className="bingo-header">
             <div className='selected-number'>
-              <p className='selected-number-label'>የካርቴላ ቁጥር :-</p>
+              {/* <p className='selected-number-label'>የካርቴላ ቁጥር :-</p> */}
               <p className='selected-number-value'>{selectedNumber}</p>
             </div>
             <div className="bingo-letters">
@@ -550,7 +544,7 @@ const PlayingBoard = () => {
           {selectedNumber2 !== null && (
           <div className="bingo-header">
             <div className='selected-number'>
-              <p className='selected-number-label'>የካርቴላ ቁጥር :-</p>
+              {/* <p className='selected-number-label'>የካርቴላ ቁጥር :-</p> */}
               <p className='selected-number-value'>{selectedNumber2}</p>
             </div>
             <div className="bingo-letters">
