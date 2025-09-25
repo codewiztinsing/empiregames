@@ -49,21 +49,34 @@ def register(request, data: RegisterSchema):
                 "message": "Username already taken"
             }, status=400)
 
+        
+        referred_by = None
+        print("referral id ",data.referred_by)
+        if data.referred_by:
+            referred_by = User.objects.get(telegram_id=data.referred_by)
+
+            print("referred_by = ",referred_by)
+        else:
+            data.referred_by = None
+
+    
         # Create user with hashed password
-        user = User.objects.create_user(
+        created_user, created = User.objects.get_or_create(
             username=data.username,
             phone=data.phone,
             telegram_id=data.telegram_id,
+            referred_by=referred_by,
             password=make_password(data.password)
         )
+        print("created_user = ",created_user)
         
-        if user:
+        if created_user:
             return JsonResponse({
                 "success": True,
                 "message": "User registered successfully",
-                "username": user.username,
-                "phone": user.phone,
-                "telegram_id": user.telegram_id
+                "username": created_user.username,
+                "phone": created_user.phone,
+                "telegram_id": created_user.telegram_id
             }, status=200)
         else:
             print("user registration failed")

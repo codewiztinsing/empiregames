@@ -7,6 +7,7 @@ class RegisterSchema(Schema):
     email: str
     phone: str
     telegram_id: str
+    referred_by: Optional[str] = None
 
 
 

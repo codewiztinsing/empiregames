@@ -761,9 +761,11 @@ async def post_init(app):
   
 
 async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
     BACK_URL = get_bot_seetings().get("bot_url")
-    # Check if user is registered
+    user_id = update.effective_user.id
+    referrer_id = context.user_data.get('referrer_id')
+    logger.info(f"referrer_id = {referrer_id}")
+
     response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
     if response.status_code != 200:
         await update.message.reply_text(
@@ -776,7 +778,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     wallet_response = _wr.json() if _wr.headers.get('content-type','').startswith('application/json') else {}
     balance = wallet_response.get('balance', 0)
 
-    invite_link = f"https://t.me/akerbingobot?start={user_id}"
+    invite_link = f"https://t.me/akerbingobot?start=ref_{user_id}"
     
     message = (
         f"🎮 Invite your friends to Aker Bingo!\n\n"
@@ -856,6 +858,67 @@ async def deposit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print("DEBUG: start_command function called")
+    user_id = update.effective_user.id
+    args = context.args  # this will be ["ref_123"] if link clicked
+    print(f"DEBUG: args = {args}")
+
+    # Check if user is already registered
+    BACK_URL = get_bot_seetings().get("bot_url")
+    try:
+        url = f"{BACK_URL}/api/v1/users/{user_id}"
+        user_exists = requests.get(url)
+        telegram_id = user_exists.json().get("telegram_id", None)
+        if telegram_id is not None:
+            await update.effective_message.reply_text("Welcome back! You are already registered.")
+            await update.effective_message.reply_text("Use /play to start playing the game!")
+            return ConversationHandler.END
+    except Exception as e:
+        logger.error(f"Error checking user existence: {e}")
+
+    if args and len(args) > 0 and args[0].startswith("ref_"):      
+        referrer_id = int(args[0].split("_")[1])
+        context.user_data['referrer_id'] = referrer_id
+        # get user profile from telegram using referrer id
+        try:
+            user_profile = await context.bot.get_chat(referrer_id)
+            logger.info(f"user_profile = {user_profile}")
+            await update.effective_message.reply_text(f"Welcome! You were referred by user {user_profile.username}")
+        except Exception as e:
+            logger.error(f"Error getting referrer profile: {e}")
+            await update.effective_message.reply_text(f"Welcome! You were referred by user {referrer_id}")
+        
+        # show notice
+        try:
+            with open('notice.txt', 'r') as file:
+                notice_message = file.read()
+            await update.effective_message.reply_text(text=notice_message)
+        except Exception as e:
+            logger.error(f"Error reading notice file: {e}")
+        
+        await update.effective_message.reply_text(text="Please share your phone number to complete registration.")
+        contact_keyboard = ReplyKeyboardMarkup(
+                [[KeyboardButton(text="📞 Share Phone Number", request_contact=True)]],
+                resize_keyboard=True,
+                one_time_keyboard=True
+            )
+        await update.effective_message.reply_text(text="Tap the button below to share your phone number.", reply_markup=contact_keyboard)
+        print("DEBUG: Returning REGISTER state for referred user")
+        return REGISTER
+    else:
+        await update.effective_message.reply_text("Welcome to the bot!")
+        await update.effective_message.reply_text("Please share your phone number to complete registration.")
+        contact_keyboard = ReplyKeyboardMarkup(
+                [[KeyboardButton(text="📞 Share Phone Number", request_contact=True)]],
+                resize_keyboard=True,
+                one_time_keyboard=True
+            )
+        await update.effective_message.reply_text(text="Tap the button below to share your phone number.", reply_markup=contact_keyboard)
+        print("DEBUG: Returning REGISTER state for regular user")
+        return REGISTER
+
+
 
 def main() -> None:
     BOT_TOKEN = get_bot_seetings().get("bot_token")
@@ -863,7 +926,7 @@ def main() -> None:
  
 
     conversation_handler = ConversationHandler(
-        entry_points=[CallbackQueryHandler(button), CommandHandler('register', register_command)],
+        entry_points=[CallbackQueryHandler(button), CommandHandler('register', register_command), CommandHandler('start', start_command)],
         states={
             # get_deposit_amount
             DEPOSIT_AMOUNT          : [MessageHandler(filters.TEXT & ~filters.COMMAND, deposit_amount)],
@@ -877,7 +940,6 @@ def main() -> None:
         allow_reentry=True
     )
 
-    # application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('play', play_command))
     application.add_handler(CommandHandler('instructions', instruction_command))
     application.add_handler(CommandHandler('support', support_command))

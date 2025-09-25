@@ -75,51 +75,79 @@ def generate_random_username():
     return f"user_{random.randint(1000,9999)}"
 
 async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print("DEBUG: handle_phone function called")
     BACK_URL = get_bot_seetings().get("bot_url")
-    # check user already exists
+    
+    # Check if user already exists
     url = f"{BACK_URL}/api/v1/users/{update.message.from_user.id}"
-    user_exists = requests.get(url)
-    print("user_exists = ",user_exists.json())
-    telegram_id = user_exists.json().get("telegram_id",None)
-    print("telegram_id = ",telegram_id)
-    if telegram_id != None:
-        await update.message.reply_text("You are already registered")
-        return ConversationHandler.END
+    try:
+        user_exists = requests.get(url)
+        print("user_exists = ", user_exists.json())
+        telegram_id = user_exists.json().get("telegram_id", None)
+        print("telegram_id = ", telegram_id)
+        if telegram_id is not None:
+            await update.message.reply_text("You are already registered!")
+            return ConversationHandler.END
+    except Exception as e:
+        print(f"Error checking user existence: {e}")
 
     # Check if the message contains a contact
     print("DEBUG: Checking for contact in message")
+    print(f"DEBUG: Message type: {type(update.message)}")
+    print(f"DEBUG: Message content: {update.message}")
     if update.message.contact:
         print("DEBUG: Contact found in message")
         phone_number = update.message.contact.phone_number
-        user_data["phone"] = phone_number
-        print("phone_number = ",phone_number)
+        print("phone_number = ", phone_number)
+        
         user_id = update.message.from_user.id
         first_name = update.message.from_user.first_name
         last_name = update.message.from_user.last_name
-        confirm_password= update.message.text
-        username =  update.message.from_user.username or generate_random_username()
-        user_data.update({
-            'telegram_id': str(update.message.from_user.id),
-            'phone': phone_number
-        })
-        user_data.update({
-            'phone': user_data.get('phone',"botphone"),
-            'username':username,
-            'password': user_data.get('password',"123456"),
-            'email': user_data.get('email',f"{user_data.get('username')}@gmail.com")
-        })
-        print("user_data = ",user_data)
-        response = requests.post(f"{BACK_URL}/api/v1/users/register", json=user_data)
-        if response.status_code == 200:  # Assume 201 means success
-            await update.message.reply_text("Registration completed successfully!")
-            await update.message.reply_text("Please user /play to start playing.")
-            return ConversationHandler.END
-        else:
-            print(f"Registration failed: {response.json()}")
-            await update.message.reply_text(response.json().get('message'))
+        username = update.message.from_user.username or generate_random_username()
+        
+        # Get referrer_id from context if available
+        referrer_id = context.user_data.get('referrer_id')
+        
+        # Prepare user data for registration
+        user_data = {
+            'telegram_id': str(user_id),
+            'phone': phone_number,
+            'username': username,
+            'password': "123456",  # Default password
+            'email': f"{username}@gmail.com",
+            'first_name': first_name or "",
+            'last_name': last_name or ""
+        }
+        
+        # Add referrer_id if user came through referral
+        if referrer_id:
+            user_data['referrer_id'] = referrer_id
+            print(f"Registering user with referrer_id: {referrer_id}")
+        
+        print("user_data = ", user_data)
+        
+        try:
+            response = requests.post(f"{BACK_URL}/api/v1/users/register", json=user_data)
+            if response.status_code == 200 or response.status_code == 201:
+                await update.message.reply_text("Registration completed successfully!")
+                # If user came through referral, show special message
+                if referrer_id:
+                    await update.message.reply_text(f"🎉 Welcome! You were referred by user {referrer_id}")
+                    await update.message.reply_text("You'll receive bonus rewards for being referred!")
+                
+                await update.message.reply_text("Please use /play to start playing.")
+                return ConversationHandler.END
+            else:
+                print(f"Registration failed: {response.json()}")
+                error_message = response.json().get('message', 'Registration failed. Please try again.')
+                await update.message.reply_text(error_message)
+                return ConversationHandler.END
+        except Exception as e:
+            print(f"Error during registration: {e}")
+            await update.message.reply_text("Registration failed. Please try again later.")
             return ConversationHandler.END
     else:
-        await update.message.reply_text("Please user /register to register.")
+        await update.message.reply_text("Please share your phone number using the button below.")
         return REGISTER
 
       
