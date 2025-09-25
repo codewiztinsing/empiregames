@@ -400,36 +400,39 @@ const Landing = () => {
                   </div>
                 </div>
                 
-                <div className='room-stat-card'>
-                  <div className='room-stat-icon'>🎯</div>
-                  <div className='room-stat-content'>
-                    <span className='room-stat-value'>
-                      {(() => {
-                        console.log(`Room ${room.betAmount} lastCalled:`, room.lastCalled);
-                        return room.lastCalled ? room.lastCalled.number : '--';
-                      })()}
-                    </span>
-                    <span className='room-stat-label'>Last</span>
+                {/* Conditional rendering based on countdown */}
+                {room.roomCountDown === 0 ? (
+                  <div className='room-stat-card'>
+                    <div className='room-stat-icon'>🎯</div>
+                    <div className='room-stat-content'>
+                      <span className='room-stat-value'>
+                        {(() => {
+                          console.log(`Room ${room.betAmount} lastCalled:`, room.lastCalled);
+                          return room.lastCalled ? room.lastCalled.number : '--';
+                        })()}
+                      </span>
+                      <span className='room-stat-label'>Last</span>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className='room-stat-card play-button-stat'>
+                    <button
+                      onClick={() => handleRoomSelect(room.betAmount)}
+                      className='play-button-small'
+                      disabled={isDisabled}
+                    >
+                      {room.players === 0 && room.status === 'waiting' ? (
+                        <span className='waiting-text-small'>
+                          <span className='waiting-dots'>•••</span> Play
+                        </span>
+                      ) : (
+                        'Play'
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* Play Button */}
-              <div className='room-action'>
-                <button
-                  onClick={() => handleRoomSelect(room.betAmount)}
-                  className='play-button'
-                  disabled={isDisabled}
-                >
-                  {room.players === 0 && room.status === 'waiting' ? (
-                    <span className='waiting-text'>
-                      <span className='waiting-dots'>•••</span> Play
-                    </span>
-                  ) : (
-                    'Play'
-                  )}
-                </button>
-              </div>
             </div>
           );
         })}
