@@ -9,8 +9,8 @@
         <h1 class="text-2xl font-bold text-white">Users</h1>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <!-- User Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <!-- Total Users -->
         <div class="bg-dark-card border border-dark-border rounded-lg p-6">
             <div class="flex items-center justify-between">
@@ -66,6 +66,84 @@
                 <div class="w-12 h-12 bg-gray-500/10 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+        <!-- Total User Balance -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm font-medium">TOTAL BALANCE</p>
+                    <p class="text-2xl font-bold text-white mt-1">ETB {{ total_user_balance|floatformat:2 }}</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total User Wins -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm font-medium">TOTAL WINS</p>
+                    <p class="text-2xl font-bold text-white mt-1">ETB {{ total_user_wins|floatformat:2 }}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total User Bets -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm font-medium">TOTAL BETS</p>
+                    <p class="text-2xl font-bold text-white mt-1">ETB {{ total_user_bets|floatformat:2 }}</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-500/10 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total User Deposits -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm font-medium">TOTAL DEPOSITS</p>
+                    <p class="text-2xl font-bold text-white mt-1">ETB {{ total_user_deposits|floatformat:2 }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total User Withdrawals -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm font-medium">TOTAL WITHDRAWALS</p>
+                    <p class="text-2xl font-bold text-white mt-1">ETB {{ total_user_withdrawals|floatformat:2 }}</p>
+                </div>
+                <div class="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"></path>
                     </svg>
                 </div>
             </div>

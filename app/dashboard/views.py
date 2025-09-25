@@ -643,6 +643,14 @@ def users(request):
     suspended_users = User.objects.filter(is_active=False).count()
     active_users = User.objects.filter(is_active=True).count()
     
+    # Financial Statistics
+    from wallet.models import Wallet, Transaction
+    total_user_balance = Wallet.objects.aggregate(Sum('balance'))['balance__sum'] or 0
+    total_user_wins = Transaction.objects.filter(type='WIN').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_user_bets = Transaction.objects.filter(type='BET').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_user_withdrawals = Transaction.objects.filter(type='WITHDRAW').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_user_deposits = Transaction.objects.filter(type='DEPOSIT').aggregate(Sum('amount'))['amount__sum'] or 0
+    
     context = {
         'users': page_obj,
         'page_title': 'Users',
@@ -654,6 +662,11 @@ def users(request):
         'search_query': search_query,
         'current_status': status_filter,
         'current_date_range': date_filter,
+        'total_user_balance': total_user_balance,
+        'total_user_wins': total_user_wins,
+        'total_user_bets': total_user_bets,
+        'total_user_withdrawals': total_user_withdrawals,
+        'total_user_deposits': total_user_deposits,
         'status_choices': [
             ('all', 'All Users'),
             ('active', 'Active'),
