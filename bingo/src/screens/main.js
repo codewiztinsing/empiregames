@@ -449,61 +449,36 @@ const PlayingBoard = () => {
   
         <div className="playing-section">
 
-          <div>
-            <div className="current-call">
-       
-              {lastBall ? (
-                <div className="ball-display">
-                  <div className='outer-circle'>
-
-                    <div  className='inner-circle'>
-
+          <div className="merged-countdown-ball-container">
+            {countDown > 0 && countDown != 29 ? (
+              // Show countdown when greater than 0
+              <div className='game-starting-container'>
+                <p className='game-starting'>00</p>
+                <p className='game-starting'>:</p>
+                <p className='game-countdown'>{countDown}</p>
+              </div>
+            ) : lastBall ? (
+              // Show ball display when countdown is 0 and ball is available
+              <div className="ball-display">
+                <div className='outer-circle'>
+                  <div className='inner-circle'>
                     <div className="ball">
-                    {lastBall.combined}
-                  </div>
-
+                      {lastBall.combined}
                     </div>
-
                   </div>
-              
-                
                 </div>
-              ) : (
-                <div className="waiting-state">
-               
+              </div>
+            ) : (
+              // Show recent called numbers when countdown is 0 but no ball yet
+              <div className="recent-called-numbers">
+                <div className="recent-called-numbers-grid">
+                  {recentCalledNumbers.map((number, index) => (
+                    <div key={index} className="recent-called-number">{number}</div>
+                  ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
-
-          
-
-          {/* <div className="recent-called-numbers-container">
-              {countDown > 0  && countDown != 29 ? (
-                // Show countdown when greater than 0
-                <div className='game-starting-container'>
-                  <p className='game-starting'>00</p>
-                  <p className='game-starting'>:</p>
-                  <p className='game-countdown'>{countDown}</p>
-                </div>
-              ) : countDown === 0 ? (
-                <div className="recent-called-numbers">
-                  <div className="recent-called-numbers-grid">
-                    {recentCalledNumbers.map((number, index) => (
-                      <div key={index} className="recent-called-number">{number}</div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="recent-called-numbers">
-                  <div className="recent-called-numbers-grid">
-                    {recentCalledNumbers.map((number, index) => (
-                      <div key={index} className="recent-called-number">{number}</div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div> */}
 
           <div className='boards-container'>
 
