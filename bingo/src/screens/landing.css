@@ -14,6 +14,91 @@
   overflow-x: hidden;
 }
 
+/* Connection Status Indicator */
+.connection-status {
+  width: 90%;
+  max-width: 600px;
+  margin-bottom: 15px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  backdrop-filter: blur(15px);
+  border: 2px solid;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.connection-status.connected {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.2);
+}
+
+.connection-status.disconnected {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+}
+
+.connection-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.connection-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  animation: connectionPulse 2s infinite;
+}
+
+.connection-dot.connected {
+  background: #22c55e;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+}
+
+.connection-dot.disconnected {
+  background: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+@keyframes connectionPulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.connection-text {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.connection-message {
+  margin-top: 8px;
+}
+
+.connection-message p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  margin: 0;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
 /* Loading and Error States */
 .loading-container {
   display: flex;
@@ -518,6 +603,12 @@
   cursor: not-allowed;
   box-shadow: none;
   opacity: 0.7;
+}
+
+.play-button-small:disabled:hover {
+  transform: none;
+  box-shadow: none;
+  animation: none;
 }
 
 .waiting-text-small {

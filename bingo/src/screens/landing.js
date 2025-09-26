@@ -16,6 +16,8 @@ const Landing = () => {
   const [totalWinnings, setTotalWinnings] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('Connecting...');
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
 
@@ -104,6 +106,39 @@ const Landing = () => {
 
     // Fetch rooms from backend
     fetchRooms();
+
+    // WebSocket connection status handlers
+    const handleConnect = () => {
+      console.log('WebSocket connected');
+      setIsConnected(true);
+      setConnectionStatus('Connected');
+    };
+
+    const handleDisconnect = () => {
+      console.log('WebSocket disconnected');
+      setIsConnected(false);
+      setConnectionStatus('Disconnected');
+    };
+
+    const handleConnectError = (error) => {
+      console.error('WebSocket connection error:', error);
+      setIsConnected(false);
+      setConnectionStatus('Connection Error');
+    };
+
+    // Add connection event listeners
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('connect_error', handleConnectError);
+
+    // Check initial connection status
+    if (socket.connected) {
+      setIsConnected(true);
+      setConnectionStatus('Connected');
+    } else {
+      setIsConnected(false);
+      setConnectionStatus('Disconnected');
+    }
 
     // Request initial data from server
     socket.emit("getAllRooms");
@@ -298,6 +333,9 @@ const Landing = () => {
     });
   
     return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('connect_error', handleConnectError);
       socket.off('allRoomsData');
       socket.off('waitingGames', handleWaitingGames);
       socket.off('globals');
@@ -339,6 +377,19 @@ const Landing = () => {
 
   return (
     <div className='landing-container'>
+      {/* Connection Status Indicator */}
+      <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
+        <div className='connection-indicator'>
+          <span className={`connection-dot ${isConnected ? 'connected' : 'disconnected'}`}></span>
+          <span className='connection-text'>{connectionStatus}</span>
+        </div>
+        {!isConnected && (
+          <div className='connection-message'>
+            <p>Please check your internet connection and refresh the page.</p>
+          </div>
+        )}
+      </div>
+
       {error && (
         <div className='error-message'>
           <p>{error}</p>
@@ -373,7 +424,7 @@ const Landing = () => {
           // Determine if room is active (game is running)
           // A room is active if it has a last called number
           const isActive = room.lastCalled && room.lastCalled !== null;
-          const isDisabled = isActive || room.status === 'Low balance';
+          const isDisabled = !isConnected || isActive || room.status === 'Low balance';
         
           // Different room themes based on bet amount
           const getRoomTheme = (betAmount) => {
@@ -467,8 +518,11 @@ const Landing = () => {
                       onClick={() => handleRoomSelect(room.betAmount)}
                       className='play-button-small'
                       disabled={isDisabled}
+                      title={!isConnected ? 'No connection to server' : ''}
                     >
-                      {room.players === 0 && !isActive ? (
+                      {!isConnected ? (
+                        'No Connection'
+                      ) : room.players === 0 && !isActive ? (
                         <span className='waiting-text-small'>
                           <span className='waiting-dots'>•••</span> Play
                         </span>
