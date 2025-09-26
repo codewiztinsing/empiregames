@@ -436,7 +436,7 @@ io.on('connection', (socket) => {
     globalStats.totalPlayersOnline = totalPlayersOnline;
     io.emit("globalStats", globalStats);
 
-    if (!game.isCountStart && game.players.size >= 1) {
+    if (!game.isCountStart && game.players.size >= 2) {
       startCountDown(game);
     }
 

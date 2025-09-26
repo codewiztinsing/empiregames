@@ -164,7 +164,11 @@ const Landing = () => {
               console.log(`Updating room ${room.betAmount} lastCalled from globals:`, data.lastBall);
               return {
                 ...room,
-                lastCalled: data.lastBall
+                lastCalled: data.lastBall,
+                // Also update other room data from globals
+                players: data.totalPlayers || room.players,
+                totalPot: data.totalWinAmount || room.totalPot
+                // Don't override countdown here - let it come from other events
               };
             }
             return room;
@@ -192,12 +196,26 @@ const Landing = () => {
         setRooms(prevRooms => 
           prevRooms.map(room => {
             if (Number(room.betAmount) === Number(gameState.roomId)) {
+              // Handle lastCalled data properly
+              let newLastCalled = room.lastCalled;
+              if (gameState.pickedNumbers && gameState.pickedNumbers.length > 0) {
+                const lastNumber = gameState.pickedNumbers[gameState.pickedNumbers.length - 1];
+                if (typeof lastNumber === 'object' && lastNumber.combined) {
+                  newLastCalled = lastNumber;
+                } else {
+                  newLastCalled = { number: lastNumber };
+                }
+              } else if (gameState.lastBall) {
+                newLastCalled = gameState.lastBall;
+              }
+              
+              // Use the actual countdown from server
+              const countdown = gameState.count_down;
+              
               const updatedRoom = { 
                 ...room, 
-                roomCountDown: gameState.count_down,
-                lastCalled: gameState.pickedNumbers && gameState.pickedNumbers.length > 0 
-                  ? { number: gameState.pickedNumbers[gameState.pickedNumbers.length - 1] }
-                  : gameState.lastBall || room.lastCalled,
+                roomCountDown: countdown,
+                lastCalled: newLastCalled,
                 totalPot: gameState.win_amount || gameState.totalWinAmount || room.totalPot,
                 players: gameState.total_players || room.players
               };
@@ -244,17 +262,29 @@ const Landing = () => {
           console.log("Checking room:", room.betAmount, "against roomData.roomId:", roomData.roomId);
           if (Number(room.betAmount) === Number(roomData.roomId)) {
             console.log("Current room lastCalled before update:", room.lastCalled);
-            const newLastCalled = roomData.pickedNumbers && roomData.pickedNumbers.length > 0 
-              ? { number: roomData.pickedNumbers[roomData.pickedNumbers.length - 1] }
-              : room.lastCalled;
+            
+            // Handle lastCalled data properly
+            let newLastCalled = room.lastCalled;
+            if (roomData.pickedNumbers && roomData.pickedNumbers.length > 0) {
+              const lastNumber = roomData.pickedNumbers[roomData.pickedNumbers.length - 1];
+              // Handle different data structures for lastCalled
+              if (typeof lastNumber === 'object' && lastNumber.combined) {
+                newLastCalled = lastNumber; // Use the full object with combined property
+              } else {
+                newLastCalled = { number: lastNumber };
+              }
+            }
             console.log("New lastCalled value:", newLastCalled);
+            
+            // Use the actual countdown from server
+            const countdown = roomData.roomCountDown || roomData.countDown || 30;
             
             const updatedRoom = { 
               ...room, 
-              roomCountDown: roomData.roomCountDown || roomData.countDown, // Use roomCountDown if available, fallback to countDown
-              players: roomData.playersCount,
-              status: roomData.gameStatus,
-              totalPot: roomData.totalWinAmount,
+              roomCountDown: countdown,
+              players: roomData.playersCount || room.players,
+              status: roomData.gameStatus || room.status,
+              totalPot: roomData.totalWinAmount || room.totalPot,
               lastCalled: newLastCalled
             };
             console.log("Updated room:", room.betAmount, "with roomCountDown:", updatedRoom.roomCountDown, "lastCalled:", updatedRoom.lastCalled);
@@ -277,6 +307,7 @@ const Landing = () => {
       socket.off('roomUpdate');
     };
   }, [socket, handleWaitingGames]);
+
 
   const handleRoomSelect = (betAmount) => {
     const selectedRoom = rooms.find(room => room.betAmount === betAmount);
@@ -339,9 +370,11 @@ const Landing = () => {
 
       <div className='rooms-container'>
         {rooms.map((room, index) => {
-          console.log("Rendering room:", room.betAmount, "with data:", room);
-          const isDisabled = room.status === 'in-progress' || room.status === 'Low balance';
-          
+          // Determine if room is active (game is running)
+          // A room is active if it has a last called number
+          const isActive = room.lastCalled && room.lastCalled !== null;
+          const isDisabled = isActive || room.status === 'Low balance';
+        
           // Different room themes based on bet amount
           const getRoomTheme = (betAmount) => {
             switch (betAmount) {
@@ -371,9 +404,9 @@ const Landing = () => {
                     </span>
                   )}
                 </div>
-                <span className={`room-status ${room.status}`}>
-                  {room.status === 'in-progress' && 'Active Game'}
-                  {room.status === 'waiting' && 'Waiting'}
+                <span className={`room-status ${isActive ? 'in-progress' : room.status}`}>
+                  {isActive && 'Active'}
+                  {!isActive && room.status === 'waiting' && 'Waiting'}
                   {room.status === 'Low balance' && 'Low Balance'}
                 </span>
               </div>
@@ -400,15 +433,29 @@ const Landing = () => {
                   </div>
                 </div>
                 
-                {/* Conditional rendering based on countdown */}
-                {room.roomCountDown === 0 ? (
+                {/* Conditional rendering based on game state */}
+                {(isActive || room.roomCountDown === 0) ? (
                   <div className='room-stat-card'>
                     <div className='room-stat-icon'>🎯</div>
                     <div className='room-stat-content'>
                       <span className='room-stat-value'>
                         {(() => {
                           console.log(`Room ${room.betAmount} lastCalled:`, room.lastCalled);
-                          return room.lastCalled ? room.lastCalled.number : '--';
+                          if (room.lastCalled) {
+                            // Handle different data structures
+                            if (room.lastCalled.combined) {
+                              return room.lastCalled.combined; // e.g., "B-7"
+                            } else if (room.lastCalled.number) {
+                              return room.lastCalled.number;
+                            } else if (typeof room.lastCalled === 'string') {
+                              return room.lastCalled;
+                            }
+                          }
+                          // If countdown is 0 but no last called number, show "Starting..."
+                          if (room.roomCountDown === 0) {
+                            return 'Starting...';
+                          }
+                          return '--';
                         })()}
                       </span>
                       <span className='room-stat-label'>Last</span>
@@ -421,7 +468,7 @@ const Landing = () => {
                       className='play-button-small'
                       disabled={isDisabled}
                     >
-                      {room.players === 0 && room.status === 'waiting' ? (
+                      {room.players === 0 && !isActive ? (
                         <span className='waiting-text-small'>
                           <span className='waiting-dots'>•••</span> Play
                         </span>
