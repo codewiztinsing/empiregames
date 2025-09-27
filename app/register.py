@@ -122,9 +122,11 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def complete_registration_without_referral(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Complete registration without any referral code"""
     BACK_URL = get_bot_seetings().get("bot_url")
+    # username from telegrm profile,if not use first nam
+    username = update.message.from_user.username or update.message.from_user.first_name
+    
     
     # Prepare user data for registration
-    username = user_data.get('username', f"user_{random.randint(1000,9999)}")
     user_data.update({
         'phone': user_data.get('phone',"botphone"),
         'username': username,
@@ -141,7 +143,7 @@ async def complete_registration_without_referral(update: Update, context: Contex
         success_message = "Registration completed successfully!"
         
         await update.message.reply_text(success_message)
-        await update.message.reply_text("Please click the button below to proceed to the next step:", reply_markup=play_options_keyboard())
+        await update.message.reply_text("please user /play to start playing")
     else:
         print(f"Registration failed: {response.json()}")
         error_message = response.json().get('message', 'Registration failed')

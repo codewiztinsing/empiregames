@@ -97,7 +97,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logger.info(f"web_app_url = {web_app_url}")
     keyboard = [
         # Row 1: Play (single button)
-        [InlineKeyboardButton("🎮 Play", web_app=WebAppInfo(url=web_app_url))],
+        # [InlineKeyboardButton("🎮 Play", web_app=WebAppInfo(url=web_app_url))],
         
         # Row 2: Deposit and Withdraw (side by side)
         [InlineKeyboardButton("💳 Deposit", callback_data='deposit'),
@@ -1030,7 +1030,7 @@ def main() -> None:
             DEPOSIT_AMOUNT          : [MessageHandler(filters.TEXT & ~filters.COMMAND, deposit_amount)],
             GET_WITHDRAW_ACCOUNT    : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_withdraw_account)],
             WITHDRAW_AMOUNT_CONFIRM : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_withdraw_amount)],
-            GET_TRANSCATION_DETAILS  : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_transcation_details)],
+            GET_TRANSCATION_DETAILS : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_transcation_details)],
             REGISTER                : [MessageHandler(filters.CONTACT, handle_phone)],
             WAIT_FOR_PAYMENT        : [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_manual_payment)],
         },
