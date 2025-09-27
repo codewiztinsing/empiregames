@@ -92,20 +92,37 @@ def create_withdrawal_request(telegram_id, amount):
    
 
 def get_manual_deposits_settings():
-    response = requests.get(f"{BACK_URL}/api/v1/wallet/manual/deposits/settings/    ")
-    if response.status_code == 200:
-        return response.json().get("minimum_deposit_amount")
-    else:
-        return 0
+    try:
+        response = requests.get(f"{BACK_URL}/api/v1/wallet/manual/deposits/settings/")
+        if response.status_code == 200:
+            return response.json().get("minimum_deposit_amount", 50)  # Default to 50 if not found
+        else:
+            return 50  # Default minimum deposit amount
+    except Exception as e:
+        print(f"Error fetching deposit settings: {e}")
+        return 50  # Default minimum deposit amount
 
 def get_manual_withdrawals_settings():
-    response = requests.get(f"{BACK_URL}/api/v1/wallet/manual/withdrawals/settings/")
-    if response.status_code == 200:
-        return response.json().get("minimum_withdrawal_amount")
-        return response.json().get("withdrawal_fee")
-    else:
-        return response.json().get("withdrawal_fee")
-        return 0
+    try:
+        response = requests.get(f"{BACK_URL}/api/v1/wallet/manual/withdrawals/settings/")
+        if response.status_code == 200:
+            return response.json().get("minimum_withdrawal_amount", 20)  # Default to 20 if not found
+        else:
+            return 20  # Default minimum withdrawal amount
+    except Exception as e:
+        print(f"Error fetching withdrawal settings: {e}")
+        return 20  # Default minimum withdrawal amount
+
+def get_withdrawal_fee():
+    try:
+        response = requests.get(f"{BACK_URL}/api/v1/wallet/manual/withdrawals/settings/")
+        if response.status_code == 200:
+            return response.json().get("withdrawal_fee", 0)  # Default to 0 if not found
+        else:
+            return 0  # Default withdrawal fee
+    except Exception as e:
+        print(f"Error fetching withdrawal fee: {e}")
+        return 0  # Default withdrawal fee
 
 
 

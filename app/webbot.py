@@ -35,6 +35,7 @@ from utils.helpers import( daily_withdraw_limit,
                 ,create_withdrawal_request,
                 get_manual_withdrawals_settings,
                 get_manual_deposits_settings,
+                get_withdrawal_fee,
                 )
 from utils.factory import handle_manual_payment
 from datetime import datetime
@@ -201,6 +202,17 @@ async def withdraw_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     amount = update.message.text
+    
+    # Validate input amount
+    try:
+        amount_float = float(amount)
+        if amount_float <= 0:
+            await update.message.reply_text("Please enter a valid positive amount.")
+            return WITHDRAW_AMOUNT_CONFIRM
+    except ValueError:
+        await update.message.reply_text("Please enter a valid numeric amount.")
+        return WITHDRAW_AMOUNT_CONFIRM
+    
     # Get user's wallet balance
     telegram_id = update.effective_user.id
     BACK_URL = get_bot_seetings().get("bot_url")
@@ -232,25 +244,26 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         minimum_withdrawal_amount = get_manual_withdrawals_settings()
 
-        if int(amount) > minimum_withdrawal_amount:
-            await update.message.reply_text(f"Withdrawal amount must be less than {minimum_withdrawal_amount} ETB")
-            return WITHDRAW_AMOUNT_CONFIRM
-
-       
-        if int(balance) < 20:
-            await update.message.reply_text(f"You must leave at least 20 ETB in your wallet. Please enter a smaller amount.")
-            return WITHDRAW_AMOUNT_CONFIRM
-
-
+        # First check if amount meets minimum requirement
         if int(amount) < minimum_withdrawal_amount:
             await update.message.reply_text(f"Withdrawal amount must be at least {minimum_withdrawal_amount} ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
+        # Get withdrawal fee and calculate total deduction
+        withdrawal_fee = get_withdrawal_fee()
+        total_deduction = amount_float + withdrawal_fee
         
-        # Check if withdrawal amount exceeds balance
-        if int(amount) > int(balance):
+        # Check if withdrawal amount (including fee) exceeds balance
+        if total_deduction > balance:
+            await update.message.reply_text(f"Insufficient funds. Your current balance is {balance} ETB (withdrawal amount + fee = {total_deduction} ETB)")
+            return WITHDRAW_AMOUNT_CONFIRM
 
-            await update.message.reply_text(f"Insufficient funds. Your current balance is {balance} ETB")
+        # Check if user would have enough balance left after withdrawal (including fee)
+        remaining_balance = balance - total_deduction
+        minimum_remaining = get_manual_deposits_settings()  # Use minimum deposit as minimum remaining
+        
+        if remaining_balance < minimum_remaining:
+            await update.message.reply_text(f"You must leave at least {minimum_remaining} ETB in your wallet (including withdrawal fee). Please enter a smaller amount.")
             return WITHDRAW_AMOUNT_CONFIRM
 
         else:
@@ -261,9 +274,23 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             logger.info(f"banks_to_bank_id {banks_to_bank_id}")
             bank_name = banks_to_bank_id.get(context.user_data['bank_id'])
             logger.info(f"bank_name {bank_name}")
-            await update.message.reply_text(
-                f"Please enter your {bank_name} number  where you want to receive the withdrawal:"
-            )
+            
+            # Get withdrawal fee and show summary
+            withdrawal_fee = get_withdrawal_fee()
+            total_deduction = amount_float + withdrawal_fee
+            
+            confirmation_message = f"""
+💰 **Withdrawal Summary**
+
+📊 Amount to withdraw: {amount} ETB
+💸 Withdrawal fee: {withdrawal_fee} ETB
+📉 Total deduction: {total_deduction} ETB
+💰 Remaining balance: {balance - total_deduction} ETB
+
+Please enter your {bank_name} number where you want to receive the withdrawal:
+            """
+            
+            await update.message.reply_text(confirmation_message)
             return GET_WITHDRAW_ACCOUNT
 
         
@@ -811,8 +838,15 @@ Your current balance: {balance} ETB
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     amount = update.message.text
 
-    if float(amount) <= get_manual_deposits_settings():
-        await update.message.reply_text("Minimum deposit amount is 50 ETB. Please enter a higher amount.")
+    try:
+        amount_float = float(amount)
+        minimum_deposit = get_manual_deposits_settings()
+        
+        if amount_float < minimum_deposit:
+            await update.message.reply_text(f"Minimum deposit amount is {minimum_deposit} ETB. Please enter a higher amount.")
+            return DEPOSIT_AMOUNT
+    except ValueError:
+        await update.message.reply_text("Please enter a valid amount.")
         return DEPOSIT_AMOUNT
 
     back_url = get_bot_seetings().get("bot_url")
