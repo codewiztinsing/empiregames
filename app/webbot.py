@@ -97,7 +97,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     logger.info(f"web_app_url = {web_app_url}")
     keyboard = [
         # Row 1: Play (single button)
-        # [InlineKeyboardButton("🎮 Play", web_app=WebAppInfo(url=web_app_url))],
+        [InlineKeyboardButton("🎮 Play", web_app=WebAppInfo(url=web_app_url))],
         
         # Row 2: Deposit and Withdraw (side by side)
         [InlineKeyboardButton("💳 Deposit", callback_data='deposit'),

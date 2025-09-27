@@ -143,7 +143,7 @@ async def complete_registration_without_referral(update: Update, context: Contex
         success_message = "Registration completed successfully!"
         
         await update.message.reply_text(success_message)
-        await update.message.reply_text("please user /play to start playing")
+        await update.message.reply_text("please user /start to start playing")
     else:
         print(f"Registration failed: {response.json()}")
         error_message = response.json().get('message', 'Registration failed')
