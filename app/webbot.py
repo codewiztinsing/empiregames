@@ -94,10 +94,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     bet_amount = 0
     player_name = update.effective_user.username
     web_app_url = f"{BACK_URL}?playerId={player_id}&betAmount={bet_amount}&playerName={player_name}"
+    spinner_url = f"https://bilenbingo.com/spinner/"
     logger.info(f"web_app_url = {web_app_url}")
     keyboard = [
         # Row 1: Play (single button)
-        [InlineKeyboardButton("🎮 Play", web_app=WebAppInfo(url=web_app_url))],
+        [InlineKeyboardButton("🎮 Play Bingo", web_app=WebAppInfo(url=web_app_url))],
+        [InlineKeyboardButton("Play Spinner", web_app=WebAppInfo(url=spinner_url))],
+        
         
         # Row 2: Deposit and Withdraw (side by side)
         [InlineKeyboardButton("💳 Deposit", callback_data='deposit'),
