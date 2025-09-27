@@ -134,7 +134,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             
             # Show special message for referred users
             welcome_message = f"""
-🎉 **Welcome to Bilen Bingo!**
+🎉 **Welcome to Gojo Bingo!**
 
 You were invited by a friend! When you register, you'll both get 10 ETB bonus!
 
@@ -143,9 +143,9 @@ Select an option below to get started:
             await update.message.reply_text(welcome_message, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
         except ValueError:
             logger.warning(f"Invalid referrer ID format: {context.args[0]}")
-            await update.message.reply_text('Welcome to Bilen Bingo! Select an option:', reply_markup=reply_markup)
+            await update.message.reply_text('Welcome to Gojo Bingo! Select an option:', reply_markup=reply_markup)
     else:
-        await update.message.reply_text('Welcome to Bilen Bingo! Select an option:', reply_markup=reply_markup)
+        await update.message.reply_text('Welcome to Gojo Bingo! Select an option:', reply_markup=reply_markup)
     context.job_queue.run_once(conversation_timeout, CONVERSATION_TIMEOUT, chat_id=update.effective_chat.id)
     return SOME_STATE
 
@@ -587,7 +587,7 @@ Your current balance: {balance} ETB
                 # [InlineKeyboardButton("Open Wow Bingo!", url=web_app_url)]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.message.reply_text("Start playing Bilen bingo", reply_markup=reply_markup)
+            await query.message.reply_text("Start playing Gojo bingo", reply_markup=reply_markup)
 
         elif query.data == 'deposit':
             await query.edit_message_text(
@@ -634,8 +634,8 @@ Your current balance: {balance} ETB
                 "tx_ref":generate_tx_ref(),
                 "return_url":f"https://t.me/wowbingobotbotbot",
                 "customization":{
-                    "title": "Bilen Bingo",
-                    "description": "Deposit to Bilen Bingo",
+                    "title": "Gojo Bingo",
+                    "description": "Deposit to Gojo Bingo",
                     "logo": "https://wowliyubingo.com/static/media/logo.png"
                 },
                 # "callback_url": "https://webhook.site/6bca0770-2235-4096-b8f6-41b861ec40e9"
@@ -691,8 +691,8 @@ Your current balance: {balance} ETB
             tax_ref, 
             f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/",
              "https://wowliyubingo.com/success", {
-                "title": "Bilen Bingo",
-                "description": "Deposit to Bilen Bingo",
+                "title": "Gojo Bingo",
+                "description": "Deposit to Gojo Bingo",
                 "logo": "https://wowliyubingo.com/static/media/logo.png"
             })
             if addis_session.get("status") == "success":
@@ -817,7 +817,7 @@ Your current balance: {balance} ETB
               
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text("Welcome to Bilen Bingo! Please select an option:", reply_markup=reply_markup)
+            await query.edit_message_text("Welcome to Gojo Bingo! Please select an option:", reply_markup=reply_markup)
             
             
  
@@ -833,7 +833,7 @@ Your current balance: {balance} ETB
                  InlineKeyboardButton("Register", callback_data='register_menu')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text("Welcome to Bilen Bingo! Please select an option:", reply_markup=reply_markup)
+            await query.edit_message_text("Welcome to Gojo Bingo! Please select an option:", reply_markup=reply_markup)
     except Exception as e:
         logger.error(f"Error handling query: {query.data} - {e}")
         await query.edit_message_text(text="An error occurred. Please try again.")
@@ -1009,7 +1009,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     invite_link = f"https://t.me/gojobingo_bot?start={user_id}"
     
     message = (
-        f"🎮 Invite your friends to Bilen Bingo!\n\n"
+        f"🎮 Invite your friends to Gojo Bingo!\n\n"
         f"Share this link with your friends:\n{invite_link}\n\n"
         f"Your current balance: {balance} ETB\n\n"
         f"Invite friends and enjoy playing together! 🎲"
