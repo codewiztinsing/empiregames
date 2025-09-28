@@ -21,8 +21,8 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 HANDLER404 = 'core.views.custom_404'
 
 
-ALLOWED_HOSTS = ["*", "wowliyubingo.com", "server.wowliyubingo.com"]
-CSRF_TRUSTED_ORIGINS = ["https://wowliyubingo.com", "https://*.ngrok.app"]
+ALLOWED_HOSTS = ["*", "akerbingo.com", "server.akerbingo.com"]
+CSRF_TRUSTED_ORIGINS = ["https://akerbingo.com", "https://*.ngrok.app"]
 
 # login redirect
 LOGIN_REDIRECT_URL = '/dashboard/'
