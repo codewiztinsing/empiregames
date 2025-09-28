@@ -302,10 +302,12 @@ const PlayingBoard = () => {
   
 
   const handleRefresh = () => {
+    console.log('Refresh button clicked', { gameId, roomId, playerId });
     socket.emit('handleRefresh', { gameId, roomId, playerId });
   };
 
   const handleLeave = (reason) => {
+    console.log('Leave button clicked', { playerId, roomId, selectedNumber, reason });
     socket.emit('leave', { playerId, roomId, selectedNumber, reason });
   };
 
@@ -536,11 +538,11 @@ const PlayingBoard = () => {
             ))}
           </div>
         </div>
-        <div className="action-buttons">
-              <button className="refresh-button" onClick={handleRefresh}>
+        <div className="action-buttons" style={{ border: '2px solid red', padding: '10px' }}>
+              <button className="refresh-button" onClick={handleRefresh} style={{ border: '2px solid blue' }}>
                 Refresh
               </button>
-              <button className="leave-button" onClick={() => handleLeave("leave")}>
+              <button className="leave-button" onClick={() => handleLeave("leave")} style={{ border: '2px solid green' }}>
                 Leave
               </button>
       </div>

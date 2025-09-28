@@ -569,6 +569,22 @@ body, #root {
   font-size: 0.8em;
 }
 
+.number-cell.insufficient-balance {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+  border: 2px solid #ffcdd2 !important;
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.number-cell.insufficient-balance:hover {
+  background-color: #ffcdd2 !important;
+  color: #b71c1c !important;
+  border: 2px solid #ef9a9a !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
+}
+
 
 .card-number-container{
   display: flex;

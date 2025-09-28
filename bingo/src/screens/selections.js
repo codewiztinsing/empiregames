@@ -80,23 +80,14 @@ const Selections = () => {
     }
   };
 
-  // Check if cell clicking should be disabled
+  // Check if cell clicking should be disabled (only for websocket connection)
   const isCellClickDisabled = () => {
-    // Disable if websocket is not connected
+    // Only disable if websocket is not connected
     if (!isSocketConnected) {
       return true;
     }
     
-    // Disable if balance is zero (regardless of loading state)
-    if (balance === 0) {
-      return true;
-    }
-    
-    // Disable if balance is insufficient
-    if (balance < parseInt(roomId)) {
-      return true;
-    }
-    
+    // Don't disable for balance issues - show message instead
     return false;
   };
 
@@ -364,30 +355,27 @@ const handleGlobals = (state) => {
   const handleNumberClick = async (number) => {
     console.log("handleNumberClick",number)
     
-    // Check if cell clicking is disabled
-    if (isCellClickDisabled()) {
-      if (!isSocketConnected) {
-        setToast("Please wait for connection to be established");
-        setIsToast(true);
-        return;
+    // Check if websocket is connected
+    if (!isSocketConnected) {
+      setToast("Please wait for connection to be established");
+      setIsToast(true);
+      return;
+    }
+    
+    // Check balance and show appropriate messages
+    if (balance === 0) {
+      if (loading) {
+        setToast("Please wait while we fetch your balance");
+      } else {
+        setToast("Your balance is zero. Please deposit to play");
       }
-      
-      if (balance === 0) {
-        if (loading) {
-          setToast("Please wait while we fetch your balance");
-        } else {
-          setToast("Your balance is zero. Please deposit to play");
-        }
-        setIsToast(true);
-        return;
-      }
-      
-      if (balance < parseInt(roomId)) {
-        setToast("Insufficient balance to select this number");
-        setIsToast(true);
-        return;
-      }
-      
+      setIsToast(true);
+      return;
+    }
+    
+    if (balance < parseInt(roomId)) {
+      setToast(`Insufficient balance. You need ${parseInt(roomId)} ETB but have ${balance} ETB. Please deposit more to play.`);
+      setIsToast(true);
       return;
     }
     
@@ -726,7 +714,8 @@ const handleGlobals = (state) => {
 
               const isSelected = selectedNumber === number;
               const isChoosen = choosenNumbers.includes(number);
-              const isDisabled = isPicked || isCellClickDisabled();
+              const isDisabled = isPicked || !isSocketConnected; // Only disable if picked or no connection
+              const hasInsufficientBalance = balance < parseInt(roomId) || balance === 0;
 
               return (
                 <button
@@ -736,6 +725,7 @@ const handleGlobals = (state) => {
                   ${isSelected ? 'selected' : ''}
                   ${isChoosen ? 'choosen' : ''}
                   ${isDisabled ? 'disabled' : ''}
+                  ${hasInsufficientBalance ? 'insufficient-balance' : ''}
                 `}
                   onClick={() => handleNumberClick(number)}
                   onDoubleClick={() => handleNumberDoubleClick(number)}
@@ -743,15 +733,15 @@ const handleGlobals = (state) => {
                   title={
                     isPicked 
                       ? `Card number ${number} is already selected by another player` 
-                      : isDisabled 
-                        ? `Number ${number} is disabled` 
+                      : !isSocketConnected
+                        ? `Please wait for connection to be established` 
                         : `Select number ${number}`
                   }
                   aria-label={
                     isPicked 
                       ? `Number ${number} already picked` 
-                      : isDisabled 
-                        ? `Number ${number} is disabled` 
+                      : !isSocketConnected
+                        ? `Please wait for connection` 
                         : `Select number ${number}`
                   }
                 >

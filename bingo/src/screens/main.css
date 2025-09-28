@@ -1016,7 +1016,8 @@ body {
   gap: 8px;
   justify-content: space-between;
   padding: 0 4px;
-  
+  position: relative;
+  z-index: 10;
 }
 
 .board-cell-main {
@@ -1058,6 +1059,9 @@ body {
   font-weight: 600;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+  position: relative;
+  z-index: 11;
 }
 
 .refresh-button:hover {
@@ -1078,6 +1082,9 @@ body {
   font-weight: 600;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+  position: relative;
+  z-index: 11;
 }
 
 .leave-button:hover {
