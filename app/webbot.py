@@ -328,8 +328,31 @@ async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def instruction_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    reply_markup = instructions_options_keyboard()  # Create the inline keyboard
-    await update.message.reply_text("Choose a instruction option:", reply_markup=reply_markup)
+    # Read and display instructions.html content directly
+    try:
+        with open('instructions.html', 'r', encoding='utf-8') as file:
+            instruction_content = file.read()
+        
+        # Create keyboard with back button
+        keyboard = [
+            [InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(
+            text=instruction_content,
+            parse_mode=ParseMode.HTML,
+            reply_markup=reply_markup
+        )
+    except FileNotFoundError:
+        await update.message.reply_text(
+            text="Instructions file not found. Please contact support."
+        )
+    except Exception as e:
+        logger.error(f"Error reading instructions: {e}")
+        await update.message.reply_text(
+            text="An error occurred while loading instructions. Please try again later."
+        )
 
 
 
