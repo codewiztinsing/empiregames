@@ -96,7 +96,8 @@ body {
   gap: 0;
   width: 100%;
   padding: 0;
-  align-items: center;
+  margin: 0;
+  align-items: stretch;
   justify-content: center;
   flex: 1;
   min-height: fit-content;
@@ -348,7 +349,8 @@ body {
 .bingo-content {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  margin-left: 10px;
   gap: 0;
   width: 100%;
   max-width: 1200px;
@@ -367,10 +369,12 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 0;
   width: 70%;
   padding: 0;
+  margin: 0;
   flex: 1;
+  border-radius: 12px 0 0 12px;
 }
 
 .boards-container {
@@ -388,7 +392,7 @@ body {
   background-color: #16223a;
   padding: 12px;
   margin: 0;
-  border-radius: 12px;
+  border-radius: 0 12px 12px 0;
   width: 40%;
   max-width: 280px;
   min-width: 200px;
@@ -408,7 +412,7 @@ body {
   flex-direction: row;
   justify-content: space-between;
   gap: 2px;
-  width: 100%;
+  width: 250px;
 }
 
 .called-numbers-grid {
@@ -972,6 +976,8 @@ body {
   touch-action: manipulation;
   pointer-events: auto;
   user-select: none;
+  width: 40px;
+  height: 40px;
 }
 
 .refresh-button {
@@ -1161,6 +1167,8 @@ body {
     flex-direction: row;
     gap: 0;
     padding: 0;
+    margin: 0;
+    align-items: stretch;
   }
   
   .called-numbers {
@@ -1177,9 +1185,9 @@ body {
   
   .playing-section {
     width: 75%;
-    gap: 10px;
+    gap: 0;
     padding: 0;
-    
+    margin: 0;
   }
   
   .boards-container {
@@ -1307,6 +1315,8 @@ body {
   .middle-container {
     gap: 0;
     padding: 0;
+    margin: 0;
+    align-items: stretch;
   }
   
   .called-numbers {
@@ -1323,8 +1333,9 @@ body {
   
   .playing-section {
     width: 75%;
-    gap: 12px;
+    gap: 0;
     padding: 0;
+    margin: 0;
   }
   
   .boards-container {
@@ -1429,6 +1440,8 @@ body {
   .middle-container {
     gap: 0;
     padding: 0;
+    margin: 0;
+    align-items: stretch;
   }
   
   .called-numbers {
@@ -1563,6 +1576,8 @@ body {
   .middle-container {
     gap: 0;
     padding: 0;
+    margin: 0;
+    align-items: stretch;
   }
   
  
