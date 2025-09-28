@@ -595,63 +595,81 @@ const PlayingBoard = () => {
 
           <div className='boards-container'>
 
-          {selectBoard && (
-          <div className="board-row">
-          
-            <div className="bingo-letters-main">
-              <span className='bingo-letter-text'>B</span>
-              <span className='bingo-letter-text'>I</span>
-              <span className='bingo-letter-text'>N</span>
-              <span className='bingo-letter-text'>G</span>
-              <span className='bingo-letter-text'>O</span>
+          {!selectedNumber ? (
+            // Show blank card with "Please wait" when no selectedNumber
+            <div className="waiting-card">
+              <div className="waiting-content">
+                <div className="waiting-spinner"></div>
+                <p className="waiting-text">Please wait, until game finished</p>
+              </div>
             </div>
-          </div>
-          )
+          ) : selectBoard ? (
+            <div className="board-row">
+              <div className="bingo-letters-main">
+                <span className='bingo-letter-text'>B</span>
+                <span className='bingo-letter-text'>I</span>
+                <span className='bingo-letter-text'>N</span>
+                <span className='bingo-letter-text'>G</span>
+                <span className='bingo-letter-text'>O</span>
+              </div>
+            </div>
+          ) : (
+            // Show waiting card when no selectBoard
+            <div className="waiting-card">
+              <div className="waiting-content">
+                <div className="waiting-spinner"></div>
+                <p className="waiting-text">Please wait, until game finished</p>
+              </div>
+            </div>
+          )}
 
-}
+
 
     
-      <div className="bingo-board">
-                  { selectBoard[0] && !isBingo && selectBoard[0].map((_, colIndex) => (
-                    <div key={colIndex} className="board-row">
-                      {selectBoard.map((row, rowIndex) => (
-                        <div key={rowIndex}
-                          className={`board-cell-main`}
-                          // if cell is * it should always be golden, selected cells should be yellow
-                          style={{ 
-                            background: row[colIndex] === 'FREE' ? '#ffa500' : selectedCell.has(row[colIndex]) ? 'orange' : '#ffffff',
-                            border: selectedCell.has(row[colIndex]) ? '2px solid #ff6600' : '1px solid #34495e'
-                          }}
-                          id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleCellClick(row[colIndex]);
-                          }}
-                        >
-                          {row[colIndex]}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
+      {selectedNumber && (
+        <>
+          <div className="bingo-board">
+            { selectBoard[0] && !isBingo && selectBoard[0].map((_, colIndex) => (
+              <div key={colIndex} className="board-row">
+                {selectBoard.map((row, rowIndex) => (
+                  <div key={rowIndex}
+                    className={`board-cell-main`}
+                    // if cell is * it should always be golden, selected cells should be yellow
+                    style={{ 
+                      background: row[colIndex] === 'FREE' ? '#ffa500' : selectedCell.has(row[colIndex]) ? 'orange' : '#ffffff',
+                      border: selectedCell.has(row[colIndex]) ? '2px solid #ff6600' : '1px solid #34495e'
+                    }}
+                    id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleCellClick(row[colIndex]);
+                    }}
+                  >
+                    {row[colIndex]}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
 
-                </div>
-
-            <div className='selected-number'>
-              <p className='selected-number-label'>የካርቴላ ቁጥር :-</p>
-              <p className='selected-number-value'>{selectedNumber}</p>
-            </div>
-            
-            <button className={`bingo-button-card-${selectedNumber}`} 
-                  onClick={() => handleBingo(selectBoard,selectedNumber)} 
-                  disabled={firstBoardLost || !selectedNumber}
-                  style={{
-                    backgroundColor: firstBoardLost ? "red" : "orange",
-                    cursor: firstBoardLost || !selectedNumber ? "not-allowed" : "pointer"
-                  }}
-            >
-               {firstBoardLost ? "You made Faul" : "BINGO!"}
-            </button>
+          <div className='selected-number'>
+            <p className='selected-number-label'>የካርቴላ ቁጥር :-</p>
+            <p className='selected-number-value'>{selectedNumber}</p>
+          </div>
+          
+          <button className={`bingo-button-card-${selectedNumber}`} 
+                onClick={() => handleBingo(selectBoard,selectedNumber)} 
+                disabled={firstBoardLost || !selectedNumber}
+                style={{
+                  backgroundColor: firstBoardLost ? "red" : "orange",
+                  cursor: firstBoardLost || !selectedNumber ? "not-allowed" : "pointer"
+                }}
+          >
+             {firstBoardLost ? "You made Faul" : "BINGO!"}
+          </button>
+        </>
+      )}
 
           </div>
 
