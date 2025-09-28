@@ -578,6 +578,17 @@ const PlayingBoard = () => {
                 </div>
               )}
             </div>
+
+            {/* Recently Called Numbers */}
+            <div className="recent-calls-container">
+              <div className="recent-calls-numbers">
+                {recentCalledNumbers.map((number, index) => (
+                  <div key={index} className={`recent-call-number ${number === '*' ? 'placeholder' : 'called'}`}>
+                    {number}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
         
