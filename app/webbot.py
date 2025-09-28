@@ -705,20 +705,18 @@ async def get_transcation_details(update: Update, context: ContextTypes.DEFAULT_
 
 
 all_public_commands_descriptions = [
+   
     BotCommand(
-        "start", 
-        "Start"
-    ),
+        "register", 
+        "Register"
+        ),
 
     BotCommand(
         "play", 
         "Play"
         ),
 
-    BotCommand(
-        "register", 
-        "Register"
-        ),
+ 
 
     BotCommand(
         "check_balance", 
@@ -738,6 +736,12 @@ all_public_commands_descriptions = [
     BotCommand(
         "instructions", 
         "Instructions"
+        ),
+
+
+    BotCommand(
+            "start", 
+            "Start"
         ),
 
       BotCommand(
