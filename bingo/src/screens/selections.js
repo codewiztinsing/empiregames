@@ -52,9 +52,33 @@ const Selections = () => {
   const [winningCard, setWinningCard] = useState([]);
   const [calledNumbers, setCalledNumbers] = useState([]);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [referralBonus, setReferralBonus] = useState(0);
+  const [referralLoading, setReferralLoading] = useState(true);
 
   // Generate numbers 1-100 (memoized since it's static)
   const numbers = Array.from({ length: 400 }, (_, i) => i + 1);
+
+  // Fetch referral bonus data
+  const fetchReferralBonus = async () => {
+    if (!playerId) return;
+    
+    try {
+      setReferralLoading(true);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/users/${playerId}/`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setReferralBonus(data.referrals?.total_earnings || 0);
+    } catch (error) {
+      console.error('Error fetching referral bonus:', error);
+      setReferralBonus(0);
+    } finally {
+      setReferralLoading(false);
+    }
+  };
 
   // Check if cell clicking should be disabled
   const isCellClickDisabled = () => {
@@ -75,6 +99,11 @@ const Selections = () => {
     
     return false;
   };
+
+  // Fetch referral bonus on component mount
+  useEffect(() => {
+    fetchReferralBonus();
+  }, [playerId]);
 
   // Socket connection state monitoring
   useEffect(() => {
@@ -158,9 +187,13 @@ const Selections = () => {
           const response = await axios.get(`${apiUrl}wallet/player/${parseInt(playerId)}`);
           console.log('Balance response:', response.data);
           setBalance(response.data.balance);
+          
+          // Also fetch referral bonus
+          await fetchReferralBonus();
+          
           setLoading(false);
         } catch (error) {
-          console.error('Error fetching balance:', error);
+          console.error('Error fetching data:', error);
           console.error('Error details:', {
             message: error.message,
             status: error.response?.status,
@@ -169,6 +202,8 @@ const Selections = () => {
             parsedPlayerId: parseInt(playerId),
             url: `${apiUrl}/wallet/player/${parseInt(playerId)}`
           });
+          setBalance(0);
+          setReferralBonus(0);
           setLoading(false);
         }
       };
@@ -206,7 +241,10 @@ const Selections = () => {
 
 const handleGlobals = (state) => {
   // Show global countdown and game state for all rooms
-  setCountDown(state.countDown);
+  if (state.countDown !== undefined) {
+    console.log('Received countdown from globals:', state.countDown);
+    setCountDown(state.countDown);
+  }
   if (state.lastBall && state.lastBall?.number) {
     // handlePlaySound(state.lastBall?.number)
     setCurrentCall(state.lastBall?.number);
@@ -265,6 +303,7 @@ const handleGlobals = (state) => {
       setPlayersLength(state.total_players);
     }
     if (state.count_down !== undefined) {
+      console.log('Received countdown from gameState:', state.count_down);
       setCountDown(state.count_down);
     }
   });
@@ -640,6 +679,15 @@ const handleGlobals = (state) => {
             <div className="balance-text">
               Stake {roomId} ብር
             </div>
+
+            {/* Referral Bonus */}
+            <div className="balance-text referral-bonus">
+              {referralLoading ? (
+                <span>Referral Bonus: Loading...</span>
+              ) : (
+                <span>Referral Bonus: {referralBonus.toFixed(2)} ብር</span>
+              )}
+            </div>
             
             {/* Connection Status */}
             <div className="connection-status">
@@ -660,7 +708,7 @@ const handleGlobals = (state) => {
           {gameStatus == "waiting" && (
             <div className="countdown-container">
               <div className="countdown-text">
-                {selectedNumber ? `Game starts in: ${countDown}` : ``}
+                {countDown !== undefined ? `Game starts in: ${countDown}` : ``}
               </div>
              
             </div>

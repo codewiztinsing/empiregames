@@ -127,7 +127,7 @@ function startCountDown(game) {
   game.isCountStart = true;
 
   const countdownInterval = setInterval(() => {
-    io.to(game.roomId).emit("gameState", {
+    io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers.filter(num => num !== null),
@@ -233,7 +233,7 @@ function handleRefresh(data){
   console.log("handleRefresh", data)
   const game = activeGames.get(data.gameId);
   if (!game) return;
-  io.to(game.roomId).emit("gameState", {
+  io.emit("gameState", {
     gameId: game.id,
     roomId: game.roomId,
     total_players: game.total_players,
@@ -336,7 +336,7 @@ io.on('connection', (socket) => {
   
   
     const playersList = [...game.players.keys()];
-    io.to(game.roomId).emit("gameState", {
+    io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers,
