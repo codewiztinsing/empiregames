@@ -311,19 +311,10 @@ def instructions_options_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 
-# Function to create the play options keyboard
-def support_options_keyboard() -> InlineKeyboardMarkup:
-    keyboard = [
-        [InlineKeyboardButton("📞 Support",  url='https://t.me/adaa_alepo')],
-        [InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')]
-    ]
-    return InlineKeyboardMarkup(keyboard)
 
 
 
-async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    reply_markup = support_options_keyboard()
-    await update.message.reply_text("Contact us using support button. We will respond to your message as soon as possible.", reply_markup=reply_markup)
+
 
 
 
@@ -422,10 +413,15 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
 
         elif query.data == 'contact_support':
+            # redirect user to @AkerBingo
             await query.edit_message_text(
-                text="Choose a contact support:",
-                reply_markup=support_options_keyboard()
+                text="Contact us using support button",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📞 Support",  url='https://t.me/AkerBingo')]])
             )
+            return
+
+
+          
         
         elif query.data == 'instructions':
             await query.edit_message_text(
@@ -518,11 +514,33 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             player_id = query.from_user.id
             user_id = query.from_user.id
             username = query.from_user.username or query.from_user.first_name
-            bet_amount = query.data
-            _resp_u = requests.get(f'{BACK_URL}/users/{user_id}/')
-            wallet_amount = (_resp_u.json().get('balance',0)) if _resp_u.headers.get('content-type','').startswith('application/json') else 0
+            bet_amount = int(query.data)
+            
+            # Check if user is registered
+            response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
+            data = response.json()
+            if data.get('phone') is None:
+                await query.edit_message_text(
+                    text="You need to register first before playing. Use the /register command.",
+                    reply_markup=instructions_options_keyboard()
+                )
+                return
+            
+            # Check wallet balance
+            _resp_u = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
+            wallet_data = _resp_u.json() if _resp_u.headers.get('content-type','').startswith('application/json') else {}
+            balance = wallet_data.get('balance', 0)
+            
+            # Check if balance is sufficient
+            if balance < bet_amount:
+                await query.edit_message_text(
+                    text=f"Insufficient balance. Your current balance is {balance} ETB. Please deposit more to play.",
+                    reply_markup=deposit_opitions_keyboard()
+                )
+                return
+            
             web_app_url = (
-                f"https://akerbingo.com/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={wallet_amount}"
+                f"https://akerbingo.com/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={balance}"
             )
 
             keyboard = [
@@ -700,6 +718,11 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     except Exception as e:
         logger.error(f"Error handling query: {query.data} - {e}")
         await query.edit_message_text(text="An error occurred. Please try again.")
+
+
+async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Contact us using support button", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📞 Support",  url='https://t.me/@AkerBingo')]]))
+    return ConversationHandler.END
 
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     amount = update.message.text
