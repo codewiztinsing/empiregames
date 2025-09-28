@@ -1647,4 +1647,39 @@ body {
   
 }
 
+/* Mobile responsive for recent calls */
+@media (max-width: 768px) {
+  .recent-calls-container {
+    margin-top: 6px;
+    padding: 5px;
+  }
+  
+  .recent-call-number {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+  
+  .recent-calls-numbers {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .recent-calls-container {
+    margin-top: 4px;
+    padding: 4px;
+  }
+  
+  .recent-call-number {
+    width: 22px;
+    height: 22px;
+    font-size: 9px;
+  }
+  
+  .recent-calls-numbers {
+    gap: 3px;
+  }
+}
+
 
