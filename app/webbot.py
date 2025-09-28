@@ -403,6 +403,72 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 text="Choose a contact support:",
                 reply_markup=support_options_keyboard()
             )
+        
+        elif query.data == 'instructions':
+            await query.edit_message_text(
+                text="Choose an instruction option:",
+                reply_markup=instructions_options_keyboard()
+            )
+        
+        elif query.data == 'register_instructions':
+            # Read and display registration instructions from instructions.html
+            try:
+                with open('instructions.html', 'r', encoding='utf-8') as file:
+                    instruction_content = file.read()
+                await query.edit_message_text(
+                    text=instruction_content,
+                    parse_mode=ParseMode.HTML
+                )
+            except FileNotFoundError:
+                await query.edit_message_text(
+                    text="Instructions file not found. Please contact support.",
+                    reply_markup=instructions_options_keyboard()
+                )
+        
+        elif query.data == 'play_instruction':
+            # Read and display game play instructions from instructions.html
+            try:
+                with open('instructions.html', 'r', encoding='utf-8') as file:
+                    instruction_content = file.read()
+                await query.edit_message_text(
+                    text=instruction_content,
+                    parse_mode=ParseMode.HTML
+                )
+            except FileNotFoundError:
+                await query.edit_message_text(
+                    text="Instructions file not found. Please contact support.",
+                    reply_markup=instructions_options_keyboard()
+                )
+        
+        elif query.data == 'deposit_instruction':
+            # Read and display deposit instructions from instructions.html
+            try:
+                with open('instructions.html', 'r', encoding='utf-8') as file:
+                    instruction_content = file.read()
+                await query.edit_message_text(
+                    text=instruction_content,
+                    parse_mode=ParseMode.HTML
+                )
+            except FileNotFoundError:
+                await query.edit_message_text(
+                    text="Instructions file not found. Please contact support.",
+                    reply_markup=instructions_options_keyboard()
+                )
+        
+        elif query.data == 'withdraw_instruction':
+            # Read and display withdrawal instructions from instructions.html
+            try:
+                with open('instructions.html', 'r', encoding='utf-8') as file:
+                    instruction_content = file.read()
+                await query.edit_message_text(
+                    text=instruction_content,
+                    parse_mode=ParseMode.HTML
+                )
+            except FileNotFoundError:
+                await query.edit_message_text(
+                    text="Instructions file not found. Please contact support.",
+                    reply_markup=instructions_options_keyboard()
+                )
         elif query.data == 'get_deposit_amount':
             return DEPOSIT_AMOUNT
         elif query.data == 'check_balance':
