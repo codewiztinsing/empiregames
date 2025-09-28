@@ -696,11 +696,7 @@ const handleGlobals = (state) => {
               </div>
             </div>
             
-            <div className="game-status">
-              <div className={`status-badge ${gameStatus}`}>
-                {gameStatus}
-              </div>
-            </div>
+          
           </div>
 
           <div className="globals-container">
@@ -715,23 +711,7 @@ const handleGlobals = (state) => {
             )}
 
         
-          {/* {gameStatus == "in-progress" && (
-            
-           <>
-           <div className="global-ball-container">
-            <div className="global-ball">
-               {calledNumbers?.length}/<span>75</span>
-            </div>
-           </div>
-            <div className="game-info-text">
-               {totalPlayers} ሰው አሁን እየተጫወቱ ናቸው
-
-            </div>
-
-           </>
-
-            
-          )} */}
+        
           </div>
 
           <div className="numbers-grid">
