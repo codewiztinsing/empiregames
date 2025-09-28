@@ -371,7 +371,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 return
 
             player_id = query.from_user.id
-            web_app_url = f"{BACK_URL}?playerId={player_id}&betAmount={bet_amount}&playerName={query.from_user.username}"
+            web_app_url = f"https://akerbingo.com/?playerId={player_id}&betAmount={bet_amount}&playerName={query.from_user.username}"
             
             await query.edit_message_text(
                 text=f"Starting game with {bet_amount} ETB bet...",
@@ -778,16 +778,16 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     wallet_response = _wr.json() if _wr.headers.get('content-type','').startswith('application/json') else {}
     balance = wallet_response.get('balance', 0)
 
-    invite_link = f"https://t.me/akerbingobot?start=ref_{user_id}"
+    # Instead of a URL button, use a "Forward" button that triggers a callback for forwarding the referral message.
+    reply_markup = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Share", switch_inline_query=f"ref_{user_id}")]
+    ])
     
     message = (
-        f"🎮 Invite your friends to Aker Bingo!\n\n"
-        f"Share this link with your friends:\n{invite_link}\n\n"
-        f"Your current balance: {balance} ETB\n\n"
-        f"Invite friends and enjoy playing together! 🎲"
+        "here is referral link:"
     )
   
-    await update.message.reply_text(message)
+    await update.message.reply_text(text=message, reply_markup=reply_markup)
 
 
 
