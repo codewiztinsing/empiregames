@@ -46,6 +46,47 @@
   transform: translateY(0);
 }
 
+/* Disabled state for number cells */
+.number-cell.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f5f5f5;
+  color: #999;
+  pointer-events: none;
+}
+
+.number-cell.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Connection status styles */
+.connection-status {
+  margin: 5px 0;
+}
+
+.status-badge.connected {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+}
+
+.status-badge.disconnected {
+  background: linear-gradient(135deg, #f44336, #d32f2f);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+}
+
 /* Mobile responsive for referral nav */
 @media (max-width: 768px) {
   .referral-nav-header {

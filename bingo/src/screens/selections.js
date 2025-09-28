@@ -51,9 +51,61 @@ const Selections = () => {
   const [winnerPlayerName, setWinnerPlayerName] = useState(null);
   const [winningCard, setWinningCard] = useState([]);
   const [calledNumbers, setCalledNumbers] = useState([]);
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
 
   // Generate numbers 1-100 (memoized since it's static)
   const numbers = Array.from({ length: 400 }, (_, i) => i + 1);
+
+  // Check if cell clicking should be disabled
+  const isCellClickDisabled = () => {
+    // Disable if websocket is not connected
+    if (!isSocketConnected) {
+      return true;
+    }
+    
+    // Disable if balance is zero and still loading
+    if (balance === 0 && loading) {
+      return true;
+    }
+    
+    // Disable if balance is insufficient
+    if (balance < parseInt(roomId)) {
+      return true;
+    }
+    
+    return false;
+  };
+
+  // Socket connection state monitoring
+  useEffect(() => {
+    const handleConnect = () => {
+      console.log('Socket connected');
+      setIsSocketConnected(true);
+    };
+
+    const handleDisconnect = () => {
+      console.log('Socket disconnected');
+      setIsSocketConnected(false);
+    };
+
+    const handleConnectError = (error) => {
+      console.error('Socket connection error:', error);
+      setIsSocketConnected(false);
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('connect_error', handleConnectError);
+
+    // Check initial connection state
+    setIsSocketConnected(socket.connected);
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('connect_error', handleConnectError);
+    };
+  }, [socket]);
 
   // Socket listeners with cleanup
   useEffect(() => {
@@ -283,14 +335,31 @@ const handleGlobals = (state) => {
   })
   const handleNumberClick = async (number) => {
     console.log("handleNumberClick",number)
-    if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) {
+    
+    // Check if cell clicking is disabled
+    if (isCellClickDisabled()) {
+      if (!isSocketConnected) {
+        setToast("Please wait for connection to be established");
+        setIsToast(true);
+        return;
+      }
+      
+      if (balance === 0 && loading) {
+        setToast("Please wait while we fetch your balance");
+        setIsToast(true);
+        return;
+      }
+      
+      if (balance < parseInt(roomId)) {
+        setToast("Insufficient balance to select this number");
+        setIsToast(true);
+        return;
+      }
+      
       return;
     }
-  
-    // Check balance before allowing selection
-    if (balance < parseInt(roomId)) {
-      setToast("Insufficient balance to select this number");
-      setIsToast(true);
+    
+    if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) {
       return;
     }
   
@@ -579,6 +648,14 @@ const handleGlobals = (state) => {
             <div className="balance-text">
               Stake {roomId} ብር
             </div>
+            
+            {/* Connection Status */}
+            <div className="connection-status">
+              <div className={`status-badge ${isSocketConnected ? 'connected' : 'disconnected'}`}>
+                {isSocketConnected ? 'Connected' : 'Disconnected'}
+              </div>
+            </div>
+            
             <div className="game-status">
               <div className={`status-badge ${gameStatus}`}>
                 {gameStatus}
@@ -629,6 +706,7 @@ const handleGlobals = (state) => {
 
               const isSelected = selectedNumber === number;
               const isChoosen = choosenNumbers.includes(number);
+              const isDisabled = isPicked || isCellClickDisabled();
 
               return (
                 <button
@@ -637,11 +715,18 @@ const handleGlobals = (state) => {
                   ${isPicked ? 'picked' : ''}
                   ${isSelected ? 'selected' : ''}
                   ${isChoosen ? 'choosen' : ''}
+                  ${isDisabled ? 'disabled' : ''}
                 `}
                   onClick={() => handleNumberClick(number)}
                   onDoubleClick={() => handleNumberDoubleClick(number)}
-                  disabled={isPicked}
-                  aria-label={isPicked ? `Number ${number} already picked` : `Select number ${number}`}
+                  disabled={isDisabled}
+                  aria-label={
+                    isPicked 
+                      ? `Number ${number} already picked` 
+                      : isDisabled 
+                        ? `Number ${number} is disabled` 
+                        : `Select number ${number}`
+                  }
                 >
                   <span className='number-cell-text'>{number}</span>
                   {isPicked && <span className="picked-badge"></span>}
