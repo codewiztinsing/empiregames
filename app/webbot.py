@@ -907,7 +907,13 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("DEBUG: Returning REGISTER state for referred user")
         return REGISTER
     else:
-        await update.effective_message.reply_text("Welcome to the bot!")
+        #show notice
+        try:
+            with open('notice.txt', 'r') as file:
+                notice_message = file.read()
+            await update.effective_message.reply_text(text=notice_message)
+        except Exception as e:
+            logger.error(f"Error reading notice file: {e}")
         await update.effective_message.reply_text("Please share your phone number to complete registration.")
         contact_keyboard = ReplyKeyboardMarkup(
                 [[KeyboardButton(text="📞 Share Phone Number", request_contact=True)]],
