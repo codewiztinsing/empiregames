@@ -63,8 +63,8 @@ const Selections = () => {
       return true;
     }
     
-    // Disable if balance is zero and still loading
-    if (balance === 0 && loading) {
+    // Disable if balance is zero (regardless of loading state)
+    if (balance === 0) {
       return true;
     }
     
@@ -344,8 +344,12 @@ const handleGlobals = (state) => {
         return;
       }
       
-      if (balance === 0 && loading) {
-        setToast("Please wait while we fetch your balance");
+      if (balance === 0) {
+        if (loading) {
+          setToast("Please wait while we fetch your balance");
+        } else {
+          setToast("Your balance is zero. Please deposit to play");
+        }
         setIsToast(true);
         return;
       }
