@@ -19,7 +19,7 @@ const server = http.createServer(app);
 const getConstant = async () => {
   return {
     gameSpeed: 1000,
-    countDown: 30
+    countDown: 300
   }
 }
 
@@ -195,7 +195,7 @@ async function startGame(game) {
     game.currentCall = ball;
     game.calledNumbers.push(ball);
     game.selectedNumbers = [];
-    io.emit("pickedNumbers",game.selectedNumbers)
+    io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
     io.emit("gameState", {
       gameId: game.id,

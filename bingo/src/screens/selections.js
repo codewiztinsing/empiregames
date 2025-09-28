@@ -205,8 +205,7 @@ const Selections = () => {
 
 
 const handleGlobals = (state) => {
-
-  if (state.roomId == roomId) {
+  // Show global countdown and game state for all rooms
   setCountDown(state.countDown);
   if (state.lastBall && state.lastBall?.number) {
     // handlePlaySound(state.lastBall?.number)
@@ -214,11 +213,9 @@ const handleGlobals = (state) => {
     setCalledNumbers(state.calledNumbers);
   }
  
-
   setTotalPlayers(state.totalPlayers);
-    setTotalCalledNumbers(state.totalCalledNumbers);
-    setTotalWinAmount(state.totalWinAmount);
-  }
+  setTotalCalledNumbers(state.totalCalledNumbers);
+  setTotalWinAmount(state.totalWinAmount);
 }
 
   const handleBingoWinner = (state) => {
@@ -230,50 +227,44 @@ const handleGlobals = (state) => {
   }
 
   const handleGameState = (state) => {
-    const gameRoom = state.roomId
-    if (roomId == gameRoom) {
-      if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
-        setPickedNumbers(state.pickedNumbers.numbers);
-      }
-      if (state.game_status == "in-progress") {
-        setGameStatus("in-progress");
-      }
-      if (state.game_status == "waiting") {
-        setGameStatus("waiting");
-      }
-     
-      if (state.game_status != "in-progress") {
-        setPlayersLength(state.total_players);
-      }
+    // Show game state for all rooms, prioritizing current room if available
+    if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
+      setPickedNumbers(state.pickedNumbers.numbers);
+    }
+    if (state.game_status == "in-progress") {
+      setGameStatus("in-progress");
+    }
+    if (state.game_status == "waiting") {
+      setGameStatus("waiting");
+    }
+   
+    if (state.game_status != "in-progress") {
+      setPlayersLength(state.total_players);
+    }
+    if (state.count_down !== undefined) {
       setCountDown(state.count_down);
     }
-
   };
 
   socket.on('globals', handleGlobals);
 
   socket.on('activeGames', (state) => {
     if (state?.activeGames?.length > 0) {
-      const activeGameId = state.activeGames[0].id
-      if (activeGameId == roomId) {
-        setGameStatus("in-progress");
-      }
+      // Show active game status for all rooms
+      setGameStatus("in-progress");
     }
-
-
-
   });
 
   socket.on('gameState', (state) => {
-    if (state.roomId == roomId) {
-      if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
-        setPickedNumbers(state.pickedNumbers.numbers);
-      }
+    // Show game state for all rooms
+    if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
+      setPickedNumbers(state.pickedNumbers.numbers);
+    }
 
-      if (state.game_status != "in-progress") {
-        setPlayersLength(state.total_players);
-
-      }
+    if (state.game_status != "in-progress") {
+      setPlayersLength(state.total_players);
+    }
+    if (state.count_down !== undefined) {
       setCountDown(state.count_down);
     }
   });
@@ -319,10 +310,8 @@ const handleGlobals = (state) => {
 
 
   const handlePickedNumbers = (state) => {
-    if (state.roomId == roomId) {
-      setPickedNumbers(state.numbers);
-    }
-
+    // Show picked numbers for all rooms, not just the current one
+    setPickedNumbers(state.numbers);
   }
 
 
@@ -364,6 +353,8 @@ const handleGlobals = (state) => {
     }
     
     if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) {
+      setToast(`Card number ${number} is already selected by another player. Please choose a different number.`);
+      setIsToast(true);
       return;
     }
   
@@ -516,11 +507,8 @@ const handleGlobals = (state) => {
 
   const handleGameStatus = (state) => {
     console.log("gameStatus", state)
-    const gameRoom = state.roomId
-    if (roomId == gameRoom) {
-      setGameStatus(state.status);
-    }
-
+    // Show game status for all rooms
+    setGameStatus(state.status);
   }
 
 
@@ -724,6 +712,13 @@ const handleGlobals = (state) => {
                   onClick={() => handleNumberClick(number)}
                   onDoubleClick={() => handleNumberDoubleClick(number)}
                   disabled={isDisabled}
+                  title={
+                    isPicked 
+                      ? `Card number ${number} is already selected by another player` 
+                      : isDisabled 
+                        ? `Number ${number} is disabled` 
+                        : `Select number ${number}`
+                  }
                   aria-label={
                     isPicked 
                       ? `Number ${number} already picked` 
