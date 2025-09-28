@@ -347,7 +347,7 @@ io.on('connection', (socket) => {
   
     });
 
-    if (!game.isCountStart && game.players && game.players.size >= 1) {
+    if (!game.isCountStart && game.players && game.players.size >= 2) {
       startCountDown(game);
     }
 
