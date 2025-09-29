@@ -196,6 +196,8 @@ const Selections = () => {
 
   // Handle all player selections
   const handleAllPlayerSelections = (data) => { 
+    console.log("=== ALL PLAYER SELECTIONS ===");
+    console.log("Received all player selections:", data);
 
     // Get playerId, roomId, and playerName from query params
     const searchParams = new URLSearchParams(window.location.search);
@@ -203,6 +205,9 @@ const Selections = () => {
     const roomId = searchParams.get('betAmount');
     const playerName = searchParams.get('playerName');
     const game_status = data.game_status;
+    
+    console.log("Query params - playerId:", playerId, "roomId:", roomId, "playerName:", playerName);
+    console.log("Game status:", game_status);
   
     
     if (data.players && Array.isArray(data.players)) {
@@ -216,11 +221,19 @@ const Selections = () => {
         const selectedNumber = currentPlayerSelection.selectedNumbers[0];
         console.log("Selected number from data:", selectedNumber);
         
-        if(selectedNumber & game_status == "in-progress") {
+        if(selectedNumber && game_status == "in-progress") {
+          console.log("✅ Current player has a selection - navigating to play screen");
+          console.log("playerId:", playerId);
+          console.log("betAmount:", roomId);
+          console.log("playerName:", playerName);
+          console.log("selectedNumber:", selectedNumber);
+          
           // Navigate to play screen with the selected number
           navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
         } else {
-          console.log("❌ Current player found but no selected number");
+          console.log("❌ Current player found but no selected number or game not in progress");
+          console.log("selectedNumber:", selectedNumber);
+          console.log("game_status:", game_status);
         }
       } else {
         console.log("❌ Current player not found in selections - staying on selection page");
@@ -430,12 +443,10 @@ const handleGlobals = (state) => {
     setJoinError(true);
     return;
   })
+
   const handleNumberClick = async (number) => {
-  
-    
     // Check if this number is already chosen (for unselecting)
     const isCurrentlyChosen = choosenNumbers.includes(number);
-    console.log("isCurrentlyChosen (recalculated):", isCurrentlyChosen);
     
     // Check if websocket is connected
     if (!isSocketConnected) {
@@ -443,8 +454,44 @@ const handleGlobals = (state) => {
       setIsToast(true);
       return;
     }
+
+    console.log("isCurrentlyChosen",isCurrentlyChosen)
+  
+    // If number is already chosen, remove it (unselect) - skip balance checks for unselecting
+    if (isCurrentlyChosen) {
+      console.log("✅ UNSELECTING CARD:", number);
+      const index = choosenNumbers.indexOf(number);
     
-    // Check balance and show appropriate messages
+      if (index > -1) {
+        const newNumbers = [...choosenNumbers];
+        const newBoards = [...choosenBoards];
+        newNumbers.splice(index, 1);
+        newBoards.splice(index, 1);
+        
+        setChoosenNumbers(newNumbers);
+        setChooseBoards(newBoards);
+
+        // Reset card after removal
+        if (newNumbers.length === 0) {
+          // Leave game before resetting selectedNumber
+          handleLeaveGame();
+          setSelectedNumber(null);
+          setSelectBoard([]);
+          setToast(`Card ${number} unselected! No cards remaining.`);
+        } else {
+          // One card remains - update to the first remaining card
+          setSelectedNumber(newNumbers[0]);
+          setSelectBoard(newBoards[0]);
+          setToast(`Card ${number} unselected! Now using Card ${newNumbers[0]}.`);
+        }
+      } else {
+        console.log("❌ ERROR: Could not find index for number:", number);
+      }
+      setIsToast(true);
+      return;
+    }
+    
+    // Balance checks only apply when selecting (not unselecting)
     if (balance === 0) {
       console.log("❌ Balance is zero");
       if (loading) {
@@ -469,54 +516,11 @@ const handleGlobals = (state) => {
       setIsToast(true);
       return;
     }
-  
-    // If number is already chosen, remove it (unselect)
-    if (isCurrentlyChosen) {
-      console.log("✅ UNSELECTING CARD:", number);
-      console.log("Current choosenNumbers before removal:", choosenNumbers);
-      console.log("Current choosenBoards before removal:", choosenBoards);
-      
-      const index = choosenNumbers.indexOf(number);
-      console.log("Index of number to remove:", index);
-      
-      if (index > -1) {
-        const newNumbers = [...choosenNumbers];
-        const newBoards = [...choosenBoards];
-        newNumbers.splice(index, 1);
-        newBoards.splice(index, 1);
-
-        console.log("New numbers after removal:", newNumbers);
-        console.log("New boards after removal:", newBoards);
-        
-        setChoosenNumbers(newNumbers);
-        setChooseBoards(newBoards);
-
-        // Reset card after removal
-        if (newNumbers.length === 0) {
-          // Leave game before resetting selectedNumber
-          handleLeaveGame();
-          setSelectedNumber(null);
-          setSelectBoard([]);
-          setToast(`Card ${number} unselected! No cards remaining.`);
-        } else {
-          // One card remains - update to the first remaining card
-          setSelectedNumber(newNumbers[0]);
-          setSelectBoard(newBoards[0]);
-          setToast(`Card ${number} unselected! Now using Card ${newNumbers[0]}.`);
-        }
-      } else {
-        console.log("❌ ERROR: Could not find index for number:", number);
-      }
-      setIsToast(true);
-      console.log("=== UNSELECT COMPLETE ===");
-      return;
-    }
    
     // If user already has a card selected, replace it with new one
     if (choosenNumbers.length >= 1) {
       // Leave current game first (but don't reset selection)
       handleLeaveGame(true);
-      
       // Generate new board for the new number
       const newBoard = generateCombination();
       
@@ -827,12 +831,13 @@ const handleGlobals = (state) => {
 
               const isSelected = selectedNumber === number;
               const isChoosen = choosenNumbers.includes(number);
-              const isDisabled = isPicked || !isSocketConnected; // Only disable if picked by another player or no connection
+              // Don't disable chosen cards for unselecting, only disable if picked by another player or no connection
+              const isDisabled = (isPicked && !isChoosen) || !isSocketConnected;
               const hasInsufficientBalance = balance < parseInt(roomId) || balance === 0;
 
               // Debug logging for selected numbers
               if (isChoosen) {
-                console.log(`Card ${number} is choosen. isPicked: ${isPicked}, isSocketConnected: ${isSocketConnected}, isDisabled: ${isDisabled}`);
+                console.log("Card",number,"is choosen")
               }
 
               return (
