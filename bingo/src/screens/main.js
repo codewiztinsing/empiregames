@@ -102,8 +102,27 @@ const PlayingBoard = () => {
         setWinAmount(data.win_amount)
         setTotalPlayers(data.total_players)
       }
-      if(calledNumber){
-        console.log('🔥 Adding called number:', calledNumber, 'to calledNumbers array');
+      
+      // Use called_numbers array from server instead of client-side accumulation
+      if (data.called_numbers && Array.isArray(data.called_numbers)) {
+        console.log('🔥 Setting called numbers from server:', data.called_numbers);
+        const calledNumbersArray = data.called_numbers.map(ball => ball.number);
+        setCalledNumbers(calledNumbersArray);
+        
+        // Trigger animation for the last called number if it's new
+        if (calledNumber) {
+          setTimeout(() => {
+            const elementId = getElementIdForNumber(parseInt(calledNumber));
+            const element = document.getElementById(elementId);
+            if (element) {
+              console.log('🎬 Animating called number:', calledNumber);
+              animateNumber(element, 2000);
+            }
+          }, 100);
+        }
+      } else if (calledNumber) {
+        // Fallback: add single number if called_numbers array is not available
+        console.log('🔥 Adding called number (fallback):', calledNumber, 'to calledNumbers array');
         setCalledNumbers(prevCalledNumbers => {
           const newArray = [...prevCalledNumbers, parseInt(calledNumber)];
           console.log('🔥 New calledNumbers array:', newArray);
@@ -121,6 +140,7 @@ const PlayingBoard = () => {
           return newArray;
         })
       }
+      
       setLastBall(data.lastBall);
       handlePlaySound(calledNumber)
       if (data.total_called_numbers) setTotalCalledNumbers(data.total_called_numbers);
@@ -219,6 +239,19 @@ const PlayingBoard = () => {
       setTotalCalledNumbers(data.totalCalledNumbers || 0);
       setWinAmount(data.win_amount || 0);
       setTotalPlayers(data.total_players || 0);
+      
+      // Mark all called numbers visually
+      if (data.calledNumbers && Array.isArray(data.calledNumbers)) {
+        setTimeout(() => {
+          data.calledNumbers.forEach(number => {
+            const elementId = getElementIdForNumber(number);
+            const element = document.getElementById(elementId);
+            if (element) {
+              element.classList.add('last-called');
+            }
+          });
+        }, 100);
+      }
       
       // Show success message
       setToast('Rejoined your previous game!');

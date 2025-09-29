@@ -600,6 +600,55 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Handle game rejoin
+  socket.on("rejoinGame", (data) => {
+    console.log("🔄 Rejoin request from player:", data.playerId, "for room:", data.roomId);
+    const game = activeGames.get(data.roomId);
+    
+    if (!game) {
+      console.log("❌ Game not found for rejoin");
+      socket.emit("rejoinError", { message: "Game not found" });
+      return;
+    }
+
+    // Check if player has disconnected data
+    if (!game.disconnectedPlayers || !game.disconnectedPlayers.has(data.playerId)) {
+      console.log("❌ No rejoin data found for player:", data.playerId);
+      socket.emit("rejoinError", { message: "No previous game data found" });
+      return;
+    }
+
+    const playerData = game.disconnectedPlayers.get(data.playerId);
+    console.log("✅ Found rejoin data for player:", playerData);
+
+    // Restore player to active game
+    game.players.set(data.playerId, playerData.boards);
+    game.numberOfBoardsToPlayer.set(data.playerId, playerData.numberOfBoards);
+    game.selectedNumbersToPlayer.set(data.playerId, [playerData.selectedNumber]);
+    
+    // Remove from disconnected players
+    game.disconnectedPlayers.delete(data.playerId);
+
+    // Send rejoin success with current game state
+    socket.emit("rejoinSuccess", {
+      playerId: data.playerId,
+      gameId: game.id,
+      roomId: game.roomId,
+      selectedNumber: playerData.selectedNumber,
+      selectedNumber2: playerData.selectedNumber2,
+      boards: playerData.boards,
+      markedCells: playerData.markedCells,
+      calledNumbers: game.calledNumbers.map(ball => ball.number),
+      lastBall: game.currentCall,
+      totalCalledNumbers: game.calledNumbers.length,
+      win_amount: game.win_amount,
+      total_players: game.total_players,
+      game_status: game.status
+    });
+
+    console.log("✅ Player successfully rejoined:", data.playerId);
+  });
+
   socket.on("disconnect", () => {
    
     const user = users.get(socket.id);
