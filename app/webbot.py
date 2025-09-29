@@ -500,12 +500,24 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
             print("response = ",response)
             balance = response.json().get('balance',0)
-            # Create payment summary with user details
+            
+            # Get user info and game statistics
+            user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}/')
+            user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
+            games_played_this_week = user_data.get('games_played_this_week', 0)
+            
+            # Calculate remaining games needed
+            remaining_games = max(0, 27 - games_played_this_week)
+            
+            # Create payment summary with user details and weekly progress
             payment_summary = (
                     "🏦 Aker BINGO STATEMENT\n" +
                     f"💰  {balance} Birr\n" +
                     f"👥  {first_name} \n" +
-                    f"📄 Transaction ID: {telegram_id}\n" +
+                    f"📄 Transaction ID: {telegram_id}\n\n" +
+                    f"🎮 Weekly Games Progress:\n" +
+                    f"📊 Games Played This Week: {games_played_this_week}/27\n" +
+                    f"⏳ Games Remaining: {remaining_games} games\n" +
                     f"🔙 Back to Menu\n" 
                 ) 
             await query.edit_message_text(text=payment_summary)
@@ -946,8 +958,16 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
     wallet_data = wallet_response.json() if wallet_response.headers.get('content-type','').startswith('application/json') else {}
     balance = wallet_data.get('balance', 0)
     
+    # Get user info and game statistics
+    user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}/')
+    user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
+    games_played_this_week = user_data.get('games_played_this_week', 0)
+    
     # Get user info for personalization
     user_name = update.effective_user.first_name or update.effective_user.username or "Player"
+    
+    # Calculate remaining games needed
+    remaining_games = max(0, 27 - games_played_this_week)
     
     # Create appealing balance message
     if balance > 0:
@@ -958,7 +978,23 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"💵 **Withdrawable Balance:** {balance} ETB\n"
         f"🔒 **Non-Withdrawable Balance:** 0.0 ETB\n"
         f"🎯 **Total Balance:** {balance} ETB\n\n"
+        f"🎮 **Weekly Games Progress:**\n"
+        f"📊 **Games Played This Week:** {games_played_this_week}/27\n"
+        f"⏳ **Games Remaining:** {remaining_games} games to complete weekly requirement\n\n"
         f"🎮 Ready to play? Your balance looks great!"
+        )
+    else:
+        message = (
+        f"💰 Hey {user_name}! Your Current Account Balance!\n"
+        f"👤 **Name:** {user_name}\n"
+        f"📱 **Phone Number:** {telegram_id}\n"
+        f"💵 **Withdrawable Balance:** {balance} ETB\n"
+        f"🔒 **Non-Withdrawable Balance:** 0.0 ETB\n"
+        f"🎯 **Total Balance:** {balance} ETB\n\n"
+        f"🎮 **Weekly Games Progress:**\n"
+        f"📊 **Games Played This Week:** {games_played_this_week}/27\n"
+        f"⏳ **Games Remaining:** {remaining_games} games to complete weekly requirement\n\n"
+        f"💳 Please deposit to start playing and complete your weekly games!"
         )
 
     await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
