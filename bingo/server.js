@@ -122,12 +122,38 @@ function getWaitingGames(activeGames,status="in-progress") {
 
 function startCountDown(game) {
  
-  if (game.isCountStart || !game.players || game.players.size < 1) return;
+  if (game.isCountStart || !game.players || game.players.size < 2) return;
   clearGameIntervals(game.id);
-  game.countDown = game.countDown;
+  game.countDown = 30; // Always reset to 30 when starting countdown
   game.isCountStart = true;
 
   const countdownInterval = setInterval(() => {
+    // Check if we still have at least 2 players during countdown
+    if (game.players.size < 2) {
+      console.log("🔄 Less than 2 players during countdown - resetting countdown");
+      clearInterval(countdownInterval);
+      game.isCountStart = false;
+      game.countDown = 30;
+      game.status = "waiting";
+      
+      // Emit updated game state
+      io.emit("gameState", {
+        gameId: game.id,
+        roomId: game.roomId,
+        pickedNumbers: game.selectedNumbers.filter(num => num !== null),
+        total_players: game.selectedNumbers.filter(num => num !== null).length,
+        game_status: game.status,
+        count_down: game.countDown
+      });
+      
+      io.emit("globals", {
+        roomId: game.roomId,
+        countDown: game.countDown
+      });
+      
+      return;
+    }
+
     io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
@@ -146,6 +172,31 @@ function startCountDown(game) {
   
 
     if (game.countDown === 0) {
+      // Final check before starting game - ensure we have at least 2 players
+      if (game.players.size < 2) {
+        console.log("❌ Not enough players to start game - resetting countdown");
+        clearInterval(countdownInterval);
+        game.isCountStart = false;
+        game.countDown = 30;
+        game.status = "waiting";
+        
+        io.emit("gameState", {
+          gameId: game.id,
+          roomId: game.roomId,
+          pickedNumbers: game.selectedNumbers.filter(num => num !== null),
+          total_players: game.selectedNumbers.filter(num => num !== null).length,
+          game_status: game.status,
+          count_down: game.countDown
+        });
+        
+        io.emit("globals", {
+          roomId: game.roomId,
+          countDown: game.countDown
+        });
+        
+        return;
+      }
+      
       clearInterval(countdownInterval);
       game.isCountStart = false;
       game.status = "waiting";
@@ -567,9 +618,9 @@ io.on('connection', (socket) => {
       selectedNumber2: data.selectedNumber2
     })
 
-    // Check if countdown is running and all players have left
-    if (game.isCountStart && game.players.size === 0) {
-      console.log("🔄 All players left during countdown - restarting countdown from 30");
+    // Check if countdown is running and we have less than 2 players
+    if (game.isCountStart && game.players.size < 2) {
+      console.log("🔄 Less than 2 players during countdown - resetting countdown from 30");
       clearGameIntervals(game.id);
       game.isCountStart = false;
       game.countDown = 30;
@@ -585,8 +636,10 @@ io.on('connection', (socket) => {
         count_down: game.countDown
       });
       
-      // Start countdown again
-      startCountDown(game);
+      // Only start countdown if we have at least 2 players
+      if (game.players.size >= 2) {
+        startCountDown(game);
+      }
     }
     
   })
@@ -730,9 +783,9 @@ io.on('connection', (socket) => {
           users.delete(socket.id);
           users.delete(socket.id);
 
-          // Check if countdown is running and all players have left
-          if (game.isCountStart && game.players.size === 0) {
-            console.log("🔄 All players disconnected during countdown - restarting countdown from 30");
+          // Check if countdown is running and we have less than 2 players
+          if (game.isCountStart && game.players.size < 2) {
+            console.log("🔄 Less than 2 players during countdown - resetting countdown from 30");
             clearGameIntervals(game.id);
             game.isCountStart = false;
             game.countDown = 30;
@@ -748,8 +801,10 @@ io.on('connection', (socket) => {
               count_down: game.countDown
             });
             
-            // Start countdown again
-            startCountDown(game);
+            // Only start countdown if we have at least 2 players
+            if (game.players.size >= 2) {
+              startCountDown(game);
+            }
           }
 
         }
