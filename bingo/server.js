@@ -566,6 +566,28 @@ io.on('connection', (socket) => {
       selectedNumber: data.selectedNumber,
       selectedNumber2: data.selectedNumber2
     })
+
+    // Check if countdown is running and all players have left
+    if (game.isCountStart && game.players.size === 0) {
+      console.log("🔄 All players left during countdown - restarting countdown from 30");
+      clearGameIntervals(game.id);
+      game.isCountStart = false;
+      game.countDown = 30;
+      game.status = "waiting";
+      
+      // Emit updated game state
+      io.emit("gameState", {
+        gameId: game.id,
+        roomId: game.roomId,
+        pickedNumbers: game.selectedNumbers,
+        total_players: game.selectedNumbers.length,
+        game_status: game.status,
+        count_down: game.countDown
+      });
+      
+      // Start countdown again
+      startCountDown(game);
+    }
     
   })
 
@@ -707,6 +729,28 @@ io.on('connection', (socket) => {
           users.delete(socket.id);
           users.delete(socket.id);
           users.delete(socket.id);
+
+          // Check if countdown is running and all players have left
+          if (game.isCountStart && game.players.size === 0) {
+            console.log("🔄 All players disconnected during countdown - restarting countdown from 30");
+            clearGameIntervals(game.id);
+            game.isCountStart = false;
+            game.countDown = 30;
+            game.status = "waiting";
+            
+            // Emit updated game state
+            io.emit("gameState", {
+              gameId: game.id,
+              roomId: game.roomId,
+              pickedNumbers: game.selectedNumbers,
+              total_players: game.selectedNumbers.length,
+              game_status: game.status,
+              count_down: game.countDown
+            });
+            
+            // Start countdown again
+            startCountDown(game);
+          }
 
         }
        
