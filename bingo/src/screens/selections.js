@@ -668,14 +668,7 @@ const handleGlobals = (state) => {
               Stake {roomId} ብር
             </div>
 
-            {/* Referral Bonus */}
-            <div className="balance-text referral-bonus">
-              {referralLoading ? (
-                <span>Referral Bonus: Loading...</span>
-              ) : (
-                <span>Referral Bonus: {referralBonus.toFixed(2)} ብር</span>
-              )}
-            </div>
+          
             
             {/* Connection Status */}
             <div className="connection-status">

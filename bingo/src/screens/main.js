@@ -45,6 +45,7 @@ const PlayingBoard = () => {
   const [totalWinAmount, setTotalWinAmount] = useState(0);
   const [totalPlayers,setTotalPlayers] = useState(0);
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
+  const [winnerCountdown, setWinnerCountdown] = useState(10);
 
   // Generate Bingo board function
   const generateCombination = () => {
@@ -250,6 +251,27 @@ const PlayingBoard = () => {
     });
   }, [lastBall]);
 
+  // ✅ Handle winner countdown and navigation
+  useEffect(() => {
+    if (!isBingo) {
+      setWinnerCountdown(10); // Reset countdown when not showing winner
+      return;
+    }
+
+    const countdownInterval = setInterval(() => {
+      setWinnerCountdown((prev) => {
+        if (prev <= 1) {
+          // Navigate to home page with query parameters
+          navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(countdownInterval);
+  }, [isBingo, playerId, roomId, playerName, navigate]);
+
   const handleBingo = (board, boardNumber) => {
     console.log('Bingo button clicked!', {
       totalCalledNumbers,
@@ -337,6 +359,9 @@ const PlayingBoard = () => {
   {isBingo && (
   <div className="bingo-winner-overlay">
     <div className="bingo-winner-card">
+      <div className="winner-countdown">
+        <p>Returning to home in: {winnerCountdown} seconds</p>
+      </div>
       <div className="winner-card-header">
         <p className='winner-card-header-text'>Bingo Winner!</p>
       </div>
