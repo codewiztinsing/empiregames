@@ -18,6 +18,7 @@ const Selections = () => {
     choosenNumbers,
     setChoosenNumbers,
     gameId,
+    setGameId,
     countDown,
     setCountDown,
     roomId,
@@ -58,27 +59,7 @@ const Selections = () => {
   // Generate numbers 1-100 (memoized since it's static)
   const numbers = Array.from({ length: 400 }, (_, i) => i + 1);
 
-  // Fetch referral bonus data
-  const fetchReferralBonus = async () => {
-    if (!playerId) return;
-    
-    try {
-      setReferralLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/users/${playerId}/`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setReferralBonus(data.referrals?.total_earnings || 0);
-    } catch (error) {
-      console.error('Error fetching referral bonus:', error);
-      setReferralBonus(0);
-    } finally {
-      setReferralLoading(false);
-    }
-  };
+  
 
   // Check if cell clicking should be disabled (only for websocket connection)
   const isCellClickDisabled = () => {
@@ -91,10 +72,7 @@ const Selections = () => {
     return false;
   };
 
-  // Fetch referral bonus on component mount
-  useEffect(() => {
-    fetchReferralBonus();
-  }, [playerId]);
+
 
   // Socket connection state monitoring
   useEffect(() => {
@@ -137,23 +115,127 @@ const Selections = () => {
     setPlayerId(urlPlayerId);
     setRoomId(urlRoomId);
     setPlayerName(urlPlayerName);
-    
+   
     if (urlPlayerId && urlRoomId) {
       socket.emit("playerJoined", { playerId: urlPlayerId, roomId: urlRoomId });
+      
+      // Request all player selections
+      console.log("📥 Requesting all player selections...");
+      socket.emit("getAllPlayerSelections", { 
+        playerId: urlPlayerId, 
+        roomId: urlRoomId 
+      });
+      
+      // Try to rejoin if there's a previous game in progress
+      attemptRejoin(urlPlayerId, urlRoomId, urlPlayerName);
     }
     
     socket.on('gameState', handleGameState);
     socket.on('pickedNumbers', handlePickedNumbers);
     socket.on("gameStatus", handleGameStatus);
     socket.on("bingoWinner", handleBingoWinner);
+    socket.on('rejoinSuccess', handleRejoinSuccess);
+    socket.on('rejoinError', handleRejoinError);
+    socket.on('allPlayerSelections', handleAllPlayerSelections);
+    
+    // Test if the listener is working
+    console.log("🔍 Socket listeners set up. Listening for allPlayerSelections event");
+    console.log("🔍 Socket connected:", socket.connected);
+    console.log("🔍 Current playerId:", playerId);
+    console.log("🔍 Current roomId:", roomId);
 
     return () => {
       socket.off('gameState', handleGameState);
       socket.off('pickedNumbers', handlePickedNumbers);
       socket.off("gameStatus", handleGameStatus);
       socket.off("bingoWinner", handleBingoWinner);
+      socket.off('rejoinSuccess', handleRejoinSuccess);
+      socket.off('rejoinError', handleRejoinError);
+      socket.off('allPlayerSelections', handleAllPlayerSelections);
     };
   }, [socket]);
+
+
+
+  // Attempt to rejoin a previous game
+  const attemptRejoin = (playerId, roomId, playerName) => {
+    socket.emit('rejoinGame', {
+      playerId: playerId,
+      roomId: roomId,
+      playerName: playerName
+    });
+  };
+
+  // Handle successful rejoin
+  const handleRejoinSuccess = (data) => {
+    console.log("=== REJOIN SUCCESS DEBUG ===");
+    console.log("Rejoin success data:", data);
+    console.log("Setting game state...");
+    
+    setToast('Rejoined your previous game! Redirecting to play...');
+    setIsToast(true);
+    
+
+    
+    // Set the game state from rejoin data
+    setGameId(data.gameId);
+    setSelectedNumber(data.selectedNumber);
+    setSelectBoard(data.boards[0]);
+    setChoosenNumbers([data.selectedNumber]);
+    setChooseBoards(data.boards);
+        // Navigate directly to play screen with current game state
+    navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${data.selectedNumber2}`);
+  };
+
+  // Handle rejoin error
+  const handleRejoinError = (data) => {
+    console.log("=== REJOIN ERROR DEBUG ===");
+    console.log("Rejoin failed:", data.message);
+    console.log("This is normal for new users or expired games");
+  };
+
+  // Handle all player selections
+  const handleAllPlayerSelections = (data) => {
+    console.log("=== ALL PLAYER SELECTIONS ===");
+    console.log("Received all player selections:", data);
+    console.log("Current playerId:", playerId);
+    console.log("Current roomId:", roomId);
+    console.log("Current playerName:", playerName);
+    
+    const game_status = data.game_status;
+    
+    if (data.players && Array.isArray(data.players)) {
+      console.log("Total players with selections:", data.players.length);
+      
+      // Process current player selection
+      const currentPlayerSelection = data.players.find(p => p.playerId === playerId);
+      console.log("Current player selection found:", currentPlayerSelection);
+      
+      if(currentPlayerSelection) {
+        const selectedNumber = currentPlayerSelection.selectedNumbers[0];
+        console.log("Selected number from data:", selectedNumber);
+        console.log("Game status:", game_status);
+        
+        if(selectedNumber && game_status == "in-progress") {
+          console.log("✅ Navigating to play screen with valid selection");
+          console.log("playerId:", playerId);
+          console.log("betAmount:", roomId);
+          console.log("playerName:", playerName);
+          console.log("selectedNumber:", selectedNumber);
+          navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
+        } else {
+          console.log("❌ No valid selection or game not in progress");
+          console.log("selectedNumber:", selectedNumber);
+          console.log("game_status:", game_status);
+          // Don't navigate if no valid selection
+        }
+      } else {
+        console.log("❌ Current player not found in selections");
+      }
+    } else {
+      console.log("No players data received or invalid format");
+    }
+  };
 
   // Handle bingo winner timeout
   useEffect(() => {
@@ -179,9 +261,7 @@ const Selections = () => {
           console.log('Balance response:', response.data);
           setBalance(response.data.balance);
           
-          // Also fetch referral bonus
-          await fetchReferralBonus();
-          
+      
           setLoading(false);
         } catch (error) {
           console.error('Error fetching data:', error);
@@ -213,9 +293,15 @@ const Selections = () => {
 
   // Countdown redirect logic - only navigate when countdown reaches exactly 00
   useEffect(() => {
-
+    console.log("gameStatus",gameStatus)
     if(gameStatus == "in-progress") {
-      navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
+      console.log("allPlayerSelections called")
+      socket.on("allPlayerSelections", (data) => {
+        console.log("allPlayerSelections called",data)
+        const selectedNumber = data.players.find(p => p.playerId === playerId)?.selectedNumbers[0];
+        navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
+      });
+     
     }
     // Navigate when countdown reaches 0 and user has selected a number
     if (countDown === 0 && selectedNumber) {
@@ -233,7 +319,6 @@ const Selections = () => {
 const handleGlobals = (state) => {
   // Show global countdown and game state for all rooms
   if (state.countDown !== undefined) {
-    console.log('Received countdown from globals:', state.countDown);
     setCountDown(state.countDown);
   }
   if (state.lastBall && state.lastBall?.number) {
@@ -285,6 +370,7 @@ const handleGlobals = (state) => {
   });
 
   socket.on('gameState', (state) => {
+
     // Show game state for all rooms
     if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
       setPickedNumbers(state.pickedNumbers.numbers);
@@ -294,7 +380,6 @@ const handleGlobals = (state) => {
       setPlayersLength(state.total_players);
     }
     if (state.count_down !== undefined) {
-      console.log('Received countdown from gameState:', state.count_down);
       setCountDown(state.count_down);
     }
   });
@@ -353,14 +438,7 @@ const handleGlobals = (state) => {
     return;
   })
   const handleNumberClick = async (number) => {
-    console.log("=== handleNumberClick START ===");
-    console.log("Number clicked:", number);
-    console.log("Current choosenNumbers:", choosenNumbers);
-    console.log("isChoosen:", choosenNumbers.includes(number));
-    console.log("isSocketConnected:", isSocketConnected);
-    console.log("balance:", balance);
-    console.log("roomId:", roomId);
-    console.log("pickedNumbers:", pickedNumbers);
+  
     
     // Check if this number is already chosen (for unselecting)
     const isCurrentlyChosen = choosenNumbers.includes(number);
@@ -368,7 +446,6 @@ const handleGlobals = (state) => {
     
     // Check if websocket is connected
     if (!isSocketConnected) {
-      console.log("❌ Socket not connected");
       setToast("Please wait for connection to be established");
       setIsToast(true);
       return;
@@ -423,14 +500,12 @@ const handleGlobals = (state) => {
 
         // Reset card after removal
         if (newNumbers.length === 0) {
-          console.log("No cards remaining, leaving game");
           // Leave game before resetting selectedNumber
           handleLeaveGame();
           setSelectedNumber(null);
           setSelectBoard([]);
           setToast(`Card ${number} unselected! No cards remaining.`);
         } else {
-          console.log("Cards remaining, switching to first remaining card:", newNumbers[0]);
           // One card remains - update to the first remaining card
           setSelectedNumber(newNumbers[0]);
           setSelectBoard(newBoards[0]);
@@ -582,7 +657,6 @@ const handleGlobals = (state) => {
 
 
   const handleGameStatus = (state) => {
-    console.log("gameStatus", state)
     // Show game status for all rooms
     setGameStatus(state.status);
   }
@@ -593,12 +667,6 @@ const handleGlobals = (state) => {
 
   // Debug useEffect to monitor state changes
   useEffect(() => {
-    console.log("=== STATE CHANGE DEBUG ===");
-    console.log("choosenNumbers changed:", choosenNumbers);
-    console.log("selectedNumber changed:", selectedNumber);
-    console.log("choosenBoards changed:", choosenBoards);
-    console.log("selectBoard changed:", selectBoard);
-    console.log("=== END STATE CHANGE DEBUG ===");
   }, [choosenNumbers, selectedNumber, choosenBoards, selectBoard]);
 
   return (
@@ -785,19 +853,7 @@ const handleGlobals = (state) => {
                   ${hasInsufficientBalance ? 'insufficient-balance' : ''}
                 `}
                   onClick={(e) => {
-                    console.log("=== BUTTON CLICK EVENT ===");
-                    console.log(`Button ${number} clicked`);
-                    console.log("Event:", e);
-                    console.log("isDisabled:", isDisabled);
-                    console.log("isChoosen:", isChoosen);
-                    console.log("isPicked:", isPicked);
-                    console.log("isSocketConnected:", isSocketConnected);
-                    console.log("balance:", balance);
-                    console.log("roomId:", roomId);
-                    console.log("choosenNumbers:", choosenNumbers);
-                    console.log("selectedNumber:", selectedNumber);
-                    console.log("=== CALLING handleNumberClick ===");
-                    
+                  
                     // Prevent default to avoid any potential issues
                     e.preventDefault();
                     e.stopPropagation();

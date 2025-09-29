@@ -97,13 +97,7 @@ const PlayingBoard = () => {
     if (!socket) return;
 
     const handleGameState = (data) => {
-      console.log('Received gameState data:', data);
-      console.log('lastBall:', data?.lastBall);
-      console.log('lastBall.combined:', data?.lastBall?.combined);
-      
-      const calledNumber = data?.lastBall?.combined?.split("-")[1]
-      console.log('Extracted calledNumber:', calledNumber);
-      
+      const calledNumber = data?.lastBall?.combined?.split("-")[1]      
       if(data.win_amount) {
         setWinAmount(data.win_amount)
         setTotalPlayers(data.total_players)
@@ -112,15 +106,11 @@ const PlayingBoard = () => {
         console.log('Adding called number:', calledNumber, 'to calledNumbers array');
         setCalledNumbers(prevCalledNumbers => {
           const newArray = [...prevCalledNumbers, parseInt(calledNumber)];
-          console.log('Updated calledNumbers:', newArray);
           return newArray;
         })
       }
       setLastBall(data.lastBall);
       handlePlaySound(calledNumber)
-      
-
-      
       if (data.total_called_numbers) setTotalCalledNumbers(data.total_called_numbers);
       if (data.count_down) setCountDown(data.count_down);
       setGameId(data.gameId);
@@ -179,15 +169,7 @@ const PlayingBoard = () => {
       window.audioCache.set(calledNumber, audio);
     };
 
-    const handlePlayWinSound = async () => {
-      const SOUND_URL = process.env.REACT_APP_SOUND_URL
-      const soundUrl = `${SOUND_URL}/win.mp3`
-      console.log("win soundUrl",soundUrl)
-      const audio = new Audio(soundUrl);
-      audio.play().catch(error => {
-        console.log('Audio play failed:', error);
-      });
-    };
+  
 
     const handleWinBingo = (data) => {
       if (data.winningCard) {
@@ -218,6 +200,31 @@ const PlayingBoard = () => {
       }
     };
 
+    const handleRejoinSuccess = (data) => {
+      console.log('Rejoin successful in main:', data);
+      // Update game state with rejoin data
+      setCalledNumbers(data.calledNumbers || []);
+      setLastBall(data.lastBall);
+      setTotalCalledNumbers(data.totalCalledNumbers || 0);
+      setWinAmount(data.win_amount || 0);
+      setTotalPlayers(data.total_players || 0);
+      
+      // Show success message
+      setToast('Rejoined your previous game!');
+      setIsToast(true);
+    };
+
+    const handleRejoinError = (data) => {
+      console.log('Rejoin failed in main:', data.message);
+      // Don't show error as this is normal for new users
+    };
+
+    const handlePlayerRejoined = (data) => {
+      console.log('Player rejoined:', data);
+      setToast(`${data.playerName} rejoined the game!`);
+      setIsToast(true);
+    };
+
     socket.on('numberSelected', (number) => setLastBall(number));
     socket.on('gameState', handleGameState);
     socket.on('gameOver', handleGameOver);
@@ -226,6 +233,9 @@ const PlayingBoard = () => {
     socket.on('bingoWinner', handleBingoWinner);
     socket.on('joinError', handleJoinError);
     socket.on('playerLeft', handlePlayerLeft);
+    socket.on('rejoinSuccess', handleRejoinSuccess);
+    socket.on('rejoinError', handleRejoinError);
+    socket.on('playerRejoined', handlePlayerRejoined);
 
   
 
@@ -237,6 +247,9 @@ const PlayingBoard = () => {
       socket.off('falseBingo', handleFalseBingo);
       socket.off('joinError', handleJoinError);
       socket.off('playerLeft', handlePlayerLeft);
+      socket.off('rejoinSuccess', handleRejoinSuccess);
+      socket.off('rejoinError', handleRejoinError);
+      socket.off('playerRejoined', handlePlayerRejoined);
       socket.off('disconnect');
     };
   }, [socket, roomId, playerId, playerName, selectedNumber, setCountDown, setGameId, setToast, setIsToast, navigate, winAmount, betAmount]);
@@ -330,7 +343,13 @@ const PlayingBoard = () => {
 
   const handleLeave = (reason) => {
     console.log('Leave button clicked', { playerId, roomId, selectedNumber, reason });
-    socket.emit('leave', { playerId, roomId, selectedNumber, reason });
+    socket.emit('leave', { 
+      playerId, 
+      roomId, 
+      selectedNumber, 
+      reason,
+      markedCells: Array.from(selectedCell) // Send current marked cells for reconnection
+    });
     // Immediately navigate to home page with current query parameters
     navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
   };

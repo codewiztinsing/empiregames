@@ -19,7 +19,7 @@ const server = http.createServer(app);
 const getConstant = async () => {
   return {
     gameSpeed: 5000,
-    countDown: 30
+    countDown: 10
   }
 }
 
@@ -60,6 +60,7 @@ async function createGame(roomId) {
     countDown: gameSettings.countDown,
     isCountStart: false,
     gameSpeed:gameSettings.gameSpeed,
+    disconnectedPlayers: new Map(),
     roomId
   };
   activeGames.set(roomId, game);
@@ -167,6 +168,20 @@ async function startGame(game) {
   io.emit("waitingGames",   getWaitingGames(activeGames,"in-progress"));
   clearGameIntervals(game.id);
 
+
+   const playersWithSelectedNumbers = Array.from(game.players.entries()).map(([playerId, boards], idx) => {
+    // Try to find the selected number for this player
+    // game.selectedNumbersToPlayer is a Map<playerId, selectedNumber>
+    let selectedNumber = null;
+    if (game.selectedNumbersToPlayer && typeof game.selectedNumbersToPlayer.get === "function") {
+      selectedNumber = game.selectedNumbersToPlayer.get(playerId) || null;
+    }
+    return {
+      playerId,
+      selectedNumber
+    };
+  });
+
   io.emit("gameStatus",{
     roomId: game.roomId,
     game_status: "in-progress"
@@ -185,6 +200,10 @@ async function startGame(game) {
   } catch (error) {
     console.error('Error charging players:', error);
   }
+
+  console.log("playersWithSelectedNumbers = ",playersWithSelectedNumbers)
+
+ 
 
   const gameInterval = setInterval(() => {
     const calledSet = new Set(game.calledNumbers.map(b => b.number));
@@ -207,12 +226,16 @@ async function startGame(game) {
       total_players: game.total_players,
       lastBall: ball,
       called_numbers: game.calledNumbers,
-      total_called_numbers: game.calledNumbers.length
+      total_called_numbers: game.calledNumbers.length,
+      playersWithSelectedNumbers:playersWithSelectedNumbers
+
+    
+   
+   
     });
    
 
-    console.log("game.win_amount = ",game.win_amount)
-    console.log("game.total_players = ",game.total_players)
+ 
 
     if (game.calledNumbers.length >= 75) {
       io.emit("gameStatus", {
@@ -267,8 +290,26 @@ io.on('connection', (socket) => {
       game_status: game.status,
       count_down: game.countDown
     });
+
+  // Send all player IDs and their selected numbers for in-progress games
+
+    const playerSelections = [];
+    for (const [playerId, numbers] of game.selectedNumbersToPlayer.entries()) {
+      playerSelections.push({
+        playerId,
+        selectedNumbers: numbers
+      });
+    }
     
-   
+    console.log("📤 Emitting allPlayerSelections to player:", data.playerId);
+    console.log("📤 Player selections data:", playerSelections);
+    
+    socket.emit("allPlayerSelections", {
+      players: playerSelections,
+      game_status: game.status
+    });
+
+ 
   });
 
   
@@ -366,19 +407,15 @@ io.on('connection', (socket) => {
   
 
   socket.on("bingo", async (data) => {
-    console.log("bingo",data)
     
     const game = activeGames.get(data.gameId);
     if (!game || game.status !== 'in-progress') return;
     const playerCards = game.players.get(data.playerId);
-    console.log("playerCards",playerCards)
     if (!playerCards || !Array.isArray(playerCards)) return;
     const board = data.board
     const boardNumber = data.boardNumber
     const markedSingleCard = markPlayerCard(board, game.calledNumbers)
-    console.log("markedSingleCard",markedSingleCard)
     const isSingleBingo = checkSingleCardBingo(markedSingleCard)
-    console.log("isSingleBingo",isSingleBingo)
     if(isSingleBingo){
       io.emit("winBingo", {
             isBingo: true,
@@ -435,21 +472,83 @@ io.on('connection', (socket) => {
 
 
   socket.on("leave",(data) => {
-    const game = activeGames.get(data.roomId);
-    if (!game) return;
   
-    if (game?.players?.has(data.playerId)) {
-      game.players.delete(data.playerId);
+    
+    const game = activeGames.get(data.roomId);
+    if (!game) {
+      console.log("❌ ERROR: Game not found for roomId:", data.roomId);
+      return;
     }
     
+    console.log("Game found:", {
+      id: game.id,
+      status: game.status,
+      roomId: game.roomId
+    });
+  
     const playerId = data.playerId
     const selectedNumber = data.selectedNumber
-    const selectedNumber2 = data.selectedNumber2
-    game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);
-    game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber2);
-    game.selectedNumbersToPlayer.delete(playerId)
-    game.selectedNumbersToPlayer.delete(playerId)
-
+    const selectedNumber2 = data.selectedNumber2 || null // Handle case where selectedNumber2 might not be provided
+    
+    // If game is in progress, preserve player data for potential reconnection
+    if (game.status === 'in-progress') {
+      console.log("🔄 Game is in progress - preserving player data for reconnection");
+      // Store player's game state for reconnection
+      if (!game.disconnectedPlayers) {
+        game.disconnectedPlayers = new Map();
+      }
+      
+      const playerData = {
+        playerId: playerId,
+        selectedNumber: selectedNumber,
+        selectedNumber2: selectedNumber2,
+        boards: game.players.get(playerId),
+        numberOfBoards: game.numberOfBoardsToPlayer.get(playerId),
+        markedCells: data.markedCells || [],
+        disconnectedAt: Date.now()
+      };
+      
+      console.log("💾 Storing player data:", {
+        playerId: playerData.playerId,
+        selectedNumber: playerData.selectedNumber,
+        hasBoards: !!playerData.boards,
+        markedCells: playerData.markedCells.length,
+        disconnectedAt: new Date(playerData.disconnectedAt).toISOString()
+      });
+      
+      game.disconnectedPlayers.set(playerId, playerData);
+   
+      
+      // Immediate verification
+      const storedData = game.disconnectedPlayers.get(playerId);
+      if (storedData) {
+        console.log("✅ Immediate verification successful - data exists");
+      } else {
+        console.log("❌ Immediate verification failed - data not found!");
+      }
+      
+      // Remove from active players but keep in selectedNumbers for game continuity
+      if (game?.players?.has(playerId)) {
+        game.players.delete(playerId);
+      }
+      
+      // Don't remove from selectedNumbers for in-progress games
+      // This allows the game to continue with the same player count
+      
+    } else {
+      console.log("⏳ Game is waiting - removing player completely");
+      // For waiting games, remove completely as before
+      if (game?.players?.has(playerId)) {
+        game.players.delete(playerId);
+        console.log("🗑️ Removed player from active players");
+      }
+      
+      game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);
+      game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber2);
+      game.selectedNumbersToPlayer.delete(playerId)
+      game.selectedNumbersToPlayer.delete(playerId)
+    }
+    
 
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
     io.emit("gameState", {
@@ -470,8 +569,35 @@ io.on('connection', (socket) => {
     
   })
 
+
   socket.on("getWinners", () => {
     socket.emit("winners", winners);
+  });
+
+  socket.on("getAllPlayerSelections", (data) => {
+    console.log("📥 Received getAllPlayerSelections request from player:", data.playerId);
+    const game = activeGames.get(data.roomId);
+    if (!game) {
+      console.log("❌ Game not found for getAllPlayerSelections");
+      return;
+    }
+
+    const playerSelections = [];
+    for (const [playerId, numbers] of game.selectedNumbersToPlayer.entries()) {
+      playerSelections.push({
+        playerId,
+        selectedNumbers: numbers
+      });
+    }
+    
+    console.log("📤 Sending allPlayerSelections to requesting player:", data.playerId);
+    console.log("📤 Player selections data:", playerSelections);
+    console.log("📤 Game status:", game.status);
+    
+    socket.emit("allPlayerSelections", {
+      players: playerSelections,
+      game_status: game.status
+    });
   });
 
   socket.on("disconnect", () => {
@@ -527,6 +653,7 @@ io.on('connection', (socket) => {
         
           game.selectedNumbersToPlayer.delete(playerId)
           game.selectedNumbersToPlayer.delete(playerId)
+         
           io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
           users.delete(socket.id);
           users.delete(socket.id);
