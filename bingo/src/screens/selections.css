@@ -516,13 +516,11 @@ body, #root {
   opacity: 0.9;
   cursor: not-allowed;
   border: 2px solid #DAA520; /* Dark golden border */
-  box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); /* Golden glow effect */
 }
 
 .number-cell.picked:hover {
   background-color: #DAA520; /* Darker golden on hover */
   transform: none;
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.7); /* Enhanced golden glow on hover */
 }
 
 .picked-badge {
