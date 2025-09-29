@@ -652,13 +652,11 @@ const PlayingBoard = () => {
             </div>
           ) : selectBoard ? (
             <div className="board-row">
-              <div className="bingo-letters-main">
-                <span className='bingo-letter-text'>B</span>
-                <span className='bingo-letter-text'>I</span>
-                <span className='bingo-letter-text'>N</span>
-                <span className='bingo-letter-text'>G</span>
-                <span className='bingo-letter-text'>O</span>
-              </div>
+                <div className='board-cell-main'>B</div>
+                <div className='board-cell-main'>I</div>
+                <div className='board-cell-main'>N</div>
+                <div className='board-cell-main'>G</div>
+                <div className='board-cell-main'>O</div>
             </div>
           ) : (
             // Show waiting card when no selectBoard
