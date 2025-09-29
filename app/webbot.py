@@ -733,7 +733,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Contact us using support button", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📞 Support",  url='https://t.me/@AkerBingo')]]))
+    await update.message.reply_text("Contact us using support button", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📞 Support",  url='https://t.me/AkerBingo')]]))
     return ConversationHandler.END
 
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
