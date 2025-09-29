@@ -202,6 +202,7 @@ const Selections = () => {
     const playerId = searchParams.get('playerId');
     const roomId = searchParams.get('betAmount');
     const playerName = searchParams.get('playerName');
+    const game_status = data.game_status;
   
     
     if (data.players && Array.isArray(data.players)) {
@@ -215,13 +216,7 @@ const Selections = () => {
         const selectedNumber = currentPlayerSelection.selectedNumbers[0];
         console.log("Selected number from data:", selectedNumber);
         
-        if(selectedNumber) {
-          console.log("✅ Current player has a selection - navigating to play screen");
-          console.log("playerId:", playerId);
-          console.log("betAmount:", roomId);
-          console.log("playerName:", playerName);
-          console.log("selectedNumber:", selectedNumber);
-          
+        if(selectedNumber & game_status == "in-progress") {
           // Navigate to play screen with the selected number
           navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
         } else {

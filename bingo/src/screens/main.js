@@ -583,7 +583,7 @@ const PlayingBoard = () => {
             ))}
           </div>
         </div>
-        <div className="action-buttons" style={{ border: '2px solid red', padding: '10px' }}>
+        <div className="action-buttons">
               <button className="refresh-button" onClick={handleRefresh} style={{ border: '2px solid blue' }}>
                 Refresh
               </button>
