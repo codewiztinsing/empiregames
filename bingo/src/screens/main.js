@@ -146,7 +146,7 @@ const PlayingBoard = () => {
 
     const handleGameOver = (data) => {
       if (data.roomId === roomId) {
-        navigate(`/?playerId=${playerId}&&betAmount=${roomId}&playerName=${playerName}`);
+        navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
       }
     };
 
@@ -331,6 +331,8 @@ const PlayingBoard = () => {
   const handleLeave = (reason) => {
     console.log('Leave button clicked', { playerId, roomId, selectedNumber, reason });
     socket.emit('leave', { playerId, roomId, selectedNumber, reason });
+    // Immediately navigate to home page with current query parameters
+    navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
   };
 
   const handleCellClick = (cell) => {
