@@ -195,14 +195,14 @@ const Selections = () => {
   };
 
   // Handle all player selections
-  const handleAllPlayerSelections = (data) => {
-    console.log("=== ALL PLAYER SELECTIONS ===");
-    console.log("Received all player selections:", data);
-    console.log("Current playerId:", playerId);
-    console.log("Current roomId:", roomId);
-    console.log("Current playerName:", playerName);
-    
-    const game_status = data.game_status;
+  const handleAllPlayerSelections = (data) => { 
+
+    // Get playerId, roomId, and playerName from query params
+    const searchParams = new URLSearchParams(window.location.search);
+    const playerId = searchParams.get('playerId');
+    const roomId = searchParams.get('betAmount');
+    const playerName = searchParams.get('playerName');
+  
     
     if (data.players && Array.isArray(data.players)) {
       console.log("Total players with selections:", data.players.length);
@@ -214,23 +214,21 @@ const Selections = () => {
       if(currentPlayerSelection) {
         const selectedNumber = currentPlayerSelection.selectedNumbers[0];
         console.log("Selected number from data:", selectedNumber);
-        console.log("Game status:", game_status);
         
-        if(selectedNumber && game_status == "in-progress") {
-          console.log("✅ Navigating to play screen with valid selection");
+        if(selectedNumber) {
+          console.log("✅ Current player has a selection - navigating to play screen");
           console.log("playerId:", playerId);
           console.log("betAmount:", roomId);
           console.log("playerName:", playerName);
           console.log("selectedNumber:", selectedNumber);
+          
+          // Navigate to play screen with the selected number
           navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
         } else {
-          console.log("❌ No valid selection or game not in progress");
-          console.log("selectedNumber:", selectedNumber);
-          console.log("game_status:", game_status);
-          // Don't navigate if no valid selection
+          console.log("❌ Current player found but no selected number");
         }
       } else {
-        console.log("❌ Current player not found in selections");
+        console.log("❌ Current player not found in selections - staying on selection page");
       }
     } else {
       console.log("No players data received or invalid format");

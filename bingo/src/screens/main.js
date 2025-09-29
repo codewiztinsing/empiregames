@@ -130,7 +130,6 @@ const PlayingBoard = () => {
       setWinnerCardNumber(data.winnerCardNumber);
       setWinnerPlayerName(data.winnerPlayerName);
       setMarkedCells(data.markedCells);
-      toast.success(`${data.winnerPlayerName} won with Bingo!`);
     }
   };
 
@@ -317,7 +316,7 @@ const PlayingBoard = () => {
       boardNumber,
     });
     
-    toast('Checking Bingo...', { icon: '🔍' });
+   
   };
 
 
