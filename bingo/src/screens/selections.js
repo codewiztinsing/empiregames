@@ -353,10 +353,22 @@ const handleGlobals = (state) => {
     return;
   })
   const handleNumberClick = async (number) => {
-    console.log("handleNumberClick",number)
+    console.log("=== handleNumberClick START ===");
+    console.log("Number clicked:", number);
+    console.log("Current choosenNumbers:", choosenNumbers);
+    console.log("isChoosen:", choosenNumbers.includes(number));
+    console.log("isSocketConnected:", isSocketConnected);
+    console.log("balance:", balance);
+    console.log("roomId:", roomId);
+    console.log("pickedNumbers:", pickedNumbers);
+    
+    // Check if this number is already chosen (for unselecting)
+    const isCurrentlyChosen = choosenNumbers.includes(number);
+    console.log("isCurrentlyChosen (recalculated):", isCurrentlyChosen);
     
     // Check if websocket is connected
     if (!isSocketConnected) {
+      console.log("❌ Socket not connected");
       setToast("Please wait for connection to be established");
       setIsToast(true);
       return;
@@ -364,6 +376,7 @@ const handleGlobals = (state) => {
     
     // Check balance and show appropriate messages
     if (balance === 0) {
+      console.log("❌ Balance is zero");
       if (loading) {
         setToast("Please wait while we fetch your balance");
       } else {
@@ -374,42 +387,60 @@ const handleGlobals = (state) => {
     }
     
     if (balance < parseInt(roomId)) {
+      console.log("❌ Insufficient balance");
       setToast(`Insufficient balance. You need ${parseInt(roomId)} ETB but have ${balance} ETB. Please deposit more to play.`);
       setIsToast(true);
       return;
     }
     
     if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) {
+      console.log("❌ Number already picked by another player");
       setToast(`Card number ${number} is already selected by another player. Please choose a different number.`);
       setIsToast(true);
       return;
     }
   
-    // If number is already chosen, remove it and leave game
-    if (choosenNumbers.includes(number)) {
+    // If number is already chosen, remove it (unselect)
+    if (isCurrentlyChosen) {
+      console.log("✅ UNSELECTING CARD:", number);
+      console.log("Current choosenNumbers before removal:", choosenNumbers);
+      console.log("Current choosenBoards before removal:", choosenBoards);
+      
       const index = choosenNumbers.indexOf(number);
+      console.log("Index of number to remove:", index);
+      
       if (index > -1) {
         const newNumbers = [...choosenNumbers];
         const newBoards = [...choosenBoards];
         newNumbers.splice(index, 1);
         newBoards.splice(index, 1);
 
+        console.log("New numbers after removal:", newNumbers);
+        console.log("New boards after removal:", newBoards);
+        
         setChoosenNumbers(newNumbers);
         setChooseBoards(newBoards);
 
         // Reset card after removal
         if (newNumbers.length === 0) {
+          console.log("No cards remaining, leaving game");
+          // Leave game before resetting selectedNumber
+          handleLeaveGame();
           setSelectedNumber(null);
           setSelectBoard([]);
+          setToast(`Card ${number} unselected! No cards remaining.`);
         } else {
-          // One card remains
+          console.log("Cards remaining, switching to first remaining card:", newNumbers[0]);
+          // One card remains - update to the first remaining card
           setSelectedNumber(newNumbers[0]);
           setSelectBoard(newBoards[0]);
+          setToast(`Card ${number} unselected! Now using Card ${newNumbers[0]}.`);
         }
+      } else {
+        console.log("❌ ERROR: Could not find index for number:", number);
       }
-      
-      // Leave game when removing selection
-      handleLeaveGame();
+      setIsToast(true);
+      console.log("=== UNSELECT COMPLETE ===");
       return;
     }
    
@@ -452,10 +483,28 @@ const handleGlobals = (state) => {
     await handleJoinGame(newNumbers[0], newBoards[0]);
   };
 
-  // Handle double click to leave game
+  // Handle double click to unselect and leave game
   const handleNumberDoubleClick = (number) => {
     if (choosenNumbers.includes(number)) {
-      handleLeaveGame();
+      // Unselect the card and leave game
+      const index = choosenNumbers.indexOf(number);
+      if (index > -1) {
+        // Leave game before resetting states
+        handleLeaveGame();
+        
+        const newNumbers = [...choosenNumbers];
+        const newBoards = [...choosenBoards];
+        newNumbers.splice(index, 1);
+        newBoards.splice(index, 1);
+
+        setChoosenNumbers(newNumbers);
+        setChooseBoards(newBoards);
+        setSelectedNumber(null);
+        setSelectBoard([]);
+        
+        setToast(`Card ${number} unselected! Left the game.`);
+        setIsToast(true);
+      }
     }
   };
 
@@ -541,6 +590,16 @@ const handleGlobals = (state) => {
 
 
 
+
+  // Debug useEffect to monitor state changes
+  useEffect(() => {
+    console.log("=== STATE CHANGE DEBUG ===");
+    console.log("choosenNumbers changed:", choosenNumbers);
+    console.log("selectedNumber changed:", selectedNumber);
+    console.log("choosenBoards changed:", choosenBoards);
+    console.log("selectBoard changed:", selectBoard);
+    console.log("=== END STATE CHANGE DEBUG ===");
+  }, [choosenNumbers, selectedNumber, choosenBoards, selectBoard]);
 
   return (
     <>
@@ -707,8 +766,13 @@ const handleGlobals = (state) => {
 
               const isSelected = selectedNumber === number;
               const isChoosen = choosenNumbers.includes(number);
-              const isDisabled = isPicked || !isSocketConnected; // Only disable if picked or no connection
+              const isDisabled = isPicked || !isSocketConnected; // Only disable if picked by another player or no connection
               const hasInsufficientBalance = balance < parseInt(roomId) || balance === 0;
+
+              // Debug logging for selected numbers
+              if (isChoosen) {
+                console.log(`Card ${number} is choosen. isPicked: ${isPicked}, isSocketConnected: ${isSocketConnected}, isDisabled: ${isDisabled}`);
+              }
 
               return (
                 <button
@@ -720,7 +784,26 @@ const handleGlobals = (state) => {
                   ${isDisabled ? 'disabled' : ''}
                   ${hasInsufficientBalance ? 'insufficient-balance' : ''}
                 `}
-                  onClick={() => handleNumberClick(number)}
+                  onClick={(e) => {
+                    console.log("=== BUTTON CLICK EVENT ===");
+                    console.log(`Button ${number} clicked`);
+                    console.log("Event:", e);
+                    console.log("isDisabled:", isDisabled);
+                    console.log("isChoosen:", isChoosen);
+                    console.log("isPicked:", isPicked);
+                    console.log("isSocketConnected:", isSocketConnected);
+                    console.log("balance:", balance);
+                    console.log("roomId:", roomId);
+                    console.log("choosenNumbers:", choosenNumbers);
+                    console.log("selectedNumber:", selectedNumber);
+                    console.log("=== CALLING handleNumberClick ===");
+                    
+                    // Prevent default to avoid any potential issues
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    handleNumberClick(number);
+                  }}
                   onDoubleClick={() => handleNumberDoubleClick(number)}
                   disabled={isDisabled}
                   title={
@@ -728,14 +811,18 @@ const handleGlobals = (state) => {
                       ? `Card number ${number} is already selected by another player` 
                       : !isSocketConnected
                         ? `Please wait for connection to be established` 
-                        : `Select number ${number}`
+                        : isChoosen
+                          ? `Click to unselect card ${number} (or double-click to unselect and leave game)`
+                          : `Select number ${number}`
                   }
                   aria-label={
                     isPicked 
                       ? `Number ${number} already picked` 
                       : !isSocketConnected
                         ? `Please wait for connection` 
-                        : `Select number ${number}`
+                        : isChoosen
+                          ? `Unselect card ${number}`
+                          : `Select number ${number}`
                   }
                 >
                   <span className='number-cell-text'>{number}</span>
