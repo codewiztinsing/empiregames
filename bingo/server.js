@@ -573,7 +573,7 @@ io.on('connection', (socket) => {
       // Immediate verification
       const storedData = game.disconnectedPlayers.get(playerId);
       if (storedData) {
-        console.log("✅ Immediate verification successful - data exists");
+        console.log("✅ Immediate verification successful xxxxxxxxx- data exists");
       } else {
         console.log("❌ Immediate verification failed - data not found!");
       }
