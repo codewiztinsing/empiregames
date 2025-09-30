@@ -372,8 +372,22 @@ body {
 }
 
 .called {
-  background-color: #4CAF50;
+  background-color:goldenrod;
   color: white;
+  animation: goldenrod 2s infinite;
+}
+
+@keyframes goldenrod {
+  0% {
+    background-color: goldenrod;
+  }
+  50% {
+    background-color: red;
+  }
+  100% {
+   
+    background-color: goldenrod;
+  }
 }
 
 
@@ -1841,9 +1855,6 @@ body {
 .last-called {
   background: goldenrod !important;
   color: #000 !important;
-  animation: lastcalledgolden 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1;
-
-
 }
 
 

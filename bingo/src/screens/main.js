@@ -690,20 +690,7 @@ const PlayingBoard = () => {
             ))}
           </div>
         </div>
-        {/* <div className="action-buttons">
-              <button className="refresh-button" onClick={handleRefresh} style={{ border: '2px solid blue' }}>
-                Refresh
-              </button>
-              <button className="leave-button" onClick={() => handleLeave("leave")} style={{ border: '2px solid green' }}>
-                Leave
-              </button>
-              <button onClick={testAnimation} style={{ border: '2px solid orange', background: 'orange', color: 'white', padding: '5px 10px', margin: '5px' }}>
-                Test JS Animation
-              </button>
-              
-              
-      </div> */}
-
+    
       </div>
 
 
