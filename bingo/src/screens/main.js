@@ -247,7 +247,7 @@ const PlayingBoard = () => {
             const elementId = getElementIdForNumber(number);
             const element = document.getElementById(elementId);
             if (element) {
-              element.classList.add('last-called');
+              element.classList.add('called');
             }
           });
         }, 100);
@@ -417,98 +417,29 @@ const PlayingBoard = () => {
     navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
   };
 
-  // JavaScript-based animation function
+  // CSS-based animation function using the last-called class
   const animateNumber = (element, duration = 2000) => {
     if (!element) return;
     
-    console.log('🎬 Starting JavaScript animation for element:', element);
+    console.log('🎬 Starting CSS animation for element:', element);
     
-    // Store original styles
-    const originalBackground = element.style.backgroundColor;
-    const originalColor = element.style.color;
-    const originalTransform = element.style.transform;
-    const originalBoxShadow = element.style.boxShadow;
+    // Remove any existing inline styles that might conflict
+    element.style.backgroundColor = '';
+    element.style.color = '';
+    element.style.transform = '';
+    element.style.boxShadow = '';
+    element.style.transition = '';
     
-    // Animation stages
-    const stages = [
-      { time: 0, background: '#ff0000', color: '#fff', scale: 1.1, shadow: '0 0 15px rgba(255, 0, 0, 0.8)' },
-      { time: 0.3, background: '#ff4444', color: '#fff', scale: 1.05, shadow: '0 0 12px rgba(255, 68, 68, 0.6)' },
-      { time: 0.6, background: '#ffaa00', color: '#000', scale: 1.02, shadow: '0 0 8px rgba(255, 170, 0, 0.4)' },
-      { time: 1.0, background: '#FFD700', color: '#000', scale: 1.0, shadow: '0 0 10px rgba(255, 215, 0, 0.5)' }
-    ];
+    // Add the CSS class to trigger the animation
+    element.classList.add('last-called');
     
-    const startTime = Date.now();
-    
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      
-      // Find current stage
-      let currentStage = stages[0];
-      let nextStage = stages[1];
-      
-      for (let i = 0; i < stages.length - 1; i++) {
-        if (progress >= stages[i].time && progress <= stages[i + 1].time) {
-          currentStage = stages[i];
-          nextStage = stages[i + 1];
-          break;
-        }
-      }
-      
-      if (progress >= 1) {
-        currentStage = stages[stages.length - 1];
-        nextStage = stages[stages.length - 1];
-      }
-      
-      // Calculate interpolation between stages
-      const stageProgress = (progress - currentStage.time) / (nextStage.time - currentStage.time);
-      const stageProgressClamped = Math.max(0, Math.min(1, stageProgress));
-      
-      // Interpolate values
-      const background = interpolateColor(currentStage.background, nextStage.background, stageProgressClamped);
-      const color = interpolateColor(currentStage.color, nextStage.color, stageProgressClamped);
-      const scale = currentStage.scale + (nextStage.scale - currentStage.scale) * stageProgressClamped;
-      const shadow = currentStage.shadow; // Keep current stage shadow for simplicity
-      
-      // Apply styles
-      element.style.backgroundColor = background;
-      element.style.color = color;
-      element.style.transform = `scale(${scale})`;
-      element.style.boxShadow = shadow;
-      element.style.transition = 'none';
-      
-      // Continue animation if not finished
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        console.log('🎬 Animation completed');
-      }
-    };
-    
-    // Start animation
-    requestAnimationFrame(animate);
+    // Remove the class after animation completes to allow re-triggering
+    setTimeout(() => {
+      element.classList.remove('last-called');
+      console.log('🎬 CSS animation completed and class removed');
+    }, duration);
   };
   
-  // Helper function to interpolate between colors
-  const interpolateColor = (color1, color2, progress) => {
-    // Simple color interpolation for hex colors
-    const hex1 = color1.replace('#', '');
-    const hex2 = color2.replace('#', '');
-    
-    const r1 = parseInt(hex1.substr(0, 2), 16);
-    const g1 = parseInt(hex1.substr(2, 2), 16);
-    const b1 = parseInt(hex1.substr(4, 2), 16);
-    
-    const r2 = parseInt(hex2.substr(0, 2), 16);
-    const g2 = parseInt(hex2.substr(2, 2), 16);
-    const b2 = parseInt(hex2.substr(4, 2), 16);
-    
-    const r = Math.round(r1 + (r2 - r1) * progress);
-    const g = Math.round(g1 + (g2 - g1) * progress);
-    const b = Math.round(b1 + (b2 - b1) * progress);
-    
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-  };
 
   // Helper function to get element ID for a number
   const getElementIdForNumber = (number) => {
@@ -685,7 +616,7 @@ const PlayingBoard = () => {
             }}>B</div>
             {Array.from({ length: 15 }, (_, i) => {
               const isCalled = calledNumbers?.includes(i + 1);
-              const className = `number ${isCalled ? 'last-called' : ''} ${selectedNumber == i + 1 ? 'selected' : ''}`;
+              const className = `number ${isCalled ? 'called' : ''} ${selectedNumber == i + 1 ? 'selected' : ''}`;
              
               return (
                 <div 
@@ -704,7 +635,7 @@ const PlayingBoard = () => {
               color: "white"
             }}>I</div>
             {Array.from({ length: 15 }, (_, i) => (
-            <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'last-called' : ''} ${selectedNumber == i + 16 ? 'selected' : ''}`}
+            <div key={i} className={`number ${calledNumbers?.includes(i + 16) ? 'called' : ''} ${selectedNumber == i + 16 ? 'selected' : ''}`}
                 id={`I${i + 16}`}
               >
                 {i + 16}
@@ -717,7 +648,7 @@ const PlayingBoard = () => {
               color: "white"
             }}>N</div>
             {Array.from({ length: 15 }, (_, i) => (
-            <div key={i} className={`number ${calledNumbers?.includes(i + 31) ? 'last-called' : ''} ${selectedNumber == i + 31 ? 'selected' : ''}`}
+            <div key={i} className={`number ${calledNumbers?.includes(i + 31) ? 'called' : ''} ${selectedNumber == i + 31 ? 'selected' : ''}`}
                 id={`N${i + 31}`}
 
               >
@@ -732,7 +663,7 @@ const PlayingBoard = () => {
             }}>G</div>
             {Array.from({ length: 15 }, (_, i) => (
               <div key={i}
-                className={`number ${calledNumbers?.includes(i + 46) ? 'last-called' : ''} ${selectedNumber == i + 46 ? 'selected' : ''}`}
+                className={`number ${calledNumbers?.includes(i + 46) ? 'called' : ''} ${selectedNumber == i + 46 ? 'selected' : ''}`}
                 id={`G${i + 46}`}
               >
                 {i + 46}
@@ -745,7 +676,7 @@ const PlayingBoard = () => {
               color: "white"
             }}>O</div>
             {Array.from({ length: 15 }, (_, i) => (
-                <div key={i} className={`number ${calledNumbers?.includes(i + 61) ? 'last-called' : ''} ${selectedNumber == i + 61 ? 'selected' : ''}  `}
+                <div key={i} className={`number ${calledNumbers?.includes(i + 61) ? 'called' : ''} ${selectedNumber == i + 61 ? 'selected' : ''}  `}
                 id={`O${i + 61}`}
 
               >

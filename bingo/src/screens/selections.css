@@ -488,7 +488,6 @@ body, #root {
 .number-cell.picked {
   background-color: #FFD700; /* Golden background for picked cards */
   color: #000; /* Black text for better contrast on golden background */
-  position: relative;
   opacity: 0.9;
   cursor: not-allowed;
   border: 2px solid #DAA520; /* Dark golden border */

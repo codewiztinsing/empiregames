@@ -1916,31 +1916,5 @@ body {
 
 }
 
-@keyframes lastcalledgolden {
-  0% {
-    background: #ff0000 !important;
-    color: #fff !important;
-    transform: scale(1.1) !important;
-    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8) !important;
-  }
-  30% {
-    background: #ff4444 !important;
-    color: #fff !important;
-    transform: scale(1.05) !important;
-    box-shadow: 0 0 12px rgba(255, 68, 68, 0.6) !important;
-  }
-  60% {
-    background: #ffaa00 !important;
-    color: #000 !important;
-    transform: scale(1.02) !important;
-    box-shadow: 0 0 8px rgba(255, 170, 0, 0.4) !important;
-  }
-  100% {
-    background: #FFD700 !important;
-    color: #000 !important;
-    transform: scale(1) !important;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5) !important;
-  }
-}   
 
 
