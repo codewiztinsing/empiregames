@@ -168,6 +168,7 @@ const PlayingBoard = () => {
     const handleGameOver = (data) => {
       if (data.roomId === roomId) {
         navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+        window.location.reload();
       }
     };
 
@@ -221,6 +222,7 @@ const PlayingBoard = () => {
         setToast(data.message);
         setIsToast(true);
         navigate(`/selection?playerId=${playerId}&betAmount=${roomId}`);
+        window.location.reload();
       }
     };
 
@@ -261,6 +263,8 @@ const PlayingBoard = () => {
     const handleRejoinError = (data) => {
       console.log('Rejoin failed in main:', data.message);
       // Don't show error as this is normal for new users
+      navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+      window.location.reload();
     };
 
     const handlePlayerRejoined = (data) => {
@@ -320,6 +324,7 @@ const PlayingBoard = () => {
         if (prev <= 1) {
           // Navigate to home page with query parameters
           navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+          window.location.reload();
           return 0;
         }
         return prev - 1;
