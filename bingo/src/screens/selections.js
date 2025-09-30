@@ -234,6 +234,8 @@ const Selections = () => {
           console.log("❌ Current player found but no selected number or game not in progress");
           console.log("selectedNumber:", selectedNumber);
           console.log("game_status:", game_status);
+          navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+
         }
       } else {
         console.log("❌ Current player not found in selections - staying on selection page");
