@@ -381,8 +381,6 @@ body {
 }
 
 
-
-
 .playing-section {
   display: flex;
   flex-direction: column;
@@ -994,7 +992,6 @@ body {
   font-weight: 700;
   font-family: 'Arial', 'Helvetica', sans-serif;
   border: 2px solid #34495e;
-  background: linear-gradient(145deg, #ffffff, #f8f9fa);
   color: #2c3e50;
   flex: 1;
   aspect-ratio: 1;
@@ -1851,3 +1848,12 @@ body {
 
 
 
+
+
+
+
+.header-bingo-style {
+  background-color: #00022E !important;
+  color: white !important;
+  font-weight: bold !important;
+}
