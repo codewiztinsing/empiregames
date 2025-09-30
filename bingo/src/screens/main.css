@@ -374,21 +374,13 @@ body {
 .called {
   background-color:goldenrod;
   color: white;
-  animation: goldenrod 2s infinite;
 }
 
-@keyframes goldenrod {
-  0% {
-    background-color: goldenrod;
-  }
-  50% {
-    background-color: red;
-  }
-  100% {
-   
-    background-color: goldenrod;
-  }
+.red-color {
+  background-color: red;
 }
+
+
 
 
 .playing-section {

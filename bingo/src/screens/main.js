@@ -167,6 +167,7 @@ const PlayingBoard = () => {
 
     const handleGameOver = (data) => {
       if (data.roomId === roomId) {
+        // Navigate to selection page for new game instead of home page
         navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
         window.location.reload();
       }
@@ -221,13 +222,14 @@ const PlayingBoard = () => {
       if (data.roomId === roomId) {
         setToast(data.message);
         setIsToast(true);
-        navigate(`/selection?playerId=${playerId}&betAmount=${roomId}`);
+        navigate(`/?playerId=${playerId}&betAmount=${roomId}`);
         window.location.reload();
       }
     };
 
     const handlePlayerLeft = (data) => {
       if (data.playerId === playerId) {
+        // Navigate to selection page for new game
         navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
         window.location.reload();
       }
@@ -322,7 +324,7 @@ const PlayingBoard = () => {
     const countdownInterval = setInterval(() => {
       setWinnerCountdown((prev) => {
         if (prev <= 1) {
-          // Navigate to home page with query parameters
+          // Navigate to selection page for new game
           navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
           window.location.reload();
           return 0;
@@ -399,8 +401,8 @@ const PlayingBoard = () => {
       reason,
       markedCells: Array.from(selectedCell) // Send current marked cells for reconnection
     });
-    // Immediately navigate to home page with current query parameters
-    navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+    // Navigate to selection page for new game
+    navigate(`/selection?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
   };
 
   const handleCellClick = (cell) => {
@@ -419,11 +421,12 @@ const PlayingBoard = () => {
 
   const handleCloseWinner = () => {
     setIsBingo(false);
+    // Navigate to selection page for new game instead of home page
     navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
   };
 
   // CSS-based animation function using the last-called class
-  const animateNumber = (element, duration = 2000) => {
+  const animateNumber = (element, duration = 4000) => {
     if (!element) return;
     
     console.log('🎬 Starting CSS animation for element:', element);
@@ -435,12 +438,13 @@ const PlayingBoard = () => {
     element.style.boxShadow = '';
     element.style.transition = '';
     
+  
     // Add the CSS class to trigger the animation
-    element.classList.add('last-called');
+    element.classList.add('red-color');
     
     // Remove the class after animation completes to allow re-triggering
     setTimeout(() => {
-      element.classList.remove('last-called');
+      element.classList.remove('red-color');
       console.log('🎬 CSS animation completed and class removed');
     }, duration);
   };
