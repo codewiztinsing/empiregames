@@ -496,15 +496,27 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             first_name = query.from_user.first_name
             last_name = query.from_user.last_name
             telegram_id = query.from_user.id
-            print("BACK_URL = ",f"{BACK_URL}/api/v1/wallet/player/{telegram_id}")
-            response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
-            print("response = ",response)
-            balance = response.json().get('balance',0)
             
-            # Get user info and game statistics
-            user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}/')
-            user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
-            games_played_this_week = user_data.get('games_played_this_week', 0)
+            try:
+                logger.info(f"Checking balance for user {telegram_id}")
+                response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
+                logger.info(f"Wallet API response status: {response.status_code}")
+                balance = response.json().get('balance', 0) if response.status_code == 200 else 0
+                
+                # Get user info and game statistics
+                user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
+                logger.info(f"User API response status: {user_response.status_code}")
+                user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
+                games_played_this_week = user_data.get('games_played_this_week', 0)
+                
+            except requests.exceptions.RequestException as e:
+                logger.error(f"API request error in check_balance callback: {e}")
+                await query.edit_message_text("❌ Error fetching your balance. Please try again later.")
+                return
+            except Exception as e:
+                logger.error(f"Unexpected error in check_balance callback: {e}")
+                await query.edit_message_text("❌ An unexpected error occurred. Please try again later.")
+                return
             
             # Calculate remaining games needed
             remaining_games = max(0, 27 - games_played_this_week)
@@ -902,7 +914,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # Get user's wallet balance
-    _wr = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}/')
+    _wr = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
     wallet_response = _wr.json() if _wr.headers.get('content-type','').startswith('application/json') else {}
     balance = wallet_response.get('balance', 0)
 
@@ -954,14 +966,30 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     BACK_URL = get_bot_seetings().get("bot_url")
     telegram_id = update.effective_user.id
-    wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
-    wallet_data = wallet_response.json() if wallet_response.headers.get('content-type','').startswith('application/json') else {}
-    balance = wallet_data.get('balance', 0)
     
-    # Get user info and game statistics
-    user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}/')
-    user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
-    games_played_this_week = user_data.get('games_played_this_week', 0)
+    try:
+        # Get wallet balance
+        wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
+        logger.info(f"Wallet API response status: {wallet_response.status_code}")
+        wallet_data = wallet_response.json() if wallet_response.headers.get('content-type','').startswith('application/json') else {}
+        balance = wallet_data.get('balance', 0)
+        logger.info(f"Balance retrieved: {balance}")
+        
+        # Get user info and game statistics
+        user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
+        logger.info(f"User API response status: {user_response.status_code}")
+        user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
+        games_played_this_week = user_data.get('games_played_this_week', 0)
+        logger.info(f"Games played this week: {games_played_this_week}")
+        
+    except requests.exceptions.RequestException as e:
+        logger.error(f"API request error: {e}")
+        await update.message.reply_text("❌ Error fetching your balance. Please try again later.")
+        return ConversationHandler.END
+    except Exception as e:
+        logger.error(f"Unexpected error in check_balance: {e}")
+        await update.message.reply_text("❌ An unexpected error occurred. Please try again later.")
+        return ConversationHandler.END
     
     # Get user info for personalization
     user_name = update.effective_user.first_name or update.effective_user.username or "Player"

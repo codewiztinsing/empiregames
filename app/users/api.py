@@ -142,14 +142,29 @@ def login(request, data: LoginSchema):
 @users_router.get("/{telegram_id}",response=UserResponseSchema)
 def get_user_by_telegram_id(request,telegram_id:int):
     try:
+        from datetime import datetime, timedelta
+
         user = User.objects.get(telegram_id=str(telegram_id))
-        print("user = ",user)
+        # Get the start and end of the current week (Monday to Sunday)
+        today = datetime.now().date()
+        start_of_week = today - timedelta(days=today.weekday())
+        end_of_week = start_of_week + timedelta(days=6)
+        games_played_this_week = Transaction.objects.filter(
+            user=user,
+            type="BET",
+            created_at__date__gte=start_of_week,
+            created_at__date__lte=end_of_week
+        ).count()
+        print("games_played_this_week remaining = ", games_played_this_week)
+        print("27-games_played_this_week = ",27-games_played_this_week)
         return UserResponseSchema(
             success=True,
             username=user.username,
             email=user.email,
             phone=user.phone,
-            telegram_id=user.telegram_id
+            telegram_id=user.telegram_id,
+            games_played_this_week=games_played_this_week,
+            remaining_games=27-games_played_this_week
         )
     except Exception as e:
         print("error = ",e)

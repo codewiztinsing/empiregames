@@ -31,4 +31,6 @@ class UserResponseSchema(Schema):
     email: Optional[str] = None
     phone: Optional[str] = None
     telegram_id: Optional[str] = None
+    games_played_this_week: Optional[int] = None
+    remaining_games: Optional[int] = None
 
