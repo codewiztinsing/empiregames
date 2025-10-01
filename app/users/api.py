@@ -53,11 +53,12 @@ def register(request, data: RegisterSchema):
         referred_by = None
         print("referral id ",data.referred_by)
         if data.referred_by:
-            referred_by = User.objects.get(telegram_id=data.referred_by)
-
-            print("referred_by = ",referred_by)
-        else:
-            data.referred_by = None
+            try:
+                referred_by = User.objects.get(telegram_id=data.referred_by)
+                print("referred_by = ",referred_by)
+            except User.DoesNotExist:
+                print(f"Referrer with telegram_id {data.referred_by} not found")
+                referred_by = None
 
     
         # Create user with hashed password
