@@ -1,0 +1,229 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="p-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white mb-2">{{ page_title }}</h1>
+        <p class="text-gray-400">Manage unwithdrawable bonuses and move them to total referral earnings</p>
+    </div>
+
+    <div class="bg-dark-card rounded-lg border border-dark-border">
+        <div class="p-6 border-b border-dark-border">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-white">Unwithdrawable Bonuses</h3>
+                <div class="flex items-center space-x-4">
+                    <form method="get" class="flex items-center space-x-2">
+                        <input type="text" name="search" 
+                               class="bg-dark-bg border border-dark-border text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-primary" 
+                               placeholder="Search users..." value="{{ search_query }}">
+                        <button type="submit" 
+                                class="bg-purple-primary hover:bg-purple-hover text-white px-4 py-2 rounded-lg transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+                
+        <div class="p-6">
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-dark-bg rounded-lg border border-dark-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-400">Total Users with Unwithdrawable Bonus</p>
+                            <p class="text-2xl font-bold text-white">{{ page_obj.paginator.count }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-dark-bg rounded-lg border border-dark-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-400">Total Unwithdrawable Amount</p>
+                            <p class="text-2xl font-bold text-yellow-400">{{ total_unwithdrawable|floatformat:2 }} birr</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-dark-border">
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">User ID</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Username</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Phone</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Unwithdrawable Bonus</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Total Referral Earnings</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Games Today</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Games This Week</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr class="border-b border-dark-border hover:bg-dark-bg transition-colors">
+                            <td class="py-4 px-4 text-white">{{ user.id }}</td>
+                            <td class="py-4 px-4 text-white font-medium">{{ user.username }}</td>
+                            <td class="py-4 px-4 text-gray-300">{{ user.phone }}</td>
+                            <td class="py-4 px-4">
+                                <span class="text-yellow-400 font-bold">{{ user.unwithdrawable_bonus|floatformat:2 }} birr</span>
+                            </td>
+                            <td class="py-4 px-4">
+                                <span class="text-green-400 font-medium">{{ user.total_referral_earnings|floatformat:2 }} birr</span>
+                            </td>
+                            <td class="py-4 px-4 text-white">{{ user.games_played_today }}</td>
+                            <td class="py-4 px-4 text-white">{{ user.games_played_this_week }}</td>
+                            <td class="py-4 px-4">
+                                <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors move-bonus-btn" 
+                                        data-user-id="{{ user.id }}" 
+                                        data-amount="{{ user.unwithdrawable_bonus }}"
+                                        data-username="{{ user.username }}">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                    </svg>
+                                    Move to Earnings
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="py-8 px-4 text-center text-gray-400">No users with unwithdrawable bonuses found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="flex justify-center mt-6">
+                <nav class="flex items-center space-x-2">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-dark-bg rounded-lg transition-colors">
+                            First
+                        </a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-dark-bg rounded-lg transition-colors">
+                            Previous
+                        </a>
+                    {% endif %}
+                    
+                    <span class="px-3 py-2 text-sm font-medium text-white bg-purple-primary rounded-lg">
+                        {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-dark-bg rounded-lg transition-colors">
+                            Next
+                        </a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-dark-bg rounded-lg transition-colors">
+                            Last
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="moveBonusModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-dark-card rounded-lg border border-dark-border p-6 max-w-md w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">Move Bonus to Earnings</h3>
+            <button type="button" class="text-gray-400 hover:text-white" onclick="closeModal()">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="mb-6">
+            <p class="text-gray-300 mb-2">Are you sure you want to move <span id="bonus-amount" class="text-yellow-400 font-bold"></span> birr from unwithdrawable bonus to total referral earnings for user <span id="username" class="text-white font-bold"></span>?</p>
+            <p class="text-gray-400 text-sm">This action cannot be undone.</p>
+        </div>
+        <div class="flex justify-end space-x-3">
+            <button type="button" class="px-4 py-2 text-gray-400 hover:text-white transition-colors" onclick="closeModal()">Cancel</button>
+            <button type="button" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors" id="confirmMoveBonus">Yes, Move Bonus</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentUserId = null;
+    
+    // Handle move bonus button clicks
+    document.querySelectorAll('.move-bonus-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            currentUserId = this.dataset.userId;
+            document.getElementById('bonus-amount').textContent = this.dataset.amount;
+            document.getElementById('username').textContent = this.dataset.username;
+            document.getElementById('moveBonusModal').classList.remove('hidden');
+            document.getElementById('moveBonusModal').classList.add('flex');
+        });
+    });
+    
+    // Handle confirmation
+    document.getElementById('confirmMoveBonus').addEventListener('click', function() {
+        if (currentUserId) {
+            moveBonusToEarnings(currentUserId);
+        }
+    });
+    
+    function moveBonusToEarnings(userId) {
+        fetch(`/dashboard/users/${userId}/move-bonus/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the request.');
+        });
+    }
+});
+
+function closeModal() {
+    document.getElementById('moveBonusModal').classList.add('hidden');
+    document.getElementById('moveBonusModal').classList.remove('flex');
+}
+</script>
+{% endblock %}

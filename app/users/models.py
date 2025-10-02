@@ -10,9 +10,12 @@ class User(AbstractUser):
     telegram_id = models.CharField(max_length=15, unique=True)
     referral_code = models.CharField(max_length=15, default=get_random_string(15))
     referred_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='referrals')
-    is_agent = models.BooleanField(default=True)  # Default to agent under Aker Bingo
+    is_agent = models.BooleanField(default=False)  # Default to customer, not agent
     sponsor_changed = models.BooleanField(default=False)  # Can only change once
     total_referral_earnings = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    signup_bonus_claimed = models.BooleanField(default=False)  # Track if signup bonus was claimed
+    sponsor_change_bonus_claimed = models.BooleanField(default=False)  # Track if sponsor change bonus was claimed
+    unwithdrawable_bonus = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Bonus that can be used to play
     total_games_played = models.PositiveIntegerField(default=0)
     games_played_today = models.PositiveIntegerField(default=0)
     games_played_this_week = models.PositiveIntegerField(default=0)
@@ -53,7 +56,8 @@ class ReferralBonus(models.Model):
     BONUS_TYPE_CHOICES = [
         ('first_generation', 'First Generation (4%)'),
         ('second_generation', 'Second Generation (1%)'),
-        ('inhouse', 'Inhouse Bonus (3%)'),
+        ('signup', 'Signup Bonus (10 birr)'),
+        ('sponsor_change', 'Sponsor Change Bonus (10 birr)'),
     ]
     
     STATUS_CHOICES = [

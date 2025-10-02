@@ -63,13 +63,17 @@ def charge_player(players, entry_fee, game_id):
 
 @shared_task
 def update_player_balance(player_id,win_amount,game_id):
-    logger.info(f"Update player balance: {player_id}")
     player = get_object_or_404(User,telegram_id=player_id)
-    logger.info("Player ",player.id)
+    first_gen_referrer = player.referred_by
+    logger.info(f"First generation referrer: {first_gen_referrer}")
+    second_gen_referrer = first_gen_referrer.referred_by
+    logger.info(f"Second generation referrer: {second_gen_referrer}")
+    inhouse_referrer = player.is_agent
+    logger.info(f"Inhouse referrer: {inhouse_referrer}")
     wallet = get_object_or_404(Wallet,user = player)
-    logger.info("Wallet ",wallet)
+
     game = get_object_or_404(Game,id=game_id)
-    logger.info("Game ",game)
+
     existing_transaction = Transaction.objects.filter(reference=game_id,type="WIN",user = player).first()
     if existing_transaction:
         logger.info("Transaction already exists")
@@ -130,4 +134,17 @@ def create_player_games(game_id, players_dict):
         return True
     except Exception as e:
         logger.error(f"Error in create_player_games: {e}")
+        return False
+
+
+@shared_task
+def process_tuesday_bonus_payments():
+    """Process bonus payments every Tuesday"""
+    logger.info("Processing Tuesday bonus payments")
+    try:
+        success, message = ReferralService.process_tuesday_bonus_payments()
+        logger.info(f"Tuesday bonus processing result: {message}")
+        return success
+    except Exception as e:
+        logger.error(f"Error processing Tuesday bonuses: {e}")
         return False

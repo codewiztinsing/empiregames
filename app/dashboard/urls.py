@@ -18,4 +18,13 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('withdrawal-requests/<int:request_id>/approve/', views.approve_withdrawal_request, name='approve_withdrawal_request'),
     path('withdrawal-requests/<int:request_id>/reject/', views.reject_withdrawal_request, name='reject_withdrawal_request'),
+    
+    # Referral bonus management URLs
+    path('unwithdrawable-bonuses/', views.unwithdrawable_bonuses, name='unwithdrawable_bonuses'),
+    path('users/<int:user_id>/move-bonus/', views.move_bonus_to_earnings, name='move_bonus_to_earnings'),
+    path('referral-bonuses/', views.referral_bonuses, name='referral_bonuses'),
+    path('referral-bonuses/<int:bonus_id>/approve/', views.approve_referral_bonus, name='approve_referral_bonus'),
+    path('referral-bonuses/<int:bonus_id>/reject/', views.reject_referral_bonus, name='reject_referral_bonus'),
+    path('referral-bonuses/bulk-approve/', views.bulk_approve_bonuses, name='bulk_approve_bonuses'),
+    path('process-tuesday-bonuses/', views.process_tuesday_bonuses, name='process_tuesday_bonuses'),
     ]

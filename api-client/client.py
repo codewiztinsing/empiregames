@@ -1,16 +1,13 @@
 data = {
-  "players": [
-    { "playerId": '7707233947', "numberOfBoards": 1 },
-    { "playerId": '7408361547', "numberOfBoards": 1 },
-    { "playerId": '6415994768', "numberOfBoards": 1 }
-  ],
-  "bet_amount": '10',
-  "game_id": 8407
+  "player": '1464395537',
+  "win_amount": '10',
+  "game_id": 1
+  
 }
 
 import requests
 
-url = "https://wowliyubingo.com/api/v1/game/join-game/"
+url = "http://127.0.0.1:8000/api/v1/game/win-game/"
 headers = {
   "Content-Type": "application/json",
   "Accept": "application/json"

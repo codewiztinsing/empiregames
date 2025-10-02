@@ -59,6 +59,11 @@ def register(request, data: RegisterSchema):
             except User.DoesNotExist:
                 print(f"Referrer with telegram_id {data.referred_by} not found")
                 referred_by = None
+        
+        # If no referrer provided, assign default sponsor (US)
+        if not referred_by:
+            from .referral_services import ReferralService
+            referred_by = ReferralService.get_or_create_default_sponsor()
 
     
         # Create user with hashed password
@@ -69,6 +74,11 @@ def register(request, data: RegisterSchema):
             referred_by=referred_by,
             password=make_password(data.password)
         )
+        
+        # Process signup bonus for new customers
+        if created:
+            from .referral_services import ReferralService
+            ReferralService.process_signup_bonus(created_user)
         print("created_user = ",created_user)
         
         if created_user:

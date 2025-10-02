@@ -2,9 +2,10 @@ from datetime import timedelta
 from django.db.models import Sum
 from django.core.paginator import Paginator
 from django.utils import timezone
-from users.models import User, SupportUser
+from users.models import User, SupportUser, ReferralBonus
 from game.models import Game
 from wallet.models import Transaction, WithdrawalRequest, Wallet
+from users.referral_services import ReferralService
 import requests
 import json
 from django.shortcuts import render, redirect
@@ -630,5 +631,190 @@ def reject_withdrawal_request(request, request_id):
     
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
 
+
+@admin_required
+def unwithdrawable_bonuses(request):
+    """View to manage unwithdrawable bonuses"""
+    # Get users with unwithdrawable bonuses
+    users_with_unwithdrawable = User.objects.filter(unwithdrawable_bonus__gt=0).order_by('-unwithdrawable_bonus')
+    
+    # Get filter parameters
+    search_query = request.GET.get('search', '')
+    if search_query:
+        users_with_unwithdrawable = users_with_unwithdrawable.filter(
+            username__icontains=search_query
+        )
+    
+    paginator = Paginator(users_with_unwithdrawable, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Calculate total unwithdrawable bonus amount
+    total_unwithdrawable = sum(float(user.unwithdrawable_bonus) for user in users_with_unwithdrawable)
+    
+    context = {
+        'users': page_obj,
+        'page_title': 'Unwithdrawable Bonuses',
+        'page_obj': page_obj,
+        'total_unwithdrawable': total_unwithdrawable,
+        'search_query': search_query,
+    }
+    return render(request, 'dashboard/unwithdrawable_bonuses.html', context)
+
+
+@admin_required
+def move_bonus_to_earnings(request, user_id):
+    """Move unwithdrawable bonus to total referral earnings"""
+    if request.method == 'POST':
+        try:
+            user = get_object_or_404(User, id=user_id)
+            
+            if user.unwithdrawable_bonus <= 0:
+                return JsonResponse({'success': False, 'message': 'User has no unwithdrawable bonus.'})
+            
+            # Move unwithdrawable bonus to total referral earnings
+            bonus_amount = user.unwithdrawable_bonus
+            user.total_referral_earnings += bonus_amount
+            user.unwithdrawable_bonus = 0
+            user.save()
+            
+            # Update wallet
+            wallet, created = Wallet.objects.get_or_create(user=user)
+            wallet.unwithdrawable_bonus = 0
+            wallet.save()
+            
+            return JsonResponse({
+                'success': True, 
+                'message': f'Successfully moved {bonus_amount} birr to total referral earnings.'
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+
+@admin_required
+def approve_referral_bonus(request, bonus_id):
+    """Approve a specific referral bonus"""
+    if request.method == 'POST':
+        try:
+            success, message = ReferralService.approve_bonus(bonus_id, request.user)
+            return JsonResponse({'success': success, 'message': message})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+
+@admin_required
+def reject_referral_bonus(request, bonus_id):
+    """Reject a specific referral bonus"""
+    if request.method == 'POST':
+        try:
+            bonus = get_object_or_404(ReferralBonus, id=bonus_id)
+            if bonus.status != 'pending':
+                return JsonResponse({'success': False, 'message': 'This bonus has already been processed.'})
+            
+            bonus.status = 'rejected'
+            bonus.save()
+            
+            return JsonResponse({'success': True, 'message': 'Referral bonus rejected successfully.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+
+@admin_required
+def bulk_approve_bonuses(request):
+    """Bulk approve multiple referral bonuses"""
+    if request.method == 'POST':
+        try:
+            bonus_ids = request.POST.getlist('bonus_ids')
+            if not bonus_ids:
+                return JsonResponse({'success': False, 'message': 'No bonuses selected.'})
+            
+            approved_count = 0
+            for bonus_id in bonus_ids:
+                success, message = ReferralService.approve_bonus(bonus_id, request.user)
+                if success:
+                    approved_count += 1
+            
+            return JsonResponse({
+                'success': True, 
+                'message': f'Successfully approved {approved_count} out of {len(bonus_ids)} bonuses.'
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+
+@admin_required
+def process_tuesday_bonuses(request):
+    """Manually trigger Tuesday bonus processing"""
+    if request.method == 'POST':
+        try:
+            success, message = ReferralService.process_tuesday_bonus_payments()
+            return JsonResponse({'success': success, 'message': message})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+
+@admin_required
+def referral_bonuses(request):
+    """View to manage referral bonuses"""
+    # Get filter parameters
+    status_filter = request.GET.get('status', '')
+    bonus_type_filter = request.GET.get('bonus_type', '')
+    search_query = request.GET.get('search', '')
+    
+    # Get bonuses
+    bonuses = ReferralBonus.objects.all().order_by('-created_at')
+    
+    if status_filter:
+        bonuses = bonuses.filter(status=status_filter)
+    
+    if bonus_type_filter:
+        bonuses = bonuses.filter(bonus_type=bonus_type_filter)
+    
+    if search_query:
+        bonuses = bonuses.filter(
+            referrer__username__icontains=search_query
+        ) | bonuses.filter(
+            winner__username__icontains=search_query
+        )
+    
+    paginator = Paginator(bonuses, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Calculate statistics
+    total_pending = ReferralBonus.objects.filter(status='pending').count()
+    total_approved = ReferralBonus.objects.filter(status='approved').count()
+    total_rejected = ReferralBonus.objects.filter(status='rejected').count()
+    
+    pending_amount = sum(float(bonus.bonus_amount) for bonus in ReferralBonus.objects.filter(status='pending'))
+    approved_amount = sum(float(bonus.bonus_amount) for bonus in ReferralBonus.objects.filter(status='approved'))
+    
+    context = {
+        'bonuses': page_obj,
+        'page_title': 'Referral Bonuses',
+        'page_obj': page_obj,
+        'status_filter': status_filter,
+        'bonus_type_filter': bonus_type_filter,
+        'search_query': search_query,
+        'total_pending': total_pending,
+        'total_approved': total_approved,
+        'total_rejected': total_rejected,
+        'pending_amount': pending_amount,
+        'approved_amount': approved_amount,
+        'status_choices': ['', 'pending', 'approved', 'rejected'],
+        'bonus_type_choices': ['', 'first_generation', 'second_generation', 'signup', 'sponsor_change'],
+    }
+    return render(request, 'dashboard/referral_bonuses.html', context)
 
 

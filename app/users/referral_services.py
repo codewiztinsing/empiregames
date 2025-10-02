@@ -1,9 +1,12 @@
+import logging
 from decimal import Decimal
 from django.db import transaction, models
 from django.utils import timezone
 from datetime import date, timedelta
 from .models import User, ReferralBonus, WithdrawalRequest
 from wallet.models import Wallet
+
+logger = logging.getLogger(__name__)
 
 
 class ReferralService:
@@ -24,6 +27,11 @@ class ReferralService:
             user.is_agent = False  # User is no longer agent under Aker Bingo
             user.sponsor_changed = True
             user.save()
+            
+            # Process sponsor change bonus if this is a sponsor change
+            if user.referred_by is not None:  # If user already had a referrer before
+                ReferralService.process_sponsor_change_bonus(user)
+            
             return True, "Sponsor set successfully"
         except User.DoesNotExist:
             return False, "Invalid referral code"
@@ -31,14 +39,24 @@ class ReferralService:
     @staticmethod
     def process_win_bonus(winner, win_amount, game_id):
         """Process referral bonuses when a user wins"""
-        bonuses_created = []
-        
+        bonuses_created = []     
+        print(f"Winner: in referral services {winner.referred_by}")
         # First generation (4% bonus)
         if winner.referred_by:
             first_gen_bonus = ReferralService._create_bonus(
                 winner.referred_by, winner, win_amount, game_id, 
                 'first_generation', Decimal('0.04'), 1
             )
+            
+            # Check if referrer qualifies for immediate bonus
+            can_withdraw, _ = ReferralService.can_withdraw(winner.referred_by)
+            if can_withdraw:
+                # Approve and add to wallet immediately
+                ReferralService.approve_bonus(first_gen_bonus.id, None)
+            else:
+                # Move to unwithdrawable bonus
+                ReferralService._move_to_unwithdrawable_bonus(first_gen_bonus)
+            
             bonuses_created.append(first_gen_bonus)
             
             # Second generation (1% bonus)
@@ -47,23 +65,161 @@ class ReferralService:
                     winner.referred_by.referred_by, winner, win_amount, game_id,
                     'second_generation', Decimal('0.01'), 2
                 )
+                
+                # Check if second generation referrer qualifies for immediate bonus
+                can_withdraw_2nd, _ = ReferralService.can_withdraw(winner.referred_by.referred_by)
+                if can_withdraw_2nd:
+                    # Approve and add to wallet immediately
+                    ReferralService.approve_bonus(second_gen_bonus.id, None)
+                else:
+                    # Move to unwithdrawable bonus
+                    ReferralService._move_to_unwithdrawable_bonus(second_gen_bonus)
+                
                 bonuses_created.append(second_gen_bonus)
         
-        # Inhouse bonus (3% for Aker Bingo agents)
-        aker_agents = User.objects.filter(is_agent=True)
-        for agent in aker_agents:
-            inhouse_bonus = ReferralService._create_bonus(
-                agent, winner, win_amount, game_id,
-                'inhouse', Decimal('0.03'), 0
-            )
-            bonuses_created.append(inhouse_bonus)
-        
         return bonuses_created
+    
+    @staticmethod
+    def process_signup_bonus(user):
+        """Process 10 birr signup bonus for new customers"""
+        if user.signup_bonus_claimed:
+            return False, "Signup bonus already claimed"
+        
+        # Create and immediately approve signup bonus
+        bonus = ReferralService._create_bonus(
+            user, user, Decimal('10.00'), 'signup', 
+            'signup', Decimal('1.00'), 0
+        )
+        
+        # Immediately approve the bonus
+        bonus.status = 'approved'
+        bonus.save()
+        
+        # Add to user's total earnings and wallet
+        user.total_referral_earnings += bonus.bonus_amount
+        user.signup_bonus_claimed = True
+        user.save()
+        
+        # Add to wallet
+        wallet, created = Wallet.objects.get_or_create(user=user)
+        wallet.balance += float(bonus.bonus_amount)
+        wallet.save()
+        
+        return True, "Signup bonus processed and added to wallet"
+    
+    @staticmethod
+    def process_sponsor_change_bonus(user):
+        """Process 10 birr bonus for sponsor change (one-time only)"""
+        if user.sponsor_change_bonus_claimed:
+            return False, "Sponsor change bonus already claimed"
+        
+        # Create and immediately approve sponsor change bonus
+        bonus = ReferralService._create_bonus(
+            user, user, Decimal('10.00'), 'sponsor_change', 
+            'sponsor_change', Decimal('1.00'), 0
+        )
+        
+        # Immediately approve the bonus
+        bonus.status = 'approved'
+        bonus.save()
+        
+        # Add to user's total earnings and wallet
+        user.total_referral_earnings += bonus.bonus_amount
+        user.sponsor_change_bonus_claimed = True
+        user.save()
+        
+        # Add to wallet
+        wallet, created = Wallet.objects.get_or_create(user=user)
+        wallet.balance += float(bonus.bonus_amount)
+        wallet.save()
+        
+        return True, "Sponsor change bonus processed and added to wallet"
+    
+    @staticmethod
+    def process_tuesday_bonus_payments():
+        """Process bonus payments every Tuesday"""
+        from datetime import datetime
+        today = timezone.now().date()
+        
+        # Check if today is Tuesday (weekday() returns 1 for Tuesday)
+        if today.weekday() != 1:
+            return False, "Today is not Tuesday"
+        
+        # Get all pending bonuses
+        pending_bonuses = ReferralBonus.objects.filter(status='pending')
+        approved_count = 0
+        
+        for bonus in pending_bonuses:
+            try:
+                # Check if user qualifies for withdrawal
+                can_withdraw, _ = ReferralService.can_withdraw(bonus.referrer)
+                if can_withdraw:
+                    # Approve the bonus
+                    success, message = ReferralService.approve_bonus(bonus.id, None)
+                    if success:
+                        approved_count += 1
+                else:
+                    # Move to unwithdrawable bonus
+                    ReferralService._move_to_unwithdrawable_bonus(bonus)
+            except Exception as e:
+                logger.error(f"Error processing bonus {bonus.id}: {e}")
+        
+        return True, f"Processed {approved_count} bonuses on Tuesday"
+    
+    @staticmethod
+    def _move_to_unwithdrawable_bonus(bonus):
+        """Move bonus to unwithdrawable balance"""
+        bonus.status = 'approved'
+        bonus.save()
+        
+        # Add to unwithdrawable bonus
+        wallet, created = Wallet.objects.get_or_create(user=bonus.referrer)
+        wallet.unwithdrawable_bonus += float(bonus.bonus_amount)
+        wallet.save()
+        
+        # Add to user's total earnings
+        bonus.referrer.unwithdrawable_bonus += bonus.bonus_amount
+        bonus.referrer.save()
+    
+    @staticmethod
+    def get_or_create_default_sponsor():
+        """Get or create the default sponsor (US)"""
+        try:
+            default_sponsor = User.objects.get(username='US')
+        except User.DoesNotExist:
+            # Create default sponsor if it doesn't exist
+            default_sponsor = User.objects.create(
+                username='US',
+                phone='0000000000',
+                telegram_id='0',
+                is_agent=True,
+                is_active=True
+            )
+        return default_sponsor
+    
+    @staticmethod
+    def use_unwithdrawable_bonus_for_play(user, amount):
+        """Use unwithdrawable bonus for playing games"""
+        if user.unwithdrawable_bonus < Decimal(str(amount)):
+            return False, "Insufficient unwithdrawable bonus"
+        
+        # Deduct from unwithdrawable bonus
+        user.unwithdrawable_bonus -= Decimal(str(amount))
+        user.save()
+        
+        # Add to regular wallet balance for playing
+        wallet, created = Wallet.objects.get_or_create(user=user)
+        wallet.balance += float(amount)
+        wallet.unwithdrawable_bonus -= float(amount)
+        wallet.save()
+        
+        return True, "Unwithdrawable bonus used for playing"
     
     @staticmethod
     def _create_bonus(referrer, winner, win_amount, game_id, bonus_type, percentage, generation_level):
         """Create a referral bonus record"""
         bonus_amount = Decimal(str(win_amount)) * percentage
+      
         
         bonus = ReferralBonus.objects.create(
             referrer=referrer,
@@ -131,13 +287,9 @@ class ReferralService:
         if user.total_referral_earnings < Decimal('500.00'):
             return False, "Minimum withdrawal amount is 500 birr"
         
-        # Check daily games requirement (3 games per day)
-        if user.games_played_today < 3:
-            return False, "Must play at least 3 games today"
-        
-        # Check weekly games requirement (27 games per week)
-        if user.games_played_this_week < 27:
-            return False, "Must play at least 27 games this week"
+        # Check qualification: 3 games per day OR 27 games per week
+        if user.games_played_today < 3 and user.games_played_this_week < 27:
+            return False, "Must play at least 3 games today OR 27 games this week"
         
         return True, "Eligible for withdrawal"
     

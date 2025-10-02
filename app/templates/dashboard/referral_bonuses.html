@@ -1,0 +1,482 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="p-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white mb-2">{{ page_title }}</h1>
+        <p class="text-gray-400">Manage referral bonuses, approve pending bonuses, and process Tuesday payments</p>
+    </div>
+
+    <div class="bg-dark-card rounded-lg border border-dark-border">
+        <div class="p-6 border-b border-dark-border">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-white">Referral Bonuses</h3>
+                <div class="flex items-center space-x-3">
+                    <button class="bg-purple-primary hover:bg-purple-hover text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" id="processTuesdayBtn">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Process Tuesday Bonuses
+                    </button>
+                    <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed" id="bulkApproveBtn" disabled>
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Bulk Approve Selected
+                    </button>
+                </div>
+            </div>
+        </div>
+                
+        <div class="p-6">
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-dark-bg rounded-lg border border-dark-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-400">Pending</p>
+                            <p class="text-2xl font-bold text-yellow-400">{{ total_pending }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-dark-bg rounded-lg border border-dark-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-400">Approved</p>
+                            <p class="text-2xl font-bold text-green-400">{{ total_approved }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-dark-bg rounded-lg border border-dark-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-400">Rejected</p>
+                            <p class="text-2xl font-bold text-red-400">{{ total_rejected }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-dark-bg rounded-lg border border-dark-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-400">Pending Amount</p>
+                            <p class="text-2xl font-bold text-blue-400">{{ pending_amount|floatformat:2 }} birr</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="mb-6">
+                <form method="get" class="flex flex-wrap items-end gap-4">
+                    <div class="flex flex-col">
+                        <label for="status" class="text-sm font-medium text-gray-400 mb-1">Status</label>
+                        <select name="status" id="status" class="bg-dark-bg border border-dark-border text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-primary">
+                            {% for choice in status_choices %}
+                            <option value="{{ choice }}" {% if choice == status_filter %}selected{% endif %}>
+                                {% if choice == '' %}All Statuses{% else %}{{ choice|title }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="bonus_type" class="text-sm font-medium text-gray-400 mb-1">Type</label>
+                        <select name="bonus_type" id="bonus_type" class="bg-dark-bg border border-dark-border text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-primary">
+                            {% for choice in bonus_type_choices %}
+                            <option value="{{ choice }}" {% if choice == bonus_type_filter %}selected{% endif %}>
+                                {% if choice == '' %}All Types{% else %}{{ choice|title }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="search" class="text-sm font-medium text-gray-400 mb-1">Search</label>
+                        <input type="text" name="search" id="search" 
+                               class="bg-dark-bg border border-dark-border text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-primary" 
+                               placeholder="Username..." value="{{ search_query }}">
+                    </div>
+                    <button type="submit" class="bg-purple-primary hover:bg-purple-hover text-white px-4 py-2 rounded-lg transition-colors">Filter</button>
+                    <a href="{% url 'dashboard:referral_bonuses' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">Clear</a>
+                </form>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-dark-border">
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                                <input type="checkbox" id="selectAll" class="rounded border-dark-border bg-dark-bg text-purple-primary focus:ring-purple-primary">
+                            </th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">ID</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Referrer</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Winner</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Win Amount</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Bonus Type</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Bonus Amount</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Generation</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Status</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Created</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bonus in bonuses %}
+                        <tr class="border-b border-dark-border hover:bg-dark-bg transition-colors">
+                            <td class="py-4 px-4">
+                                {% if bonus.status == 'pending' %}
+                                <input type="checkbox" class="bonus-checkbox rounded border-dark-border bg-dark-bg text-purple-primary focus:ring-purple-primary" value="{{ bonus.id }}">
+                                {% endif %}
+                            </td>
+                            <td class="py-4 px-4 text-white">{{ bonus.id }}</td>
+                            <td class="py-4 px-4 text-white font-medium">{{ bonus.referrer.username }}</td>
+                            <td class="py-4 px-4 text-white font-medium">{{ bonus.winner.username }}</td>
+                            <td class="py-4 px-4 text-white">{{ bonus.win_amount|floatformat:2 }} birr</td>
+                            <td class="py-4 px-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if bonus.bonus_type == 'first_generation' %}bg-blue-100 text-blue-800
+                                    {% elif bonus.bonus_type == 'second_generation' %}bg-cyan-100 text-cyan-800
+                                    {% elif bonus.bonus_type == 'signup' %}bg-green-100 text-green-800
+                                    {% elif bonus.bonus_type == 'sponsor_change' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ bonus.get_bonus_type_display }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-4 text-white font-bold">{{ bonus.bonus_amount|floatformat:2 }} birr</td>
+                            <td class="py-4 px-4 text-gray-300">
+                                {% if bonus.generation_level > 0 %}
+                                {{ bonus.generation_level }}{% if bonus.generation_level == 1 %}st{% elif bonus.generation_level == 2 %}nd{% else %}th{% endif %} Gen
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </td>
+                            <td class="py-4 px-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if bonus.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                    {% elif bonus.status == 'approved' %}bg-green-100 text-green-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ bonus.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-4 text-gray-300">{{ bonus.created_at|date:"M d, Y H:i" }}</td>
+                            <td class="py-4 px-4">
+                                {% if bonus.status == 'pending' %}
+                                <div class="flex space-x-2">
+                                    <button class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors approve-btn" data-bonus-id="{{ bonus.id }}">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Approve
+                                    </button>
+                                    <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors reject-btn" data-bonus-id="{{ bonus.id }}">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Reject
+                                    </button>
+                                </div>
+                                {% else %}
+                                <span class="text-gray-400 text-sm">Processed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="11" class="py-8 px-4 text-center text-gray-400">No referral bonuses found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                        </table>
+                    </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="flex justify-center mt-6">
+                <nav class="flex items-center space-x-2">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if status_filter %}&status={{ status_filter }}{% endif %}{% if bonus_type_filter %}&bonus_type={{ bonus_type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-dark-bg rounded-lg transition-colors">
+                            First
+                        </a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if bonus_type_filter %}&bonus_type={{ bonus_type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-dark-bg rounded-lg transition-colors">
+                            Previous
+                        </a>
+                    {% endif %}
+                    
+                    <span class="px-3 py-2 text-sm font-medium text-white bg-purple-primary rounded-lg">
+                        {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if bonus_type_filter %}&bonus_type={{ bonus_type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-dark-bg rounded-lg transition-colors">
+                            Next
+                        </a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if bonus_type_filter %}&bonus_type={{ bonus_type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-dark-bg rounded-lg transition-colors">
+                            Last
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modals -->
+<div id="approveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-dark-card rounded-lg border border-dark-border p-6 max-w-md w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">Approve Bonus</h3>
+            <button type="button" class="text-gray-400 hover:text-white" onclick="closeApproveModal()">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="mb-6">
+            <p class="text-gray-300">Are you sure you want to approve this referral bonus?</p>
+        </div>
+        <div class="flex justify-end space-x-3">
+            <button type="button" class="px-4 py-2 text-gray-400 hover:text-white transition-colors" onclick="closeApproveModal()">Cancel</button>
+            <button type="button" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors" id="confirmApprove">Yes, Approve</button>
+        </div>
+    </div>
+</div>
+
+<div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-dark-card rounded-lg border border-dark-border p-6 max-w-md w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">Reject Bonus</h3>
+            <button type="button" class="text-gray-400 hover:text-white" onclick="closeRejectModal()">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="mb-6">
+            <p class="text-gray-300">Are you sure you want to reject this referral bonus?</p>
+        </div>
+        <div class="flex justify-end space-x-3">
+            <button type="button" class="px-4 py-2 text-gray-400 hover:text-white transition-colors" onclick="closeRejectModal()">Cancel</button>
+            <button type="button" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors" id="confirmReject">Yes, Reject</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentBonusId = null;
+    
+    // Select all functionality
+    document.getElementById('selectAll').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.bonus-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateBulkApproveButton();
+    });
+    
+    // Individual checkbox change
+    document.querySelectorAll('.bonus-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkApproveButton);
+    });
+    
+    function updateBulkApproveButton() {
+        const checkedBoxes = document.querySelectorAll('.bonus-checkbox:checked');
+        const bulkApproveBtn = document.getElementById('bulkApproveBtn');
+        bulkApproveBtn.disabled = checkedBoxes.length === 0;
+    }
+    
+    // Approve button clicks
+    document.querySelectorAll('.approve-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            currentBonusId = this.dataset.bonusId;
+            document.getElementById('approveModal').classList.remove('hidden');
+            document.getElementById('approveModal').classList.add('flex');
+        });
+    });
+    
+    // Reject button clicks
+    document.querySelectorAll('.reject-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            currentBonusId = this.dataset.bonusId;
+            document.getElementById('rejectModal').classList.remove('hidden');
+            document.getElementById('rejectModal').classList.add('flex');
+        });
+    });
+    
+    // Confirm approve
+    document.getElementById('confirmApprove').addEventListener('click', function() {
+        if (currentBonusId) {
+            approveBonus(currentBonusId);
+        }
+    });
+    
+    // Confirm reject
+    document.getElementById('confirmReject').addEventListener('click', function() {
+        if (currentBonusId) {
+            rejectBonus(currentBonusId);
+        }
+    });
+    
+    // Bulk approve
+    document.getElementById('bulkApproveBtn').addEventListener('click', function() {
+        const checkedBoxes = document.querySelectorAll('.bonus-checkbox:checked');
+        const bonusIds = Array.from(checkedBoxes).map(cb => cb.value);
+        
+        if (bonusIds.length > 0) {
+            bulkApproveBonuses(bonusIds);
+        }
+    });
+    
+    // Process Tuesday bonuses
+    document.getElementById('processTuesdayBtn').addEventListener('click', function() {
+        if (confirm('Are you sure you want to process Tuesday bonuses? This will approve all qualified bonuses and move unqualified ones to unwithdrawable balance.')) {
+            processTuesdayBonuses();
+        }
+    });
+    
+    function approveBonus(bonusId) {
+        fetch(`/dashboard/referral-bonuses/${bonusId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the request.');
+        });
+    }
+    
+    function rejectBonus(bonusId) {
+        fetch(`/dashboard/referral-bonuses/${bonusId}/reject/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the request.');
+        });
+    }
+    
+    function bulkApproveBonuses(bonusIds) {
+        const formData = new FormData();
+        bonusIds.forEach(id => formData.append('bonus_ids', id));
+        
+        fetch('/dashboard/referral-bonuses/bulk-approve/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the request.');
+        });
+    }
+    
+    function processTuesdayBonuses() {
+        fetch('/dashboard/process-tuesday-bonuses/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the request.');
+        });
+    }
+});
+
+function closeApproveModal() {
+    document.getElementById('approveModal').classList.add('hidden');
+    document.getElementById('approveModal').classList.remove('flex');
+}
+
+function closeRejectModal() {
+    document.getElementById('rejectModal').classList.add('hidden');
+    document.getElementById('rejectModal').classList.remove('flex');
+}
+</script>
+{% endblock %}
