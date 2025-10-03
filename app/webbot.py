@@ -920,7 +920,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     telegram_id = update.effective_user.id
     # Use ref_ prefix so start command can parse first-generation referrer
-    invite_link = f"https://t.me/testselambingobot?start=ref_{telegram_id}"
+    invite_link = f"https://t.me/akerbingobot?start=ref_{telegram_id}"
     message = f"Invite your friends using this link:\n{invite_link}"
     reply_markup = None
     await update.message.reply_text(text=message, reply_markup=reply_markup)
