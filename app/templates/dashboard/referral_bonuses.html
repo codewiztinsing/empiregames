@@ -178,10 +178,14 @@
                             </td>
                             <td class="py-4 px-4 text-white font-bold">{{ bonus.bonus_amount|floatformat:2 }} birr</td>
                             <td class="py-4 px-4 text-gray-300">
-                                {% if bonus.generation_level > 0 %}
-                                {{ bonus.generation_level }}{% if bonus.generation_level == 1 %}st{% elif bonus.generation_level == 2 %}nd{% else %}th{% endif %} Gen
+                                {% if bonus.winner.referred_by %}
+                                    {% if bonus.winner.referred_by.referred_by %}
+                                        2nd Gen
+                                    {% else %}
+                                        1st Gen
+                                    {% endif %}
                                 {% else %}
-                                N/A
+                                    N/A
                                 {% endif %}
                             </td>
                             <td class="py-4 px-4">

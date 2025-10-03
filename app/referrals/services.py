@@ -65,7 +65,7 @@ class ReferralService:
         from wallet.models import Wallet
         
         wallet, created = Wallet.objects.get_or_create(user=user)
-        wallet.balance += amount
+        wallet.balance += float(amount)
         wallet.save()
         
         # Create transaction record

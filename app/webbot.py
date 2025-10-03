@@ -918,15 +918,11 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     wallet_response = _wr.json() if _wr.headers.get('content-type','').startswith('application/json') else {}
     balance = wallet_response.get('balance', 0)
 
-    # Instead of a URL button, use a "Forward" button that triggers a callback for forwarding the referral message.
-    reply_markup = InlineKeyboardMarkup([
-        [InlineKeyboardButton("Share", switch_inline_query=f"ref_{user_id}")]
-    ])
-    
-    message = (
-        "here is referral link:"
-    )
-  
+    telegram_id = update.effective_user.id
+    # Use ref_ prefix so start command can parse first-generation referrer
+    invite_link = f"https://t.me/testselambingobot?start=ref_{telegram_id}"
+    message = f"Invite your friends using this link:\n{invite_link}"
+    reply_markup = None
     await update.message.reply_text(text=message, reply_markup=reply_markup)
 
 
@@ -935,6 +931,11 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("DEBUG: register_command function called")
     user_id = update.effective_user.id
     BACK_URL = get_bot_seetings().get("bot_url")
+    # selambingobot ref_1464395537
+    referrer_id = context.args[0] if context.args else None
+    context.user_data['referrer_id'] = referrer_id
+    print("referrer_id = ",referrer_id)
+
     
     # Check if user is already registered
     response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
@@ -1041,7 +1042,20 @@ async def deposit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("DEBUG: start_command function called")
     user_id = update.effective_user.id
+    # @testselselambingobot ref_1464395537
+    # If the user started the bot with a referral link like @testselselambingobot ref_1464395537,
+    # extract the telegram id from the argument starting with "ref_"
+    referrer_id = None
+    if context.args and len(context.args) > 0 and context.args[0].startswith("ref_"):
+        print("DEBUG: Extracting referrer_id from context.args")
+        try:
+            referrer_id = int(context.args[0].split("_")[1])
+            context.user_data['referrer_id'] = referrer_id
+            print(f"DEBUG: Extracted referrer_id = {referrer_id}")
+        except Exception as e:
+            logger.error(f"Error extracting referrer_id: {e}")
     args = context.args  # this will be ["ref_123"] if link clicked
+
     print(f"DEBUG: args = {args}")
 
     # Check if user is already registered

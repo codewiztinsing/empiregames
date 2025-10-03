@@ -12,10 +12,10 @@ class User(AbstractUser):
     referred_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='referrals')
     is_agent = models.BooleanField(default=False)  # Default to customer, not agent
     sponsor_changed = models.BooleanField(default=False)  # Can only change once
-    total_referral_earnings = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    total_referral_earnings = models.FloatField(default=0.00)
     signup_bonus_claimed = models.BooleanField(default=False)  # Track if signup bonus was claimed
     sponsor_change_bonus_claimed = models.BooleanField(default=False)  # Track if sponsor change bonus was claimed
-    unwithdrawable_bonus = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Bonus that can be used to play
+    unwithdrawable_bonus = models.FloatField(default=0.00)  # Bonus that can be used to play
     total_games_played = models.PositiveIntegerField(default=0)
     games_played_today = models.PositiveIntegerField(default=0)
     games_played_this_week = models.PositiveIntegerField(default=0)
@@ -69,9 +69,9 @@ class ReferralBonus(models.Model):
     referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referral_bonuses')
     winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='win_bonuses')
     game_id = models.CharField(max_length=100)
-    win_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    win_amount = models.FloatField()
     bonus_type = models.CharField(max_length=20, choices=BONUS_TYPE_CHOICES)
-    bonus_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    bonus_amount = models.FloatField()
     generation_level = models.PositiveIntegerField()  # 1 for first generation, 2 for second
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -90,9 +90,7 @@ class WithdrawalRequest(models.Model):
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='withdrawal_requests')
-    amount = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2,
+    amount = models.FloatField(
         validators=[MinValueValidator(Decimal('500.00'))]  # Minimum 500 birr
     )
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
