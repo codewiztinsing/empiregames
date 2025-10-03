@@ -9,6 +9,8 @@ from users.referral_services import ReferralService
 from .permissions import admin_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
+from referrals.models import ReferralBonus as LegacyReferralBonus, ReferralWithdrawal, UserGameStats
+from game.models import PlayerGame
 import requests
 import json
 from django.shortcuts import render, redirect
@@ -548,6 +550,33 @@ def user_delete(request, user_id):
         user.delete()
         return redirect('dashboard:users')
     return render(request, 'dashboard/user_delete_confirm.html', {'user_obj': user, 'page_title': 'Delete User'})
+
+
+@admin_required
+def user_details(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    wallet = Wallet.objects.filter(user=user).first()
+    transactions = Transaction.objects.filter(user=user).order_by('-created_at')[:50]
+    referral_bonuses = ReferralBonus.objects.filter(referrer=user).order_by('-created_at')[:50]
+    referral_withdrawals = WithdrawalRequest.objects.filter(user=user).order_by('-created_at')[:50]
+    player_games = PlayerGame.objects.filter(user=user).select_related('game').order_by('-game__created_at')[:50]
+
+    # Legacy/referrals app data if present
+    legacy_bonuses = LegacyReferralBonus.objects.filter(user=user).order_by('-id')[:50] if 'referrals' in settings.INSTALLED_APPS else []
+    user_stats = UserGameStats.objects.filter(user=user).first() if 'referrals' in settings.INSTALLED_APPS else None
+
+    context = {
+        'page_title': f'User Details - {user.username}',
+        'user_obj': user,
+        'wallet': wallet,
+        'transactions': transactions,
+        'referral_bonuses': referral_bonuses,
+        'referral_withdrawals': referral_withdrawals,
+        'player_games': player_games,
+        'legacy_bonuses': legacy_bonuses,
+        'user_stats': user_stats,
+    }
+    return render(request, 'dashboard/user_details.html', context)
 def bingo_cards(request):
     return render(request, 'dashboard/bingo_cards.html')
 

@@ -159,6 +159,11 @@
                                 >
                                     Edit
                                 </a>
+                                <a class="text-blue-400 hover:text-blue-300 text-sm font-medium" 
+                                href="{% url 'dashboard:user_details' user.id %}"
+                                >
+                                    Details
+                                </a>
                                 <a class="text-red-400 hover:text-red-300 text-sm font-medium" 
                                 href="{% url 'accounts:block_user' user.id %}"
                                 >
