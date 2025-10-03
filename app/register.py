@@ -119,10 +119,10 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'last_name': last_name or ""
         }
         
-        # Add referrer_id if user came through referral
+        # Add referred_by (telegram_id of referrer) if user came through referral
         if referrer_id:
-            user_data['referrer_id'] = referrer_id
-            print(f"Registering user with referrer_id: {referrer_id}")
+            user_data['referred_by'] = str(referrer_id)
+            print(f"Registering user with referred_by: {referrer_id}")
         
         print("user_data = ", user_data)
         

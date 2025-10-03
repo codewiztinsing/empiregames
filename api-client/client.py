@@ -1,19 +1,39 @@
-data = {
-  "player": '1464395537',
-  "win_amount": '10',
-  "game_id": 1
-  
-}
-
 import requests
+import random
+BASE_URL = "http://localhost:8000/api/v1/users"
 
-url = "http://127.0.0.1:8000/api/v1/game/win-game/"
-headers = {
-  "Content-Type": "application/json",
-  "Accept": "application/json"
-}
+def test_register_without_referred():
+    data = {
+        "username": f"testuser{random.randint(1, 1000)}",
+        "phone": str(random.randint(1000000000, 9999999999)),
+        "telegram_id": str(random.randint(1000000000, 9999999999)),
+        "password": "testpassword1",
+        "referred_by": None,
+        "email": "testuser1@gmail.com"
+    }
+    response = requests.post(f"{BASE_URL}/register", json=data)
+    print("Register without referred_by:")
+    print("Status Code:", response.status_code)
+    print("Response:", response.json())
+    print("-" * 40)
 
-response = requests.post(url, json=data, headers=headers)
+def test_register_with_referred(referred_telegram_id):
+    data = {
+        "username": f"testuser{random.randint(1, 1000)}",
+        "phone": str(random.randint(1000000000, 9999999999)),
+        "telegram_id": str(random.randint(1000000000, 9999999999)),
+        "password": "testpassword2",
+        "referred_by": referred_telegram_id,
+        "email": "testuser2@gmail.com"
+    }
+    response = requests.post(f"{BASE_URL}/register", json=data)
+    print("Register with referred_by:")
+    print("Status Code:", response.status_code)
+    print("Response:", response.json())
+    print("-" * 40)
 
-print(f"Status Code: {response.status_code}")
-print(f"Response: {response.text}")
+if __name__ == "__main__":
+    # First, register a user without referral to get a valid telegram_id for referral
+    test_register_without_referred()
+    # Use the telegram_id of the first user as the referrer for the second user
+    test_register_with_referred("tg_1001")

@@ -919,7 +919,8 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     balance = wallet_response.get('balance', 0)
 
     telegram_id = update.effective_user.id
-    invite_link = f"https://t.me/testselambingobot?start={telegram_id}"
+    # Use ref_ prefix so start command can parse first-generation referrer
+    invite_link = f"https://t.me/testselambingobot?start=ref_{telegram_id}"
     message = f"Invite your friends using this link:\n{invite_link}"
     reply_markup = None
     await update.message.reply_text(text=message, reply_markup=reply_markup)
