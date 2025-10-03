@@ -66,8 +66,11 @@ def update_player_balance(player_id,win_amount,game_id):
     player = get_object_or_404(User,telegram_id=player_id)
     first_gen_referrer = player.referred_by
     logger.info(f"First generation referrer: {first_gen_referrer}")
-    second_gen_referrer = first_gen_referrer.referred_by
-    logger.info(f"Second generation referrer: {second_gen_referrer}")
+    if first_gen_referrer:
+        second_gen_referrer = first_gen_referrer.referred_by
+        logger.info(f"Second generation referrer: {second_gen_referrer}")
+    else:
+        second_gen_referrer = None
     inhouse_referrer = player.is_agent
     logger.info(f"Inhouse referrer: {inhouse_referrer}")
     wallet = get_object_or_404(Wallet,user = player)
