@@ -982,6 +982,9 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
         games_played_this_week = user_data.get('games_played_this_week', 0)
         logger.info(f"Games played this week: {games_played_this_week}")
+
+        # Referral bonus (float)
+        total_referral_earnings = float(user_data.get('total_referral_earnings', 0)) if isinstance(user_data, dict) else 0.0
         
     except requests.exceptions.RequestException as e:
         logger.error(f"API request error: {e}")
@@ -1005,6 +1008,7 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"👤 **Name:** {user_name}\n"
         f"📱 **Phone Number:** {telegram_id}\n"
         f"💵 **Withdrawable Balance:** {balance} ETB\n"
+        f"🎁 **Referral Bonus:** {total_referral_earnings:.2f} ETB\n"
         f"🔒 **Non-Withdrawable Balance:** 0.0 ETB\n"
         f"🎯 **Total Balance:** {balance} ETB\n\n"
         f"🎮 **Weekly Games Progress:**\n"
@@ -1018,6 +1022,7 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"👤 **Name:** {user_name}\n"
         f"📱 **Phone Number:** {telegram_id}\n"
         f"💵 **Withdrawable Balance:** {balance} ETB\n"
+        f"🎁 **Referral Bonus:** {total_referral_earnings:.2f} ETB\n"
         f"🔒 **Non-Withdrawable Balance:** 0.0 ETB\n"
         f"🎯 **Total Balance:** {balance} ETB\n\n"
         f"🎮 **Weekly Games Progress:**\n"
