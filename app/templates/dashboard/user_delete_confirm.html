@@ -1,0 +1,22 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <h1 class="text-2xl font-bold text-white mb-4">Delete User</h1>
+    <div class="bg-dark-card rounded-lg border border-dark-border p-6 max-w-xl">
+        <p class="text-gray-300 mb-6">Are you sure you want to delete user <span class="text-white font-semibold">{{ user_obj.username }}</span>? This action cannot be undone.</p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="flex items-center space-x-3">
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Delete</button>
+                <a href="{% url 'dashboard:users' %}" class="text-gray-300 hover:text-white">Cancel</a>
+            </div>
+        </form>
+    </div>
+    
+</div>
+{% endblock %}
+
+

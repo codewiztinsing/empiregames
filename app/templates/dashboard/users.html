@@ -155,9 +155,9 @@
                         <td class="py-3 px-4">
                             <div class="flex items-center space-x-2">
                                 <a class="text-purple-primary hover:text-purple-hover text-sm font-medium"
-                                href="{% url 'accounts:user_details' user.id %}"
+                                href="{% url 'dashboard:user_edit' user.id %}"
                                 >
-                                    View 
+                                    Edit
                                 </a>
                                 <a class="text-red-400 hover:text-red-300 text-sm font-medium" 
                                 href="{% url 'accounts:block_user' user.id %}"

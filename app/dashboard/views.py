@@ -6,6 +6,9 @@ from users.models import User, SupportUser, ReferralBonus
 from game.models import Game
 from wallet.models import Transaction, WithdrawalRequest, Wallet
 from users.referral_services import ReferralService
+from .permissions import admin_required
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
 import requests
 import json
 from django.shortcuts import render, redirect
@@ -491,6 +494,60 @@ def users(request):
     return render(request, 'dashboard/users.html', context)
 
 
+@admin_required
+def user_edit(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    wallet = Wallet.objects.filter(user=user).first()
+    context = {'user_obj': user, 'wallet': wallet, 'page_title': 'Edit User'}
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        is_agent = request.POST.get('is_agent') == 'on'
+        sponsor_changed = request.POST.get('sponsor_changed') == 'on'
+        referred_by_telegram = request.POST.get('referred_by_telegram', '').strip()
+        balance = request.POST.get('balance', '').strip()
+
+        if username:
+            user.username = username
+        if phone:
+            user.phone = phone
+        user.is_agent = is_agent
+        user.sponsor_changed = sponsor_changed
+
+        # Update referred_by using referrer's telegram_id if provided
+        if referred_by_telegram:
+            try:
+                referrer = User.objects.get(telegram_id=str(referred_by_telegram))
+                user.referred_by = referrer
+            except User.DoesNotExist:
+                context['error'] = 'Referrer with that Telegram ID not found.'
+                return render(request, 'dashboard/user_edit.html', context)
+        else:
+            user.referred_by = None
+
+        user.save()
+        # Update wallet balance if provided
+        if balance != '':
+            try:
+                if not wallet:
+                    wallet = Wallet.objects.create(user=user, balance=0)
+                wallet.balance = float(balance)
+                wallet.save()
+            except Exception as e:
+                context['error'] = f'Failed to update balance: {e}'
+                return render(request, 'dashboard/user_edit.html', context)
+        return redirect('dashboard:users')
+
+    return render(request, 'dashboard/user_edit.html', context)
+
+
+@admin_required
+def user_delete(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        user.delete()
+        return redirect('dashboard:users')
+    return render(request, 'dashboard/user_delete_confirm.html', {'user_obj': user, 'page_title': 'Delete User'})
 def bingo_cards(request):
     return render(request, 'dashboard/bingo_cards.html')
 
