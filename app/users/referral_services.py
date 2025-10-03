@@ -1,5 +1,4 @@
 import logging
-from decimal import Decimal
 from django.db import transaction, models
 from django.utils import timezone
 from datetime import date, timedelta
@@ -45,7 +44,7 @@ class ReferralService:
         if winner.referred_by:
             first_gen_bonus = ReferralService._create_bonus(
                 winner.referred_by, winner, win_amount, game_id, 
-                'first_generation', Decimal('0.04'), 1
+                'first_generation', float('0.04'), 1
             )
             
             # Check if referrer qualifies for immediate bonus
@@ -63,7 +62,7 @@ class ReferralService:
             if winner.referred_by.referred_by:
                 second_gen_bonus = ReferralService._create_bonus(
                     winner.referred_by.referred_by, winner, win_amount, game_id,
-                    'second_generation', Decimal('0.01'), 2
+                    'second_generation', float('0.01'), 2
                 )
                 
                 # Check if second generation referrer qualifies for immediate bonus
@@ -87,8 +86,8 @@ class ReferralService:
         
         # Create and immediately approve signup bonus
         bonus = ReferralService._create_bonus(
-            user, user, Decimal('10.00'), 'signup', 
-            'signup', Decimal('1.00'), 0
+            user, user, float('10.00'), 'signup', 
+            'signup', float('1.00'), 0
         )
         
         # Immediately approve the bonus
@@ -96,7 +95,7 @@ class ReferralService:
         bonus.save()
         
         # Add to user's total earnings and wallet
-        user.total_referral_earnings += bonus.bonus_amount
+        user.total_referral_earnings += float(bonus.bonus_amount)
         user.signup_bonus_claimed = True
         user.save()
         
@@ -115,8 +114,8 @@ class ReferralService:
         
         # Create and immediately approve sponsor change bonus
         bonus = ReferralService._create_bonus(
-            user, user, Decimal('10.00'), 'sponsor_change', 
-            'sponsor_change', Decimal('1.00'), 0
+            user, user, float('10.00'), 'sponsor_change', 
+            'sponsor_change', float('1.00'), 0
         )
         
         # Immediately approve the bonus
@@ -124,7 +123,7 @@ class ReferralService:
         bonus.save()
         
         # Add to user's total earnings and wallet
-        user.total_referral_earnings += bonus.bonus_amount
+        user.total_referral_earnings += float(bonus.bonus_amount)
         user.sponsor_change_bonus_claimed = True
         user.save()
         
@@ -178,7 +177,7 @@ class ReferralService:
         wallet.save()
         
         # Add to user's total earnings
-        bonus.referrer.unwithdrawable_bonus += bonus.bonus_amount
+        bonus.referrer.unwithdrawable_bonus += float(bonus.bonus_amount)
         bonus.referrer.save()
     
     @staticmethod
@@ -200,11 +199,11 @@ class ReferralService:
     @staticmethod
     def use_unwithdrawable_bonus_for_play(user, amount):
         """Use unwithdrawable bonus for playing games"""
-        if user.unwithdrawable_bonus < Decimal(str(amount)):
+        if user.unwithdrawable_bonus < float(amount):
             return False, "Insufficient unwithdrawable bonus"
         
         # Deduct from unwithdrawable bonus
-        user.unwithdrawable_bonus -= Decimal(str(amount))
+        user.unwithdrawable_bonus -= float(amount)
         user.save()
         
         # Add to regular wallet balance for playing
@@ -218,7 +217,7 @@ class ReferralService:
     @staticmethod
     def _create_bonus(referrer, winner, win_amount, game_id, bonus_type, percentage, generation_level):
         """Create a referral bonus record"""
-        bonus_amount = Decimal(str(win_amount)) * percentage
+        bonus_amount = float(win_amount) * float(percentage)
       
         
         bonus = ReferralBonus.objects.create(
@@ -246,7 +245,7 @@ class ReferralService:
                 bonus.save()
                 
                 # Add to user's total earnings
-                bonus.referrer.total_referral_earnings += bonus.bonus_amount
+                bonus.referrer.total_referral_earnings += float(bonus.bonus_amount)
                 bonus.referrer.save()
                 
                 # Add to wallet
@@ -284,7 +283,7 @@ class ReferralService:
     def can_withdraw(user):
         """Check if user can withdraw referral earnings"""
         # Check minimum amount
-        if user.total_referral_earnings < Decimal('500.00'):
+        if user.total_referral_earnings < float('500.00'):
             return False, "Minimum withdrawal amount is 500 birr"
         
         # Check qualification: 3 games per day OR 27 games per week
@@ -300,7 +299,7 @@ class ReferralService:
         if not can_withdraw:
             return False, message
         
-        if amount < Decimal('500.00'):
+        if amount < float('500.00'):
             return False, "Minimum withdrawal amount is 500 birr"
         
         if amount > user.total_referral_earnings:
@@ -335,7 +334,7 @@ class ReferralService:
         pending_bonuses = ReferralBonus.objects.filter(
             referrer=user, 
             status='pending'
-        ).aggregate(total=models.Sum('bonus_amount'))['total'] or Decimal('0.00')
+        ).aggregate(total=models.Sum('bonus_amount'))['total'] or float('0.00')
         
         return {
             'total_referrals': total_referrals,
