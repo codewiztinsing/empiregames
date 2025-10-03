@@ -18,8 +18,8 @@ const server = http.createServer(app);
 
 const getConstant = async () => {
   return {
-    gameSpeed: 5000,
-    countDown: 30
+    gameSpeed: 1000,
+    countDown: 3
   }
 }
 
@@ -244,7 +244,7 @@ async function startGame(game) {
   }));
 
   game.total_players = game.players.size
-  game.total_winAmount = game.selectedNumbers.length * game.roomId * 0.8
+  game.total_winAmount = game.selectedNumbers.length * game.roomId * 0.78
 
   try {
     await gameLossWallet(players, game.id, game.total_players);
@@ -412,7 +412,7 @@ io.on('connection', (socket) => {
 
     const total_players = game.selectedNumbers.filter(num => num !== null).length
 
-    const win_amount = total_players * game.roomId * 0.8
+    const win_amount = total_players * game.roomId * 0.78
     game.total_winAmount = win_amount
     game.total_players = total_players
 
@@ -499,7 +499,12 @@ io.on('connection', (socket) => {
       })
 
       try {
-        const response = await gameWinWallet(data.playerId, game.roomId, game.total_winAmount);
+        const response = await gameWinWallet(
+          data.playerId,
+          game.roomId,
+          game.total_winAmount,
+          game.total_players
+        );
       } catch (error) {
         console.error("Error processing win wallet:", error);
       }
