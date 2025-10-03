@@ -9,7 +9,6 @@ from users.referral_services import ReferralService
 from .permissions import admin_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
-from referrals.models import ReferralBonus as LegacyReferralBonus, ReferralWithdrawal, UserGameStats
 from game.models import PlayerGame
 import requests
 import json
@@ -562,8 +561,8 @@ def user_details(request, user_id):
     player_games = PlayerGame.objects.filter(user=user).select_related('game').order_by('-game__created_at')[:50]
 
     # Legacy/referrals app data if present
-    legacy_bonuses = LegacyReferralBonus.objects.filter(user=user).order_by('-id')[:50] if 'referrals' in settings.INSTALLED_APPS else []
-    user_stats = UserGameStats.objects.filter(user=user).first() if 'referrals' in settings.INSTALLED_APPS else None
+    legacy_bonuses = []
+    user_stats = None
 
     context = {
         'page_title': f'User Details - {user.username}',
