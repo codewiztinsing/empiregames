@@ -46,11 +46,18 @@ class ReferralService:
                 winner.referred_by, winner, win_amount, game_id, 
                 'first_generation', float('0.04'), 1
             )
-            
+            ReferralService.create_bonus(
+                winner.referred_by, winner, win_amount, game_id, 
+                'first_generation', float('0.04'), 1
+            )
             
             # Second generation (1% bonus)
             if winner.referred_by.referred_by:
                 second_gen_bonus = ReferralService._create_bonus(
+                    winner.referred_by.referred_by, winner, win_amount, game_id,
+                    'second_generation', float('0.01'), 2
+                )
+                ReferralService.create_bonus(
                     winner.referred_by.referred_by, winner, win_amount, game_id,
                     'second_generation', float('0.01'), 2
                 )
