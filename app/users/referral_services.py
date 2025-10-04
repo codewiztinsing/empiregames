@@ -38,7 +38,7 @@ class ReferralService:
     @staticmethod
     def process_win_bonus(winner, win_amount, game_id):
         """Process referral bonuses when a user wins"""
-        bonuses_created = []     
+        
         print(f"Winner: in referral services {winner.referred_by}")
         # First generation (4% bonus)
         if winner.referred_by:
@@ -47,16 +47,6 @@ class ReferralService:
                 'first_generation', float('0.04'), 1
             )
             
-            # Check if referrer qualifies for immediate bonus
-            can_withdraw, _ = ReferralService.can_withdraw(winner.referred_by)
-            if can_withdraw:
-                # Approve and add to wallet immediately
-                ReferralService.approve_bonus(first_gen_bonus.id, None)
-            else:
-                # Move to unwithdrawable bonus
-                ReferralService._move_to_unwithdrawable_bonus(first_gen_bonus)
-            
-            bonuses_created.append(first_gen_bonus)
             
             # Second generation (1% bonus)
             if winner.referred_by.referred_by:
@@ -65,18 +55,9 @@ class ReferralService:
                     'second_generation', float('0.01'), 2
                 )
                 
-                # Check if second generation referrer qualifies for immediate bonus
-                can_withdraw_2nd, _ = ReferralService.can_withdraw(winner.referred_by.referred_by)
-                if can_withdraw_2nd:
-                    # Approve and add to wallet immediately
-                    ReferralService.approve_bonus(second_gen_bonus.id, None)
-                else:
-                    # Move to unwithdrawable bonus
-                    ReferralService._move_to_unwithdrawable_bonus(second_gen_bonus)
-                
-                bonuses_created.append(second_gen_bonus)
+               
         
-        return bonuses_created
+        return True
     
     @staticmethod
     def process_signup_bonus(user):
@@ -218,20 +199,10 @@ class ReferralService:
     def _create_bonus(referrer, winner, win_amount, game_id, bonus_type, percentage, generation_level):
         """Create a referral bonus record"""
         bonus_amount = float(win_amount) * float(percentage)
-      
-        
-        bonus = ReferralBonus.objects.create(
-            referrer=referrer,
-            winner=winner,
-            game_id=game_id,
-            win_amount=win_amount,
-            bonus_type=bonus_type,
-            bonus_amount=bonus_amount,
-            generation_level=generation_level,
-            status='pending'
-        )
-        
-        return bonus
+        wallet, created = Wallet.objects.get_or_create(user=referrer)
+        wallet.balance += float(bonus_amount)
+        wallet.save()
+        return True
     
     @staticmethod
     def approve_bonus(bonus_id, admin_user):

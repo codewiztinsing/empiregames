@@ -64,17 +64,7 @@ def charge_player(players, entry_fee, game_id):
 @shared_task
 def update_player_balance(player_id,win_amount,game_id):
     player = get_object_or_404(User,telegram_id=player_id)
-    first_gen_referrer = player.referred_by
-    logger.info(f"First generation referrer: {first_gen_referrer}")
-    if first_gen_referrer:
-        second_gen_referrer = first_gen_referrer.referred_by
-        logger.info(f"Second generation referrer: {second_gen_referrer}")
-    else:
-        second_gen_referrer = None
-    inhouse_referrer = player.is_agent
-    logger.info(f"Inhouse referrer: {inhouse_referrer}")
     wallet = get_object_or_404(Wallet,user = player)
-
     game = get_object_or_404(Game,id=game_id)
 
     existing_transaction = Transaction.objects.filter(reference=game_id,type="WIN",user = player).first()
@@ -97,12 +87,7 @@ def update_player_balance(player_id,win_amount,game_id):
         except Exception as e:
             logger.error(f"Error processing referral bonuses: {e}")
         
-        # Update player game statistics
-        try:
-            ReferralService.update_game_stats(player)
-            logger.info(f"Updated game stats for player {player_id}")
-        except Exception as e:
-            logger.error(f"Error updating game stats: {e}")
+      
         
         return True,wallet.balance
 
