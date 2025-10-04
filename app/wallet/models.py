@@ -4,7 +4,7 @@ from users.models import User
 
 class Wallet(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    balance = models.FloatField(default=19.00)
+    balance = models.FloatField(default=0.00)  # Changed from 19.00 to 0.00
     total_referral_earnings = models.FloatField(default=0.00)
     unwithdrawable_bonus = models.FloatField(default=0.00)  # Bonus that can be used to play
     created_at = models.DateTimeField(auto_now_add=True)

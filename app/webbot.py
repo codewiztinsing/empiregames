@@ -744,6 +744,38 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await query.edit_message_text(text="An error occurred. Please try again.")
 
 
+async def show_id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Command to show user's unique ID"""
+    try:
+        print("DEBUG: show_id_command called")
+        user_id = update.effective_user.id
+        username = update.effective_user.username or "User"
+        
+        print(f"DEBUG: user_id = {user_id}, username = {username}")
+        
+        # Create the unique ID in the format Aker_telegramid
+        unique_id = f"Aker_{user_id}"
+        
+        message = (
+            f"🆔 Your Unique ID\n\n"
+            f"ID: <code>{unique_id}</code>\n"
+            f"Username: {username}\n\n"
+            f"📋 You can copy the ID above to share with others.\n"
+            f"💡 Others can use this ID to refer you as their sponsor."
+        )
+        
+        print(f"DEBUG: Sending message: {message}")
+        await update.message.reply_text(message, parse_mode=ParseMode.HTML)
+        print("DEBUG: Message sent successfully")
+        
+    except Exception as e:
+        print(f"DEBUG: Error in show_id_command: {e}")
+        logger.error(f"Error in show_id_command: {e}")
+        await update.message.reply_text("❌ Error showing your ID. Please try again.")
+    
+    return ConversationHandler.END
+
+
 async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Command to contact support"""
     await update.message.reply_text(
@@ -762,12 +794,16 @@ async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def change_sponsor_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Command to change user's sponsor/referrer"""
+    print("DEBUG: change_sponsor_command called")
     user_id = update.effective_user.id
     BACK_URL = get_bot_seetings().get("bot_url")
     
     try:
+        print(f"DEBUG: Processing change_sponsor for user {user_id}")
         # Check if user is registered
         user_response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
+        print(f"DEBUG: User response status: {user_response.status_code}")
+        
         if user_response.status_code != 200:
             await update.message.reply_text("❌ You need to register first. Use /register command.")
             return ConversationHandler.END
@@ -782,18 +818,24 @@ async def change_sponsor_command(update: Update, context: ContextTypes.DEFAULT_T
             await update.message.reply_text("❌ You have already changed your sponsor once. This can only be done once.")
             return ConversationHandler.END
         
+        print("DEBUG: Sending change sponsor instructions")
         await update.message.reply_text(
             "🔄 **Change Sponsor**\n\n"
             "Please enter the Telegram ID of your new sponsor.\n"
-            "You can find someone's Telegram ID by asking them to use /invite command.\n\n"
+            "You can use either:\n"
+            "• Direct Telegram ID (e.g., 1464395537)\n"
+            "• Aker ID format (e.g., Aker_1464395537)\n\n"
+            "You can find someone's ID by asking them to use /show_id command.\n\n"
             "⚠️ **Note:** You can only change your sponsor once!\n\n"
-            "Enter the Telegram ID (numbers only):",
+            "Enter the sponsor ID:",
             parse_mode=ParseMode.MARKDOWN
         )
         
+        print("DEBUG: Returning CHANGE_SPONSOR_WAIT_ID state")
         return CHANGE_SPONSOR_WAIT_ID
         
     except Exception as e:
+        print(f"DEBUG: Error in change_sponsor_command: {e}")
         logger.error(f"Error in change_sponsor_command: {e}")
         await update.message.reply_text("❌ An error occurred. Please try again later.")
         return ConversationHandler.END
@@ -801,27 +843,43 @@ async def change_sponsor_command(update: Update, context: ContextTypes.DEFAULT_T
 
 async def handle_new_sponsor_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the new sponsor ID input"""
+    print("DEBUG: handle_new_sponsor_id function called")
     user_id = update.effective_user.id
-    new_sponsor_id = update.message.text.strip()
+    new_sponsor_input = update.message.text.strip()
     BACK_URL = get_bot_seetings().get("bot_url")
+
     
     try:
-        # Validate that the input is a number
-        try:
-            new_sponsor_id_int = int(new_sponsor_id)
-        except ValueError:
-            await update.message.reply_text("❌ Please enter a valid Telegram ID (numbers only).")
-            return CHANGE_SPONSOR_WAIT_ID
+        # Extract Telegram ID from input - handle both formats
+        new_sponsor_id_int = None
+        
+        if new_sponsor_input.startswith("Aker_"):
+            # Handle Aker_telegramid format
+            try:
+                telegram_id_part = new_sponsor_input.replace("Aker_", "")
+                new_sponsor_id_int = int(telegram_id_part)
+                print(f"DEBUG: Extracted Telegram ID from Aker format: {new_sponsor_id_int}")
+            except ValueError:
+                await update.message.reply_text("❌ Invalid Aker ID format. Please use Aker_telegramid or just the Telegram ID.")
+                return CHANGE_SPONSOR_WAIT_ID
+        else:
+            # Handle direct Telegram ID format
+            try:
+                new_sponsor_id_int = int(new_sponsor_input)
+                print(f"DEBUG: Using direct Telegram ID: {new_sponsor_id_int}")
+            except ValueError:
+                await update.message.reply_text("❌ Please enter a valid Telegram ID (numbers only) or Aker ID (Aker_telegramid).")
+                return CHANGE_SPONSOR_WAIT_ID
         
         # Check if the new sponsor exists
         sponsor_response = requests.get(f'{BACK_URL}/api/v1/users/{new_sponsor_id_int}')
         if sponsor_response.status_code != 200:
-            await update.message.reply_text("❌ The sponsor with that Telegram ID doesn't exist or isn't registered.")
+            await update.message.reply_text("❌ The sponsor with that ID doesn't exist or isn't registered.")
             return CHANGE_SPONSOR_WAIT_ID
         
         sponsor_data = sponsor_response.json()
         if not sponsor_data.get('phone'):
-            await update.message.reply_text("❌ The sponsor with that Telegram ID isn't registered.")
+            await update.message.reply_text("❌ The sponsor with that ID isn't registered.")
             return CHANGE_SPONSOR_WAIT_ID
         
         # Check if user is trying to set themselves as sponsor
@@ -829,22 +887,33 @@ async def handle_new_sponsor_id(update: Update, context: ContextTypes.DEFAULT_TY
             await update.message.reply_text("❌ You cannot set yourself as your sponsor.")
             return CHANGE_SPONSOR_WAIT_ID
         
-        # Check if the new sponsor is already referred by the current user (prevent circular references)
+        # Get current user's database ID for the update
         current_user_response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
         current_user_data = current_user_response.json()
+        current_user_db_id = current_user_data.get('id')
         
-        # Simple check: if new sponsor's referred_by is the current user, reject
+        if not current_user_db_id:
+            await update.message.reply_text("❌ Could not find user database ID. Please try again later.")
+            return ConversationHandler.END
+        
+        # Get sponsor's database ID
+        sponsor_db_id = sponsor_data.get('id')
+        if not sponsor_db_id:
+            await update.message.reply_text("❌ Could not find sponsor database ID. Please try again later.")
+            return CHANGE_SPONSOR_WAIT_ID
+        
+        # Check if the new sponsor is already referred by the current user (prevent circular references)
         if sponsor_data.get('referred_by') == user_id:
             await update.message.reply_text("❌ Cannot set this sponsor as it would create a circular reference.")
             return CHANGE_SPONSOR_WAIT_ID
         
-        # Update the user's sponsor
+        # Update the user's sponsor using the new API endpoint
         update_data = {
-            'referred_by': new_sponsor_id_int,
+            'referred_by': sponsor_db_id,
             'sponsor_changed': True
         }
         
-        update_response = requests.put(f'{BACK_URL}/api/v1/users/{user_id}/', json=update_data)
+        update_response = requests.put(f'{BACK_URL}/api/v1/users/{current_user_db_id}/change-sponsor', json=update_data)
         
         if update_response.status_code == 200:
             sponsor_username = sponsor_data.get('username', f'User {new_sponsor_id_int}')
@@ -863,7 +932,7 @@ async def handle_new_sponsor_id(update: Update, context: ContextTypes.DEFAULT_TY
     except Exception as e:
         logger.error(f"Error in handle_new_sponsor_id: {e}")
         await update.message.reply_text("❌ An error occurred. Please try again later.")
-        return ConversationHandler.END
+    return ConversationHandler.END
 
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     amount = update.message.text
@@ -1011,6 +1080,11 @@ all_public_commands_descriptions = [
     BotCommand(
         "change_sponsor", 
         "Change Sponsor"
+        ),
+
+    BotCommand(
+        "show_id", 
+        "Show My ID"
         )
     ]
 
@@ -1041,8 +1115,11 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     balance = wallet_response.get('balance', 0)
 
     telegram_id = update.effective_user.id
+    # Get bot username dynamically
+    bot_username = (await context.bot.get_me()).username
+    # bot_username = "testselambingobot"
     # Use ref_ prefix so start command can parse first-generation referrer
-    invite_link = f"https://t.me/akerbingobot?start=ref_{telegram_id}"
+    invite_link = f"https://t.me/{bot_username}?start=ref_{telegram_id}"
     message = f"Invite your friends using this link:\n{invite_link}"
     reply_markup = None
     await update.message.reply_text(text=message, reply_markup=reply_markup)
@@ -1057,7 +1134,7 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     referrer_id = context.args[0] if context.args else None
     context.user_data['referrer_id'] = referrer_id
     print("referrer_id = ",referrer_id)
-
+    
     
     # Check if user is already registered
     response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
@@ -1253,7 +1330,7 @@ def main() -> None:
  
 
     conversation_handler = ConversationHandler(
-        entry_points=[CallbackQueryHandler(button), CommandHandler('register', register_command), CommandHandler('start', start_command)],
+        entry_points=[CallbackQueryHandler(button), CommandHandler('register', register_command), CommandHandler('start', start_command), CommandHandler('change_sponsor', change_sponsor_command)],
         states={
             # get_deposit_amount
             DEPOSIT_AMOUNT          : [MessageHandler(filters.TEXT & ~filters.COMMAND, deposit_amount)],
@@ -1274,7 +1351,7 @@ def main() -> None:
     application.add_handler(CommandHandler('withdraw', withdraw_command))
     application.add_handler(CommandHandler('check_balance', check_balance_command))
     application.add_handler(CommandHandler('deposit', deposit_command))
-    application.add_handler(CommandHandler('change_sponsor', change_sponsor_command))
+    application.add_handler(CommandHandler('show_id', show_id_command))
     application.add_handler(conversation_handler)
     application.add_handler(CommandHandler('invite', handle_invite))  
     application.run_polling(allowed_updates=Update.ALL_TYPES)

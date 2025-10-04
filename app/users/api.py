@@ -2,7 +2,7 @@ import jwt
 from ninja import NinjaAPI,Router
 from ninja.security import django_auth
 from .auth import encode_jwt,decode_jwt
-from .schema import RegisterSchema, LoginSchema, UserSchema, UserResponseSchema
+from .schema import RegisterSchema, LoginSchema, UserSchema, UserResponseSchema, UpdateUserSchema, ChangeSponsorSchema
 # from .models import User
 from django.db import IntegrityError
 from django.http import JsonResponse
@@ -51,19 +51,23 @@ def register(request, data: RegisterSchema):
 
         
         referred_by = None
+        has_real_referrer = False  # Track if user has a real referrer (not default)
+        
         print("referral id ",data.referred_by)
         if data.referred_by:
             try:
                 referred_by = User.objects.get(telegram_id=data.referred_by)
+                has_real_referrer = True  # User was actually referred by someone
                 print("referred_by = ",referred_by)
             except User.DoesNotExist:
                 print(f"Referrer with telegram_id {data.referred_by} not found")
                 referred_by = None
         
-        # If no referrer provided, assign default sponsor (US)
+        # If no referrer provided, assign default sponsor (Akerbingo)
         if not referred_by:
             from .referral_services import ReferralService
             referred_by = ReferralService.get_or_create_default_sponsor()
+            # Default sponsor is assigned but user doesn't get signup bonus
 
     
         # Create user with hashed password
@@ -75,10 +79,15 @@ def register(request, data: RegisterSchema):
             password=make_password(data.password)
         )
         
-        # Process signup bonus for new customers
-        if created:
+        # Process signup bonus ONLY if:
+        # 1. User is newly created
+        # 2. User has a real referrer (NOT the default Akerbingo sponsor)
+        if created and has_real_referrer:
             from .referral_services import ReferralService
-            ReferralService.process_signup_bonus(created_user)
+            success, message = ReferralService.process_signup_bonus(created_user)
+            print(f"Signup bonus (referred by {referred_by.username}): {message}")
+        elif created and not has_real_referrer:
+            print(f"User {created_user.username} has default sponsor (Akerbingo), NO signup bonus given")
         print("created_user = ",created_user)
         
         if created_user:
@@ -170,6 +179,7 @@ def get_user_by_telegram_id(request,telegram_id:int):
         print("27-games_played_this_week = ",27-games_played_this_week)
         return UserResponseSchema(
             success=True,
+            id=user.id,
             username=user.username,
             email=user.email,
             phone=user.phone,
@@ -489,4 +499,56 @@ def get_user_wallet(request, user_id: int):
         print(f"Error getting user wallet: {e}")
         return JsonResponse({"error": str(e)}, status=500)
 
+
+
+
+@users_router.put("/{user_id}/change-sponsor")
+def change_sponsor(request, user_id: int, data: ChangeSponsorSchema):
+    """Change user's sponsor/referrer"""
+    try:
+        user = User.objects.get(id=user_id)
+        
+        # Update referred_by if provided
+        if data.referred_by is not None:
+            try:
+                new_sponsor = User.objects.get(id=data.referred_by)
+                user.referred_by = new_sponsor
+            except User.DoesNotExist:
+                return JsonResponse({"error": "Sponsor not found"}, status=404)
+        
+        # Update sponsor_changed if provided
+        if data.sponsor_changed is not None:
+            user.sponsor_changed = data.sponsor_changed
+        
+        user.save()
+        
+        return JsonResponse({
+            "success": True,
+            "message": "Sponsor changed successfully",
+            "referred_by": user.referred_by.id if user.referred_by else None,
+            "sponsor_changed": user.sponsor_changed
+        }, status=200)
+        
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@users_router.put("/{user_id}/")
+def update_user(request, user_id: int, data: UpdateUserSchema):
+    """Update user information"""
+    try:
+        user = User.objects.get(id=user_id)
+        user.username = data.username
+        user.email = data.email
+        user.phone = data.phone
+        user.telegram_id = data.telegram_id
+        user.save()
+        return JsonResponse({"message": "User updated successfully"}, status=200)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
+    except Exception as e:
+        print(f"Error updating user: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
 

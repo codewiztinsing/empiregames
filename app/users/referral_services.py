@@ -170,13 +170,13 @@ class ReferralService:
     
     @staticmethod
     def get_or_create_default_sponsor():
-        """Get or create the default sponsor (US)"""
+        """Get or create the default sponsor (Akerbingo)"""
         try:
-            default_sponsor = User.objects.get(username='US')
+            default_sponsor = User.objects.get(username='Akerbingo')
         except User.DoesNotExist:
             # Create default sponsor if it doesn't exist
             default_sponsor = User.objects.create(
-                username='US',
+                username='Akerbingo',
                 phone='0000000000',
                 telegram_id='0',
                 is_agent=True,
