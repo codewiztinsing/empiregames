@@ -27,10 +27,21 @@ class LoginSchema(Schema):
 class UserResponseSchema(Schema):
     success: bool
     message: Optional[str] = None
+    id: Optional[int] = None
     username: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
     telegram_id: Optional[str] = None
     games_played_this_week: Optional[int] = None
     remaining_games: Optional[int] = None
+
+class UpdateUserSchema(Schema):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    telegram_id: Optional[str] = None
+
+class ChangeSponsorSchema(Schema):
+    referred_by: Optional[int] = None
+    sponsor_changed: Optional[bool] = None
 
