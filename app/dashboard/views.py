@@ -475,6 +475,43 @@ def users(request):
     page_obj = paginator.get_page(page_number)
     total_users = users.count()
     suspended_users = users.filter(is_active=False).count()
+    
+    # Calculate referral bonuses and total balance for each user
+    users_with_bonuses = []
+    for user in page_obj:
+        # Get first generation bonuses
+        first_gen_bonuses = ReferralBonus.objects.filter(
+            referrer=user,
+            bonus_type='first_generation',
+            status='approved'
+        ).aggregate(total=Sum('bonus_amount'))['total'] or 0.0
+        
+        # Get second generation bonuses
+        second_gen_bonuses = ReferralBonus.objects.filter(
+            referrer=user,
+            bonus_type='second_generation',
+            status='approved'
+        ).aggregate(total=Sum('bonus_amount'))['total'] or 0.0
+        
+        # Get wallet balance
+        wallet_balance = 0.0
+        try:
+            wallet = Wallet.objects.get(user=user)
+            wallet_balance = wallet.balance
+        except Wallet.DoesNotExist:
+            pass
+        
+        # Calculate total balance (wallet + referral earnings)
+        total_balance = wallet_balance
+        
+        users_with_bonuses.append({
+            'user': user,
+            'first_gen_bonus': first_gen_bonuses,
+            'second_gen_bonus': second_gen_bonuses,
+            'wallet_balance': wallet_balance,
+            'total_balance': total_balance,
+        })
+    
     # handle next and previous page
     has_next = page_obj.has_next()
     has_previous = page_obj.has_previous()
@@ -483,6 +520,7 @@ def users(request):
     
     context = {
         'users': page_obj,
+        'users_with_bonuses': users_with_bonuses,
         'page_title': 'Users',
         'page_obj': page_obj,
         'total_users': total_users,

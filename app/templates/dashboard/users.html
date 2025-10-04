@@ -122,50 +122,44 @@
                     <tr>
                         <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">USER</th>
                         <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">CONTACT</th>
-                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">BALANCE</th>
-                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">BONUS</th>
-                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">SCORE</th>
+                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">1ST GEN BONUS</th>
+                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">2ND GEN BONUS</th>
+                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">TOTAL BALANCE</th>
                         <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-dark-border">
-                    <!-- User Row 1 -->
-
-                    {% for user in users %}
+                    {% for user_data in users_with_bonuses %}
                     <tr class="hover:bg-dark-bg transition-colors">
                         <td class="py-3 px-4">
                             <div class="flex items-center space-x-3">
                                 <div class="w-8 h-8 bg-purple-primary rounded-full flex items-center justify-center">
-                                    <span class="text-white text-sm font-medium">{{ user.username|slice:":2" }}</span>
+                                    <span class="text-white text-sm font-medium">{{ user_data.user.username|slice:":2" }}</span>
                                 </div>
                                 <div>
-                                    <p class="text-white font-medium">{{ user.username }}</p>
-                                    <p class="text-gray-400 text-sm">USER ID: {{ user.id }}</p>
+                                    <p class="text-white font-medium">{{ user_data.user.username }}</p>
+                                    <p class="text-gray-400 text-sm">USER ID: {{ user_data.user.id }}</p>
                                 </div>
                             </div>
                         </td>
-                        <td class="py-3 px-4 text-white">{{ user.phone }}</td>
-                        <td class="py-3 px-4 text-white">ETB {{ user.wallet.balance }}</td>
-                        <td class="py-3 px-4 text-white">{{ user.created_at }}</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                {{ user.is_active }}
-                            </span>
-                        </td>
+                        <td class="py-3 px-4 text-white">{{ user_data.user.phone }}</td>
+                        <td class="py-3 px-4 text-green-400">ETB {{ user_data.first_gen_bonus|floatformat:2 }}</td>
+                        <td class="py-3 px-4 text-blue-400">ETB {{ user_data.second_gen_bonus|floatformat:2 }}</td>
+                        <td class="py-3 px-4 text-yellow-400 font-semibold">ETB {{ user_data.total_balance|floatformat:2 }}</td>
                         <td class="py-3 px-4">
                             <div class="flex items-center space-x-2">
                                 <a class="text-purple-primary hover:text-purple-hover text-sm font-medium"
-                                href="{% url 'dashboard:user_edit' user.id %}"
+                                href="{% url 'dashboard:user_edit' user_data.user.id %}"
                                 >
                                     Edit
                                 </a>
                                 <a class="text-blue-400 hover:text-blue-300 text-sm font-medium" 
-                                href="{% url 'dashboard:user_details' user.id %}"
+                                href="{% url 'dashboard:user_details' user_data.user.id %}"
                                 >
                                     Details
                                 </a>
                                 <a class="text-red-400 hover:text-red-300 text-sm font-medium" 
-                                href="{% url 'accounts:block_user' user.id %}"
+                                href="{% url 'accounts:block_user' user_data.user.id %}"
                                 >
                                     Block
                                 </a>
