@@ -280,13 +280,8 @@ async function startGame(game) {
       total_called_numbers: game.calledNumbers.length,
       playersWithSelectedNumbers:playersWithSelectedNumbers
 
-    
-   
-   
     });
    
-
- 
 
     if (game.calledNumbers.length >= 75) {
       io.emit("gameStatus", {
@@ -502,7 +497,7 @@ io.on('connection', (socket) => {
         const response = await gameWinWallet(
           data.playerId,
           game.roomId,
-          game.total_winAmount,
+          game.win_amount,
           game.total_players
         );
       } catch (error) {
