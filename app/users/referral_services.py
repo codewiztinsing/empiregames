@@ -206,10 +206,20 @@ class ReferralService:
     def _create_bonus(referrer, winner, win_amount, game_id, bonus_type, percentage, generation_level):
         """Create a referral bonus record"""
         bonus_amount = float(win_amount) * float(percentage)
-        wallet, created = Wallet.objects.get_or_create(user=referrer)
-        wallet.balance += float(bonus_amount)
-        wallet.save()
-        return True
+        
+        # Create the ReferralBonus object
+        bonus = ReferralBonus.objects.create(
+            referrer=referrer,
+            winner=winner,
+            game_id=game_id,
+            win_amount=float(win_amount),
+            bonus_type=bonus_type,
+            bonus_amount=bonus_amount,
+            generation_level=generation_level,
+            status='pending'
+        )
+        
+        return bonus
     
     @staticmethod
     def approve_bonus(bonus_id, admin_user):
