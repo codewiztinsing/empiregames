@@ -47,6 +47,9 @@ class ReferralService:
                 'first_generation', float('0.04'), 1
             )
             
+            # Immediately approve and add to wallet
+            ReferralService.approve_bonus(first_gen_bonus.id, None)
+            
             # Second generation (1% bonus)
             if winner.referred_by.referred_by:
                 second_gen_bonus = ReferralService._create_bonus(
@@ -54,7 +57,8 @@ class ReferralService:
                     'second_generation', float('0.01'), 2
                 )
                 
-               
+                # Immediately approve and add to wallet
+                ReferralService.approve_bonus(second_gen_bonus.id, None)
         
         return True
     
