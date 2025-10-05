@@ -1182,8 +1182,11 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         games_played_this_week = user_data.get('games_played_this_week', 0)
         logger.info(f"Games played this week: {games_played_this_week}")
 
-        # Referral bonus (float)
+        # Referral bonus and counts (float)
         total_referral_earnings = float(user_data.get('total_referral_earnings', 0)) if isinstance(user_data, dict) else 0.0
+        first_gen_referrals_count = user_data.get('first_gen_referrals_count', 0)
+        second_gen_referrals_count = user_data.get('second_gen_referrals_count', 0)
+        total_referrals_count = first_gen_referrals_count + second_gen_referrals_count
         
     except requests.exceptions.RequestException as e:
         logger.error(f"API request error: {e}")
@@ -1210,6 +1213,10 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"🎁 **Referral Bonus:** {total_referral_earnings:.2f} ETB\n"
         f"🔒 **Non-Withdrawable Balance:** 0.0 ETB\n"
         f"🎯 **Total Balance:** {balance} ETB\n\n"
+        f"👥 **Referral Network:**\n"
+        f"🔗 **Total Referrals:** {total_referrals_count}\n"
+        f"🥇 **1st Generation:** {first_gen_referrals_count}\n"
+        f"🥈 **2nd Generation:** {second_gen_referrals_count}\n\n"
         f"🎮 **Weekly Games Progress:**\n"
         f"📊 **Games Played This Week:** {games_played_this_week}/27\n"
         f"⏳ **Games Remaining:** {remaining_games} games to complete weekly requirement\n\n"
@@ -1224,6 +1231,10 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"🎁 **Referral Bonus:** {total_referral_earnings:.2f} ETB\n"
         f"🔒 **Non-Withdrawable Balance:** 0.0 ETB\n"
         f"🎯 **Total Balance:** {balance} ETB\n\n"
+        f"👥 **Referral Network:**\n"
+        f"🔗 **Total Referrals:** {total_referrals_count}\n"
+        f"🥇 **1st Generation:** {first_gen_referrals_count}\n"
+        f"🥈 **2nd Generation:** {second_gen_referrals_count}\n\n"
         f"🎮 **Weekly Games Progress:**\n"
         f"📊 **Games Played This Week:** {games_played_this_week}/27\n"
         f"⏳ **Games Remaining:** {remaining_games} games to complete weekly requirement\n\n"

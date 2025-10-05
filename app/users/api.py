@@ -175,6 +175,11 @@ def get_user_by_telegram_id(request,telegram_id:int):
             created_at__date__gte=start_of_week,
             created_at__date__lte=end_of_week
         ).count()
+        
+        # Get referral counts
+        first_gen_referrals_count = User.objects.filter(referred_by=user).count()
+        second_gen_referrals_count = User.objects.filter(referred_by__referred_by=user).count()
+        
         print("games_played_this_week remaining = ", games_played_this_week)
         print("27-games_played_this_week = ",27-games_played_this_week)
         return UserResponseSchema(
@@ -185,7 +190,10 @@ def get_user_by_telegram_id(request,telegram_id:int):
             phone=user.phone,
             telegram_id=user.telegram_id,
             games_played_this_week=games_played_this_week,
-            remaining_games=27-games_played_this_week
+            remaining_games=27-games_played_this_week,
+            total_referral_earnings=float(user.total_referral_earnings),
+            first_gen_referrals_count=first_gen_referrals_count,
+            second_gen_referrals_count=second_gen_referrals_count
         )
     except Exception as e:
         print("error = ",e)
