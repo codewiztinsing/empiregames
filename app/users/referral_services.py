@@ -47,6 +47,9 @@ class ReferralService:
                 'first_generation', float('0.04'), 1
             )
             
+            # Automatically approve and add to wallet
+            ReferralService._approve_and_add_bonus(first_gen_bonus)
+            
             # Second generation (1% bonus)
             if winner.referred_by.referred_by:
                 second_gen_bonus = ReferralService._create_bonus(
@@ -54,7 +57,8 @@ class ReferralService:
                     'second_generation', float('0.01'), 2
                 )
                 
-               
+                # Automatically approve and add to wallet
+                ReferralService._approve_and_add_bonus(second_gen_bonus)
         
         return True
     
@@ -212,6 +216,30 @@ class ReferralService:
         )
         
         return bonus
+    
+    @staticmethod
+    def _approve_and_add_bonus(bonus):
+        """Automatically approve a bonus and add to referrer's wallet"""
+        try:
+            with transaction.atomic():
+                # Update bonus status
+                bonus.status = 'approved'
+                bonus.save()
+                
+                # Add to referrer's total earnings
+                bonus.referrer.total_referral_earnings += float(bonus.bonus_amount)
+                bonus.referrer.save()
+                
+                # Add to referrer's wallet
+                wallet, created = Wallet.objects.get_or_create(user=bonus.referrer)
+                wallet.balance += float(bonus.bonus_amount)
+                wallet.save()
+                
+                print(f"Bonus approved and added: {bonus.bonus_amount} to {bonus.referrer.username}")
+                
+        except Exception as e:
+            print(f"Error approving bonus: {e}")
+            raise e
     
     @staticmethod
     def approve_bonus(bonus_id, admin_user):
