@@ -598,6 +598,34 @@ def user_details(request, user_id):
     referral_withdrawals = WithdrawalRequest.objects.filter(user=user).order_by('-created_at')[:50]
     player_games = PlayerGame.objects.filter(user=user).select_related('game').order_by('-game__created_at')[:50]
 
+    # Get all users referred by this user with their generation levels
+    referred_users = []
+    
+    # First generation (direct referrals)
+    first_gen_users = User.objects.filter(referred_by=user).select_related('referred_by')
+    for ref_user in first_gen_users:
+        referred_users.append({
+            'user': ref_user,
+            'generation': '1st Generation',
+            'level': 1
+        })
+    
+    # Second generation (referrals of referrals)
+    second_gen_users = User.objects.filter(referred_by__referred_by=user).select_related('referred_by', 'referred_by__referred_by')
+    for ref_user in second_gen_users:
+        referred_users.append({
+            'user': ref_user,
+            'generation': '2nd Generation', 
+            'level': 2
+        })
+    
+    # Sort by generation level and creation date
+    referred_users.sort(key=lambda x: (x['level'], x['user'].created_at), reverse=True)
+    
+    # Calculate generation counts
+    first_gen_count = len([u for u in referred_users if u['level'] == 1])
+    second_gen_count = len([u for u in referred_users if u['level'] == 2])
+
     # Legacy/referrals app data if present
     legacy_bonuses = []
     user_stats = None
@@ -610,6 +638,9 @@ def user_details(request, user_id):
         'referral_bonuses': referral_bonuses,
         'referral_withdrawals': referral_withdrawals,
         'player_games': player_games,
+        'referred_users': referred_users,
+        'first_gen_count': first_gen_count,
+        'second_gen_count': second_gen_count,
         'legacy_bonuses': legacy_bonuses,
         'user_stats': user_stats,
     }

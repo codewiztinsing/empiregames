@@ -26,6 +26,33 @@
                 <p class="text-gray-400">No wallet found.</p>
                 {% endif %}
             </div>
+            <div class="bg-dark-card border border-dark-border rounded p-4">
+                <h2 class="text-white font-semibold mb-3">Referred Users ({{ referred_users|length }})</h2>
+                {% if referred_users %}
+                <div class="mb-3 flex gap-2">
+                    <span class="text-xs px-2 py-1 bg-blue-600 text-white rounded">1st Gen: {{ first_gen_count }}</span>
+                    <span class="text-xs px-2 py-1 bg-green-600 text-white rounded">2nd Gen: {{ second_gen_count }}</span>
+                </div>
+                <div class="space-y-2 max-h-64 overflow-y-auto">
+                    {% for ref_data in referred_users %}
+                    <div class="flex justify-between items-center p-2 bg-gray-800 rounded">
+                        <div>
+                            <p class="text-gray-300 text-sm">{{ ref_data.user.username }}</p>
+                            <p class="text-gray-400 text-xs">{{ ref_data.user.telegram_id }}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs px-2 py-1 rounded {% if ref_data.level == 1 %}bg-blue-600 text-white{% else %}bg-green-600 text-white{% endif %}">
+                                {{ ref_data.generation }}
+                            </span>
+                            <p class="text-gray-400 text-xs mt-1">{{ ref_data.user.created_at|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-400">No referred users.</p>
+                {% endif %}
+            </div>
         </div>
         <div class="lg:col-span-2 space-y-6">
             <div class="bg-dark-card border border-dark-border rounded p-4">
