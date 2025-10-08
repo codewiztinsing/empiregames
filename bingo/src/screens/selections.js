@@ -159,6 +159,7 @@ const Selections = () => {
 
   // Attempt to rejoin a previous game
   const attemptRejoin = (playerId, roomId, playerName) => {
+    console.log("attemptRejoin",playerId, roomId, playerName)
     socket.emit('rejoinGame', {
       playerId: playerId,
       roomId: roomId,
@@ -787,7 +788,7 @@ const handleGlobals = (state) => {
           <div className="balance-container">
 
             <div className="balance-text">
-              Balance {balance} ብር
+              Balance {balance.toFixed(2)} ብር
             </div>
 
             <div className="balance-text">

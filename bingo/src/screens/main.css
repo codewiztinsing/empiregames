@@ -560,7 +560,7 @@ body {
 
 .number.called {
   color: white;
-  animation: pulse 2s infinite;
+  /* animation: pulse 2s infinite; */
 }
 
 @keyframes pulse {

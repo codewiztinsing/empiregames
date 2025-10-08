@@ -1116,13 +1116,20 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     telegram_id = update.effective_user.id
     # Get bot username dynamically
-    bot_username = (await context.bot.get_me()).username\
-    # bot_username = "testselambingobot"
+    bot_username = (await context.bot.get_me()).username
     # Use ref_ prefix so start command can parse first-generation referrer
     invite_link = f"https://t.me/{bot_username}?start=ref_{telegram_id}"
-    message = f"Invite your friends using this link:\n{invite_link}"
+    message = (
+        "Invite your friends using this link:\n"
+        f"<code>{invite_link}</code>\n\n"
+        "Copy and share the link above!"
+    )
     reply_markup = None
-    await update.message.reply_text(text=message, reply_markup=reply_markup)
+    await update.message.reply_text(
+        text=message, 
+        reply_markup=reply_markup, 
+        parse_mode="HTML"
+    )
 
 
 

@@ -35,6 +35,7 @@ const PlayingBoard = () => {
   const [totalCalledNumbers, setTotalCalledNumbers] = useState(0);
   const [selectedCell, setSelectedCell] = useState(new Set());
   const [isBingo, setIsBingo] = useState(false);
+  const [isDisqualified, setIsDisqualified] = useState(false);
   const [winningCard, setWinningCard] = useState(null);
   const [winner, setWinner] = useState(null);
   const [winnerCardNumber, setWinnerCardNumber] = useState(null);
@@ -149,8 +150,15 @@ const PlayingBoard = () => {
     };
 
   const handleFalseBingo = (data) => {
+    console.log("handleFalseBingo",data)
+
     const loserBoard = data.losser_board;
     if (loserBoard === selectedNumber) setFirstBoardLost(true);
+    if (data.playerId && data.playerId === playerId) {
+      setIsDisqualified(true);
+      setToast("You are disqualified for this round.");
+      setIsToast(true);
+    }
   };
 
   const handleBingoWinner = (data) => {
@@ -243,6 +251,9 @@ const PlayingBoard = () => {
       setTotalCalledNumbers(data.totalCalledNumbers || 0);
       setWinAmount(data.win_amount || 0);
       setTotalPlayers(data.total_players || 0);
+      if (data.faulMade === true) {
+        setIsDisqualified(true);
+      }
       
       // Mark all called numbers visually
       if (data.calledNumbers && Array.isArray(data.calledNumbers)) {
@@ -281,6 +292,25 @@ const PlayingBoard = () => {
     socket.on('winBingo', handleWinBingo);
     socket.on('falseBingo', handleFalseBingo);
     socket.on('bingoWinner', handleBingoWinner);
+    socket.on('disqualified', (payload) => {
+      console.log("disqualified",payload)
+      if (!payload) return;
+          console.log("disqualified",payload.gameId, payload.roomId)
+      if (payload.gameId === gameId && payload.roomId === roomId) {
+        setIsDisqualified(true);
+        setToast(payload.message || 'You are disqualified for this round.');
+        setIsToast(true);
+      }
+    });
+    socket.on('faulMadePlayers', (payload) => {
+      try {
+        if (payload && Array.isArray(payload.faulPlayers)) {
+          if (payload.faulPlayers.includes(playerId)) {
+            setIsDisqualified(true);
+          }
+        }
+      } catch (e) {}
+    });
     socket.on('joinError', handleJoinError);
     socket.on('playerLeft', handlePlayerLeft);
     socket.on('rejoinSuccess', handleRejoinSuccess);
@@ -300,6 +330,8 @@ const PlayingBoard = () => {
       socket.off('rejoinSuccess', handleRejoinSuccess);
       socket.off('rejoinError', handleRejoinError);
       socket.off('playerRejoined', handlePlayerRejoined);
+      socket.off('disqualified');
+      socket.off('faulMadePlayers');
       socket.off('disconnect');
     };
   }, [socket, roomId, playerId, playerName, selectedNumber, setCountDown, setGameId, setToast, setIsToast, navigate, winAmount, betAmount]);
@@ -313,6 +345,17 @@ const PlayingBoard = () => {
       return updated.length > 3 ? updated.slice(1) : updated;
     });
   }, [lastBall]);
+
+  // ✅ On landing: request current disqualified (faul) players to immediately reflect state
+  useEffect(() => {
+    try {
+      if (!socket) return;
+      // Require a gameId to scope the request; fallback to roomId if used as id
+      const gid = gameId || roomId;
+      if (!gid) return;
+      socket.emit('faulMadePlayer', { gameId: gid });
+    } catch (e) {}
+  }, [socket, gameId, roomId]);
 
   // ✅ Handle winner countdown and navigation
   useEffect(() => {
@@ -808,13 +851,13 @@ const PlayingBoard = () => {
           
           <button className={`bingo-button-card-${selectedNumber}`} 
                 onClick={() => handleBingo(selectBoard,selectedNumber)} 
-                disabled={firstBoardLost || !selectedNumber}
+                disabled={firstBoardLost || isDisqualified || !selectedNumber}
                 style={{
-                  backgroundColor: firstBoardLost ? "red" : "orange",
-                  cursor: firstBoardLost || !selectedNumber ? "not-allowed" : "pointer"
+                  backgroundColor: (firstBoardLost || isDisqualified) ? "red" : "orange",
+                  cursor: (firstBoardLost || isDisqualified || !selectedNumber) ? "not-allowed" : "pointer"
                 }}
           >
-             {firstBoardLost ? "You made Faul" : "BINGO!"}
+             {(firstBoardLost || isDisqualified) ? "Disqualified" : "BINGO!"}
           </button>
         </>
       )}

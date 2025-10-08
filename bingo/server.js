@@ -61,6 +61,7 @@ async function createGame(roomId) {
     isCountStart: false,
     gameSpeed:gameSettings.gameSpeed,
     disconnectedPlayers: new Map(),
+    fauldMadePlayers: new Map(),
     roomId
   };
   activeGames.set(roomId, game);
@@ -453,7 +454,14 @@ io.on('connection', (socket) => {
   
 
   socket.on("bingo", async (data) => {
-    
+    // If player previously made a false bingo, ignore further bingo attempts
+    const gameForFaulCheck = activeGames.get(data.gameId);
+    if (gameForFaulCheck && gameForFaulCheck.fauldMadePlayers && gameForFaulCheck.fauldMadePlayers.get && gameForFaulCheck.fauldMadePlayers.get(data.playerId) === true) {
+      console.log("🚫 Ignoring bingo from disqualified player due to faul:", data.playerId);
+      socket.emit("disqualified", { message: "You are disqualified for this round due to false bingo.", roomId: data.roomId, gameId: data.gameId });
+      return;
+    }
+
     const game = activeGames.get(data.gameId);
     if (!game || game.status !== 'in-progress') return;
     const playerCards = game.players.get(data.playerId);
@@ -508,6 +516,7 @@ io.on('connection', (socket) => {
     }
 
     else{
+      game.fauldMadePlayers.set(data.playerId, true);
       io.emit("falseBingo", {
         isBingo: false,
         playerId: data.playerId,
@@ -520,6 +529,29 @@ io.on('connection', (socket) => {
     
 });
   
+
+socket.on("faulMadePlayer", (data) => {
+  const game = Array.from(activeGames.values()).find(g => g.status === 'in-progress' && g.id === data.gameId);
+  
+  if (!game) {
+    console.log("❌ Game not found for faulMadePlayer event");
+    return;
+  }
+
+  // Gather all players who have made a faul (false bingo)
+  const faulPlayers = [];
+  for (const [playerId, value] of game.fauldMadePlayers.entries()) {
+    if (value) {
+      faulPlayers.push(playerId);
+    }
+  }
+
+  io.emit("faulMadePlayers", {
+    gameId: data.gameId,
+    roomId: game.roomId,
+    faulPlayers: faulPlayers
+  });
+})
 
 
   socket.on("leave",(data) => {
@@ -568,6 +600,35 @@ io.on('connection', (socket) => {
       });
       
       game.disconnectedPlayers.set(playerId, playerData);
+
+      // Mark player as disqualified for the current round upon leaving mid-game
+      try {
+        if (!game.fauldMadePlayers) {
+          game.fauldMadePlayers = new Map();
+        }
+        game.fauldMadePlayers.set(playerId, true);
+
+        // Broadcast disqualification and the updated list of disqualified (faul) players
+        const faulPlayers = [];
+        for (const [pid, val] of game.fauldMadePlayers.entries()) {
+          if (val) faulPlayers.push(pid);
+        }
+
+        io.emit("disqualified", {
+          message: "You left during an active game. You are disqualified for this round.",
+          roomId: game.roomId,
+          gameId: game.id,
+          playerId: playerId
+        });
+
+        io.emit("faulMadePlayers", {
+          gameId: game.id,
+          roomId: game.roomId,
+          faulPlayers
+        });
+      } catch (e) {
+        console.log("Error marking player disqualified on leave:", e);
+      }
    
       
       // Immediate verification
@@ -696,6 +757,31 @@ io.on('connection', (socket) => {
     const playerData = game.disconnectedPlayers.get(data.playerId);
     console.log("✅ Found rejoin data for player:", playerData);
 
+    // If player had made a false bingo (faul), disqualify and do not restore to active game
+    const wasFaulMade = !!(game.fauldMadePlayers && game.fauldMadePlayers.get && game.fauldMadePlayers.get(data.playerId) === true);
+    if (wasFaulMade) {
+      console.log("🚫 Player is disqualified due to false bingo, not restoring:", data.playerId);
+      socket.emit("rejoinError", { message: "You are disqualified for this round due to false bingo.", disqualified: true });
+      // Still provide state snapshot so client can reflect current game without enabling actions
+      socket.emit("rejoinSuccess", {
+        playerId: data.playerId,
+        gameId: game.id,
+        roomId: game.roomId,
+        selectedNumber: playerData.selectedNumber,
+        selectedNumber2: playerData.selectedNumber2,
+        boards: playerData.boards,
+        markedCells: playerData.markedCells,
+        calledNumbers: game.calledNumbers.map(ball => ball.number),
+        lastBall: game.currentCall,
+        totalCalledNumbers: game.calledNumbers.length,
+        win_amount: game.win_amount,
+        total_players: game.total_players,
+        game_status: game.status,
+        faulMade: true
+      });
+      return;
+    }
+
     // Restore player to active game
     game.players.set(data.playerId, playerData.boards);
     game.numberOfBoardsToPlayer.set(data.playerId, playerData.numberOfBoards);
@@ -703,6 +789,9 @@ io.on('connection', (socket) => {
     
     // Remove from disconnected players
     game.disconnectedPlayers.delete(data.playerId);
+
+    // Determine if this player had already made a false bingo (faul)
+    const hasFaulMade = !!(game.fauldMadePlayers && game.fauldMadePlayers.get && game.fauldMadePlayers.get(data.playerId) === true);
 
     // Send rejoin success with current game state
     socket.emit("rejoinSuccess", {
@@ -718,7 +807,8 @@ io.on('connection', (socket) => {
       totalCalledNumbers: game.calledNumbers.length,
       win_amount: game.win_amount,
       total_players: game.total_players,
-      game_status: game.status
+      game_status: game.status,
+      faulMade: hasFaulMade
     });
 
     console.log("✅ Player successfully rejoined:", data.playerId);
