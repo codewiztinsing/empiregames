@@ -1191,6 +1191,14 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
 
         # Referral bonus (float)
         total_referral_earnings = float(user_data.get('total_referral_earnings', 0)) if isinstance(user_data, dict) else 0.0
+
+        # Compute balances per policy
+        wallet_balance = float(balance or 0)
+        referral_bonus = float(total_referral_earnings or 0)
+        threshold_met = referral_bonus >= 500.0
+        withdrawable_balance = wallet_balance + (referral_bonus if threshold_met else 0.0)
+        non_withdrawable_balance = 0.0 if threshold_met else referral_bonus
+        total_balance = wallet_balance + referral_bonus
         
     except requests.exceptions.RequestException as e:
         logger.error(f"API request error: {e}")
@@ -1213,10 +1221,10 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"💰 Hey {user_name}! Your Current Account Balance!\n"
         f"👤 **Name:** {user_name}\n"
         f"📱 **Phone Number:** {telegram_id}\n"
-        f"💵 **Withdrawable Balance:** {balance} ETB\n"
-        f"🎁 **Referral Bonus:** {total_referral_earnings:.2f} ETB\n"
-        f"🔒 **Non-Withdrawable Balance:** 0.0 ETB\n"
-        f"🎯 **Total Balance:** {balance} ETB\n\n"
+        f"🎁 **Referral Bonus:** {referral_bonus:.2f} ETB\n"
+        f"💵 **Withdrawable Balance:** {withdrawable_balance:.2f} ETB\n"
+        f"🔒 **Non-Withdrawable Balance:** {non_withdrawable_balance:.2f} ETB\n"
+        f"🎯 **Total Balance:** {total_balance:.2f} ETB\n\n"
         f"🎮 **Weekly Games Progress:**\n"
         f"📊 **Games Played This Week:** {games_played_this_week}/27\n"
         f"⏳ **Games Remaining:** {remaining_games} games to complete weekly requirement\n\n"
@@ -1227,10 +1235,10 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"💰 Hey {user_name}! Your Current Account Balance!\n"
         f"👤 **Name:** {user_name}\n"
         f"📱 **Phone Number:** {telegram_id}\n"
-        f"💵 **Withdrawable Balance:** {balance} ETB\n"
-        f"🎁 **Referral Bonus:** {total_referral_earnings:.2f} ETB\n"
-        f"🔒 **Non-Withdrawable Balance:** 0.0 ETB\n"
-        f"🎯 **Total Balance:** {balance} ETB\n\n"
+        f"🎁 **Referral Bonus:** {referral_bonus:.2f} ETB\n"
+        f"💵 **Withdrawable Balance:** {withdrawable_balance:.2f} ETB\n"
+        f"🔒 **Non-Withdrawable Balance:** {non_withdrawable_balance:.2f} ETB\n"
+        f"🎯 **Total Balance:** {total_balance:.2f} ETB\n\n"
         f"🎮 **Weekly Games Progress:**\n"
         f"📊 **Games Played This Week:** {games_played_this_week}/27\n"
         f"⏳ **Games Remaining:** {remaining_games} games to complete weekly requirement\n\n"

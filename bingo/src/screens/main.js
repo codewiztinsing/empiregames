@@ -46,7 +46,7 @@ const PlayingBoard = () => {
   const [totalWinAmount, setTotalWinAmount] = useState(0);
   const [totalPlayers,setTotalPlayers] = useState(0);
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
-  const [winnerCountdown, setWinnerCountdown] = useState(10);
+  const [winnerCountdown, setWinnerCountdown] = useState(5);
 
   // Generate Bingo board function
   const generateCombination = () => {
