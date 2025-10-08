@@ -312,7 +312,7 @@ const Selections = () => {
      
     }
     // Navigate when countdown reaches 0 and user has selected a number
-    if (countDown === 0 && selectedNumber) {
+    if (countDown === 0 && gameStatus != "waiting") {
       // Navigate to play section when countdown reaches 00
       setToast("Game starting! Redirecting to play section...");
       setIsToast(true);
