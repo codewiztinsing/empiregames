@@ -19,7 +19,7 @@ const server = http.createServer(app);
 const getConstant = async () => {
   return {
     gameSpeed: 4000,
-    countDown: 50
+    countDown: 10
   }
 }
 
@@ -88,6 +88,7 @@ async  function endGame(game) {
   game.winner = null;
   game.countDown = 30;
   game.isCountStart = false;
+  game.fauldMadePlayers.clear();
 
   for (const [socketId, user] of users.entries()) {
     if (user.gameId === game.id) users.delete(socketId);

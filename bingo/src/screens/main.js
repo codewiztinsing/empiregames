@@ -99,6 +99,16 @@ const PlayingBoard = () => {
 
     const handleGameState = (data) => {
       const calledNumber = data?.lastBall?.combined?.split("-")[1]      
+      console.log("totalCalledNumbers",totalCalledNumbers)
+      console.log("data.total_called_numbers",data.called_numbers)
+
+      if (data.called_numbers.length === 75) {
+        setToast("All 75 numbers have been called! Please select new cards for the next game.");
+        setIsToast(true);
+        navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+        window.location.reload();
+      }
+
       if(data.win_amount) {
         setWinAmount(data.win_amount)
         setTotalPlayers(data.total_players)
@@ -145,6 +155,7 @@ const PlayingBoard = () => {
       setLastBall(data.lastBall);
       handlePlaySound(calledNumber)
       if (data.total_called_numbers) setTotalCalledNumbers(data.total_called_numbers);
+    
       if (data.count_down) setCountDown(data.count_down);
       setGameId(data.gameId);
     };
@@ -316,6 +327,15 @@ const PlayingBoard = () => {
     socket.on('rejoinSuccess', handleRejoinSuccess);
     socket.on('rejoinError', handleRejoinError);
     socket.on('playerRejoined', handlePlayerRejoined);
+    socket.on('navigateToSelection', (data) => {
+      if (data.roomId === roomId) {
+        setToast(data.message || "All 75 numbers have been called! Please select new cards for the next game.");
+        setIsToast(true);
+        // Navigate to card selection page
+        navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+        window.location.reload();
+      }
+    });
 
   
 
@@ -330,6 +350,7 @@ const PlayingBoard = () => {
       socket.off('rejoinSuccess', handleRejoinSuccess);
       socket.off('rejoinError', handleRejoinError);
       socket.off('playerRejoined', handlePlayerRejoined);
+      socket.off('navigateToSelection');
       socket.off('disqualified');
       socket.off('faulMadePlayers');
       socket.off('disconnect');
@@ -360,7 +381,7 @@ const PlayingBoard = () => {
   // ✅ Handle winner countdown and navigation
   useEffect(() => {
     if (!isBingo) {
-      setWinnerCountdown(10); // Reset countdown when not showing winner
+      setWinnerCountdown(5); // Reset countdown when not showing winner
       return;
     }
 
