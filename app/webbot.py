@@ -1120,13 +1120,18 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Use ref_ prefix so start command can parse first-generation referrer
     invite_link = f"https://t.me/{bot_username}?start=ref_{telegram_id}"
     message = (
-        "Invite your friends using this link:\n"
-        f"<code>{invite_link}</code>\n\n"
+        "Invite your friends to Aker Bingo and earn rewards!\n\n"
+        "Tap the button below to share your invite link with others."
     )
-    reply_markup = None
+    # Create a share button with the invite link
+    share_button = InlineKeyboardButton(
+        text="🔗 Share Invite Link",
+        switch_inline_query=invite_link
+    )
+    reply_markup = InlineKeyboardMarkup([[share_button]])
     await update.message.reply_text(
-        text=message, 
-        reply_markup=reply_markup, 
+        text=message,
+        reply_markup=reply_markup,
         parse_mode="HTML"
     )
 
@@ -1219,7 +1224,6 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         message = (
         f"💰 Hey {user_name}! Your Current Account Balance!\n"
         f"👤 **Name:** {user_name}\n"
-        f"📱 **Phone Number:** {telegram_id}\n"
         f"🎁 **Referral Bonus:** {referral_bonus:.2f} ETB\n"
         f"💵 **Withdrawable Balance:** {withdrawable_balance:.2f} ETB\n"
         f"🔒 **Non-Withdrawable Balance:** {non_withdrawable_balance:.2f} ETB\n"
@@ -1227,7 +1231,6 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"🎮 **Weekly Games Progress:**\n"
         f"📊 **Games Played This Week:** {games_played_this_week}/27\n"
         f"⏳ **Games Remaining:** {remaining_games} games to complete weekly requirement\n\n"
-        f"🎮 Ready to play? Your balance looks great!"
         )
     else:
         message = (
