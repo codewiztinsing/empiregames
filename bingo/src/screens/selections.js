@@ -788,7 +788,7 @@ const handleGlobals = (state) => {
           <div className="balance-container">
 
             <div className="balance-text">
-              Balance {balance.toFixed(2)} ብር
+              Balance {parseInt(balance)} ብር
             </div>
 
             <div className="balance-text">
