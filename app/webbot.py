@@ -1122,7 +1122,6 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = (
         "Invite your friends using this link:\n"
         f"<code>{invite_link}</code>\n\n"
-        "Copy and share the link above!"
     )
     reply_markup = None
     await update.message.reply_text(
