@@ -16,7 +16,7 @@ from wallet.models import Transaction,ChapaSession,Wallet,WithdrawalRequest
 from game.models import Game, PlayerGame
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
-
+from .referral_services import ReferralService
 
 from pydantic import BaseModel
 from typing import Optional, Union
@@ -175,6 +175,9 @@ def get_user_by_telegram_id(request,telegram_id:int):
             created_at__date__gte=start_of_week,
             created_at__date__lte=end_of_week
         ).count()
+
+        total_referral_earnings=ReferralService.get_referral_stats(user)['total_earnings']
+        print("total_referral_earnings = ",total_referral_earnings)
         print("games_played_this_week remaining = ", games_played_this_week)
         print("27-games_played_this_week = ",27-games_played_this_week)
         return UserResponseSchema(
@@ -185,6 +188,7 @@ def get_user_by_telegram_id(request,telegram_id:int):
             phone=user.phone,
             telegram_id=user.telegram_id,
             games_played_this_week=games_played_this_week,
+            total_referral_earnings=total_referral_earnings,
             remaining_games=27-games_played_this_week
         )
     except Exception as e:

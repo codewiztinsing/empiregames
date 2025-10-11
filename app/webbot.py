@@ -176,7 +176,7 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
     try:
         _resp = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
         wallet_response = _resp.json() if _resp.headers.get('content-type','').startswith('application/json') else {}
-        balance = float(wallet_response.get('balance', 0))
+        balance = float(wallet_response.get('balance', 0)) + float(wallet_response.get('total_referral_earnings', 0)) if float(wallet_response.get('total_referral_earnings', 0)) > 500 else float(wallet_response.get('balance', 0))
 
 
         daily_limit = daily_withdraw_limit(telegram_id)
@@ -374,7 +374,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             bet_amount = int(query.data)
             wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
             wallet_data = wallet_response.json()
-            balance = wallet_data.get('balance', 0)
+            balance = wallet_data.get('balance', 0) + wallet_data.get('total_referral_earnings', 0)
            
           
             if balance < bet_amount:
@@ -1202,7 +1202,7 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         threshold_met = referral_bonus >= 500.0
         withdrawable_balance = wallet_balance + (referral_bonus if threshold_met else 0.0)
         non_withdrawable_balance = 0.0 if threshold_met else referral_bonus
-        total_balance = wallet_balance + referral_bonus
+        total_balance = wallet_balance + referral_bonus if threshold_met else wallet_balance
         
     except requests.exceptions.RequestException as e:
         logger.error(f"API request error: {e}")
@@ -1223,21 +1223,21 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
     if balance > 0:
         message = (
         f"💰 Hey {user_name}! Your Current Account Balance!\n"
-        f"👤 **Name:** {user_name}\n"
-        f"🎁 **Referral Bonus:** {referral_bonus:.2f} ETB\n"
-        f"💵 **Withdrawable Balance:** {withdrawable_balance:.2f} ETB\n"
-        f"🔒 **Non-Withdrawable Balance:** {non_withdrawable_balance:.2f} ETB\n"
-        f"🎯 **Total Balance:** {total_balance:.2f} ETB\n\n"
-        f"🎮 **Weekly Games Progress:**\n"
-        f"📊 **Games Played This Week:** {games_played_this_week}/27\n"
-        f"⏳ **Games Remaining:** {remaining_games} games to complete weekly requirement\n\n"
+        f"👤 **Name: {user_name}\n"
+        # f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
+        f"💵 **Withdrawable Balance: {withdrawable_balance:.2f} ETB\n"
+        f"🔒 **Non-Withdrawable Balance: {non_withdrawable_balance:.2f} ETB\n"
+        f"🎯 **Total Balance: {total_balance:.2f} ETB\n\n"
+        f"🎮 **Weekly Games Progress:\n"
+        f"📊 **Games Played This Week: {games_played_this_week}/27\n"
+        f"⏳ **Games Remaining:{remaining_games} games to complete weekly requirement\n\n"
         )
     else:
         message = (
         f"💰 Hey {user_name}! Your Current Account Balance!\n"
         f"👤 **Name:** {user_name}\n"
         f"📱 **Phone Number:** {telegram_id}\n"
-        f"🎁 **Referral Bonus:** {referral_bonus:.2f} ETB\n"
+        # f"🎁 **Referral Bonus:** {referral_bonus:.2f} ETB\n"
         f"💵 **Withdrawable Balance:** {withdrawable_balance:.2f} ETB\n"
         f"🔒 **Non-Withdrawable Balance:** {non_withdrawable_balance:.2f} ETB\n"
         f"🎯 **Total Balance:** {total_balance:.2f} ETB\n\n"

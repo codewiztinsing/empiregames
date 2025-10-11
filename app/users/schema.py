@@ -34,6 +34,8 @@ class UserResponseSchema(Schema):
     telegram_id: Optional[str] = None
     games_played_this_week: Optional[int] = None
     remaining_games: Optional[int] = None
+    total_referral_earnings: Optional[float] = None
+    
 
 class UpdateUserSchema(Schema):
     username: Optional[str] = None

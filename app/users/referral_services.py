@@ -233,9 +233,9 @@ class ReferralService:
                 bonus.referrer.save()
                 
                 # Add to wallet
-                wallet, created = Wallet.objects.get_or_create(user=bonus.referrer)
-                wallet.balance += bonus.bonus_amount
-                wallet.save()
+                # wallet, created = Wallet.objects.get_or_create(user=bonus.referrer)
+                # wallet.balance += bonus.bonus_amount
+                # wallet.save()
                 
             return True, "Bonus approved and added to wallet"
         except ReferralBonus.DoesNotExist:
@@ -310,21 +310,14 @@ class ReferralService:
         """Get referral statistics for a user"""
         first_gen_referrals = user.referrals.all()
         second_gen_referrals = User.objects.filter(referred_by__in=first_gen_referrals)
-        
+        print("second_gen_referrals = ",second_gen_referrals)
         total_referrals = first_gen_referrals.count()
         total_second_gen = second_gen_referrals.count()
-        
         total_earnings = user.total_referral_earnings
-        pending_bonuses = ReferralBonus.objects.filter(
-            referrer=user, 
-            status='pending'
-        ).aggregate(total=models.Sum('bonus_amount'))['total'] or float('0.00')
-        
         return {
             'total_referrals': total_referrals,
             'total_second_gen': total_second_gen,
             'total_earnings': total_earnings,
-            'pending_bonuses': pending_bonuses,
             'games_played_today': user.games_played_today,
             'games_played_this_week': user.games_played_this_week,
             'can_withdraw': ReferralService.can_withdraw(user)[0]

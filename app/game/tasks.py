@@ -76,7 +76,6 @@ def update_player_balance(player_id,win_amount,game_id):
         game.ended = True
         game.started = True
         game.save()
-    
         push_transaction(player.telegram_id, win_amount,win_amount,"WIN","success",game_id)
         wallet.save()
         
