@@ -511,42 +511,24 @@ def change_sponsor(request, user_id: int, data: ChangeSponsorSchema):
     """Change user's sponsor/referrer"""
     try:
         user = User.objects.get(id=user_id)
+        print("user = ",user)
         
         # Update referred_by if provided
         if data.referred_by is not None:
             try:
                 new_sponsor = User.objects.get(id=data.referred_by)
+
+                # check if new_sponsor is already referred by user
+                if new_sponsor.referred_by == user:
+                    return JsonResponse({"error": f"You cannot set {new_sponsor.username} as your sponsor because you are already referred by them."}, status=400)
                 
                 # Prevent self-sponsorship
                 if new_sponsor.id == user.id:
                     return JsonResponse({"error": "Cannot set yourself as sponsor"}, status=400)
-                
-                # Check for bidirectional sponsorship (circular reference)
-                def check_circular_reference(current_user, target_sponsor, visited=None):
-                    """Recursively check if setting target_sponsor would create a circular reference"""
-                    if visited is None:
-                        visited = set()
-                    
-                    if current_user.id in visited:
-                        return True  # Circular reference detected
-                    
-                    visited.add(current_user.id)
-                    
-                    # If target_sponsor is already referred by current_user, it's bidirectional
-                    if target_sponsor.referred_by and target_sponsor.referred_by.id == current_user.id:
-                        return True
-                    
-                    # Check if target_sponsor is in current_user's referral chain
-                    if target_sponsor.referred_by:
-                        return check_circular_reference(current_user, target_sponsor.referred_by, visited)
-                    
-                    return False
-                
-                # Check for circular reference
-                if check_circular_reference(user, new_sponsor):
-                    return JsonResponse({"error": "Cannot set this sponsor as it would create a circular reference"}, status=400)
-                
+             
                 user.referred_by = new_sponsor
+                user.sponsor_changed = True
+                user.save()
             except User.DoesNotExist:
                 return JsonResponse({"error": "Sponsor not found"}, status=404)
         
