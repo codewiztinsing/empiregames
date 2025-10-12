@@ -603,10 +603,7 @@ def user_edit(request, user_id):
                     
                     return False
                 
-                # Check for circular reference
-                if check_circular_reference(user, referrer):
-                    context['error'] = 'Cannot set this sponsor as it would create a circular reference.'
-                    return render(request, 'dashboard/user_edit.html', context)
+              
                 
                 user.referred_by = referrer
                 user.sponsor_changed = True  # Mark that user has changed sponsor
