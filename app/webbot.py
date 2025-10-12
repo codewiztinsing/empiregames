@@ -921,7 +921,7 @@ async def handle_new_sponsor_id(update: Update, context: ContextTypes.DEFAULT_TY
             await update.message.reply_text(
                 f"✅ <b>Sponsor Changed Successfully!</b>\n\n"
                 f"Your new sponsor is: {sponsor_username} (ID: {new_sponsor_id_int})\n\n"
-                f"🎁 You have received a sponsor change bonus of 10 ETB!\n"
+                f"💰 10 ETB has been moved from your wallet to referral earnings!\n"
                 f"⚠️ <i>Note:</i> You cannot change your sponsor again.",
                 parse_mode=ParseMode.HTML
             )
@@ -1243,12 +1243,13 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         message = (
         f"💰 Hey {user_name}! Your Current Account Balance!\n"
         f"📱 **Phone Number:** {phone}\n"
-        f"💵 **Withdrawable Balance:** {withdrawable_balance:.2f} ETB\n"
-        f"🎯 **Total Balance:** {total_balance:.2f} ETB\n\n"
-        f"🎮 **Weekly Games Progress:**\n"
-        f"📊 **Games Played This Week:** {games_played_this_week}/27\n"
-        f"⏳ **Games Remaining:** {remaining_games} games to complete weekly requirement\n\n"
-        f"💳 Please deposit to start playing and complete your weekly games!"
+        f"🎯 **Balance: {balance:.2f} ETB\n"
+        f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
+        f"🎯 **Total Balance: {total_balance:.2f} ETB\n"
+        f"💵 **Withdrawable Balance: {withdrawable_balance:.2f} ETB\n"
+        f"🎮 **Weekly Games Progress:\n"
+        f"📊 **Games Played This Week: {games_played_this_week}/27\n"
+        f"⏳ **Games Remaining:{remaining_games} games to complete weekly requirement\n\n"
         )
 
     await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)

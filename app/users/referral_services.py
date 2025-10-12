@@ -134,17 +134,23 @@ class ReferralService:
         bonus.status = 'approved'
         bonus.save()
         
-        # Add to user's total referral earnings only (not wallet balance)
+        # Add to user's total referral earnings and subtract from wallet balance
         user.total_referral_earnings += float(bonus.bonus_amount)
         user.sponsor_change_bonus_claimed = True
         user.save()
         
-        # Update wallet's total_referral_earnings field to keep it in sync
+        # Update wallet: subtract from balance and add to referral earnings
         wallet, created = Wallet.objects.get_or_create(user=user)
-        wallet.total_referral_earnings += float(bonus.bonus_amount)
+        
+        # Check if user has sufficient balance
+        if wallet.balance < float(bonus.bonus_amount):
+            return False, f"Insufficient wallet balance. Required: {bonus.bonus_amount} ETB, Available: {wallet.balance} ETB"
+        
+        wallet.balance -= float(bonus.bonus_amount)  # Remove 10 ETB from wallet
+        wallet.total_referral_earnings += float(bonus.bonus_amount)  # Add 10 ETB to referral earnings
         wallet.save()
         
-        return True, "Sponsor change bonus processed and added to referral earnings"
+        return True, "Sponsor change bonus processed: 10 ETB moved from wallet to referral earnings"
     
     @staticmethod
     def process_tuesday_bonus_payments():
