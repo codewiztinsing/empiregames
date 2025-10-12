@@ -17,9 +17,14 @@ class ReferralService:
         if user.sponsor_changed:
             return False, "You can only change sponsor once"
         
-        # Check if user already has a referrer - don't allow sponsor change
+        # Check if user was invited by another user - don't allow sponsor change
         if user.referred_by is not None:
-            return False, "You already have a sponsor and cannot change it"
+            # Check if user was invited by a real user (not default sponsor)
+            default_sponsor = ReferralService.get_or_create_default_sponsor()
+            if user.referred_by.id != default_sponsor.id:
+                return False, "You were invited by another user and cannot change your sponsor"
+            else:
+                return False, "You already have a sponsor and cannot change it"
         
         try:
             referrer = User.objects.get(referral_code=referral_code)
@@ -106,17 +111,17 @@ class ReferralService:
         bonus.status = 'approved'
         bonus.save()
         
-        # Add to user's total earnings and wallet
+        # Add to user's total referral earnings only (not wallet balance)
         user.total_referral_earnings += float(bonus.bonus_amount)
         user.signup_bonus_claimed = True
         user.save()
         
-        # Add to wallet
+        # Update wallet's total_referral_earnings field to keep it in sync
         wallet, created = Wallet.objects.get_or_create(user=user)
-        wallet.balance += float(bonus.bonus_amount)
+        wallet.total_referral_earnings += float(bonus.bonus_amount)
         wallet.save()
         
-        return True, "Signup bonus processed and added to wallet"
+        return True, "Signup bonus processed and added to referral earnings"
     
     @staticmethod
     def process_sponsor_change_bonus(user):
