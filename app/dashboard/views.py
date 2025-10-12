@@ -555,6 +555,12 @@ def user_edit(request, user_id):
 
         # Update referred_by using referrer's telegram_id if provided
         if referred_by_telegram:
+            # Check if user has already changed sponsor - limit to once only
+            # Superusers can bypass this restriction
+            if user.sponsor_changed and not request.user.is_superuser:
+                context['error'] = 'User has already changed sponsor once. This can only be done once. (Superusers can override this restriction)'
+                return render(request, 'dashboard/user_edit.html', context)
+            
             # Check if user was invited by another user - don't allow sponsor change
             # Superusers can bypass this restriction
             if user.referred_by is not None and not sponsor_changed and not request.user.is_superuser:
@@ -597,9 +603,13 @@ def user_edit(request, user_id):
                     
                     return False
                 
-              
+                # Check for circular reference
+                if check_circular_reference(user, referrer):
+                    context['error'] = 'Cannot set this sponsor as it would create a circular reference.'
+                    return render(request, 'dashboard/user_edit.html', context)
                 
                 user.referred_by = referrer
+                user.sponsor_changed = True  # Mark that user has changed sponsor
             except User.DoesNotExist:
                 context['error'] = 'Referrer with that Telegram ID not found.'
                 return render(request, 'dashboard/user_edit.html', context)

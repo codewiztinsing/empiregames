@@ -95,20 +95,26 @@ def player_wallet(request,telegram_id:int):
         user = User.objects.filter(telegram_id=telegram_id).first()
         print("user = ",user)
         wallet = Wallet.objects.filter(user=user).first()
-        referral_bonus = ReferralBonus.objects.filter(referrer=user).first()
-        print("referral_bonus = ",referral_bonus)
+        
         # Get total bonus amount generated from sponsor change for this user
         sponsor_change_bonus_total = ReferralBonus.objects.filter(
             referrer=user,
             bonus_type='sponsor_change'
         ).aggregate(total=models.Sum('bonus_amount'))['total'] or 0
-        print("sponsor_change_bonus_total = ",sponsor_change_bonus_total)
-        if referral_bonus:
-            referral_bonus = referral_bonus.bonus_amount
-        else:
-            referral_bonus = 0
-        total_balance = wallet.balance + referral_bonus + sponsor_change_bonus_total
-        return JsonResponse({"balance": total_balance if wallet else 0, "referral_bonus": referral_bonus, "total_balance": total_balance, "sponsor_change_bonus_total": sponsor_change_bonus_total}, status=200)
+        
+        # Get referral bonus amount
+        referral_bonus = ReferralBonus.objects.filter(
+            referrer=user,
+        ).aggregate(total=models.Sum('bonus_amount'))['total'] or 0
+        
+        print("referral_bonus = ",referral_bonus)
+        
+        total_balance = (wallet.balance if wallet else 0) + referral_bonus 
+        return JsonResponse({
+            "balance": wallet.balance if wallet else 0,
+            "referral_bonus": referral_bonus, 
+            "total_balance": total_balance
+        }, status=200)
     except Exception as e:
         print("error = ",e)
         return JsonResponse({"error": str(e)}, status=400)

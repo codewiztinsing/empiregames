@@ -23,8 +23,7 @@ class ReferralService:
             default_sponsor = ReferralService.get_or_create_default_sponsor()
             if user.referred_by.id != default_sponsor.id:
                 return False, "You were invited by another user and cannot change your sponsor"
-            else:
-                return False, "You already have a sponsor and cannot change it"
+            # If user has default sponsor, allow sponsor change (don't block)
         
         try:
             referrer = User.objects.get(referral_code=referral_code)
@@ -139,22 +138,10 @@ class ReferralService:
         bonus.status = 'approved'
         bonus.save()
         
-        # Add to user's total referral earnings and subtract from wallet balance
-        user.total_referral_earnings += float(bonus.bonus_amount)
         user.sponsor_change_bonus_claimed = True
         user.save()
         
-        # Update wallet: subtract from balance and add to referral earnings
-        wallet, created = Wallet.objects.get_or_create(user=user)
-        
-        # Check if user has sufficient balance
-        if wallet.balance < float(bonus.bonus_amount):
-            return False, f"Insufficient wallet balance. Required: {bonus.bonus_amount} ETB, Available: {wallet.balance} ETB"
-        
-        wallet.balance -= float(bonus.bonus_amount)  # Remove 10 ETB from wallet
-        wallet.total_referral_earnings += float(bonus.bonus_amount)  # Add 10 ETB to referral earnings
-        wallet.save()
-        
+     
         return True, "Sponsor change bonus processed: 10 ETB moved from wallet to referral earnings"
     
     @staticmethod

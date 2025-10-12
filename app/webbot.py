@@ -819,16 +819,13 @@ async def change_sponsor_command(update: Update, context: ContextTypes.DEFAULT_T
             return ConversationHandler.END
         
         # Check if user was invited by another user - don't allow sponsor change
-        if user_data.get('referred_by') is not None:
-            # Check if user was invited by a real user (not default sponsor)
-            # Default sponsor has telegram_id '0' (Akerbingo)
-            if user_data.get('referred_by') != '0':
-                await update.message.reply_text("❌ You were invited by another user and cannot change your sponsor.")
-                return ConversationHandler.END
-            else:
-                await update.message.reply_text("❌ You already have a sponsor and cannot change it.")
-                return ConversationHandler.END
-        
+        # Check if user has a referred_by, and if so, whether it is the default sponsor (telegram_id == '0')
+        referred_by = user_data.get('referred_by')
+        if referred_by is not None and referred_by != '0':
+            # User was invited by a real user (not default sponsor)
+            await update.message.reply_text("❌ You were invited by another user and cannot change your sponsor.")
+            return ConversationHandler.END
+        # If user has default sponsor (telegram_id '0'), allow sponsor change (don't block)
         print("DEBUG: Sending change sponsor instructions")
         await update.message.reply_text(
             "🔄 **Change Sponsor**\n\n"
@@ -1211,7 +1208,7 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
 
         # Compute balances per policy
         wallet_balance = float(balance or 0)
-        referral_bonus = float(total_referral_earnings or 0)
+        referral_bonus = wallet_data.get('referral_bonus', 0)
         threshold_met = referral_bonus >= 500.0
         withdrawable_balance = wallet_balance + (referral_bonus if threshold_met else 0.0)
         total_balance = wallet_balance + referral_bonus 

@@ -106,15 +106,18 @@ def change_sponsor(request):
             return JsonResponse({'success': False, 'error': 'You can only change sponsor once'})
         
         # Check if user was invited by another user - don't allow sponsor change
+        from users.referral_services import ReferralService
+        # Check if referred_by is set and whether it's the default sponsor
         if request.user.referred_by is not None:
-            # Check if user was invited by a real user (not default sponsor)
-            from users.referral_services import ReferralService
             default_sponsor = ReferralService.get_or_create_default_sponsor()
+            # If user was invited by a real user (not default sponsor)
             if request.user.referred_by.id != default_sponsor.id:
                 return JsonResponse({'success': False, 'error': 'You were invited by another user and cannot change your sponsor'})
-            else:
-                return JsonResponse({'success': False, 'error': 'You already have a sponsor and cannot change it'})
-        
+            # If referred_by IS the default sponsor, allow changing sponsor
+            # If referred_by is default sponsor, allow continuing (do nothing)
+        else:
+            # If user has no sponsor at all (should not typically happen except legacy), treat as allowed
+            pass
         from users.models import User
         try:
             sponsor = User.objects.get(referral_code=sponsor_code)

@@ -513,6 +513,10 @@ def change_sponsor(request, user_id: int, data: ChangeSponsorSchema):
         user = User.objects.get(id=user_id)
         print("user = ",user)
         
+        # Check if user has already changed sponsor - limit to once only
+        if user.sponsor_changed:
+            return JsonResponse({"error": "You have already changed your sponsor once. This can only be done once."}, status=400)
+        
         # Check if user was invited by another user - don't allow sponsor change
         if user.referred_by is not None:
             # Check if user was invited by a real user (not default sponsor)
@@ -520,8 +524,7 @@ def change_sponsor(request, user_id: int, data: ChangeSponsorSchema):
             default_sponsor = ReferralService.get_or_create_default_sponsor()
             if user.referred_by.id != default_sponsor.id:
                 return JsonResponse({"error": "You were invited by another user and cannot change your sponsor"}, status=400)
-            else:
-                return JsonResponse({"error": "You already have a sponsor and cannot change it"}, status=400)
+            # If user has default sponsor, allow sponsor change (don't block)
         
         # Update referred_by if provided
         if data.referred_by is not None:
