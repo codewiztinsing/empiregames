@@ -917,7 +917,7 @@ async def handle_new_sponsor_id(update: Update, context: ContextTypes.DEFAULT_TY
                 f"✅ **Sponsor Changed Successfully!**\n\n"
                 f"Your new sponsor is: {sponsor_username} (ID: {new_sponsor_id_int})\n\n"
                 f"🎁 You have received a sponsor change bonus of 10 ETB!\n"
-                f"⚠️ **Note:** You cannot change your sponsor again.",
+                f"⚠️ *Note:* You cannot change your sponsor again.",
                 parse_mode=ParseMode.MARKDOWN
             )
         else:
