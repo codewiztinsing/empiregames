@@ -268,7 +268,7 @@ const Selections = () => {
         try {
           const response = await axios.get(`${apiUrl}wallet/player/${parseInt(playerId)}`);
           console.log('Balance response:', response.data);
-          setBalance(response.data.balance);
+          setBalance(response.data.total_balance);
           
       
           setLoading(false);

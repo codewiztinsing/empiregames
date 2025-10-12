@@ -10,7 +10,7 @@ function BingoCard({ card, calledNumbers, onBingo }) {
     
     // Check rows
     for (let row = 0; row < 5; row++) {
-      if (card[row].every(cell => cell.marked || cell.number === 'FREE')) {
+      if (card[row].every(cell => cell.marked || cell.number === '*')) {
         onBingo();
         return;
       }
@@ -18,7 +18,7 @@ function BingoCard({ card, calledNumbers, onBingo }) {
     
     // Check columns
     for (let col = 0; col < 5; col++) {
-      if (card.every(row => row[col].marked || row[col].number === 'FREE')) {
+      if (card.every(row => row[col].marked || row[col].number === '*')) {
         onBingo();
         return;
       }
@@ -27,14 +27,14 @@ function BingoCard({ card, calledNumbers, onBingo }) {
     // Check diagonals
     if (
       [card[0][0], card[1][1], card[2][2], card[3][3], card[4][4]
-    ].every(cell => cell.marked || cell.number === 'FREE')) {
+    ].every(cell => cell.marked || cell.number === '*')) {
       onBingo();
       return;
     }
     
     if (
       [card[0][4], card[1][3], card[2][2], card[3][1], card[4][0]
-    ].every(cell => cell.marked || cell.number === 'FREE')) {
+    ].every(cell => cell.marked || cell.number === '*')) {
       onBingo();
       return;
     }
@@ -44,7 +44,7 @@ function BingoCard({ card, calledNumbers, onBingo }) {
   const markedCard = card.map(row => 
     row.map(cell => ({
       ...cell,
-      marked: calledNumbers.includes(cell.number) || cell.number === 'FREE'
+      marked: calledNumbers.includes(cell.number) || cell.number === '*'
     }))
   );
 
@@ -65,7 +65,7 @@ function BingoCard({ card, calledNumbers, onBingo }) {
           {row.map((cell, colIndex) => (
             <div 
               key={`${rowIndex}-${colIndex}`} 
-              className={`bingo-cell ${cell.marked ? 'marked' : ''} ${cell.number === 'FREE' ? 'free' : ''}`}
+              className={`bingo-cell ${cell.marked ? 'marked' : ''} ${cell.number === '*' ? 'free' : ''}`}
             >
               {cell.number}
             </div>

@@ -16,7 +16,7 @@ const BingoWinner = () => {
         
         // Center square is always FREE
         if (i === 2 && j === 2) {
-          num = 'FREE';
+          num = '*';
         } else {
           do {
             num = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -26,7 +26,7 @@ const BingoWinner = () => {
         
         row.push({
           number: num,
-          marked: num === 'FREE'
+          marked: num === '*'
         });
       }
       card.push(row);
