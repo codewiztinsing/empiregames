@@ -914,11 +914,11 @@ async def handle_new_sponsor_id(update: Update, context: ContextTypes.DEFAULT_TY
         if update_response.status_code == 200:
             sponsor_username = sponsor_data.get('username', f'User {new_sponsor_id_int}')
             await update.message.reply_text(
-                f"✅ **Sponsor Changed Successfully!**\n\n"
+                f"✅ <b>Sponsor Changed Successfully!</b>\n\n"
                 f"Your new sponsor is: {sponsor_username} (ID: {new_sponsor_id_int})\n\n"
                 f"🎁 You have received a sponsor change bonus of 10 ETB!\n"
-                f"⚠️ *Note:* You cannot change your sponsor again.",
-                parse_mode=ParseMode.MARKDOWN
+                f"⚠️ <i>Note:</i> You cannot change your sponsor again.",
+                parse_mode=ParseMode.HTML
             )
         else:
             # Handle API error responses
