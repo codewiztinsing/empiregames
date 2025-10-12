@@ -516,6 +516,36 @@ def change_sponsor(request, user_id: int, data: ChangeSponsorSchema):
         if data.referred_by is not None:
             try:
                 new_sponsor = User.objects.get(id=data.referred_by)
+                
+                # Prevent self-sponsorship
+                if new_sponsor.id == user.id:
+                    return JsonResponse({"error": "Cannot set yourself as sponsor"}, status=400)
+                
+                # Check for bidirectional sponsorship (circular reference)
+                def check_circular_reference(current_user, target_sponsor, visited=None):
+                    """Recursively check if setting target_sponsor would create a circular reference"""
+                    if visited is None:
+                        visited = set()
+                    
+                    if current_user.id in visited:
+                        return True  # Circular reference detected
+                    
+                    visited.add(current_user.id)
+                    
+                    # If target_sponsor is already referred by current_user, it's bidirectional
+                    if target_sponsor.referred_by and target_sponsor.referred_by.id == current_user.id:
+                        return True
+                    
+                    # Check if target_sponsor is in current_user's referral chain
+                    if target_sponsor.referred_by:
+                        return check_circular_reference(current_user, target_sponsor.referred_by, visited)
+                    
+                    return False
+                
+                # Check for circular reference
+                if check_circular_reference(user, new_sponsor):
+                    return JsonResponse({"error": "Cannot set this sponsor as it would create a circular reference"}, status=400)
+                
                 user.referred_by = new_sponsor
             except User.DoesNotExist:
                 return JsonResponse({"error": "Sponsor not found"}, status=404)
@@ -525,6 +555,16 @@ def change_sponsor(request, user_id: int, data: ChangeSponsorSchema):
             user.sponsor_changed = data.sponsor_changed
         
         user.save()
+        
+        # Process sponsor change bonus if this is a sponsor change
+        if data.sponsor_changed:
+            from users.referral_services import ReferralService
+            bonus_success, bonus_message = ReferralService.process_sponsor_change_bonus(user)
+            if not bonus_success:
+                # Log the error but don't fail the sponsor change
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to process sponsor change bonus for user {user.id}: {bonus_message}")
         
         return JsonResponse({
             "success": True,

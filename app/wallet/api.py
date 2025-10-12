@@ -14,6 +14,7 @@ from .schema import (ChapaSessionSchema,
     AddisPayCallbackSchema
  )
 from .models import ChapaSession, Wallet,Transaction, AddisPaySession
+from users.models import ReferralBonus
 from django.http import JsonResponse
 from utils import generate_reference
 from users.models import User
@@ -93,8 +94,13 @@ def player_wallet(request,telegram_id:int):
         user = User.objects.filter(telegram_id=telegram_id).first()
         print("user = ",user)
         wallet = Wallet.objects.filter(user=user).first()
+        referral_bonus = ReferralBonus.objects.filter(referrer=user).first()
+        if referral_bonus:
+            referral_bonus = referral_bonus.bonus_amount
+        else:
+            referral_bonus = 0
         print("wallet = ",wallet)
-        return JsonResponse({"balance": wallet.balance if wallet else 0}, status=200)
+        return JsonResponse({"balance": wallet.balance if wallet else 0, "referral_bonus": referral_bonus}, status=200)
     except Exception as e:
         print("error = ",e)
         return JsonResponse({"error": str(e)}, status=400)

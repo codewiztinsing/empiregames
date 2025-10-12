@@ -55,7 +55,7 @@ const PlayingBoard = () => {
       const column = [];
       for (let j = 0; j < 5; j++) {
         if (i === 2 && j === 2) {
-          column.push('FREE');
+          column.push('*');
         } else {
           let num;
           do {
@@ -848,7 +848,7 @@ const PlayingBoard = () => {
                     className={`board-cell-main`}
                     // if cell is * it should always be golden, selected cells should be yellow
                     style={{ 
-                      background: row[colIndex] === 'FREE' ? '#ffa500' : selectedCell.has(row[colIndex]) ? 'orange' : '#ffffff',
+                      background: row[colIndex] === '*' ? '#ffa500' : selectedCell.has(row[colIndex]) ? 'orange' : '#ffffff',
                       border: selectedCell.has(row[colIndex]) ? '2px solid #ff6600' : '1px solid #34495e'
                     }}
                     id={`${row[colIndex] <= 15 && row[colIndex] > 0 ? 'b' : row[colIndex] <= 30 && row[colIndex] > 15 ? 'i' : row[colIndex] <= 45 && row[colIndex] > 30 ? 'n' : row[colIndex] <= 60 && row[colIndex] > 45 ? 'g' : row[colIndex] <= 75 && row[colIndex] > 60 ? 'o' : ''}${row[colIndex]}`}

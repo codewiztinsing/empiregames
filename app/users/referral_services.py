@@ -22,14 +22,38 @@ class ReferralService:
             if referrer == user:
                 return False, "Cannot refer yourself"
             
+            # Check for bidirectional sponsorship (circular reference)
+            def check_circular_reference(current_user, target_sponsor, visited=None):
+                """Recursively check if setting target_sponsor would create a circular reference"""
+                if visited is None:
+                    visited = set()
+                
+                if current_user.id in visited:
+                    return True  # Circular reference detected
+                
+                visited.add(current_user.id)
+                
+                # If target_sponsor is already referred by current_user, it's bidirectional
+                if target_sponsor.referred_by and target_sponsor.referred_by.id == current_user.id:
+                    return True
+                
+                # Check if target_sponsor is in current_user's referral chain
+                if target_sponsor.referred_by:
+                    return check_circular_reference(current_user, target_sponsor.referred_by, visited)
+                
+                return False
+            
+            # Check for circular reference
+            if check_circular_reference(user, referrer):
+                return False, "Cannot set this sponsor as it would create a circular reference"
+            
             user.referred_by = referrer
             user.is_agent = False  # User is no longer agent under Aker Bingo
             user.sponsor_changed = True
             user.save()
             
-            # Process sponsor change bonus if this is a sponsor change
-            if user.referred_by is not None:  # If user already had a referrer before
-                ReferralService.process_sponsor_change_bonus(user)
+            # Process sponsor change bonus for sponsor change
+            ReferralService.process_sponsor_change_bonus(user)
             
             return True, "Sponsor set successfully"
         except User.DoesNotExist:

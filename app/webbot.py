@@ -902,12 +902,8 @@ async def handle_new_sponsor_id(update: Update, context: ContextTypes.DEFAULT_TY
             await update.message.reply_text("❌ Could not find sponsor database ID. Please try again later.")
             return CHANGE_SPONSOR_WAIT_ID
         
-        # Check if the new sponsor is already referred by the current user (prevent circular references)
-        if sponsor_data.get('referred_by') == user_id:
-            await update.message.reply_text("❌ Cannot set this sponsor as it would create a circular reference.")
-            return CHANGE_SPONSOR_WAIT_ID
-        
         # Update the user's sponsor using the new API endpoint
+        # The API will handle bidirectional sponsorship validation
         update_data = {
             'referred_by': sponsor_db_id,
             'sponsor_changed': True
@@ -925,7 +921,13 @@ async def handle_new_sponsor_id(update: Update, context: ContextTypes.DEFAULT_TY
                 parse_mode=ParseMode.MARKDOWN
             )
         else:
-            await update.message.reply_text("❌ Failed to change sponsor. Please try again later.")
+            # Handle API error responses
+            try:
+                error_data = update_response.json()
+                error_message = error_data.get('error', 'Failed to change sponsor')
+                await update.message.reply_text(f"❌ {error_message}")
+            except:
+                await update.message.reply_text("❌ Failed to change sponsor. Please try again later.")
         
         return ConversationHandler.END
         
@@ -1201,8 +1203,7 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         referral_bonus = float(total_referral_earnings or 0)
         threshold_met = referral_bonus >= 500.0
         withdrawable_balance = wallet_balance + (referral_bonus if threshold_met else 0.0)
-        non_withdrawable_balance = 0.0 if threshold_met else referral_bonus
-        total_balance = wallet_balance + referral_bonus if threshold_met else wallet_balance
+        total_balance = wallet_balance + referral_bonus 
         
     except requests.exceptions.RequestException as e:
         logger.error(f"API request error: {e}")
@@ -1218,16 +1219,17 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
     
     # Calculate remaining games needed
     remaining_games = max(0, 27 - games_played_this_week)
-    
+
+    phone = get_user_phone(telegram_id)
     # Create appealing balance message
     if balance > 0:
         message = (
         f"💰 Hey {user_name}! Your Current Account Balance!\n"
-        f"👤 **Name: {user_name}\n"
-        # f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
+        f"📱 **Phone Number:** {phone}\n"
+        f"🎯 **Balance: {balance:.2f} ETB\n"
+        f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
+        f"🎯 **Total Balance: {total_balance:.2f} ETB\n"
         f"💵 **Withdrawable Balance: {withdrawable_balance:.2f} ETB\n"
-        f"🔒 **Non-Withdrawable Balance: {non_withdrawable_balance:.2f} ETB\n"
-        f"🎯 **Total Balance: {total_balance:.2f} ETB\n\n"
         f"🎮 **Weekly Games Progress:\n"
         f"📊 **Games Played This Week: {games_played_this_week}/27\n"
         f"⏳ **Games Remaining:{remaining_games} games to complete weekly requirement\n\n"
@@ -1235,11 +1237,8 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
     else:
         message = (
         f"💰 Hey {user_name}! Your Current Account Balance!\n"
-        f"👤 **Name:** {user_name}\n"
-        f"📱 **Phone Number:** {telegram_id}\n"
-        # f"🎁 **Referral Bonus:** {referral_bonus:.2f} ETB\n"
+        f"📱 **Phone Number:** {phone}\n"
         f"💵 **Withdrawable Balance:** {withdrawable_balance:.2f} ETB\n"
-        f"🔒 **Non-Withdrawable Balance:** {non_withdrawable_balance:.2f} ETB\n"
         f"🎯 **Total Balance:** {total_balance:.2f} ETB\n\n"
         f"🎮 **Weekly Games Progress:**\n"
         f"📊 **Games Played This Week:** {games_played_this_week}/27\n"

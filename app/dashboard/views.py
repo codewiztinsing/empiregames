@@ -557,6 +557,38 @@ def user_edit(request, user_id):
         if referred_by_telegram:
             try:
                 referrer = User.objects.get(telegram_id=str(referred_by_telegram))
+                
+                # Prevent self-sponsorship
+                if referrer.id == user.id:
+                    context['error'] = 'Cannot set user as their own sponsor.'
+                    return render(request, 'dashboard/user_edit.html', context)
+                
+                # Check for bidirectional sponsorship (circular reference)
+                def check_circular_reference(current_user, target_sponsor, visited=None):
+                    """Recursively check if setting target_sponsor would create a circular reference"""
+                    if visited is None:
+                        visited = set()
+                    
+                    if current_user.id in visited:
+                        return True  # Circular reference detected
+                    
+                    visited.add(current_user.id)
+                    
+                    # If target_sponsor is already referred by current_user, it's bidirectional
+                    if target_sponsor.referred_by and target_sponsor.referred_by.id == current_user.id:
+                        return True
+                    
+                    # Check if target_sponsor is in current_user's referral chain
+                    if target_sponsor.referred_by:
+                        return check_circular_reference(current_user, target_sponsor.referred_by, visited)
+                    
+                    return False
+                
+                # Check for circular reference
+                if check_circular_reference(user, referrer):
+                    context['error'] = 'Cannot set this sponsor as it would create a circular reference.'
+                    return render(request, 'dashboard/user_edit.html', context)
+                
                 user.referred_by = referrer
             except User.DoesNotExist:
                 context['error'] = 'Referrer with that Telegram ID not found.'
@@ -565,6 +597,17 @@ def user_edit(request, user_id):
             user.referred_by = None
 
         user.save()
+        
+        # Process sponsor change bonus if this is a sponsor change
+        if sponsor_changed:
+            from users.referral_services import ReferralService
+            bonus_success, bonus_message = ReferralService.process_sponsor_change_bonus(user)
+            if not bonus_success:
+                # Log the error but don't fail the sponsor change
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to process sponsor change bonus for user {user.id}: {bonus_message}")
+        
         # Update wallet balance if provided
         if balance != '':
             try:

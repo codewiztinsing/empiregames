@@ -116,6 +116,15 @@ def change_sponsor(request):
             request.user.sponsor_changed = True
             request.user.save()
             
+            # Process sponsor change bonus
+            from users.referral_services import ReferralService
+            bonus_success, bonus_message = ReferralService.process_sponsor_change_bonus(request.user)
+            if not bonus_success:
+                # Log the error but don't fail the sponsor change
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to process sponsor change bonus for user {request.user.id}: {bonus_message}")
+            
             messages.success(request, 'Sponsor changed successfully')
             return JsonResponse({'success': True, 'message': 'Sponsor changed successfully'})
             
