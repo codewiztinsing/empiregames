@@ -597,10 +597,7 @@ def user_edit(request, user_id):
                     
                     return False
                 
-                # Check for circular reference
-                if check_circular_reference(user, referrer):
-                    context['error'] = 'Cannot set this sponsor as it would create a circular reference.'
-                    return render(request, 'dashboard/user_edit.html', context)
+              
                 
                 user.referred_by = referrer
             except User.DoesNotExist:
@@ -623,14 +620,10 @@ def user_edit(request, user_id):
         
         # Update wallet balance if provided
         if balance != '':
-            try:
-                if not wallet:
-                    wallet = Wallet.objects.create(user=user, balance=0)
-                wallet.balance = float(balance)
-                wallet.save()
-            except Exception as e:
-                context['error'] = f'Failed to update balance: {e}'
-                return render(request, 'dashboard/user_edit.html', context)
+            if not wallet:
+                wallet = Wallet.objects.create(user=user, balance=0)
+            wallet.balance = float(balance)
+            wallet.save()
         return redirect('dashboard:users')
 
     return render(request, 'dashboard/user_edit.html', context)
