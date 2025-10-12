@@ -105,6 +105,10 @@ def change_sponsor(request):
         if request.user.sponsor_changed:
             return JsonResponse({'success': False, 'error': 'You can only change sponsor once'})
         
+        # Check if user already has a referrer - don't allow sponsor change
+        if request.user.referred_by is not None:
+            return JsonResponse({'success': False, 'error': 'You already have a sponsor and cannot change it'})
+        
         from users.models import User
         try:
             sponsor = User.objects.get(referral_code=sponsor_code)

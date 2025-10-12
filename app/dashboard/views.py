@@ -555,6 +555,11 @@ def user_edit(request, user_id):
 
         # Update referred_by using referrer's telegram_id if provided
         if referred_by_telegram:
+            # Check if user already has a referrer - don't allow sponsor change
+            if user.referred_by is not None and not sponsor_changed:
+                context['error'] = 'User already has a sponsor and cannot change it.'
+                return render(request, 'dashboard/user_edit.html', context)
+            
             try:
                 referrer = User.objects.get(telegram_id=str(referred_by_telegram))
                 

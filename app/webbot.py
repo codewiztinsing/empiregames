@@ -818,6 +818,11 @@ async def change_sponsor_command(update: Update, context: ContextTypes.DEFAULT_T
             await update.message.reply_text("❌ You have already changed your sponsor once. This can only be done once.")
             return ConversationHandler.END
         
+        # Check if user already has a referrer - don't allow sponsor change
+        if user_data.get('referred_by') is not None:
+            await update.message.reply_text("❌ You already have a sponsor and cannot change it.")
+            return ConversationHandler.END
+        
         print("DEBUG: Sending change sponsor instructions")
         await update.message.reply_text(
             "🔄 **Change Sponsor**\n\n"

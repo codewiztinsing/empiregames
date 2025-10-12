@@ -513,6 +513,10 @@ def change_sponsor(request, user_id: int, data: ChangeSponsorSchema):
         user = User.objects.get(id=user_id)
         print("user = ",user)
         
+        # Check if user already has a referrer - don't allow sponsor change
+        if user.referred_by is not None:
+            return JsonResponse({"error": "You already have a sponsor and cannot change it"}, status=400)
+        
         # Update referred_by if provided
         if data.referred_by is not None:
             try:
