@@ -16,11 +16,16 @@ def handle_deposit_success(tx_ref):
         if user:
             wallet = Wallet.objects.filter(user=user).first()
             if wallet:
-                wallet.balance += float(chapa_session.amount)
+                # Add 30% bonus to deposit amount
+                deposit_amount = float(chapa_session.amount)
+                bonus_amount = deposit_amount * 0.30
+                total_amount = deposit_amount + bonus_amount
+                
+                wallet.balance += total_amount
                 wallet.save()
-                transaction = Transaction.objects.create(user=user,amount=chapa_session.amount,type="DEPOSIT",status="success",reference=chapa_session.tx_ref)
+                transaction = Transaction.objects.create(user=user,amount=total_amount,type="DEPOSIT",status="success",reference=chapa_session.tx_ref)
                 # push notification to user
-                message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {chapa_session.amount} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {chapa_session.tx_ref}\n\n✅ Your account has been credited successfully!"
+                message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {deposit_amount} ETB\n🎁 Bonus: {bonus_amount} ETB (30%)\n💎 Total Credited: {total_amount} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {chapa_session.tx_ref}\n\n✅ Your account has been credited successfully!"
                 send_notification(user.telegram_id, "Deposit successful", message)
                 return True
             else:

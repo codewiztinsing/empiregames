@@ -248,14 +248,19 @@ def manual_success(request):
             # Process the successful payment
             user = get_object_or_404(User, phone=manual_session.phone_number)
             wallet = get_object_or_404(Wallet, user=user)
-            wallet.balance += float(details.get("amount").strip("ETB"))
+            # Add 30% bonus to deposit amount
+            deposit_amount = float(details.get("amount").strip("ETB"))
+            bonus_amount = deposit_amount * 0.30
+            total_amount = deposit_amount + bonus_amount
+            
+            wallet.balance += total_amount
             print("wallet balance = ",wallet.balance)
             wallet.save()
             manual_session.status = "success"
             manual_session.save()
             transaction = Transaction.objects.create(
                 user=user,
-                amount=float(details.get("amount").strip("ETB")),
+                amount=total_amount,
                 type="DEPOSIT",
                 status="success",
                 reference=manual_session.session_id
@@ -269,7 +274,9 @@ def manual_success(request):
                     telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
                     message = (
                         f"🎉 Deposit Successful! 🎉\n\n"
-                        f"💰 Amount: {details.get('amount').strip('ETB')} ETB\n"
+                        f"💰 Amount: {deposit_amount} ETB\n"
+                        f"🎁 Bonus: {bonus_amount} ETB (30%)\n"
+                        f"💎 Total Credited: {total_amount} ETB\n"
                         f"📊 New Balance: {wallet.balance} ETB\n"
                         f"🔗 Reference: {manual_session.session_id}\n\n"
                         f"✅ Your account has been credited successfully!"
@@ -380,14 +387,20 @@ def manual_cbe_success(request):
             print("phone from manual session = ",manual_session.phone_number)
             user = get_object_or_404(User, phone=manual_session.phone_number)
             wallet = get_object_or_404(Wallet, user=user)
-            wallet.balance += float(details.get("Transferred Amount").strip("ETB"))
+            
+            # Add 30% bonus to deposit amount
+            deposit_amount = float(details.get("Transferred Amount").strip("ETB"))
+            bonus_amount = deposit_amount * 0.30
+            total_amount = deposit_amount + bonus_amount
+            
+            wallet.balance += total_amount
             print("wallet balance = ",wallet.balance)
             wallet.save()
             manual_session.status = "success"
             manual_session.save()
             transaction = Transaction.objects.create(
                 user=user,
-                amount=float(details.get("Transferred Amount").strip("ETB")),
+                amount=total_amount,
                 type="DEPOSIT",
                 status="success",
                 reference=manual_session.session_id
@@ -399,7 +412,7 @@ def manual_cbe_success(request):
                 try:
                     bot_token = config('BOT_TOKEN')
                     telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                    message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {details.get('Transferred Amount').strip('ETB')} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {manual_session.session_id}\n\n✅ Your account has been credited successfully!"
+                    message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {deposit_amount} ETB\n🎁 Bonus: {bonus_amount} ETB (30%)\n💎 Total Credited: {total_amount} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {manual_session.session_id}\n\n✅ Your account has been credited successfully!"
                     telegram_payload = {
                         'chat_id': user.telegram_id,
                         'text': message,
