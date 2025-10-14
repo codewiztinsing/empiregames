@@ -1210,15 +1210,17 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
         logger.info(f"User API response status: {user_response.status_code}")
         user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
-        games_played_this_week = user_data.get('games_played_this_week', 0)
+        games_played_this_week = user_data.get('games_played_this_week', 0) or 0
         logger.info(f"Games played this week: {games_played_this_week}")
 
-        # Referral bonus (float)
-        total_referral_earnings = float(user_data.get('total_referral_earnings', 0)) if isinstance(user_data, dict) else 0.0
+        # Referral bonus (float) - handle None values
+        total_referral_earnings_raw = user_data.get('total_referral_earnings', 0) or 0
+        total_referral_earnings = float(total_referral_earnings_raw) if isinstance(total_referral_earnings_raw, (int, float, str)) else 0.0
 
-        # Compute balances per policy
+        # Compute balances per policy - handle None values
         wallet_balance = float(balance or 0)
-        referral_bonus = wallet_data.get('referral_bonus', 0)
+        referral_bonus_raw = wallet_data.get('referral_bonus', 0) or 0
+        referral_bonus = float(referral_bonus_raw) if isinstance(referral_bonus_raw, (int, float, str)) else 0.0
         threshold_met = referral_bonus >= 500.0
         withdrawable_balance = wallet_balance + (referral_bonus if threshold_met else 0.0)
         total_balance = wallet_balance + referral_bonus 
@@ -1235,8 +1237,9 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
     # Get user info for personalization
     user_name = update.effective_user.first_name or update.effective_user.username or "Player"
     
-    # Calculate remaining games needed
-    remaining_games = max(0, 27 - games_played_this_week)
+    # Calculate remaining games needed - ensure games_played_this_week is an integer
+    games_played = int(games_played_this_week) if games_played_this_week is not None else 0
+    remaining_games = max(0, 27 - games_played)
 
     phone = get_user_phone(telegram_id)
     # Create appealing balance message
@@ -1248,6 +1251,9 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
         f"🎯 **Total Balance: {total_balance:.2f} ETB\n"
         f"💵 **Withdrawable Balance: {withdrawable_balance:.2f} ETB\n"
+        f"🎮 **Weekly Games Progress:\n"
+        f"📊 **Games Played This Week: {games_played}/27\n"
+        f"⏳ **Games Remaining: {remaining_games} games to complete weekly requirement\n\n"
         )
     else:
         message = (
@@ -1257,6 +1263,9 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
         f"🎯 **Total Balance: {total_balance:.2f} ETB\n"
         f"💵 **Withdrawable Balance: {withdrawable_balance:.2f} ETB\n"
+        f"🎮 **Weekly Games Progress:\n"
+        f"📊 **Games Played This Week: {games_played}/27\n"
+        f"⏳ **Games Remaining: {remaining_games} games to complete weekly requirement\n\n"
         )
 
     await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
