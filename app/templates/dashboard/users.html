@@ -26,9 +26,9 @@
         <!-- Filter + Stats Cards -->
         <div class="flex items-center justify-between mb-4">
             <div class="space-x-2">
-                <a href="?filter=all" class="px-3 py-2 rounded-md text-sm {{ current_filter == 'all'|yesno:'bg-purple-primary text-white,bg-gray-700 text-gray-300' }}">All</a>
-                <a href="?filter=with" class="px-3 py-2 rounded-md text-sm {{ current_filter == 'with'|yesno:'bg-purple-primary text-white,bg-gray-700 text-gray-300' }}">With Agent</a>
-                <a href="?filter=without" class="px-3 py-2 rounded-md text-sm {{ current_filter == 'without'|yesno:'bg-purple-primary text-white,bg-gray-700 text-gray-300' }}">Without Agent</a>
+                <a href="?filter=all" class="px-3 py-2 rounded-md text-sm {% if current_filter == 'all' %}bg-purple-primary text-white{% else %}bg-gray-700 text-gray-300{% endif %}">All</a>
+                <a href="?filter=with" class="px-3 py-2 rounded-md text-sm {% if current_filter == 'with' %}bg-purple-primary text-white{% else %}bg-gray-700 text-gray-300{% endif %}">With Agent</a>
+                <a href="?filter=without" class="px-3 py-2 rounded-md text-sm {% if current_filter == 'without' %}bg-purple-primary text-white{% else %}bg-gray-700 text-gray-300{% endif %}">Without Agent</a>
             </div>
         </div>
 
