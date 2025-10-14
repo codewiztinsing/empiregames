@@ -103,7 +103,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             context.user_data['referrer_id'] = referrer_id
         except ValueError:
             logger.warning(f"Invalid referrer ID format: {context.args[0]}")
-    await update.message.reply_text('Welcome to Aker Bingo! Select an option:', reply_markup=reply_markup)
+    # Send welcome image instead of text
+    try:
+        with open('wellcomenote.jpeg', 'rb') as photo:
+            await update.message.reply_photo(photo=photo, caption='Select an option:', reply_markup=reply_markup)
+    except FileNotFoundError:
+        # Fallback to text if image not found
+        await update.message.reply_text('Welcome to Aker Bingo! Select an option:', reply_markup=reply_markup)
     context.job_queue.run_once(conversation_timeout, CONVERSATION_TIMEOUT, chat_id=update.effective_chat.id)
     return SOME_STATE
 
@@ -656,17 +662,20 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         
         elif query.data == "register":
+            # Send welcome image first
+            try:
+                with open('wellcomenote.jpeg', 'rb') as photo:
+                    await query.message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+            except FileNotFoundError:
+                # Fallback if image not found
+                pass
+            
             # Use a ReplyKeyboardMarkup with request_contact to actually receive phone number
             contact_keyboard = ReplyKeyboardMarkup(
                 [[KeyboardButton(text="📞 Share Phone Number", request_contact=True)]],
                 resize_keyboard=True,
                 one_time_keyboard=True
             )
-            # get notice message from file notice_message.txt
-            with open('notice.txt', 'r') as file:
-                notice_message = file.read()
-            await query.edit_message_text(text=notice_message)
-            # await query.edit_message_text(text="📱 Please share your phone number to register:")
             await query.message.reply_text(
                 text="Tap the button below to share your phone number.",
                 reply_markup=contact_keyboard
@@ -1169,15 +1178,19 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return ConversationHandler.END
     
+    # Send welcome image first
+    try:
+        with open('wellcomenote.jpeg', 'rb') as photo:
+            await update.message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+    except FileNotFoundError:
+        # Fallback if image not found
+        pass
+    
     contact_keyboard = ReplyKeyboardMarkup(
                 [[KeyboardButton(text="📞 Share Phone Number", request_contact=True)]],
                 resize_keyboard=True,
                 one_time_keyboard=True
             )
-            # get notice message from file notice_message.txt
-    with open('notice.txt', 'r') as file:
-                notice_message = file.read()
-    await update.message.reply_text(text=notice_message)
     await update.message.reply_text(
                 text="Tap the button below to share your phone number.",
                 reply_markup=contact_keyboard
@@ -1312,13 +1325,13 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logger.error(f"Error getting referrer profile: {e}")
             await update.effective_message.reply_text(f"Welcome! You were referred by user {referrer_id}")
         
-        # show notice
+        # Send welcome image first
         try:
-            with open('notice.txt', 'r') as file:
-                notice_message = file.read()
-            await update.effective_message.reply_text(text=notice_message)
-        except Exception as e:
-            logger.error(f"Error reading notice file: {e}")
+            with open('wellcomenote.jpeg', 'rb') as photo:
+                await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+        except FileNotFoundError:
+            # Fallback if image not found
+            pass
         
         await update.effective_message.reply_text(text="Please share your phone number to complete registration.")
         contact_keyboard = ReplyKeyboardMarkup(
@@ -1330,13 +1343,14 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("DEBUG: Returning REGISTER state for referred user")
         return REGISTER
     else:
-        #show notice
+        # Send welcome image first
         try:
-            with open('notice.txt', 'r') as file:
-                notice_message = file.read()
-            await update.effective_message.reply_text(text=notice_message)
-        except Exception as e:
-            logger.error(f"Error reading notice file: {e}")
+            with open('wellcomenote.jpeg', 'rb') as photo:
+                await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+        except FileNotFoundError:
+            # Fallback if image not found
+            pass
+        
         await update.effective_message.reply_text("Please share your phone number to complete registration.")
         contact_keyboard = ReplyKeyboardMarkup(
                 [[KeyboardButton(text="📞 Share Phone Number", request_contact=True)]],
