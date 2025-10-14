@@ -1251,9 +1251,7 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
         f"🎯 **Total Balance: {total_balance:.2f} ETB\n"
         f"💵 **Withdrawable Balance: {withdrawable_balance:.2f} ETB\n"
-        f"🎮 **Weekly Games Progress:\n"
-        f"📊 **Games Played This Week: {games_played}/27\n"
-        f"⏳ **Games Remaining: {remaining_games} games to complete weekly requirement\n\n"
+
         )
     else:
         message = (
@@ -1263,9 +1261,7 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
         f"🎯 **Total Balance: {total_balance:.2f} ETB\n"
         f"💵 **Withdrawable Balance: {withdrawable_balance:.2f} ETB\n"
-        f"🎮 **Weekly Games Progress:\n"
-        f"📊 **Games Played This Week: {games_played}/27\n"
-        f"⏳ **Games Remaining: {remaining_games} games to complete weekly requirement\n\n"
+       
         )
 
     await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
