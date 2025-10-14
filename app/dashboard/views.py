@@ -196,23 +196,34 @@ def transcations(request):
 
 @login_required
 def users(request):
-    # Filter users with agent codes
-    users_with_agents = User.objects.filter(agent_code__isnull=False).exclude(agent_code='').order_by('-created_at')
-    paginator = Paginator(users_with_agents, 20)
+    # filter can be: all | with | without
+    current_filter = request.GET.get('filter', 'all')
+    base_qs = User.objects.all().order_by('-created_at')
+    if current_filter == 'with':
+        user_qs = base_qs.filter(agent_code__isnull=False).exclude(agent_code='')
+    elif current_filter == 'without':
+        user_qs = base_qs.filter(Q(agent_code__isnull=True) | Q(agent_code=''))
+    else:
+        user_qs = base_qs
+
+    paginator = Paginator(user_qs, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
-    # Get statistics
-    total_users_with_agents = users_with_agents.count()
-    total_users = User.objects.count()
-    conversion_rate = (total_users_with_agents / total_users * 100) if total_users > 0 else 0
-    
+
+    # Statistics
+    total_users = base_qs.count()
+    total_with_agents = base_qs.filter(agent_code__isnull=False).exclude(agent_code='').count()
+    total_without_agents = total_users - total_with_agents
+    conversion_rate = (total_with_agents / total_users * 100) if total_users > 0 else 0
+
     context = {
         'users': page_obj,
-        'total_users_with_agents': total_users_with_agents,
+        'total_users_with_agents': total_with_agents,
+        'total_users_without_agents': total_without_agents,
         'total_users': total_users,
         'conversion_rate': conversion_rate,
-        'page_title': 'Users with Agent Codes',
+        'current_filter': current_filter,
+        'page_title': 'Users',
         'page_obj': page_obj
     }
     return render(request, 'dashboard/users.html', context)
