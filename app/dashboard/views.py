@@ -218,6 +218,60 @@ def users(request):
     return render(request, 'dashboard/users.html', context)
 
 @login_required
+def user_detail(request, user_id):
+    """Admin view: single user detail page"""
+    user = get_object_or_404(User, id=user_id)
+    # wallet & transactions if available
+    wallet = None
+    try:
+        wallet = Transaction.objects.filter(user=user)
+    except Exception:
+        wallet = None
+
+    # recent transactions
+    transactions = Transaction.objects.filter(user=user).order_by('-created_at')[:50]
+
+    context = {
+        'view_user': user,
+        'transactions': transactions,
+        'page_title': f'User: {user.username}'
+    }
+    return render(request, 'dashboard/user_detail.html', context)
+
+
+@login_required
+@admin_required
+def toggle_user_active(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        try:
+            user.is_active = not user.is_active
+            user.save(update_fields=['is_active'])
+            messages.success(request, f"User '{user.username}' is now {'active' if user.is_active else 'inactive'}.")
+        except Exception as e:
+            messages.error(request, f'Error updating user status: {str(e)}')
+    else:
+        messages.error(request, 'Invalid request method.')
+    return redirect('dashboard:user_detail', user_id=user.id)
+
+
+@login_required
+@admin_required
+def delete_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        try:
+            username = user.username
+            user.delete()
+            messages.success(request, f"User '{username}' deleted successfully.")
+            return redirect('dashboard:users')
+        except Exception as e:
+            messages.error(request, f'Error deleting user: {str(e)}')
+            return redirect('dashboard:user_detail', user_id=user_id)
+    messages.error(request, 'Invalid request method.')
+    return redirect('dashboard:user_detail', user_id=user_id)
+
+@login_required
 @admin_required
 def users_with_agents_api(request):
     """API endpoint to get users with agent codes"""
