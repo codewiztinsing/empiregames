@@ -483,59 +483,72 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         elif query.data == "chapa":
             BACK_URL = get_bot_seetings().get("bot_url")
-            url = "/api/v1/wallet/chapa/create-session"
-            full_url = f"{BACK_URL}{url}"
             
-
+            # Get user information
             _ufa = requests.get(f"{BACK_URL}/api/v1/users/{query.from_user.id}")
             user_from_api = _ufa.json() if _ufa.headers.get('content-type','').startswith('application/json') else {}
             phone_number = user_from_api.get("phone")
+            
+            if not phone_number:
+                await query.edit_message_text(text="Phone number not found. Please register first.")
+                return ConversationHandler.END
            
-            data = {
+            # Create session data
+            session_data = {
                 "amount": context.user_data['deposit_amount'],
                 "currency": "ETB",
                 "first_name": query.from_user.first_name,
                 "last_name": query.from_user.last_name or query.from_user.username,
                 "email": f"{query.from_user.username}@gmail.com",
                 "phone_number": phone_number,
-                "tx_ref":generate_tx_ref(),
-                "return_url":f"https://t.me/wowbingobotbotbot",
-                "customization":{
-                    "title": "Wow Bingo",
-                    "description": "Deposit to Wow Bingo",
-                    "logo": "https://wowliyubingo.com/static/media/logo.png"
-                },
-                # "callback_url": "https://webhook.site/6bca0770-2235-4096-b8f6-41b861ec40e9"
-                "callback_url": f"{BACK_URL}/api/v1/wallet/webhook/chapa/callback/"
+                "tx_ref": generate_tx_ref()
             }
 
-            response = requests.post(full_url, json=data)
-            logger.info(f"response = {response}")
-            if response.status_code == 200:
-                chapa_session = initialize_payment(**data)
-                logger.info(f"data = {chapa_session}")
-
-                data = chapa_session.get("data")
+            # Create session using existing wallet API
+            session_response = requests.post(f"{BACK_URL}/api/v1/wallet/chapa/create-session", json=session_data)
+            logger.info(f"Session creation response = {session_response}")
             
-                checkout_url = data.get("checkout_url")
-                keyboard = [
-                    [InlineKeyboardButton("Pay with Chapa", url=checkout_url)]
-                ]
-                reply_markup = InlineKeyboardMarkup(keyboard)
-                await query.edit_message_text(
-                    text="Click the button below to complete your payment:",
-                    reply_markup=reply_markup
-                )
+            if session_response.status_code == 200:
+                # Initialize payment using existing chapa function
+                payment_data = {
+                    "amount": context.user_data['deposit_amount'],
+                    "currency": "ETB",
+                    "email": f"{query.from_user.username}@gmail.com",
+                    "first_name": query.from_user.first_name,
+                    "last_name": query.from_user.last_name or query.from_user.username,
+                    "phone_number": phone_number,
+                    "tx_ref": session_data["tx_ref"]
+                }
+                
+                chapa_session = initialize_payment(**payment_data)
+                logger.info(f"Chapa session data = {chapa_session}")
 
-                return ConversationHandler.END
-
+                if chapa_session.get("status") == "success":
+                    checkout_url = chapa_session.get("data", {}).get("checkout_url")
+                    if checkout_url:
+                        keyboard = [
+                            [InlineKeyboardButton("Pay with Chapa", url=checkout_url)]
+                        ]
+                        reply_markup = InlineKeyboardMarkup(keyboard)
+                        await query.edit_message_text(
+                            text="Click the button below to complete your payment:",
+                            reply_markup=reply_markup
+                        )
+                        return ConversationHandler.END
+                    else:
+                        await query.edit_message_text(text="Failed to get payment URL. Please try again.")
+                        return ConversationHandler.END
+                else:
+                    await query.edit_message_text(text="Failed to initialize payment. Please try again.")
+                    return ConversationHandler.END
             else:
-                await query.edit_message_text(text="An error occurred. Please try again.")
+                await query.edit_message_text(text="Failed to create payment session. Please try again.")
                 return ConversationHandler.END
            
         elif query.data == "addispay":
             BACK_URL = get_bot_seetings().get("bot_url")
-            # check if user is registered
+            
+            # Check if user is registered
             response = requests.get(f"{BACK_URL}/api/v1/users/{query.from_user.id}")
             user_from_api = response.json() if response.headers.get('content-type','').startswith('application/json') else {}            
             if not user_from_api.get("success", False):
@@ -543,24 +556,33 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 return ConversationHandler.END
                 
             phone_number = user_from_api.get("phone")
-            tax_ref = generate_tx_ref()
+            if not phone_number:
+                await query.edit_message_text(text="Phone number not found. Please register first.")
+                return ConversationHandler.END
+                
+            tx_ref = generate_tx_ref()
+            
+            # Create AddisPay session using existing function
             addis_session = create_session(
-            float(context.user_data['deposit_amount']), 
-            "ETB",
-            f"{query.from_user.username}@gmail.com", 
-            query.from_user.first_name,
-             query.from_user.last_name,
-            phone_number, 
-            tax_ref, 
-            f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/",
-             "https://wowliyubingo.com/success", {
-                "title": "Wow Bingo",
-                "description": "Deposit to Wow Bingo",
-                "logo": "https://wowliyubingo.com/static/media/logo.png"
-            })
+                float(context.user_data['deposit_amount']), 
+                "ETB",
+                f"{query.from_user.username}@gmail.com", 
+                query.from_user.first_name or "User",
+                query.from_user.last_name or "Name",
+                phone_number, 
+                tx_ref, 
+                f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/",
+                "https://wowliyubingo.com/success", 
+                {
+                    "title": "Wow Bingo",
+                    "description": "Deposit to Wow Bingo",
+                    "logo": "https://wowliyubingo.com/static/media/logo.png"
+                }
+            )
+            
             if addis_session.get("status") == "success":
                 data = addis_session.get("data")
-                # create session in database
+                # Create session in database using existing wallet API
                 session_data = {
                     "amount": float(context.user_data['deposit_amount']),
                     "currency": "ETB",
@@ -568,30 +590,29 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                     "first_name": query.from_user.first_name or "User",
                     "last_name": query.from_user.last_name or "Name",
                     "phone_number": phone_number,
-                    "tx_ref": tax_ref,
+                    "tx_ref": tx_ref,
                     "callback_url": f"{BACK_URL}/api/v1/wallet/webhook/addispay/callback/",
                     "session_id": data.get("uuid")
                 }
-                print("session_data = ",session_data)
+                
                 session_creating_response = requests.post(f"{BACK_URL}/api/v1/wallet/addispay/create-session", json=session_data)
                 if session_creating_response.status_code == 200:
                     checkout_url = data.get("checkout_url") + "/" + data.get("uuid")
+                    keyboard = [
+                        [InlineKeyboardButton("Pay with AddisPay", url=checkout_url)]
+                    ]
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    await query.edit_message_text(
+                        text="Click the button below to complete your payment:",
+                        reply_markup=reply_markup
+                    )
+                    return ConversationHandler.END
                 else:
                     await query.edit_message_text(text="Failed to create payment session. Please try again.")
                     return ConversationHandler.END
             else:
-                await query.edit_message_text(text="An error occurred. Please try again.")
+                await query.edit_message_text(text="Failed to initialize AddisPay payment. Please try again.")
                 return ConversationHandler.END
-            keyboard = [
-                [InlineKeyboardButton("Pay with AddisPay", url=checkout_url)]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text(
-                text="Click the button below to complete your payment:",
-                reply_markup=reply_markup
-            )
-
-            return ConversationHandler.END
            
 
       
@@ -629,30 +650,82 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
             return REGISTER
 
-        elif query.data == 'manual':
-            keyboard = [
-                [InlineKeyboardButton("Telebirr", callback_data='manual_telebirr')],
-                [InlineKeyboardButton("CBE", callback_data='manual_cbe')],
-                [InlineKeyboardButton("🔙 Back to Menu", callback_data='menu')]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.message.reply_text(text="Please select a payment method:", reply_markup=reply_markup)
 
         elif query.data == "manual_telebirr":
-            filepath = "telebirr_message.html"
-            with open(filepath, 'r') as file:
-                message = file.read()
-            context.user_data['payment_method'] = 'manual_telebirr'
-            await query.edit_message_text(text=message, parse_mode=ParseMode.HTML)
-            return WAIT_FOR_PAYMENT
+            try:
+                filepath = "telebirr_message.html"
+                with open(filepath, 'r') as file:
+                    message = file.read()
+                context.user_data['payment_method'] = 'manual_telebirr'
+                
+                # Add deposit amount to the message
+                deposit_amount = context.user_data.get('deposit_amount', 'N/A')
+                enhanced_message = f"""
+<b>💰 Manual Telebirr Deposit</b>
+<b>Amount: {deposit_amount} ETB</b>
+
+{message}
+
+<b>📱 After making the payment, please send your transaction receipt here.</b>
+"""
+                await query.edit_message_text(text=enhanced_message, parse_mode=ParseMode.HTML)
+                return WAIT_FOR_PAYMENT
+            except FileNotFoundError:
+                # Fallback message if HTML file is not found
+                deposit_amount = context.user_data.get('deposit_amount', 'N/A')
+                fallback_message = f"""
+<b>💰 Manual Telebirr Deposit</b>
+<b>Amount: {deposit_amount} ETB</b>
+
+<b>📱 Payment Instructions:</b>
+1. Open your Telebirr app
+2. Transfer {deposit_amount} ETB to the provided account
+3. Take a screenshot of your transaction receipt
+4. Send the receipt here for verification
+
+<b>📞 After making the payment, please send your transaction receipt here.</b>
+"""
+                context.user_data['payment_method'] = 'manual_telebirr'
+                await query.edit_message_text(text=fallback_message, parse_mode=ParseMode.HTML)
+                return WAIT_FOR_PAYMENT
 
         elif query.data == "manual_cbe":
-            filepath = "cbe_message.html"
-            with open(filepath, 'r') as file:
-                message = file.read()
-            await query.edit_message_text(text=message, parse_mode=ParseMode.HTML)
-            context.user_data['payment_method'] = 'manual_cbe'
-            return WAIT_FOR_PAYMENT
+            try:
+                filepath = "cbe_message.html"
+                with open(filepath, 'r') as file:
+                    message = file.read()
+                context.user_data['payment_method'] = 'manual_cbe'
+                
+                # Add deposit amount to the message
+                deposit_amount = context.user_data.get('deposit_amount', 'N/A')
+                enhanced_message = f"""
+<b>💰 Manual CBE Deposit</b>
+<b>Amount: {deposit_amount} ETB</b>
+
+{message}
+
+<b>📱 After making the payment, please send your transaction receipt here.</b>
+"""
+                await query.edit_message_text(text=enhanced_message, parse_mode=ParseMode.HTML)
+                return WAIT_FOR_PAYMENT
+            except FileNotFoundError:
+                # Fallback message if HTML file is not found
+                deposit_amount = context.user_data.get('deposit_amount', 'N/A')
+                fallback_message = f"""
+<b>💰 Manual CBE Deposit</b>
+<b>Amount: {deposit_amount} ETB</b>
+
+<b>🏦 Payment Instructions:</b>
+1. Go to any CBE branch or use CBE mobile banking
+2. Transfer {deposit_amount} ETB to the provided account
+3. Take a screenshot of your transaction receipt
+4. Send the receipt here for verification
+
+<b>📞 After making the payment, please send your transaction receipt here.</b>
+"""
+                context.user_data['payment_method'] = 'manual_cbe'
+                await query.edit_message_text(text=fallback_message, parse_mode=ParseMode.HTML)
+                return WAIT_FOR_PAYMENT
     
         elif query.data == 'share_phone':
             # Fallback in case the inline button is used elsewhere
@@ -701,24 +774,38 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     amount = update.message.text
 
-    if float(amount) <=49:
-        await update.message.reply_text("Minimum deposit amount is 50 ETB. Please enter a higher amount.")
+    # Validate deposit amount
+    try:
+        deposit_amount_float = float(amount)
+        if deposit_amount_float <= 49:
+            await update.message.reply_text("Minimum deposit amount is 50 ETB. Please enter a higher amount.")
+            return DEPOSIT_AMOUNT
+    except ValueError:
+        await update.message.reply_text("Please enter a valid amount.")
         return DEPOSIT_AMOUNT
 
     back_url = get_bot_seetings().get("bot_url")
    
+    # Get user information using existing API
     full_url = f"{back_url}/api/v1/users/{update.effective_user.id}"
     logger.info(f"full_url = {full_url}")
 
-    response = requests.get(full_url)
     try:
-        response_data = response.json()
-        print("wow pay bot url ", response_data)
-        phone = response_data.get("phone")
-    except requests.exceptions.JSONDecodeError:
-        print("Invalid JSON response from API")
-        phone = None
-    print("phone = ",phone)
+        response = requests.get(full_url)
+        if response.status_code == 200:
+            response_data = response.json()
+            phone = response_data.get("phone")
+            if not phone:
+                await update.message.reply_text("Phone number not found. Please register first.")
+                return ConversationHandler.END
+        else:
+            await update.message.reply_text("Failed to get user information. Please try again.")
+            return ConversationHandler.END
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error getting user info: {e}")
+        await update.message.reply_text("An error occurred. Please try again.")
+        return ConversationHandler.END
+    
     context.user_data['deposit_amount'] = amount    
 
     message = """
@@ -727,21 +814,20 @@ async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     <b>📞 Phone:</b> {}  
     <b>💰 Amount:</b> {} ETB  
     <b>📅 Date:</b> {}
-    """.format(update.effective_user.username,phone,amount,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    """.format(update.effective_user.username, phone, amount, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    
     inline_keyboard = [
         [
-                # InlineKeyboardButton("Chapa", callback_data='chapa'),
-                InlineKeyboardButton("Telebirr", callback_data='chapa_telebirr'),
-                InlineKeyboardButton("CBE", callback_data='chapa_cbe')
-
-            # InlineKeyboardButton("AddisPay", callback_data='addispay')
+            InlineKeyboardButton("Manual Telebirr", callback_data='manual_telebirr'),
+            InlineKeyboardButton("Manual CBE", callback_data='manual_cbe')
         ],
         [
-            InlineKeyboardButton("Manual", callback_data='manual')
+            InlineKeyboardButton("Direct Telebirr", callback_data='chapa_telebirr'),
+            InlineKeyboardButton("Direct CBE", callback_data='chapa_cbe')
         ]
     ]
     reply_markup = InlineKeyboardMarkup(inline_keyboard)
-    await update.message.reply_text(message,parse_mode=ParseMode.HTML,reply_markup=reply_markup)
+    await update.message.reply_text(message, parse_mode=ParseMode.HTML, reply_markup=reply_markup)
     
    
   
@@ -802,19 +888,23 @@ all_public_commands_descriptions = [
         ),
 
     BotCommand(
-        "instructions", 
-        "instructions to play game"
-        ),
-
-      BotCommand(
-        "support", 
-        "Contact us"
+        "deposit", 
+        "deposit funds"
         ),
 
     BotCommand(
         "withdraw", 
         "withdraw funds"
         ),
+
+    BotCommand("check_balance", 
+    "check balance"),
+
+      BotCommand(
+        "support", 
+        "Contact us"
+        ),
+
     BotCommand(
         "invite", 
         "Invite your friends"
@@ -828,6 +918,98 @@ async def post_init(app):
 
       
   
+
+async def deposit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the /deposit command"""
+    user_id = update.effective_user.id
+    BACK_URL = get_bot_seetings().get("bot_url")
+    
+    # Check if user is registered
+    try:
+        response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
+        if response.status_code != 200:
+            await update.message.reply_text(
+                "You need to register first before making deposits. Use the /register command."
+            )
+            return
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error checking user registration: {e}")
+        await update.message.reply_text("An error occurred. Please try again.")
+        return
+
+    # Get user's wallet balance
+    try:
+        _wr = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}/')
+        wallet_response = _wr.json() if _wr.headers.get('content-type','').startswith('application/json') else {}
+        balance = wallet_response.get('balance', 0)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error getting wallet balance: {e}")
+        balance = 0
+
+    message = f"""
+💰 <b>Deposit Funds</b>
+
+Your current balance: <b>{balance} ETB</b>
+
+Please enter the amount you want to deposit (minimum 50 ETB):
+"""
+    
+    await update.message.reply_text(message, parse_mode=ParseMode.HTML)
+    
+    # Set the conversation state to wait for deposit amount
+    context.user_data['command'] = 'deposit'
+    return DEPOSIT_AMOUNT
+
+
+async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the /check_balance command"""
+    user_id = update.effective_user.id
+    BACK_URL = get_bot_seetings().get("bot_url")
+    
+    # Check if user is registered
+    try:
+        response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
+        if response.status_code != 200:
+            await update.message.reply_text(
+                "You need to register first before checking your balance. Use the /register command."
+            )
+            return
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error checking user registration: {e}")
+        await update.message.reply_text("An error occurred. Please try again.")
+        return
+
+    # Get user's wallet balance
+    try:
+        _wr = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}/')
+        wallet_response = _wr.json() if _wr.headers.get('content-type','').startswith('application/json') else {}
+        balance = wallet_response.get('balance', 0)
+        
+        # Get user information for display
+        user_response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
+        user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
+        username = user_data.get('username', update.effective_user.username or 'User')
+        
+        message = f"""
+💰 <b>Account Balance</b>
+
+👤 <b>User:</b> {username}
+💳 <b>Current Balance:</b> {balance} ETB
+
+📊 <b>Account Status:</b> Active
+🕒 <b>Last Updated:</b> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+
+💡 <i>Use /deposit to add funds or /play to start gaming!</i>
+"""
+        
+        await update.message.reply_text(message, parse_mode=ParseMode.HTML)
+        
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error getting wallet balance: {e}")
+        await update.message.reply_text(
+            "❌ Unable to retrieve your balance at the moment. Please try again later."
+        )
+
 
 async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -871,7 +1053,10 @@ def main() -> None:
  
 
     conversation_handler = ConversationHandler(
-        entry_points=[CallbackQueryHandler(button)],
+        entry_points=[
+            CallbackQueryHandler(button),
+            CommandHandler('deposit', deposit_command)
+        ],
         states={
             # get_deposit_amount
             DEPOSIT_AMOUNT          : [MessageHandler(filters.TEXT & ~filters.COMMAND, deposit_amount)],
@@ -893,6 +1078,7 @@ def main() -> None:
     application.add_handler(CommandHandler('instructions', instruction_command))
     application.add_handler(CommandHandler('support', support_command))
     application.add_handler(CommandHandler('withdraw', withdraw_command))
+    application.add_handler(CommandHandler('check_balance', check_balance_command))
     application.add_handler(conversation_handler)
     application.add_handler(CommandHandler('invite', handle_invite))  
     application.run_polling(allowed_updates=Update.ALL_TYPES)
