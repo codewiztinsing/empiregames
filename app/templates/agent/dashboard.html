@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 min-h-screen">
+    <!-- Header -->
+    <header class="bg-gray-800 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-user-tie text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <h1 class="text-xl font-semibold text-white">Agent Dashboard</h1>
+                        <p class="text-sm text-gray-400">Welcome, {{ agent.name }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if referral_link %}
+                    <button onclick="copyReferral('{{ referral_link }}')" class="text-gray-300 hover:text-white flex items-center">
+                        <i class="fas fa-link text-lg mr-2"></i>
+                        Copy Referral Link
+                    </button>
+                    {% endif %}
+                    <a href="{% url 'agent:profile' %}" class="text-gray-300 hover:text-white">
+                        <i class="fas fa-user-circle text-lg"></i>
+                    </a>
+                    <a href="{% url 'agent:logout' %}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-600 rounded-lg">
+                        <i class="fas fa-users text-white"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-400">Total Users</p>
+                        <p class="text-2xl font-semibold text-white">{{ total_users }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-600 rounded-lg">
+                        <i class="fas fa-user-check text-white"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-400">Active Users</p>
+                        <p class="text-2xl font-semibold text-white">{{ active_users }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-600 rounded-lg">
+                        <i class="fas fa-money-bill-wave text-white"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-400">Total Deposits</p>
+                        <p class="text-2xl font-semibold text-white">{{ total_deposits|floatformat:2 }} ETB</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 bg-yellow-600 rounded-lg">
+                        <i class="fas fa-coins text-white"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-400">Total Earnings</p>
+                        <p class="text-2xl font-semibold text-white">{{ total_earnings|floatformat:2 }} ETB</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <a href="{% url 'agent:users' %}" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-6 border border-gray-700 transition-colors">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-600 rounded-lg">
+                        <i class="fas fa-users text-white"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-white">Manage Users</h3>
+                        <p class="text-sm text-gray-400">View and manage your referred users</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{% url 'agent:commissions' %}" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-6 border border-gray-700 transition-colors">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-600 rounded-lg">
+                        <i class="fas fa-chart-line text-white"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-white">View Commissions</h3>
+                        <p class="text-sm text-gray-400">Track your earnings and commissions</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{% url 'agent:profile' %}" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-6 border border-gray-700 transition-colors">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-600 rounded-lg">
+                        <i class="fas fa-user-cog text-white"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-white">My Profile</h3>
+                        <p class="text-sm text-gray-400">Update your profile and settings</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Recent Users -->
+            <div class="bg-gray-800 rounded-xl border border-gray-700">
+                <div class="p-6 border-b border-gray-700">
+                    <h3 class="text-lg font-semibold text-white">Recent Users</h3>
+                    <p class="text-sm text-gray-400">Latest users who registered with your code</p>
+                </div>
+                <div class="p-6">
+                    {% if recent_users %}
+                        <div class="space-y-4">
+                            {% for user in recent_users %}
+                            <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                                        <span class="text-sm font-medium text-white">{{ user.username|first|upper }}</span>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-white">{{ user.username }}</p>
+                                        <p class="text-xs text-gray-400">{{ user.created_at|date:"M d, Y" }}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    {% if user.is_active %}
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-900 text-green-200">
+                                            Active
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-900 text-red-200">
+                                            Inactive
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-4 text-center">
+                            <a href="{% url 'agent:users' %}" class="text-purple-400 hover:text-purple-300 text-sm font-medium">
+                                View All Users →
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8">
+                            <i class="fas fa-users text-gray-400 text-3xl mb-2"></i>
+                            <p class="text-gray-400">No users yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="bg-gray-800 rounded-xl border border-gray-700">
+                <div class="p-6 border-b border-gray-700">
+                    <h3 class="text-lg font-semibold text-white">Recent Transactions</h3>
+                    <p class="text-sm text-gray-400">Latest transactions from your users</p>
+                </div>
+                <div class="p-6">
+                    {% if recent_transactions %}
+                        <div class="space-y-4">
+                            {% for transaction in recent_transactions %}
+                            <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-exchange-alt text-white text-xs"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-white">{{ transaction.user.username }}</p>
+                                        <p class="text-xs text-gray-400">{{ transaction.created_at|date:"M d, Y" }}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-medium text-white">{{ transaction.amount|floatformat:2 }} ETB</p>
+                                    <p class="text-xs text-gray-400">{{ transaction.type }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8">
+                            <i class="fas fa-exchange-alt text-gray-400 text-3xl mb-2"></i>
+                            <p class="text-gray-400">No transactions yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function copyReferral(link) {
+        navigator.clipboard.writeText(link).then(function() {
+            alert('Referral link copied!');
+        }).catch(function() {
+            // Fallback
+            const ta = document.createElement('textarea');
+            ta.value = link; document.body.appendChild(ta); ta.select();
+            document.execCommand('copy'); document.body.removeChild(ta);
+            alert('Referral link copied!');
+        });
+    }
+    </script>
+</body>
+</html>

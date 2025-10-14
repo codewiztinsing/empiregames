@@ -7,6 +7,7 @@ from .main import api
 
 urlpatterns = [
     path('dashboard/',include('dashboard.urls')),
+    path('agent/',include('dashboard.agent_urls')),
     path('accounts/',include('users.urls')),
     path('admin/', admin.site.urls),
     path('api/v1/', api.urls),

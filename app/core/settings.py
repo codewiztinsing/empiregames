@@ -20,6 +20,9 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 # Custom 404 page settings
 HANDLER404 = 'core.views.custom_404'
 
+# Telegram Bot Settings
+TELEGRAM_BOT_USERNAME = 'wowbingobotbotbot'
+
 
 ALLOWED_HOSTS = ["*", "wowliyubingo.com", "server.wowliyubingo.com"]
 CSRF_TRUSTED_ORIGINS = ["https://wowliyubingo.com", "https://*.ngrok.app"]
@@ -45,6 +48,8 @@ INSTALLED_APPS = [
     'users',
     'wallet',
     'promotion',
+    'dashboard',
+    'webhooks',
 ]
 
 

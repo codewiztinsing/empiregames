@@ -65,7 +65,7 @@ class ManualSession(models.Model):
 class Transaction(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.FloatField()
-    type = models.CharField(choices=[("DEPOSIT", "Deposit"), ("WITHDRAW", "Withdraw"),("BET", "Bet"),("WIN", "Win"),], max_length=20)
+    type = models.CharField(choices=[("DEPOSIT", "Deposit"), ("WITHDRAW", "Withdraw"),("BET", "Bet"),("WIN", "Win"),("COMMISSION", "Commission"),], max_length=20)
     status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
     reference = models.CharField(max_length=100,blank=True,null=True)
     created_at = models.DateTimeField(auto_now_add=True)

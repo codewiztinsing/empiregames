@@ -1,0 +1,331 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-dark-bg p-6">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2">{{ page_title }}</h1>
+                    <p class="text-gray-400">Create a new agent to start earning commissions from referrals</p>
+                </div>
+                <a href="{% url 'dashboard:agents' %}" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors duration-200">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Agents
+                </a>
+            </div>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-dark-card border border-dark-border rounded-xl shadow-xl">
+            <div class="p-8">
+                <form method="post" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <!-- Agent Information -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-300 mb-2">
+                                <i class="fas fa-user mr-2 text-purple-primary"></i>Agent Name
+                            </label>
+                            <input type="text" 
+                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all duration-200" 
+                                   id="name" 
+                                   name="name" 
+                                   placeholder="Enter agent's full name" 
+                                   value="{{ prefill.name|default:'' }}"
+                                   required>
+                            <p class="mt-2 text-sm text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Enter the agent's full name
+                            </p>
+                        </div>
+
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-300 mb-2">
+                                <i class="fas fa-phone mr-2 text-purple-primary"></i>Phone Number
+                            </label>
+                            <input type="tel" 
+                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all duration-200" 
+                                   id="phone" 
+                                   name="phone" 
+                                   placeholder="Enter phone number" 
+                                   value="{{ prefill.phone|default:'' }}"
+                                   required>
+                            <p class="mt-2 text-sm text-gray-400">
+                                <i class="fas fa-mobile-alt mr-1"></i>
+                                Agent's contact phone number
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Agent Code -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="agent_code" class="block text-sm font-medium text-gray-300 mb-2">
+                                <i class="fas fa-code mr-2 text-purple-primary"></i>Agent Code
+                            </label>
+                            <input type="text" 
+                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all duration-200" 
+                                   id="agent_code" 
+                                   name="agent_code" 
+                                   placeholder="Enter unique agent code" 
+                                   value="{{ prefill.agent_code|default:'' }}"
+                                   required>
+                            <p class="mt-2 text-sm text-gray-400">
+                                <i class="fas fa-lightbulb mr-1"></i>
+                                This code will be used for referrals (e.g., AGENT001)
+                            </p>
+                        </div>
+
+                        <!-- Username -->
+                        <div>
+                            <label for="username" class="block text-sm font-medium text-gray-300 mb-2">
+                                <i class="fas fa-user mr-2 text-purple-primary"></i>Username
+                            </label>
+                            <input type="text" 
+                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all duration-200" 
+                                   id="username" 
+                                   name="username" 
+                                   placeholder="Enter login username" 
+                                   value="{{ prefill.username|default:'' }}"
+                                   required>
+                            <p class="mt-2 text-sm text-gray-400">
+                                <i class="fas fa-key mr-1"></i>
+                                Agent's login username for dashboard access
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Password and Email -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-300 mb-2">
+                                <i class="fas fa-lock mr-2 text-purple-primary"></i>Password
+                            </label>
+                            <input type="password" 
+                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all duration-200" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="Enter login password" 
+                                   required>
+                            <p class="mt-2 text-sm text-gray-400">
+                                <i class="fas fa-shield-alt mr-1"></i>
+                                Agent's login password (minimum 6 characters)
+                            </p>
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-300 mb-2">
+                                <i class="fas fa-envelope mr-2 text-purple-primary"></i>Email (Optional)
+                            </label>
+                            <input type="email" 
+                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all duration-200" 
+                                   id="email" 
+                                   name="email" 
+                                   value="{{ prefill.email|default:'' }}"
+                                   placeholder="Enter email address">
+                            <p class="mt-2 text-sm text-gray-400">
+                                <i class="fas fa-at mr-1"></i>
+                                Agent's email address for notifications
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Telegram Link Section -->
+                    <div class="grid grid-cols-1 gap-6">
+
+                        <!-- Telegram Link Preview -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                <i class="fab fa-telegram mr-2 text-purple-primary"></i>Telegram Bot Link
+                            </label>
+                            <div class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-gray-300">
+                                <div class="flex items-center justify-between">
+                                    <span id="telegram-link-preview" class="text-sm">https://t.me/wowbingobotbotbot?start=agent_</span>
+                                    <button type="button" onclick="copyTelegramLink()" class="text-purple-primary hover:text-purple-hover">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-400">
+                                <i class="fas fa-link mr-1"></i>
+                                This link will be generated automatically for referrals
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Commission Rate -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="commission_rate" class="block text-sm font-medium text-gray-300 mb-2">
+                                <i class="fas fa-percentage mr-2 text-purple-primary"></i>Commission Rate (%)
+                            </label>
+                            <div class="relative">
+                                <input type="number" 
+                                       class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all duration-200" 
+                                       id="commission_rate" 
+                                       name="commission_rate" 
+                                       value="{{ prefill.commission_rate|default:'5.00' }}" 
+                                       step="0.01" 
+                                       min="0" 
+                                       max="100" 
+                                       required>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                    <span class="text-gray-400 text-sm">%</span>
+                                </div>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-400">
+                                <i class="fas fa-calculator mr-1"></i>
+                                Percentage of deposit amount the agent will earn
+                            </p>
+                        </div>
+
+                        <!-- Preview Card -->
+                        <div class="bg-gradient-to-r from-purple-primary to-purple-hover rounded-lg p-4">
+                            <h3 class="text-white font-semibold mb-2">
+                                <i class="fas fa-eye mr-2"></i>Commission Preview
+                            </h3>
+                            <div class="text-sm text-purple-100">
+                                <p>For a 100 ETB deposit:</p>
+                                <p class="text-lg font-bold" id="commission-preview">5.00 ETB</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info Box -->
+                    <div class="bg-blue-900 border border-blue-700 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-blue-400 mt-1 mr-3"></i>
+                            <div class="text-blue-100">
+                                <h4 class="font-semibold mb-1">How Agent Commissions Work</h4>
+                                <ul class="text-sm space-y-1">
+                                    <li>• Agents earn commissions when their referred users make deposits</li>
+                                    <li>• Commissions are automatically calculated and added to agent wallets</li>
+                                    <li>• All commission transactions are tracked and visible in the dashboard</li>
+                                    <li>• Agents can track their referrals and earnings in real-time</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-600">
+                        <a href="{% url 'dashboard:agents' %}" 
+                           class="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors duration-200 flex items-center">
+                            <i class="fas fa-times mr-2"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" 
+                                class="px-6 py-3 bg-purple-primary hover:bg-purple-hover text-white rounded-lg transition-colors duration-200 flex items-center shadow-lg">
+                            <i class="fas fa-save mr-2"></i>
+                            Create Agent
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('name');
+    const phoneInput = document.getElementById('phone');
+    const agentCodeInput = document.getElementById('agent_code');
+    const commissionRateInput = document.getElementById('commission_rate');
+    const commissionPreview = document.getElementById('commission-preview');
+    const telegramLinkPreview = document.getElementById('telegram-link-preview');
+    
+    // Auto-generate agent code based on name
+    function generateAgentCode() {
+        const name = nameInput.value.trim();
+        if (name) {
+            // Remove spaces and special characters, convert to uppercase
+            const cleanName = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+            const agentCode = 'AGENT_' + cleanName;
+            agentCodeInput.value = agentCode;
+            updateTelegramLink();
+        } else {
+            agentCodeInput.value = '';
+            updateTelegramLink();
+        }
+    }
+    
+    // Update Telegram link preview
+    function updateTelegramLink() {
+        const agentCode = agentCodeInput.value.trim();
+        if (agentCode) {
+            telegramLinkPreview.textContent = `https://t.me/wowbingobotbotbot?start=agent_${agentCode}`;
+        } else {
+            telegramLinkPreview.textContent = 'https://t.me/wowbingobotbotbot?start=agent_';
+        }
+    }
+    
+    // Auto-generate agent code when name changes
+    nameInput.addEventListener('input', generateAgentCode);
+    nameInput.addEventListener('change', generateAgentCode);
+    
+    // Update Telegram link when agent code changes
+    agentCodeInput.addEventListener('input', updateTelegramLink);
+    agentCodeInput.addEventListener('change', updateTelegramLink);
+    
+    // Update commission preview when rate changes
+    function updateCommissionPreview() {
+        const rate = parseFloat(commissionRateInput.value) || 0;
+        const commission = (100 * rate / 100).toFixed(2);
+        commissionPreview.textContent = commission + ' ETB';
+    }
+    
+    commissionRateInput.addEventListener('input', updateCommissionPreview);
+    commissionRateInput.addEventListener('change', updateCommissionPreview);
+    
+    // Initialize previews
+    updateCommissionPreview();
+    updateTelegramLink();
+    
+    // Add smooth animations
+    const formInputs = document.querySelectorAll('input, select');
+    formInputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('transform', 'scale-105');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.classList.remove('transform', 'scale-105');
+        });
+    });
+});
+
+// Copy Telegram link to clipboard
+function copyTelegramLink() {
+    const telegramLinkPreview = document.getElementById('telegram-link-preview');
+    const link = telegramLinkPreview.textContent;
+    
+    navigator.clipboard.writeText(link).then(function() {
+        // Show success feedback
+        const button = event.target.closest('button');
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check text-green-400"></i>';
+        
+        setTimeout(function() {
+            button.innerHTML = originalIcon;
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = link;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+    });
+}
+</script>
+{% endblock %}

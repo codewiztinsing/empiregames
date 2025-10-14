@@ -77,6 +77,9 @@ def chapa_callback(request):
         wallet.save()
         chapa_session.status = "success"
         chapa_session.save()
+        
+        # Process agent commission
+        
         print("Payment processed successfully")
 
     return JsonResponse({"message": "Callback received"}, status=200)
@@ -161,6 +164,9 @@ def addispay_callback(request):
             wallet.save()
             addispay_session.status = data.get("payment_status")
             addispay_session.save()
+            
+            # Process agent commission
+            
             print("AddisPay payment processed successfully")
             return JsonResponse({"message": "Callback received"}, status=200)
         else:
@@ -225,19 +231,22 @@ def manual_success(request):
             # Process the successful payment
             user = get_object_or_404(User, phone=manual_session.phone_number)
             wallet = get_object_or_404(Wallet, user=user)
-            wallet.balance += float(details.get("amount").strip("ETB"))
+            deposit_amount = float(details.get("amount").strip("ETB"))
+            wallet.balance += deposit_amount
             print("wallet balance = ",wallet.balance)
             wallet.save()
             manual_session.status = "success"
             manual_session.save()
             transaction = Transaction.objects.create(
                 user=user,
-                amount=float(details.get("amount").strip("ETB")),
+                amount=deposit_amount,
                 type="DEPOSIT",
                 status="success",
                 reference=manual_session.session_id
             )
             transaction.save()
+            
+            # Process agent commission
             
             # Notify user about successful deposit
             if user.telegram_id:
@@ -357,19 +366,22 @@ def manual_cbe_success(request):
             print("phone from manual session = ",manual_session.phone_number)
             user = get_object_or_404(User, phone=manual_session.phone_number)
             wallet = get_object_or_404(Wallet, user=user)
-            wallet.balance += float(details.get("Transferred Amount").strip("ETB"))
+            deposit_amount = float(details.get("Transferred Amount").strip("ETB"))
+            wallet.balance += deposit_amount
             print("wallet balance = ",wallet.balance)
             wallet.save()
             manual_session.status = "success"
             manual_session.save()
             transaction = Transaction.objects.create(
                 user=user,
-                amount=float(details.get("Transferred Amount").strip("ETB")),
+                amount=deposit_amount,
                 type="DEPOSIT",
                 status="success",
                 reference=manual_session.session_id
             )
             transaction.save()
+            
+            # Process agent commission
             
             # Notify user about successful deposit
             if user.telegram_id:

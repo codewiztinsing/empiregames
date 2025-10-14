@@ -12,8 +12,15 @@ urlpatterns = [
     path('transcations/', views.transcations, name='transcations'),
     path('users/', views.users, name='users'),
     path('bingo_cards/', views.bingo_cards, name='bingo_cards'),
-    path('referrals/', views.referrals, name='referrals'),
-    path('messages/', views.messages, name='messages'),
+    path('messages/', views.dashboard_messages, name='messages'),
     path('contact/', views.contact, name='contact'),
     path('logout/', views.logout, name='logout'),
+    
+    # Agent Management URLs
+    path('agents/', views.agents, name='agents'),
+    path('agents/create/', views.create_agent, name='create_agent'),
+    path('agents/<int:agent_id>/', views.agent_detail, name='agent_detail'),
+    path('agents/<int:agent_id>/edit/', views.edit_agent, name='edit_agent'),
+    path('agents/<int:agent_id>/delete/', views.delete_agent, name='delete_agent'),
+    path('api/users-with-agents/', views.users_with_agents_api, name='users_with_agents_api'),
 ]

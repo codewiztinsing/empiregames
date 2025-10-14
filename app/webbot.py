@@ -94,12 +94,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # https://t.me/bilanbingobot?start=1464395537
     # Extract referral info from deep link if present
     referrer_id = None
+    agent_code = None
     if context.args and len(context.args) > 0:
         try:
-            referrer_id = int(context.args[0])
-            print("referrer_id = ",referrer_id)
-
-            # Store referrer ID in user data for later use
+            # Check if it's an agent referral
+            if context.args[0].startswith('agent_'):
+                agent_code = context.args[0].replace('agent_', '')
+                print("agent_code = ", agent_code)
+                # Store agent code in user data for later use
+                context.user_data['agent_code'] = agent_code
+            else:
+                # Regular user referral
+                referrer_id = int(context.args[0])
+                print("referrer_id = ", referrer_id)
+                # Store referrer ID in user data for later use
             context.user_data['referrer_id'] = referrer_id
         except ValueError:
             logger.warning(f"Invalid referrer ID format: {context.args[0]}")
@@ -1027,7 +1035,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     wallet_response = _wr.json() if _wr.headers.get('content-type','').startswith('application/json') else {}
     balance = wallet_response.get('balance', 0)
 
-    invite_link = f"https://t.me/wowbingobot?start={user_id}"
+    invite_link = f"https://t.me/wowbingobotbotbot?start={user_id}"
     
     message = (
         f"🎮 Invite your friends to Wow Bingo!\n\n"

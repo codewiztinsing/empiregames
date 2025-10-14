@@ -100,12 +100,19 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'telegram_id': str(update.message.from_user.id),
             'phone': phone_number
         })
+        # Get agent code from context if available
+        agent_code = context.user_data.get('agent_code')
+        
         user_data.update({
             'phone': user_data.get('phone',"botphone"),
             'username':username,
             'password': user_data.get('password',"123456"),
             'email': user_data.get('email',f"{user_data.get('username')}@gmail.com")
         })
+        
+        # Add agent code if available
+        if agent_code:
+            user_data['agent_code'] = agent_code
         print("user_data = ",user_data)
         response = requests.post(f"{BACK_URL}/api/v1/users/register", json=user_data)
         if response.status_code == 200:  # Assume 201 means success

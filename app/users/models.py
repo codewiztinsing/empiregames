@@ -7,6 +7,7 @@ class User(AbstractUser):
     phone = models.CharField(max_length=15, unique=True)
     telegram_id = models.CharField(max_length=15, unique=True)
     referral_code = models.CharField(max_length=15, default=get_random_string(15))
+    agent_code = models.CharField(max_length=20, blank=True, null=True, help_text="Agent code that referred this user")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     groups = models.ManyToManyField(
@@ -26,3 +27,16 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+    
+    def create_user(self, username, phone, telegram_id, password, agent_code=None, **extra_fields):
+        """Create a new user with agent code support"""
+        user = self.create(
+            username=username,
+            phone=phone,
+            telegram_id=telegram_id,
+            agent_code=agent_code,
+            **extra_fields
+        )
+        user.set_password(password)
+        user.save()
+        return user

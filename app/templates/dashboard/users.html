@@ -1,292 +1,265 @@
 {% extends 'dashboard/base.html' %}
 
-{% block title %}Users - Bingo Admin{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="flex-1 p-6">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-white">Users</h1>
+<div class="min-h-screen bg-dark-bg p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2">{{ page_title }}</h1>
+                    <p class="text-gray-400">View all users who were referred by agents</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="{% url 'dashboard:agents' %}" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        View Agents
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-500 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-400">Total Users</p>
+                        <p class="text-2xl font-semibold text-white">{{ total_users }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-500 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-400">Users with Agents</p>
+                        <p class="text-2xl font-semibold text-white">{{ total_users_with_agents }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border rounded-xl p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-primary rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-400">Conversion Rate</p>
+                        <p class="text-2xl font-semibold text-white">
+                            {{ total_users_with_agents }}/{{ total_users }} ({{ conversion_rate|floatformat:1 }}%)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="bg-dark-card border border-dark-border rounded-xl shadow-xl">
+            <div class="p-6 border-b border-dark-border">
+                <h2 class="text-xl font-semibold text-white">Users with Agent Codes</h2>
+                <p class="text-gray-400 mt-1">All users who were referred by agents</p>
+            </div>
+            
+            <div class="overflow-x-auto">
+                {% if users %}
+                    <table class="w-full">
+                        <thead class="bg-gray-800">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Agent Code</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Phone</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Telegram ID</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Registration Date</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-dark-card divide-y divide-gray-700">
+                            {% for user in users %}
+                            <tr class="hover:bg-gray-800 transition-colors duration-200">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <div class="h-10 w-10 rounded-full bg-purple-primary flex items-center justify-center">
+                                                <span class="text-sm font-medium text-white">{{ user.username|first|upper }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-white">{{ user.username }}</div>
+                                            <div class="text-sm text-gray-400">{{ user.email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <code class="bg-gray-800 px-2 py-1 rounded text-sm text-purple-300">{{ user.agent_code }}</code>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                    {{ user.phone }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    {{ user.telegram_id }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    {{ user.created_at|date:"M d, Y" }}
+                                    <div class="text-xs text-gray-500">{{ user.created_at|date:"H:i" }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex space-x-2">
+                                        <button onclick="viewUserDetails('{{ user.id }}', '{{ user.username }}', '{{ user.agent_code }}')" 
+                                                class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-blue-400 bg-blue-900 hover:bg-blue-800 transition-colors duration-200">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                            View Details
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-300">No users with agent codes found</h3>
+                        <p class="mt-1 text-sm text-gray-500">Users will appear here when they register through agent referral links.</p>
+                        <div class="mt-6">
+                            <a href="{% url 'dashboard:agents' %}" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-primary hover:bg-purple-hover">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                View Agents
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="px-6 py-4 border-t border-dark-border">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-400">
+                        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        {% if page_obj.has_previous %}
+                            <a href="?page=1" class="px-3 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors duration-200">
+                                First
+                            </a>
+                            <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors duration-200">
+                                Previous
+                            </a>
+                        {% endif %}
+                        
+                        <span class="px-3 py-2 text-sm font-medium text-white bg-purple-primary rounded-md">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors duration-200">
+                                Next
+                            </a>
+                            <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors duration-200">
+                                Last
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
     </div>
+</div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <!-- Total Users -->
-        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-400 text-sm font-medium">TOTAL USERS</p>
-                    <p class="text-2xl font-bold text-white mt-1">40</p>
-                </div>
-                <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+<!-- User Details Modal -->
+<div id="userModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-dark-card">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-white">User Details</h3>
+                <button onclick="closeUserModal()" class="text-gray-400 hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
-                </div>
-            </div>
-        </div>
-
-        <!-- Active Users -->
-        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-400 text-sm font-medium">ACTIVE</p>
-                    <p class="text-2xl font-bold text-white mt-1">40</p>
-                </div>
-                <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <!-- Suspended Users -->
-        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-400 text-sm font-medium">SUSPENDED</p>
-                    <p class="text-2xl font-bold text-white mt-1">0</p>
-                </div>
-                <div class="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <!-- Offline Users -->
-        <div class="bg-dark-card border border-dark-border rounded-lg p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-400 text-sm font-medium">OFFLINE</p>
-                    <p class="text-2xl font-bold text-white mt-1">0</p>
-                </div>
-                <div class="w-12 h-12 bg-gray-500/10 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-12.728 12.728m0 0L18.364 18.364M5.636 18.364l12.728-12.728"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Filters and Search -->
-    <div class="bg-dark-card border border-dark-border rounded-lg p-4 mb-6">
-        <div class="flex flex-wrap items-center gap-4">
-            <!-- Search -->
-            <div class="flex-1 min-w-64">
-                <div class="relative">
-                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    <input type="text" placeholder="Search by name or email..." class="w-full pl-10 pr-4 py-2 bg-dark-bg border border-dark-border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent">
-                </div>
-            </div>
-
-            <!-- Status Filter -->
-            <div class="flex items-center space-x-2">
-                <label class="text-sm text-gray-400">Status:</label>
-                <select class="bg-dark-bg border border-dark-border text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-primary">
-                    <option>All Users</option>
-                    <option>Active</option>
-                    <option>Suspended</option>
-                    <option>Offline</option>
-                </select>
-            </div>
-
-            <!-- Date Range Filter -->
-            <div class="flex items-center space-x-2">
-                <label class="text-sm text-gray-400">Joined:</label>
-                <input type="date" class="bg-dark-bg border border-dark-border text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-primary">
-            </div>
-
-            <!-- Reset and Create User Buttons -->
-            <div class="flex items-center space-x-2">
-                <button class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white border border-dark-border rounded-lg hover:bg-dark-bg transition-colors">
-                    Reset
-                </button>
-                <button class="px-4 py-2 text-sm font-medium text-white bg-purple-primary hover:bg-purple-hover rounded-lg transition-colors">
-                    Create User
                 </button>
             </div>
-        </div>
-    </div>
-
-    <!-- Users Table -->
-    <div class="bg-dark-card border border-dark-border rounded-lg overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-dark-bg border-b border-dark-border">
-                    <tr>
-                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">USER</th>
-                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">CONTACT</th>
-                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">BALANCE</th>
-                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">BONUS</th>
-                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">SCORE</th>
-                        <th class="text-left py-3 px-4 text-gray-400 font-medium text-sm uppercase tracking-wider">ACTIONS</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-dark-border">
-                    <!-- User Row 1 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 bg-purple-primary rounded-full flex items-center justify-center">
-                                    <span class="text-white text-sm font-medium">JD</span>
-                                </div>
-                                <div>
-                                    <p class="text-white font-medium">ZEYITUNESH</p>
-                                    <p class="text-gray-400 text-sm">USER ID: 0000001</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 text-white">0791616</td>
-                        <td class="py-3 px-4 text-white">ETB 0.00</td>
-                        <td class="py-3 px-4 text-white">Sep 17, 2024 10:17 PM</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Active
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View
-                                </button>
-                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
-                                    Block
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- User Row 2 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                                    <span class="text-white text-sm font-medium">AB</span>
-                                </div>
-                                <div>
-                                    <p class="text-white font-medium">ABEBE</p>
-                                    <p class="text-gray-400 text-sm">USER ID: 0000002</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 text-white">0911234567</td>
-                        <td class="py-3 px-4 text-white">ETB 150.00</td>
-                        <td class="py-3 px-4 text-white">Sep 18, 2024 2:30 PM</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Active
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View
-                                </button>
-                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
-                                    Block
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- User Row 3 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                                    <span class="text-white text-sm font-medium">MK</span>
-                                </div>
-                                <div>
-                                    <p class="text-white font-medium">MEKDES</p>
-                                    <p class="text-gray-400 text-sm">USER ID: 0000003</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 text-white">0923456789</td>
-                        <td class="py-3 px-4 text-white">ETB 75.50</td>
-                        <td class="py-3 px-4 text-white">Sep 19, 2024 9:45 AM</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Active
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View
-                                </button>
-                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
-                                    Block
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- User Row 4 -->
-                    <tr class="hover:bg-dark-bg transition-colors">
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                                    <span class="text-white text-sm font-medium">DW</span>
-                                </div>
-                                <div>
-                                    <p class="text-white font-medium">DAWIT</p>
-                                    <p class="text-gray-400 text-sm">USER ID: 0000004</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4 text-white">0934567890</td>
-                        <td class="py-3 px-4 text-white">ETB 200.25</td>
-                        <td class="py-3 px-4 text-white">Sep 20, 2024 4:15 PM</td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Active
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center space-x-2">
-                                <button class="text-purple-primary hover:text-purple-hover text-sm font-medium">
-                                    View
-                                </button>
-                                <button class="text-red-400 hover:text-red-300 text-sm font-medium">
-                                    Block
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="flex items-center justify-between p-4 border-t border-dark-border">
-            <div class="text-sm text-gray-400">
-                Showing 1 to 4 of 40 results
-            </div>
-            <div class="flex items-center space-x-2">
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    Previous
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
-                    1
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    2
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    3
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    Next
-                </button>
+            <div id="userDetails" class="space-y-3">
+                <!-- User details will be populated here -->
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// View user details
+function viewUserDetails(userId, username, agentCode) {
+    const modal = document.getElementById('userModal');
+    const detailsDiv = document.getElementById('userDetails');
+    
+    detailsDiv.innerHTML = `
+        <div class="bg-gray-800 p-4 rounded-lg">
+            <div class="flex items-center mb-3">
+                <div class="h-10 w-10 rounded-full bg-purple-primary flex items-center justify-center">
+                    <span class="text-sm font-medium text-white">${username.charAt(0).toUpperCase()}</span>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-white">${username}</p>
+                    <p class="text-xs text-gray-400">User ID: ${userId}</p>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-400">Agent Code:</span>
+                    <code class="bg-gray-700 px-2 py-1 rounded text-xs text-purple-300">${agentCode}</code>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-400">Status:</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-200">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        Active
+                    </span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
+}
+
+// Close user modal
+function closeUserModal() {
+    const modal = document.getElementById('userModal');
+    modal.classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('userModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeUserModal();
+    }
+});
+</script>
 {% endblock %}

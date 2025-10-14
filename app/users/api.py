@@ -47,11 +47,13 @@ def register(request, data: RegisterSchema):
             }, status=400)
 
         # Create user with hashed password
+        agent_code = getattr(data, 'agent_code', None)
         user = User.objects.create_user(
             username=data.username,
             phone=data.phone,
             telegram_id=data.telegram_id,
-            password=make_password(data.password)
+            password=make_password(data.password),
+            agent_code=agent_code
         )
         
         if user:
@@ -60,7 +62,8 @@ def register(request, data: RegisterSchema):
                 "message": "User registered successfully",
                 "username": user.username,
                 "phone": user.phone,
-                "telegram_id": user.telegram_id
+                "telegram_id": user.telegram_id,
+                "agent_code": user.agent_code
             }, status=200)
         else:
             print("user registration failed")
@@ -133,7 +136,8 @@ def get_user_by_telegram_id(request,telegram_id:int):
             username=user.username,
             email=user.email,
             phone=user.phone,
-            telegram_id=user.telegram_id
+            telegram_id=user.telegram_id,
+            agent_code=user.agent_code
         )
     except Exception as e:
         print("error = ",e)

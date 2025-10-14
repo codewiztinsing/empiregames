@@ -7,6 +7,7 @@ class RegisterSchema(Schema):
     email: str
     phone: str
     telegram_id: str
+    agent_code: Optional[str] = None
 
 
 
@@ -30,4 +31,5 @@ class UserResponseSchema(Schema):
     email: Optional[str] = None
     phone: Optional[str] = None
     telegram_id: Optional[str] = None
+    agent_code: Optional[str] = None
 
