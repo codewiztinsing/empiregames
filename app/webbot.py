@@ -533,9 +533,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                     f"💰  {balance} Birr\n" +
                     f"👥  {first_name} \n" +
                     f"📄 Transaction ID: {telegram_id}\n\n" +
-                    f"🎮 Weekly Games Progress:\n" +
-                    f"📊 Games Played This Week: {games_played_this_week}/27\n" +
-                    f"⏳ Games Remaining: {remaining_games} games\n" +
                     f"🔙 Back to Menu\n" 
                 ) 
             await query.edit_message_text(text=payment_summary)
@@ -1251,9 +1248,6 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
         f"🎯 **Total Balance: {total_balance:.2f} ETB\n"
         f"💵 **Withdrawable Balance: {withdrawable_balance:.2f} ETB\n"
-        f"🎮 **Weekly Games Progress:\n"
-        f"📊 **Games Played This Week: {games_played_this_week}/27\n"
-        f"⏳ **Games Remaining:{remaining_games} games to complete weekly requirement\n\n"
         )
     else:
         message = (
@@ -1263,9 +1257,6 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
         f"🎯 **Total Balance: {total_balance:.2f} ETB\n"
         f"💵 **Withdrawable Balance: {withdrawable_balance:.2f} ETB\n"
-        f"🎮 **Weekly Games Progress:\n"
-        f"📊 **Games Played This Week: {games_played_this_week}/27\n"
-        f"⏳ **Games Remaining:{remaining_games} games to complete weekly requirement\n\n"
         )
 
     await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
