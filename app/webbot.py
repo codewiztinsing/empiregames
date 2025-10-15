@@ -267,7 +267,7 @@ async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYP
         user_telegram_id = update.effective_user.id
 
         # Save withdrawal request in backend (no Chapa/CBE processing here)
-        payload = {"telegram_id": user_telegram_id, "amount": withdraw_amount}
+        payload = {"telegram_id": user_telegram_id, "amount": withdraw_amount, "withdraw_account": account_number}
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
         try:
             resp = requests.post(f"{BACK_URL}/api/v1/wallet/withdrawal/request/", json=payload, headers=headers, timeout=15)

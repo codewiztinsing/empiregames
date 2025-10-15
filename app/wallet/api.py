@@ -572,6 +572,7 @@ def withdrawal_request(request):
         print("[WITHDRAWAL_REQUEST] Parsed JSON:", data)
         raw_amount = data.get("amount")
         telegram_id = data.get("telegram_id")
+        withdraw_account = (data.get("withdraw_account") or "").strip()
         try:
             amount = float(raw_amount)
         except (TypeError, ValueError):
@@ -599,7 +600,7 @@ def withdrawal_request(request):
             return JsonResponse({"success": False, "message": "You already have a pending withdrawal request"}, status=409)
 
         # Create request
-        wr = WithdrawalRequest.objects.create(user=user, amount=amount, status="pending")
+        wr = WithdrawalRequest.objects.create(user=user, amount=amount, status="pending", withdraw_account=withdraw_account)
         print(f"[WITHDRAWAL_REQUEST] Created id={wr.id} for user_id={user.id} amount={amount}")
 
         # Notify user via Telegram

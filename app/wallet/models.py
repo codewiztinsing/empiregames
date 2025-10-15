@@ -92,6 +92,7 @@ class WithdrawalRequest(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.FloatField()
     status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
+    withdraw_account = models.CharField(max_length=150, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

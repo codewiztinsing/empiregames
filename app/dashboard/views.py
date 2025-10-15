@@ -371,7 +371,7 @@ def payments(request):
     status_filter = request.GET.get('status', 'all')
     
     # Filter withdrawal requests based on status
-    withdrawal_requests = WithdrawalRequest.objects.all().order_by('-created_at')
+    withdrawal_requests = WithdrawalRequest.objects.select_related('user').all().order_by('-created_at')
     
     if status_filter != 'all':
         withdrawal_requests = withdrawal_requests.filter(status=status_filter)
