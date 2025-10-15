@@ -23,7 +23,8 @@ async def handle_manual_payment(update: Update, context: ContextTypes.DEFAULT_TY
         manual_payment_url = manual_payment_url + "receipts/verify/cbe/"
     callbackurl = "https://akerbingo.com/api/v1/wallet/manual/callback/success/"
     # callbackurl = "https://webhook.site/c4d3fb2b-3d0b-4fd7-b6fd-775f1ed34937"
-    errorUrl    = "https://akerbingo.com" + "/api/v1/wallet/manual/callback/error/"
+    # errorUrl    = "https://akerbingo.com/api/v1/wallet/manual/callback/error/"
+    errorUrl    = "https://webhook.site/c4d3fb2b-3d0b-4fd7-b6fd-775f1ed34937"
     data = {
         "message": update.message.text,
         "callbackurl": callbackurl,

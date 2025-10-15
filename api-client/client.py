@@ -54,7 +54,7 @@ def post_manual_callback_error(payload):
     Returns:
         requests.Response: The response object from the server.
     """
-    url = f"{base_url}/api/v1/wallet/manual/callback/error/"
+    url = f"https://akerbingo.com/api/v1/wallet/manual/callback/error/"
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json"
@@ -78,7 +78,7 @@ def post_manual_callback_error(payload):
         raise
 
 payload = {
-    'session_id': 'a92b3708-2657-42a6-b759-ed3edc837d74', 
+    'session_id': '2c331829-d5a4-41fc-a308-642ce4d26585', 
     'status': 'failed', 
     'message': 'Transaction number already processed', 
     'data': {
