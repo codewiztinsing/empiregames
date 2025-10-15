@@ -358,11 +358,37 @@ def manual_success(request):
 def manual_error(request):
     print("Manual error request")
     try:
-
         data = json.loads(request.body.decode('utf-8'))
         session_id = data.get("session_id")
         status = data.get("status")
-        print("Manual error data:", data)
+        message = data.get("message", "Payment verification failed")
+        manual_session = ManualSession.objects.filter(session_id=session_id).first()
+        print("manual_session = ",manual_session)
+        if manual_session:
+            user = User.objects.filter(phone=manual_session.phone_number).first()
+            if user and user.telegram_id:
+                try:
+                    bot_token = config('BOT_TOKEN')
+                    telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                    error_msg = (
+                        f"⚠️ Deposit Failed ⚠️\n\n"
+                        f"🔗 Reference: {manual_session.session_id}\n"
+                        f"❌ Reason: {message}\n\n"
+                        f"Please contact support if you need assistance."
+                    )
+                    telegram_payload = {
+                        'chat_id': user.telegram_id,
+                        'text': error_msg,
+                        'parse_mode': 'HTML'
+                    }
+                    requests.post(telegram_url, json=telegram_payload)
+                    print(f"Notified user {user.telegram_id} about manual error")
+                except Exception as notification_error:
+                    print(f"Failed to notify user about manual error: {notification_error}")
+      
+        
+      
+        return JsonResponse({"message": "Error callback processed"}, status=200)
     except Exception as e:
         print(f"Error processing Manual error: {e}")
         return JsonResponse({"message": "Error processing error"}, status=500)    
