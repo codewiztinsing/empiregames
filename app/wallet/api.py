@@ -522,7 +522,7 @@ def manual_cbe_success(request):
                 from re import sub
                 cleaned = sub(r"[^0-9.]", "", str(raw_amount))
                 deposit_amount = float(cleaned) if cleaned else 0.0
-            bonus_amount = deposit_amount * 0.30
+            bonus_amount = deposit_amount * 0.25
             total_amount = deposit_amount + bonus_amount
             
             # Update manual session with correct amount
@@ -546,7 +546,7 @@ def manual_cbe_success(request):
                 try:
                     bot_token = config('BOT_TOKEN')
                     telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                    message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {deposit_amount} ETB\n🎁 Bonus: {bonus_amount} ETB (30%)\n💎 Total Credited: {total_amount} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {manual_session.session_id}\n\n✅ Your account has been credited successfully!"
+                    message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {deposit_amount} ETB\n🎁 Bonus: {bonus_amount} ETB (25%)\n💎 Total Credited: {total_amount} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {manual_session.session_id}\n\n✅ Your account has been credited successfully!"
                     telegram_payload = {
                         'chat_id': user.telegram_id,
                         'text': message,
