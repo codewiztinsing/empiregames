@@ -1,42 +1,26 @@
 import requests
 
-class ManualCallbackClient:
-    BASE_URL = "https://akerbingo.com/api/v1/wallet/manual/callback/cbe/success/"
+def send_callback(url, payload):
+    """
+    Sends a POST request to the given callback URL with the provided payload as JSON.
 
-    @staticmethod
-    def post_success_callback(session_id, message="Transaction verified successfully", data=None, status="success"):
-        """
-        Posts a success callback for CBE manual payment.
+    Args:
+        url (str): The callback URL.
+        payload (dict): The payload to send.
 
-        Args:
-            session_id (str): The session ID to use in the payload.
-            message (str): The message to send.
-            data (dict): Payment data. If None, uses example data.
-            status (str): Status value (default: "success").
-        Returns:
-            requests.Response: The response object from the post.
-        """
-        if data is None:
-            data = {
-                "Customer Name": "TINSAE ALAKO ABIYO",
-                "Receiver": "AZEB BEHAILU MEKONEN",
-                "Payer": "TINSAE ALAKO ABIYO",
-                "Payment Date & Time": "10/15/2025, 11:49:00 AM",
-                "Transferred Amount": "10.00 ETB",
-                "VAT": "8 ETB",
-                "Total Debited": "8 ETB",
-                "VAT Receipt No:": "FT252888G5X9",
-            }
-        payload = {
-            "session_id": session_id,
-            "status": status,
-            "message": message,
-            "data": data,
-        }
-        response = requests.post(ManualCallbackClient.BASE_URL, json=payload)
+    Returns:
+        response (requests.Response): The response object from the POST request.
+    """
+    try:
+        response = requests.post(url, json=payload, timeout=10)
+        response.raise_for_status()
         return response
+    except requests.exceptions.RequestException as e:
+        # Handle/log errors as needed in your application context.
+        print(f"Error sending callback: {e}")
+        return None
 
-# Example usage:
-client = ManualCallbackClient()
-resp = client.post_success_callback("95365bb4-2f91-404c-8ca7-90edecda0141")
-print(resp.status_code, resp.text)
+payload ={'session_id': '21b62565-cd51-4d67-8d32-7a437e81874c', 'status': 'success', 'message': 'Transaction verified successfully', 'data': {'payer_name': 'alako abiyo ludago', 'payer_telebirr_no': '2519****1912', 'payer_account_type': 'Individual Customer', 'credited_party': 'AZEB BEHAILU MEKOEN', 'credited_account': '2519****3249', 'transaction_status': 'የከፋይ ስም/Payer Name', 'invoice_no': 'የክፍያ ቀን/Payment date', 'payment_date': 'የክፍያ ዝርዝር/ Invoice details', 'settled_amount': 'የክፍያ ዝርዝር/ Invoice details', 'service_fee': '0.87 Birr', 'total_paid': 'የክፍያ ዝርዝር/ Invoice details', 'total_in_words': 'eleven birr and zero cent', 'payment_mode': 'telebirr', 'payment_reason': 'Send Money to Registered Customer', 'payment_channel': 'API/App', 'customer_note': '', 'amount': 11.0, 'ref_number': 'CJF5HGXUUJ'}, 'payer_telebirr_no': '2519****1912', 'credited_party': 'AZEB BEHAILU MEKOEN', 'amount': 11.0, 'ref_number': 'CJF5HGXUUJ'}
+
+response = send_callback("http://127.0.0.1:8000/api/v1/wallet/manual/callback/success/", payload)
+print(response)

@@ -20,22 +20,20 @@ async def handle_manual_payment(update: Update, context: ContextTypes.DEFAULT_TY
     print(f"DEBUG: Payment method: {manual_payment_method}")
     if manual_payment_method == "manual_telebirr":
         manual_payment_url = manual_payment_url + "receipts/verify/telebirr/"
-        callbackurl = "https://akerbingo.com/api/v1/wallet/manual/callback/success/"
-        errorUrl    = "https://akerbingo.com/api/v1/wallet/manual/callback/error/"
+        callbackurl = config("BACK_URL") + "/api/v1/wallet/manual/callback/success/"
+        errorUrl    = config("BACK_URL") + "/api/v1/wallet/manual/callback/error/"
     elif manual_payment_method == "manual_cbe":
         manual_payment_url = manual_payment_url + "receipts/verify/cbe/"
-        callbackurl = "https://akerbingo.com/api/v1/wallet/manual/callback/cbe/success/"
-        errorUrl    = "https://akerbingo.com/api/v1/wallet/manual/callback/cbe/error/"
-    # #callbackurl = "https://akerbingo.com/api/v1/wallet/manual/callback/success/"
-    # callbackurl = "https://webhook.site/c4d3fb2b-3d0b-4fd7-b6fd-775f1ed34937"
-    # # errorUrl    = "https://akerbingo.com/api/v1/wallet/manual/callback/error/"
-    # errorUrl    = "https://webhook.site/c4d3fb2b-3d0b-4fd7-b6fd-775f1ed34937"
+        callbackurl = config("BACK_URL") + "/api/v1/wallet/manual/callback/cbe/success/"
+        errorUrl    = config("BACK_URL") + "/api/v1/wallet/manual/callback/cbe/error/"
+  
     data = {
         "message": update.message.text,
         "callbackurl": callbackurl,
         "errorUrl": errorUrl
         
     }
+    print("data = ",data)
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
