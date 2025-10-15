@@ -48,6 +48,11 @@ const PlayingBoard = () => {
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
   const [winnerCountdown, setWinnerCountdown] = useState(5);
 
+  // Include simulated (fake) players from selection screen for display purposes only
+  const simulatedCount = (typeof window !== 'undefined' && window.__simulatedPickedCount) ? window.__simulatedPickedCount : 0;
+  const displayedTotalPlayers = (totalPlayers || 0) + (simulatedCount || 0);
+  const displayedWinAmount = (displayedTotalPlayers * (roomId || 0) * 0.78) || 0;
+
   // Generate Bingo board function
   const generateCombination = () => {
     const numbers = [];
@@ -657,12 +662,11 @@ const PlayingBoard = () => {
       <div className="stats-bar">
         <div className="stat-item">
           <span>ደራሽ</span>
-          <span>{isNaN(winAmount.toFixed(2)) ? 0 : (winAmount.toFixed(2))}</span>
+          <span>{isNaN(displayedWinAmount.toFixed(2)) ? 0 : (displayedWinAmount.toFixed(2))}</span>
         </div>
         <div className="stat-item">
           <span>ብዛት</span>
-          
-          <span>{totalPlayers}</span>
+          <span>{displayedTotalPlayers}</span>
         </div>
         <div className="stat-item">
           <span>መደብ </span>

@@ -343,6 +343,15 @@ const Selections = () => {
     };
   }, [isSocketConnected, gameStatus, selectedNumber, pickedNumbers, choosenNumbers, choosenNumbers?.length]);
 
+  // Expose simulated count globally for main screen to read
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        window.__simulatedPickedCount = fakePickedNumbers?.length || 0;
+      }
+    } catch (e) {}
+  }, [fakePickedNumbers]);
+
   // Countdown is controlled by the server; client only displays server-provided countDown
 
   // Countdown redirect logic - only navigate when countdown reaches exactly 00
