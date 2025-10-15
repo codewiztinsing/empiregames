@@ -46,10 +46,9 @@ def verify_telebirr_receipt(message,session_id):
     MANUAL_API_KEY = config('MANUAL_API_KEY')
     manual_payment_url = config("MANUAL_BASE_URL")
     manual_payment_url = manual_payment_url + "receipts/verify/telebirr/"
-    callbackurl = config("BACK_URL") + "/api/v1/wallet/webhook/manual/success/"
-    errorUrl = config("BACK_URL") + "/api/v1/wallet/webhook/manual/error/"
-    # callbackurl = "https://webhook.site/eb5edb76-4b62-4400-9c67-fcdc7d5bc018"
-    # errorUrl = "https://webhook.site/eb5edb76-4b62-4400-9c67-fcdc7d5bc018"
+    callbackurl = f"https://akerbingo.com/api/v1/wallet/manual/callback/success/"
+    errorUrl = f"https://akerbingo.com/api/v1/wallet/manual/callback/error/"
+    #
     data = {
         "message": message,
         "session_id": session_id,
