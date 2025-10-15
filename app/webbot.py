@@ -16,8 +16,7 @@ from telegram import (
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from datetime import datetime, timedelta
 from utils import initialize_payment,get_bot_seetings,get_user_phone,get_user_phone
-from utils.chapa import transfer_funds,get_available_banks,initialize_chapa_direct_charges   
-from utils.addis import create_session
+# Removed Chapa/AddisPay integrations
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -144,7 +143,7 @@ def deposit_opitions_keyboard() -> InlineKeyboardMarkup:
 
 def withdraw_opitions_keyboard(context: ContextTypes.DEFAULT_TYPE) -> InlineKeyboardMarkup:
     logger.info("withdraw_opitions_keyboard")
-    banks = get_available_banks()
+    banks = {}
     logger.info("banks = ",banks)
     # Only show Telebirr and CBE options
     keyboard = []
@@ -180,7 +179,13 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
     logger.info(f"amount {amount}")
  
     try:
-        _resp = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
+        # Fetch wallet and payment settings
+        settings_resp = requests.get(f'{BACK_URL}/api/v1/wallet/payment-settings/', timeout=10)
+        settings_json = settings_resp.json() if settings_resp.status_code == 200 else {}
+        min_withdrawal = float(settings_json.get('min_withdrawal_amount', 50))
+        max_withdrawal = float(settings_json.get('max_withdrawal_amount', 100))
+
+        _resp = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}', timeout=10)
         wallet_response = _resp.json() if _resp.headers.get('content-type','').startswith('application/json') else {}
         balance = float(wallet_response.get('balance', 0)) + float(wallet_response.get('total_referral_earnings', 0)) if float(wallet_response.get('total_referral_earnings', 0)) > 500 else float(wallet_response.get('balance', 0))
 
@@ -208,8 +213,9 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         #     await update.message.reply_text(f"2 ጨወታ ማሽነፍ አለብዎት")
         #     return WITHDRAW_AMOUNT_CONFIRM
 
-        if int(amount) > 100:
-            await update.message.reply_text(f"Withdrawal amount must be less than 100 ETB")
+        # Enforce PaymentSettings min/max
+        if float(amount) > max_withdrawal and max_withdrawal > 0:
+            await update.message.reply_text(f"Withdrawal amount must be less than or equal to {max_withdrawal:.0f} ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
        
@@ -218,8 +224,8 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             return WITHDRAW_AMOUNT_CONFIRM
 
 
-        if int(amount) < 50:
-            await update.message.reply_text(f"Withdrawal amount must be at least 50 ETB")
+        if float(amount) < min_withdrawal:
+            await update.message.reply_text(f"Withdrawal amount must be at least {min_withdrawal:.0f} ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
         
@@ -258,11 +264,27 @@ async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYP
     BACK_URL = get_bot_seetings().get("bot_url")
     try:
         withdraw_amount = float(context.user_data['withdraw_amount'])
-        bank_id = context.user_data['bank_id']
-        banks_to_bank_id = context.user_data['banks_to_bank_id']
-        bank_id = banks_to_bank_id.get(f"{bank_id}".title())
-        transfer_funds(f"{update.effective_user.first_name} {update.effective_user.last_name}", account_number, withdraw_amount, "ETB", generate_tx_ref(), bank_id)
-        await update.message.reply_text("Please wait message from CBE/Aker. Your withdrawal will be processed within 30 minutes.")
+        user_telegram_id = update.effective_user.id
+
+        # Save withdrawal request in backend (no Chapa/CBE processing here)
+        payload = {"telegram_id": user_telegram_id, "amount": withdraw_amount}
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        try:
+            resp = requests.post(f"{BACK_URL}/api/v1/wallet/withdrawal/request/", json=payload, headers=headers, timeout=15)
+            ok = resp.status_code == 200 and resp.headers.get('content-type','').startswith('application/json')
+            data = resp.json() if ok else {"success": False, "message": resp.text}
+        except Exception as http_err:
+            data = {"success": False, "message": str(http_err)}
+
+        if data.get("success"):
+            await update.message.reply_text(
+                "✅ Your withdrawal request has been submitted. We will review and process it shortly."
+            )
+        else:
+            await update.message.reply_text(
+                f"❌ Failed to submit withdrawal request. {data.get('message','Please try again later.')}"
+            )
+
         return ConversationHandler.END
     except Exception as e:
         print(f"Error sending message to user: {e}")

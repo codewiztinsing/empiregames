@@ -29,6 +29,7 @@ from .permissions import (
      )
 from .tasks import send_message_to_all_players
 from decouple import config
+import requests
 
 def fetch_transaction_data_from_api():
     """Fetch transaction data from API"""
@@ -318,7 +319,6 @@ def games(request):
         games = Game.objects.all().order_by('-id')
         if status_filter:
             games = games.filter(status=status_filter)
-        
         paginator = Paginator(games, limit)
         page_obj = paginator.get_page(page)
         data_source = "Database"
@@ -894,6 +894,20 @@ def approve_withdrawal_request(request, request_id):
             wallet = withdrawal_request.user.wallet
             wallet.balance -= withdrawal_request.amount
             wallet.save()
+            # Notify user via Telegram
+            try:
+                if getattr(withdrawal_request.user, 'telegram_id', None):
+                    bot_token = config('BOT_TOKEN')
+                    telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                    text = (
+                        f"✅ Withdrawal Approved\n\n"
+                        f"💸 Amount: {withdrawal_request.amount} ETB\n"
+                        f"📌 Status: Success\n"
+                        f"🔗 Reference: WR-{withdrawal_request.id}"
+                    )
+                    requests.post(telegram_url, json={'chat_id': withdrawal_request.user.telegram_id, 'text': text, 'parse_mode': 'HTML'})
+            except Exception:
+                pass
             
             return JsonResponse({'success': True, 'message': 'Withdrawal request approved successfully.'})
             
@@ -915,6 +929,20 @@ def reject_withdrawal_request(request, request_id):
             # Update withdrawal request status
             withdrawal_request.status = 'failed'
             withdrawal_request.save()
+            # Notify user via Telegram
+            try:
+                if getattr(withdrawal_request.user, 'telegram_id', None):
+                    bot_token = config('BOT_TOKEN')
+                    telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                    text = (
+                        f"❌ Withdrawal Rejected\n\n"
+                        f"💸 Amount: {withdrawal_request.amount} ETB\n"
+                        f"📌 Status: Rejected\n"
+                        f"🔗 Reference: WR-{withdrawal_request.id}"
+                    )
+                    requests.post(telegram_url, json={'chat_id': withdrawal_request.user.telegram_id, 'text': text, 'parse_mode': 'HTML'})
+            except Exception:
+                pass
             
             return JsonResponse({'success': True, 'message': 'Withdrawal request rejected successfully.'})
             

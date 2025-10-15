@@ -3,18 +3,13 @@ import requests
 from ninja import NinjaAPI,Router
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
-from .models import ManualSession, WithdrawalRequest
+from .models import ManualSession, WithdrawalRequest, PaymentSettings
 from django.db import models
 from decouple import config
-from .schema import (ChapaSessionSchema,
-    ChapaSessionResponseSchema, 
-    ChapaCallbackSchema,
-    WalletSchema, 
-    AddisPaySessionSchema,
-    AddisPaySessionResponseSchema,
-    AddisPayCallbackSchema
- )
-from .models import ChapaSession, Wallet,Transaction, AddisPaySession
+from .schema import (
+    WalletSchema,
+)
+from .models import Wallet,Transaction
 from users.models import ReferralBonus
 from django.http import JsonResponse
 from utils import generate_reference
@@ -30,61 +25,35 @@ router = Router()
 def index():
     return "Hello, World!"
 
-@router.post("/chapa/create-session")
-def create_chapa_session(request, data: ChapaSessionSchema):
+
+# Telebirr P2P tariff bands (ETB)
+def calculate_telebirr_fee(amount: float) -> float:
     try:
-        chapa_session = ChapaSession.objects.create(
-        amount=data.amount,
-        status="PENDING",
-        currency=data.currency,
-        email=data.email,
-        first_name=data.first_name,
-        last_name=data.last_name,
-        phone_number=data.phone_number,
-        tx_ref=data.tx_ref
-    )
-       
-        return JsonResponse({
-            "session_id": chapa_session.id or None,
-            "status": chapa_session.status or None,
-            "message": "Session created successfully"
-        }, status=200)
-    except Exception as e:
-        print("error = ",e)
-        return JsonResponse({"error": str(e)}, status=400)
+        amt = float(amount)
+    except Exception:
+        return 0.0
+    if amt <= 0:
+        return 0.0
+    if amt < 100:
+        return 1.0
+    if 101 <= amt <= 500:
+        return 2.0
+    if 501 <= amt <= 1500:
+        return 4.0
+    if 1501 <= amt <= 5000:
+        return 6.0
+    # 5001 to 75000
+    return 8.0
+
+@router.post("/chapa/create-session")
+def create_chapa_session(request):
+    return JsonResponse({"message": "Chapa disabled"}, status=410)
 
 # /api/v1/webhook/chapa/callback/
 @router.get("/webhook/chapa/callback/")
 @csrf_exempt
 def chapa_callback(request):
-    # For GET requests, data comes in query parameters, not request body
-    trx_ref = request.GET.get("trx_ref")
-    status = request.GET.get("status")
-    
-    if not trx_ref or not status:
-        return JsonResponse({"message": "Missing required parameters"}, status=400)
-    
-    chapa_session = ChapaSession.objects.filter(tx_ref=trx_ref).first()
-    if not chapa_session:
-        print("Chapa session not found")
-        return JsonResponse({"message": "Session not found"}, status=404)
-    
-    phone_number = chapa_session.phone_number
-    user = User.objects.filter(phone=phone_number).first()
-    if not user:
-        print("User not found")
-        return JsonResponse({"message": "User not found"}, status=404)
-    
-    chapa_session.status = status
-    if status == "success":
-        wallet = Wallet.objects.get(user=user)
-        wallet.balance += float(chapa_session.amount)
-        wallet.save()
-        chapa_session.status = "success"
-        chapa_session.save()
-        print("Payment processed successfully")
-
-    return JsonResponse({"message": "Callback received"}, status=200)
+    return JsonResponse({"message": "Chapa callback disabled"}, status=410)
 
 
 
@@ -141,61 +110,6 @@ def update_player_wallet(request,telegram_id:int, data: WalletSchema):
 
 
 
-@router.post("/addispay/create-session")
-def create_addispay_session(request, data: AddisPaySessionSchema):
-    try:
-        addispay_session = AddisPaySession.objects.create(
-            amount=data.amount,
-            status="PENDING",
-            currency=data.currency,
-            email=data.email,
-            first_name=data.first_name,
-            last_name=data.last_name,
-            phone_number=data.phone_number,
-            tx_ref=data.tx_ref,
-            callback_url=data.callback_url,
-            session_id=data.session_id
-          
-        )
-        return JsonResponse({
-            "session_id": addispay_session.id or None,
-            "status": addispay_session.status or None,
-            "message": "Session created successfully"
-        }, status=200)
-    except Exception as e:
-        print("error = ",e)
-        return JsonResponse({"error": str(e)}, status=400)
-    
-
-@router.post("/webhook/addispay/callback/success/")
-@csrf_exempt
-def addispay_callback(request):
-    try:
-        data = json.loads(request.body.decode('utf-8'))
-        print("AddisPay callback data:", data)
-        
-        if data.get("payment_status") == "success":
-            addispay_session = get_object_or_404(AddisPaySession, session_id=data.get("session_uuid"))
-            print("addispay_session = ",addispay_session)
-            phone_number = addispay_session.phone_number
-            user = get_object_or_404(User, phone=phone_number)
-            wallet = get_object_or_404(Wallet, user=user)
-            wallet.balance += float(addispay_session.amount)
-            wallet.save()
-            addispay_session.status = data.get("payment_status")
-            addispay_session.save()
-            print("AddisPay payment processed successfully")
-            return JsonResponse({"message": "Callback received"}, status=200)
-        else:
-            print(f"AddisPay payment failed with status: {data.get('payment_status')}")
-            return JsonResponse({"message": "Payment failed"}, status=400)
-    except (json.JSONDecodeError, UnicodeDecodeError) as e:
-        print(f"Error parsing AddisPay callback data: {e}")
-        return JsonResponse({"message": "Invalid callback data"}, status=400)
-    except Exception as e:
-        print(f"Error processing AddisPay callback: {e}")
-        return JsonResponse({"message": "Error processing callback"}, status=500)
-    
 
 # /api/v1/wallet/webhook/manual/error/
 
@@ -311,17 +225,21 @@ def manual_success(request):
                 from re import sub
                 cleaned = sub(r"[^0-9.]", "", str(raw_amount))
                 deposit_amount = float(cleaned) if cleaned else 0.0
+            # Deduct telebirr P2P fee based on official tariff bands
+            fee = calculate_telebirr_fee(deposit_amount)
+            net_amount = max(deposit_amount - fee, 0.0)
+            print(f"[MANUAL_SUCCESS] deposit_amount={deposit_amount} fee={fee} net_amount={net_amount}")
             
             # Update manual session with correct amount
-            manual_session.amount = deposit_amount
-            wallet.balance += deposit_amount
+            manual_session.amount = net_amount
+            wallet.balance += net_amount
             print("wallet balance = ",wallet.balance)
             wallet.save()
             manual_session.status = "success"
             manual_session.save()
             transaction = Transaction.objects.create(
                 user=user,
-                amount=deposit_amount,
+                amount=net_amount,
                 type="DEPOSIT",
                 status="success",
                 reference=manual_session.session_id
@@ -639,14 +557,72 @@ def manual_cbe_success(request):
 @router.post("/withdrawal/request/")
 def withdrawal_request(request):
     try:
-        data = json.loads(request.body.decode('utf-8'))
-        amount = data.get("amount")
-        user = User.objects.filter(telegram_id=data.get("telegram_id")).first()
-        withdrawal_request = WithdrawalRequest.objects.create(user=user,amount=amount,status="pending")
-        return JsonResponse({"message": "Withdrawal request created successfully"}, status=200)
+        try:
+            decoded_body = request.body.decode('utf-8') if isinstance(request.body, (bytes, bytearray)) else str(request.body)
+        except Exception as decode_err:
+            print("[WITHDRAWAL_REQUEST] Body decode error:", decode_err)
+            decoded_body = str(request.body)
+        print("[WITHDRAWAL_REQUEST] Raw body:", decoded_body)
+        try:
+            data = json.loads(decoded_body or '{}')
+        except json.JSONDecodeError as jde:
+            print("[WITHDRAWAL_REQUEST] JSON decode error:", jde)
+            return JsonResponse({"success": False, "message": "invalid_json", "details": str(jde)}, status=400)
+
+        print("[WITHDRAWAL_REQUEST] Parsed JSON:", data)
+        raw_amount = data.get("amount")
+        telegram_id = data.get("telegram_id")
+        try:
+            amount = float(raw_amount)
+        except (TypeError, ValueError):
+            return JsonResponse({"success": False, "message": "Amount must be a number"}, status=400)
+        if amount <= 0:
+            return JsonResponse({"success": False, "message": "Amount must be greater than zero"}, status=400)
+
+        user = User.objects.filter(telegram_id=telegram_id).first()
+        if not user:
+            return JsonResponse({"success": False, "message": "User not found"}, status=404)
+
+        # Enforce payment settings if present
+        try:
+            from wallet.models import PaymentSettings
+            settings_obj = PaymentSettings.get_solo()
+            if settings_obj.min_withdrawal_amount and amount < settings_obj.min_withdrawal_amount:
+                return JsonResponse({"success": False, "message": f"Minimum withdrawal is {settings_obj.min_withdrawal_amount} ETB"}, status=400)
+            if settings_obj.max_withdrawal_amount and settings_obj.max_withdrawal_amount > 0 and amount > settings_obj.max_withdrawal_amount:
+                return JsonResponse({"success": False, "message": f"Maximum withdrawal is {settings_obj.max_withdrawal_amount} ETB"}, status=400)
+        except Exception as _:
+            pass
+
+        # Check for existing pending request
+        if WithdrawalRequest.objects.filter(user=user, status='pending').exists():
+            return JsonResponse({"success": False, "message": "You already have a pending withdrawal request"}, status=409)
+
+        # Create request
+        wr = WithdrawalRequest.objects.create(user=user, amount=amount, status="pending")
+        print(f"[WITHDRAWAL_REQUEST] Created id={wr.id} for user_id={user.id} amount={amount}")
+
+        # Notify user via Telegram
+        if getattr(user, 'telegram_id', None):
+            try:
+                bot_token = config('BOT_TOKEN')
+                telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                text = (
+                    f"🧾 Withdrawal Request Submitted\n\n"
+                    f"💸 Amount: {amount} ETB\n"
+                    f"📌 Status: Pending Review\n\n"
+                    f"You'll be notified once it's processed."
+                )
+                requests.post(telegram_url, json={'chat_id': user.telegram_id, 'text': text, 'parse_mode': 'HTML'})
+            except Exception as notify_err:
+                print("[WITHDRAWAL_REQUEST] Notification failed:", notify_err)
+
+        return JsonResponse({"success": True, "message": "Withdrawal request created successfully"}, status=200)
     except Exception as e:
-        print(f"Error processing Withdrawal request: {e}")
-        return JsonResponse({"message": "Error processing withdrawal request"}, status=500)
+        import traceback
+        print(f"[WITHDRAWAL_REQUEST] Error: {e}")
+        traceback.print_exc()
+        return JsonResponse({"success": False, "message": "Error processing withdrawal request", "error": str(e)}, status=500)
 
 
 # Transaction Statistics API Endpoints
@@ -758,4 +734,17 @@ def get_transactions_by_type(request, transaction_type: str = None):
         print(f"Error getting transactions by type: {e}")
         return JsonResponse({"error": str(e)}, status=500)
 
+
+@router.get("/payment-settings/")
+def get_payment_settings(request):
+    try:
+        settings_obj = PaymentSettings.get_solo()
+        return JsonResponse({
+            "min_deposit_amount": float(settings_obj.min_deposit_amount),
+            "min_withdrawal_amount": float(settings_obj.min_withdrawal_amount),
+            "max_withdrawal_amount": float(settings_obj.max_withdrawal_amount),
+            "withdrawal_fee_percent": float(settings_obj.withdrawal_fee_percent),
+        }, status=200)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
