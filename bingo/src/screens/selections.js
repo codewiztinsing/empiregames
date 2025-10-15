@@ -55,6 +55,8 @@ const Selections = () => {
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [referralBonus, setReferralBonus] = useState(0);
   const [referralLoading, setReferralLoading] = useState(true);
+  const [fakePickedNumbers, setFakePickedNumbers] = useState([]);
+  const fakeTimersRef = React.useRef({ intervalId: null });
 
   // Generate numbers 1-100 (memoized since it's static)
   const numbers = Array.from({ length: 400 }, (_, i) => i + 1);
@@ -300,6 +302,49 @@ const Selections = () => {
     }
   }, [playerId]);
 
+  // Fake selection simulator: start as soon as the first real player (you) selects a card; picks are permanent
+  useEffect(() => {
+    const hasUserSelection = choosenNumbers && choosenNumbers.length >= 1;
+    const shouldSimulate = isSocketConnected && gameStatus === 'waiting' && hasUserSelection;
+    console.log('[FAKE_SIM] connected:', isSocketConnected, 'status:', gameStatus, 'hasUserSelection:', hasUserSelection, '=> shouldSimulate:', shouldSimulate);
+    // Cleanup helper
+    const clearTimers = () => {
+      if (fakeTimersRef.current.intervalId) {
+        clearInterval(fakeTimersRef.current.intervalId);
+        fakeTimersRef.current.intervalId = null;
+      }
+    };
+
+    if (!shouldSimulate) {
+      clearTimers();
+      // Keep existing fake picks to mimic permanence
+      return;
+    }
+
+    // Start interval to add random fake picks
+    fakeTimersRef.current.intervalId = setInterval(() => {
+      // Avoid spamming too many at once
+      if (fakePickedNumbers.length >= 30) {
+        return;
+      }
+      // Choose a candidate number not already truly picked or already faked, and not user-selected
+      const universe = Array.from({ length: 400 }, (_, i) => i + 1);
+      const taken = new Set([...(pickedNumbers || []), ...fakePickedNumbers, ...(choosenNumbers || [])]);
+      const candidates = universe.filter(n => !taken.has(n));
+      if (candidates.length === 0) return;
+      const idx = Math.floor(Math.random() * candidates.length);
+      const chosen = candidates[idx];
+      console.log('[FAKE_SIM] adding fake pick:', chosen);
+      setFakePickedNumbers(prev => [...prev, chosen]);
+    }, 900 + Math.floor(Math.random() * 700));
+
+    return () => {
+      clearTimers();
+    };
+  }, [isSocketConnected, gameStatus, selectedNumber, pickedNumbers, choosenNumbers, choosenNumbers?.length]);
+
+  // Countdown is controlled by the server; client only displays server-provided countDown
+
   // Countdown redirect logic - only navigate when countdown reaches exactly 00
   useEffect(() => {
     console.log("gameStatus",gameStatus)
@@ -460,36 +505,9 @@ const handleGlobals = (state) => {
 
     console.log("isCurrentlyChosen",isCurrentlyChosen)
   
-    // If number is already chosen, remove it (unselect) - skip balance checks for unselecting
+    // If card already chosen by this user, do nothing (prevent unselect)
     if (isCurrentlyChosen) {
-      console.log("✅ UNSELECTING CARD:", number);
-      const index = choosenNumbers.indexOf(number);
-    
-      if (index > -1) {
-        const newNumbers = [...choosenNumbers];
-        const newBoards = [...choosenBoards];
-        newNumbers.splice(index, 1);
-        newBoards.splice(index, 1);
-        
-        setChoosenNumbers(newNumbers);
-        setChooseBoards(newBoards);
-
-        // Reset card after removal
-        if (newNumbers.length === 0) {
-          // Leave game before resetting selectedNumber
-          handleLeaveGame();
-          setSelectedNumber(null);
-          setSelectBoard([]);
-          setToast(`Card ${number} unselected! No cards remaining.`);
-        } else {
-          // One card remains - update to the first remaining card
-          setSelectedNumber(newNumbers[0]);
-          setSelectBoard(newBoards[0]);
-          setToast(`Card ${number} unselected! Now using Card ${newNumbers[0]}.`);
-        }
-      } else {
-        console.log("❌ ERROR: Could not find index for number:", number);
-      }
+      setToast(`Card ${number} already selected`);
       setIsToast(true);
       return;
     }
@@ -520,24 +538,9 @@ const handleGlobals = (state) => {
       return;
     }
    
-    // If user already has a card selected, replace it with new one
+    // Prevent switching to another card once one is selected
     if (choosenNumbers.length >= 1) {
-      // Leave current game first (but don't reset selection)
-      handleLeaveGame(true);
-      // Generate new board for the new number
-      const newBoard = generateCombination();
-      
-      // Replace the existing selection
-      setChoosenNumbers([number]);
-      setChooseBoards([newBoard]);
-      setSelectedNumber(number);
-      setSelectBoard(newBoard);
-      
-      // Join game with new card
-      await handleJoinGame(number, newBoard);
-      
-      // Show toast for card switch
-      setToast(`Switched to Card ${number}! Waiting for countdown...`);
+      setToast(`You have already selected Card ${choosenNumbers[0]}`);
       setIsToast(true);
       return;
     }
@@ -827,16 +830,16 @@ const handleGlobals = (state) => {
 
             {numbers.map(number => {
               // const isPicked = pickedNumbers && pickedNumbers.includes(number) || false;
-              let isPicked = false;
-              if (pickedNumbers && pickedNumbers.length > 0) {
-                isPicked = pickedNumbers.includes(number);
-              }
+              const realPicked = (pickedNumbers && pickedNumbers.length > 0) ? pickedNumbers.includes(number) : false;
+              const simulatedPicked = fakePickedNumbers.includes(number);
+              const effectivePicked = realPicked || simulatedPicked;
 
               const isSelected = selectedNumber === number;
               const isChoosen = choosenNumbers.includes(number);
               // Don't disable chosen cards for unselecting, only disable if picked by another player or no connection
-              const isDisabled = (isPicked && !isChoosen) || !isSocketConnected;
+              const isDisabled = (effectivePicked && !isChoosen) || !isSocketConnected;
               const hasInsufficientBalance = balance < parseInt(roomId) || balance === 0;
+              const isPicked = effectivePicked;
 
               // Debug logging for selected numbers
               if (isChoosen) {
@@ -853,6 +856,7 @@ const handleGlobals = (state) => {
                   ${isDisabled ? 'disabled' : ''}
                   ${hasInsufficientBalance ? 'insufficient-balance' : ''}
                 `}
+                  style={{ position: 'relative' }}
                   onClick={(e) => {
                   
                     // Prevent default to avoid any potential issues
@@ -884,6 +888,7 @@ const handleGlobals = (state) => {
                 >
                   <span className='number-cell-text'>{number}</span>
                   {isPicked && <span className="picked-badge"></span>}
+                  {/* No extra badge; simulated picks appear identical to real picks */}
                 </button>
               );
             })}

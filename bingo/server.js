@@ -124,14 +124,14 @@ function getWaitingGames(activeGames,status="in-progress") {
 
 function startCountDown(game) {
  
-  if (game.isCountStart || !game.players || game.players.size < 2) return;
+  if (game.isCountStart || !game.players || game.players.size < 1) return;
   clearGameIntervals(game.id);
   game.countDown = 30; // Always reset to 30 when starting countdown
   game.isCountStart = true;
 
   const countdownInterval = setInterval(() => {
-    // Check if we still have at least 2 players during countdown
-    if (game.players.size < 2) {
+    // Check if we still have at least 1 player during countdown
+    if (game.players.size < 1) {
       console.log("🔄 Less than 2 players during countdown - resetting countdown");
       clearInterval(countdownInterval);
       game.isCountStart = false;
@@ -174,8 +174,8 @@ function startCountDown(game) {
   
 
     if (game.countDown === 0) {
-      // Final check before starting game - ensure we have at least 2 players
-      if (game.players.size < 2) {
+      // Final check before starting game - ensure we have at least 1 player
+      if (game.players.size < 1) {
         console.log("❌ Not enough players to start game - resetting countdown");
         clearInterval(countdownInterval);
         game.isCountStart = false;
@@ -436,7 +436,7 @@ io.on('connection', (socket) => {
   
     });
 
-    if (!game.isCountStart && game.players && game.players.size >= 2) {
+    if (!game.isCountStart && game.players && game.players.size >= 1) {
       startCountDown(game);
     }
 
@@ -680,8 +680,8 @@ socket.on("faulMadePlayer", (data) => {
       selectedNumber2: data.selectedNumber2
     })
 
-    // Check if countdown is running and we have less than 2 players
-    if (game.isCountStart && game.players.size < 2) {
+    // Check if countdown is running and we have less than 1 player
+    if (game.isCountStart && game.players.size < 1) {
       console.log("🔄 Less than 2 players during countdown - resetting countdown from 30");
       clearGameIntervals(game.id);
       game.isCountStart = false;
@@ -698,8 +698,8 @@ socket.on("faulMadePlayer", (data) => {
         count_down: game.countDown
       });
       
-      // Only start countdown if we have at least 2 players
-      if (game.players.size >= 2) {
+      // Only start countdown if we have at least 1 player
+      if (game.players.size >= 1) {
         startCountDown(game);
       }
     }
@@ -874,8 +874,8 @@ socket.on("faulMadePlayer", (data) => {
           users.delete(socket.id);
           users.delete(socket.id);
 
-          // Check if countdown is running and we have less than 2 players
-          if (game.isCountStart && game.players.size < 2) {
+          // Check if countdown is running and we have less than 1 player
+          if (game.isCountStart && game.players.size < 1) {
             console.log("🔄 Less than 2 players during countdown - resetting countdown from 30");
             clearGameIntervals(game.id);
             game.isCountStart = false;
@@ -892,8 +892,8 @@ socket.on("faulMadePlayer", (data) => {
               count_down: game.countDown
             });
             
-            // Only start countdown if we have at least 2 players
-            if (game.players.size >= 2) {
+            // Only start countdown if we have at least 1 player
+            if (game.players.size >= 1) {
               startCountDown(game);
             }
           }
