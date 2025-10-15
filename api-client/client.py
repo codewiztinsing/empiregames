@@ -1,39 +1,26 @@
+# base_url = "https://akerbingo.com"
+base_url = "http://127.0.0.1:8000"
+
 import requests
-import random
-BASE_URL = "http://localhost:8000/api/v1/users"
 
-def test_register_without_referred():
-    data = {
-        "username": f"testuser{random.randint(1, 1000)}",
-        "phone": str(random.randint(1000000000, 9999999999)),
-        "telegram_id": str(random.randint(1000000000, 9999999999)),
-        "password": "testpassword1",
-        "referred_by": None,
-        "email": "testuser1@gmail.com"
+def post_manual_callback_success(payload):
+    """
+    Sends a POST request to /api/v1/wallet/manual/callback/success/ endpoint with the provided payload.
+
+    Args:
+        payload (dict): The data to send in the body of the POST request.
+
+    Returns:
+        requests.Response: The response object from the server.
+    """
+    url = f"{base_url}/api/v1/wallet/manual/callback/success/"
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
     }
-    response = requests.post(f"{BASE_URL}/register", json=data)
-    print("Register without referred_by:")
-    print("Status Code:", response.status_code)
-    print("Response:", response.json())
-    print("-" * 40)
+    response = requests.post(url, json=payload, headers=headers)
+    return response
 
-def test_register_with_referred(referred_telegram_id):
-    data = {
-        "username": f"testuser{random.randint(1, 1000)}",
-        "phone": str(random.randint(1000000000, 9999999999)),
-        "telegram_id": str(random.randint(1000000000, 9999999999)),
-        "password": "testpassword2",
-        "referred_by": referred_telegram_id,
-        "email": "testuser2@gmail.com"
-    }
-    response = requests.post(f"{BASE_URL}/register", json=data)
-    print("Register with referred_by:")
-    print("Status Code:", response.status_code)
-    print("Response:", response.json())
-    print("-" * 40)
-
-if __name__ == "__main__":
-    # First, register a user without referral to get a valid telegram_id for referral
-    test_register_without_referred()
-    # Use the telegram_id of the first user as the referrer for the second user
-    test_register_with_referred("tg_1001")
+payload = {"session_id": "a92b3708-2657-42a6-b759-ed3edc837d74", "status": "success", "message": "Transaction verified successfully", "data": {"payer_name": "alako abiyo ludago", "payer_telebirr_no": "2519****1912", "payer_account_type": "Individual Customer", "credited_party": "AZEB BEHAILU MEKOEN", "credited_account": "2519****3249", "transaction_status": "\u12e8\u12a8\u134b\u12ed \u1235\u121d/Payer Name", "invoice_no": "\u12e8\u12ad\u134d\u12eb \u1240\u1295/Payment date", "payment_date": "\u12e8\u12ad\u134d\u12eb \u12dd\u122d\u12dd\u122d/ Invoice details", "settled_amount": "\u12e8\u12ad\u134d\u12eb \u12dd\u122d\u12dd\u122d/ Invoice details", "service_fee": "0.87 Birr", "total_paid": "\u12e8\u12ad\u134d\u12eb \u12dd\u122d\u12dd\u122d/ Invoice details", "total_in_words": "eleven birr and zero cent", "payment_mode": "telebirr", "payment_reason": "Send Money to Registered Customer", "payment_channel": "API/App", "customer_note": "", "amount": 11.0, "ref_number": "CJF7H9M8DN"}, "payer_telebirr_no": "2519****1912", "credited_party": "AZEB BEHAILU MEKOEN", "amount": 11.0, "ref_number": "CJF7H9M8DN"}
+response = post_manual_callback_success(payload)
+print(response.json())

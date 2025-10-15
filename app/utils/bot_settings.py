@@ -13,6 +13,8 @@ def get_bot_seetings():
 
 def initialize_manual_session(amount, session_id, phone_number):
     print("initialize manual session")
+    print(f"DEBUG: Initializing session with amount: {amount}, session_id: {session_id}, phone_number: {phone_number}")
+    print(f"DEBUG: Phone number type: {type(phone_number)}")
     BACK_URL = config('BACK_URL')
     url = f"{BACK_URL}/api/v1/wallet/manual/session/"
     data = {

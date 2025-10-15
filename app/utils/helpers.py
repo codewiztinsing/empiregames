@@ -38,11 +38,15 @@ def is_deposited_player(user_id):
 
 
 def get_user_phone(user_id):
+    print(f"DEBUG: Getting phone for user_id: {user_id}")
     response = requests.get(f"{BACK_URL}/api/v1/users/{user_id}")
     print("phone number response = ",response.json())
     if response.status_code == 200:
-        return response.json().get("phone")
+        phone = response.json().get("phone")
+        print(f"DEBUG: Retrieved phone number: {phone} (type: {type(phone)})")
+        return phone
     else:
+        print(f"DEBUG: Failed to get phone for user_id: {user_id}, status: {response.status_code}")
         return None
     
 def verify_receipt(message,paymentMethod,session_id):

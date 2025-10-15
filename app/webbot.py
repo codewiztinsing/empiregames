@@ -525,7 +525,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 return
             
             # Calculate remaining games needed
-            remaining_games = max(0, 27 - games_played_this_week)
+            remaining_games = 0
             
             # Create payment summary with user details and weekly progress
             payment_summary = (
@@ -693,6 +693,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             with open(filepath, 'r') as file:
                 message = file.read()
             context.user_data['payment_method'] = 'manual_telebirr'
+            # Debug: Log deposit_amount to ensure it's preserved
+            logger.info(f"Manual Telebirr selected. Deposit amount in context: {context.user_data.get('deposit_amount', 'NOT FOUND')}")
             await query.edit_message_text(text=message, parse_mode=ParseMode.HTML)
             return WAIT_FOR_PAYMENT
 
@@ -702,6 +704,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 message = file.read()
             await query.edit_message_text(text=message, parse_mode=ParseMode.HTML)
             context.user_data['payment_method'] = 'manual_cbe'
+            # Debug: Log deposit_amount to ensure it's preserved
+            logger.info(f"Manual CBE selected. Deposit amount in context: {context.user_data.get('deposit_amount', 'NOT FOUND')}")
             return WAIT_FOR_PAYMENT
     
         elif query.data == 'share_phone':
@@ -1239,7 +1243,7 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
     
     # Calculate remaining games needed - ensure games_played_this_week is an integer
     games_played = int(games_played_this_week) if games_played_this_week is not None else 0
-    remaining_games = max(0, 27 - games_played)
+    remaining_games = 0
 
     phone = get_user_phone(telegram_id)
     # Create appealing balance message

@@ -222,17 +222,21 @@ def manual_success(request):
                 return JsonResponse({"message": "No matching session found"}, status=404)
                         
             if manual_session.status == "success":
-                # Transaction already processed
+                # Transaction already processed - notify user if possible
                 user = User.objects.filter(phone=manual_session.phone_number).first()
-                if user and user.telegram_id:
-                    try:
+                try:
+                    balance_text = None
+                    if user:
+                        wallet_obj = Wallet.objects.filter(user=user).first()
+                        balance_text = f"{wallet_obj.balance} ETB" if wallet_obj else "(unknown)"
+                    if user and user.telegram_id:
                         bot_token = config('BOT_TOKEN')
                         telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
                         message = (
-                            f"🎉 Deposit Failed! 🎉\n\n"
-                            f"📊 New Balance: {wallet.balance} ETB\n"
-                            f"🔗 Reference: {manual_session.session_id}\n\n"
-                            f"❌ Your account has been credited failed!"
+                            f"⚠️ Transaction Already Processed!\n\n"
+                            f"🔗 Reference: {manual_session.session_id}\n"
+                            f"📊 Balance: {balance_text}\n\n"
+                            f"This payment has already been credited to your wallet."
                         )
                         telegram_payload = {
                             'chat_id': user.telegram_id,
@@ -241,18 +245,66 @@ def manual_success(request):
                         }
                         requests.post(telegram_url, json=telegram_payload)
                         print(f"Notified user {user.telegram_id} about duplicate transaction")
-                    except Exception as notification_error:
-                        print(f"Failed to notify user about duplicate transaction: {notification_error}")
+                except Exception as notification_error:
+                    print(f"Failed to notify user about duplicate transaction: {notification_error}")
                 return JsonResponse({"message": "Already processed"}, status=200)
             
             # Process the successful payment
-            user = get_object_or_404(User, phone=manual_session.phone_number)
-            wallet = get_object_or_404(Wallet, user=user)
+            print(f"DEBUG: Looking for user with phone: {manual_session.phone_number}")
+            print(f"DEBUG: Manual session phone_number type: {type(manual_session.phone_number)}")
+
+            # Resolve user: prefer manual_session.phone_number; if missing, fall back to last-4 match from payer number
+            user = None
+            if manual_session.phone_number:
+                try:
+                    user = User.objects.get(phone=manual_session.phone_number)
+                    print(f"DEBUG: Found user by full phone: {user.username} (ID: {user.id})")
+                except User.DoesNotExist:
+                    print(f"DEBUG: No user with exact phone: {manual_session.phone_number}")
+            if user is None:
+                masked_payer = payer_telebirr_no or ""
+                # Extract digits and take last 4
+                import re
+                digits = "".join(re.findall(r"\d", masked_payer))
+                last4 = digits[-4:] if len(digits) >= 4 else ""
+                print(f"DEBUG: Masked payer='{masked_payer}', digits='{digits}', last4='{last4}'")
+                if last4:
+                    candidates = list(User.objects.filter(phone__endswith=last4).values("id", "username", "phone"))
+                    print(f"DEBUG: Candidates matching last4 '{last4}': {candidates}")
+                    if len(candidates) == 1:
+                        user = User.objects.get(id=candidates[0]["id"])  # resolve to instance
+                        print(f"DEBUG: Resolved user by last4: {user.username} (ID: {user.id})")
+                        # Persist phone back to session if missing
+                        if not manual_session.phone_number:
+                            manual_session.phone_number = user.phone
+                            manual_session.save(update_fields=["phone_number"])
+                    elif len(candidates) == 0:
+                        return JsonResponse({"error": f"User not found by phone last4 '{last4}'"}, status=404)
+                    else:
+                        return JsonResponse({"error": f"Multiple users share phone last4 '{last4}'", "candidates": candidates}, status=409)
+                else:
+                    return JsonResponse({"error": "Unable to extract last 4 digits from payer number"}, status=400)
+            
+            try:
+                wallet = Wallet.objects.get(user=user)
+                print(f"DEBUG: Found wallet for user: {user.username}")
+            except Wallet.DoesNotExist:
+                print(f"DEBUG: Wallet not found for user: {user.username}")
+                return JsonResponse({"error": f"Wallet not found for user: {user.username}"}, status=404)
             # Add 30% bonus to deposit amount
-            deposit_amount = float(details.get("amount").strip("ETB"))
+            raw_amount = details.get("amount")
+            print(f"DEBUG: Telebirr raw amount value: {raw_amount} ({type(raw_amount)})")
+            if isinstance(raw_amount, (int, float)):
+                deposit_amount = float(raw_amount)
+            else:
+                from re import sub
+                cleaned = sub(r"[^0-9.]", "", str(raw_amount))
+                deposit_amount = float(cleaned) if cleaned else 0.0
             bonus_amount = deposit_amount * 0.30
             total_amount = deposit_amount + bonus_amount
             
+            # Update manual session with correct amount
+            manual_session.amount = deposit_amount
             wallet.balance += total_amount
             print("wallet balance = ",wallet.balance)
             wallet.save()
@@ -364,14 +416,24 @@ def manual_cbe_success(request):
                 return JsonResponse({"message": "No matching session found"}, status=404)
                         
             if manual_session.status == "success":
-                # Transaction already processed
+                # Transaction already processed - notify user if possible
                 user = User.objects.filter(phone=manual_session.phone_number).first()
                 print("user = ",user)
-                if user and user.telegram_id:
-                    try:
+                try:
+                    balance_text = None
+                    if user:
+                        wallet_obj = Wallet.objects.filter(user=user).first()
+                        balance_text = f"{wallet_obj.balance} ETB" if wallet_obj else "(unknown)"
+                    if user and user.telegram_id:
                         bot_token = config('BOT_TOKEN')
                         telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                        message = f"⚠️ Transaction Already Processed!\n\n💰 Amount: {manual_session.amount} ETB\n🔗 Reference: {manual_session.session_id}\n\nThis payment has already been credited to your wallet."
+                        message = (
+                            f"⚠️ Transaction Already Processed!\n\n"
+                            f"💰 Amount: {manual_session.amount} ETB\n"
+                            f"🔗 Reference: {manual_session.session_id}\n"
+                            f"📊 Balance: {balance_text}\n\n"
+                            f"This payment has already been credited to your wallet."
+                        )
                         telegram_payload = {
                             'chat_id': user.telegram_id,
                             'text': message,
@@ -379,20 +441,66 @@ def manual_cbe_success(request):
                         }
                         requests.post(telegram_url, json=telegram_payload)
                         print(f"Notified user {user.telegram_id} about duplicate transaction")
-                    except Exception as notification_error:
-                        print(f"Failed to notify user about duplicate transaction: {notification_error}")
+                except Exception as notification_error:
+                    print(f"Failed to notify user about duplicate transaction: {notification_error}")
                 return JsonResponse({"message": "Already processed"}, status=200)
             
             # Process the successful payment
             print("phone from manual session = ",manual_session.phone_number)
-            user = get_object_or_404(User, phone=manual_session.phone_number)
-            wallet = get_object_or_404(Wallet, user=user)
+            print(f"DEBUG: Looking for user with phone: {manual_session.phone_number}")
+            print(f"DEBUG: Manual session phone_number type: {type(manual_session.phone_number)}")
+
+            # Resolve user: prefer manual_session.phone_number; if missing, try last4 from details/credited account
+            user = None
+            if manual_session.phone_number:
+                try:
+                    user = User.objects.get(phone=manual_session.phone_number)
+                    print(f"DEBUG: Found user by full phone: {user.username} (ID: {user.id})")
+                except User.DoesNotExist:
+                    print(f"DEBUG: No user with exact phone: {manual_session.phone_number}")
+            if user is None:
+                masked_payer = details.get("credited_account") or details.get("payer_telebirr_no") or ""
+                import re
+                digits = "".join(re.findall(r"\d", masked_payer))
+                last4 = digits[-4:] if len(digits) >= 4 else ""
+                print(f"DEBUG: Masked payer='{masked_payer}', digits='{digits}', last4='{last4}'")
+                if last4:
+                    candidates = list(User.objects.filter(phone__endswith=last4).values("id", "username", "phone"))
+                    print(f"DEBUG: Candidates matching last4 '{last4}': {candidates}")
+                    if len(candidates) == 1:
+                        user = User.objects.get(id=candidates[0]["id"])  # resolve to instance
+                        print(f"DEBUG: Resolved user by last4: {user.username} (ID: {user.id})")
+                        if not manual_session.phone_number:
+                            manual_session.phone_number = user.phone
+                            manual_session.save(update_fields=["phone_number"])
+                    elif len(candidates) == 0:
+                        return JsonResponse({"error": f"User not found by phone last4 '{last4}'"}, status=404)
+                    else:
+                        return JsonResponse({"error": f"Multiple users share phone last4 '{last4}'", "candidates": candidates}, status=409)
+                else:
+                    return JsonResponse({"error": "Unable to extract last 4 digits from payer number"}, status=400)
+
+            try:
+                wallet = Wallet.objects.get(user=user)
+                print(f"DEBUG: Found wallet for user: {user.username}")
+            except Wallet.DoesNotExist:
+                print(f"DEBUG: Wallet not found for user: {user.username}")
+                return JsonResponse({"error": f"Wallet not found for user: {user.username}"}, status=404)
             
             # Add 30% bonus to deposit amount
-            deposit_amount = float(details.get("Transferred Amount").strip("ETB"))
+            raw_amount = details.get("Transferred Amount")
+            print(f"DEBUG: CBE raw amount value: {raw_amount} ({type(raw_amount)})")
+            if isinstance(raw_amount, (int, float)):
+                deposit_amount = float(raw_amount)
+            else:
+                from re import sub
+                cleaned = sub(r"[^0-9.]", "", str(raw_amount))
+                deposit_amount = float(cleaned) if cleaned else 0.0
             bonus_amount = deposit_amount * 0.30
             total_amount = deposit_amount + bonus_amount
             
+            # Update manual session with correct amount
+            manual_session.amount = deposit_amount
             wallet.balance += total_amount
             print("wallet balance = ",wallet.balance)
             wallet.save()

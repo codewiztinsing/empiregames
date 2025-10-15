@@ -12,6 +12,11 @@ async def handle_manual_payment(update: Update, context: ContextTypes.DEFAULT_TY
     manual_payment_method = context.user_data['payment_method']
     manual_payment_url = config("MANUAL_BASE_URL")
     MANUAL_API_KEY = config("MANUAL_API_KEY")
+    
+    # Debug: Log all user_data keys to understand what's available
+    print(f"DEBUG: User data keys: {list(context.user_data.keys())}")
+    print(f"DEBUG: Deposit amount: {context.user_data.get('deposit_amount', 'NOT FOUND')}")
+    print(f"DEBUG: Payment method: {manual_payment_method}")
     if manual_payment_method == "manual_telebirr":
         manual_payment_url = manual_payment_url + "receipts/verify/telebirr/"
     elif manual_payment_method == "manual_cbe":
@@ -32,14 +37,18 @@ async def handle_manual_payment(update: Update, context: ContextTypes.DEFAULT_TY
     }
     response = requests.post(manual_payment_url, json=data, headers=headers)
     if response.status_code in [202,200]:
-        amount = context.user_data['deposit_amount']
+        # Get deposit amount from user_data, default to 0 and proceed
+        amount = context.user_data.get('deposit_amount', 0)
+        
         session_id = response.json().get("session_id")
         phone_number = get_user_phone(update.effective_user.id)
         if manual_payment_method == "manual_telebirr":
-            initialize_manual_session(amount, session_id, phone_number)
+            # Initialize with 0 amount, callback will update with correct amount
+            initialize_manual_session(0, session_id, phone_number)
             verify_telebirr_receipt(message,session_id)
         elif manual_payment_method == "manual_cbe":
-            initialize_manual_session(amount, session_id, phone_number)
+            # Initialize with 0 amount, callback will update with correct amount
+            initialize_manual_session(0, session_id, phone_number)
             verify_cbe_receipt(message,session_id)
     
         await update.message.reply_text(f"Session created successfully, please wait for the payment to be verified")
