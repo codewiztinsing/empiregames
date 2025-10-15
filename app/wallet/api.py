@@ -353,14 +353,56 @@ def manual_success(request):
             
             return JsonResponse({"message": "Manual success processed"}, status=200)
         else:
+            print(f"[MANUAL_SUCCESS] Non-success callback received: status={status}")
             manual_session = ManualSession.objects.filter(session_id=session_id).first()
-            if not manual_session:
-                print(f"[MANUAL_SUCCESS] No manual session found to mark failed. session_id={session_id}")
-                return JsonResponse({"message": "No matching session found to mark failed"}, status=404)
-            manual_session.status = "failed"
-            manual_session.save(update_fields=["status"])
-            print(f"[MANUAL_SUCCESS] Marked manual session as failed. session_id={session_id}")
-            return JsonResponse({"message": "Manual failed data"}, status=200)
+            user = None
+            if manual_session and manual_session.phone_number:
+                user = User.objects.filter(phone=manual_session.phone_number).first()
+            if not user:
+                # Try to resolve user via payer phone last4 from details
+                masked_payer = data.get("payer_telebirr_no") or details.get("payer_telebirr_no") or details.get("credited_account") or ""
+                import re
+                digits = "".join(re.findall(r"\d", masked_payer))
+                last4 = digits[-4:] if len(digits) >= 4 else ""
+                if last4:
+                    candidates = list(User.objects.filter(phone__endswith=last4).values("id", "username", "phone"))
+                    if len(candidates) == 1:
+                        user = User.objects.get(id=candidates[0]["id"])
+                        if manual_session and not manual_session.phone_number:
+                            manual_session.phone_number = user.phone
+                            manual_session.save(update_fields=["phone_number"]) 
+
+            # Notify user appropriately
+            msg = (data.get("message") or "Payment failed").lower()
+            if user and getattr(user, 'telegram_id', None):
+                try:
+                    bot_token = config('BOT_TOKEN')
+                    telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                    if "already processed" in msg:
+                        text = (
+                            f"⚠️ Transaction Already Processed!\n\n"
+                            f"🔗 Reference: {session_id}\n"
+                            f"This payment was already credited earlier."
+                        )
+                    else:
+                        text = (
+                            f"❌ Payment Failed\n\n"
+                            f"🔗 Reference: {session_id}\n"
+                            f"📝 Reason: {data.get('message', 'Unknown error')}"
+                        )
+                    requests.post(telegram_url, json={'chat_id': user.telegram_id, 'text': text, 'parse_mode': 'HTML'})
+                    print(f"[MANUAL_SUCCESS] Notified user {user.telegram_id} for non-success callback")
+                except Exception as notify_err:
+                    print(f"[MANUAL_SUCCESS] Failed to notify user: {notify_err}")
+
+            # Update session to failed if exists
+            if manual_session:
+                manual_session.status = "failed"
+                manual_session.save(update_fields=["status"])
+                print(f"[MANUAL_SUCCESS] Marked manual session as failed. session_id={session_id}")
+            else:
+                print(f"[MANUAL_SUCCESS] No manual session found for non-success callback. session_id={session_id}")
+            return JsonResponse({"message": "Manual non-success processed"}, status=200)
     except Exception as e:
         import traceback
         print(f"[MANUAL_SUCCESS] Error processing Manual success: {e}")
