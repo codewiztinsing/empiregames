@@ -202,9 +202,20 @@ def addispay_callback(request):
 @router.post("/manual/callback/success/")
 @csrf_exempt
 def manual_success(request):
-    print("Manual success request")
+    print("[MANUAL_SUCCESS] Manual success request")
     try:
-        data = json.loads(request.body.decode('utf-8'))
+        try:
+            decoded_body = request.body.decode('utf-8') if isinstance(request.body, (bytes, bytearray)) else str(request.body)
+        except Exception as decode_err:
+            print("[MANUAL_SUCCESS] Body decode error:", decode_err)
+            decoded_body = str(request.body)
+        print("[MANUAL_SUCCESS] Raw body:", decoded_body)
+        try:
+            data = json.loads(decoded_body or '{}')
+        except json.JSONDecodeError as jde:
+            print("[MANUAL_SUCCESS] JSON decode error:", jde)
+            return JsonResponse({"error": "invalid_json", "details": str(jde)}, status=400)
+        print("[MANUAL_SUCCESS] Parsed JSON:", data)
         session_id = data.get("session_id")
         status = data.get("status")
         # Extract payer number from either top-level or nested 'data'
@@ -347,8 +358,10 @@ def manual_success(request):
             manual_session.save()
             return JsonResponse({"message": "Manual failed data"}, status=200)
     except Exception as e:
-        print(f"Error processing Manual success: {e}")
-        return JsonResponse({"message": "Error processing success"}, status=500)
+        import traceback
+        print(f"[MANUAL_SUCCESS] Error processing Manual success: {e}")
+        traceback.print_exc()
+        return JsonResponse({"message": "Error processing success", "error": str(e)}, status=500)
 
 @router.post("/manual/callback/error/")
 @csrf_exempt
@@ -394,11 +407,23 @@ def manual_error(request):
 @router.post("/manual/session/")
 def manual_session(request):
     try:
-        data = json.loads(request.body.decode('utf-8'))
+        try:
+            decoded_body = request.body.decode('utf-8') if isinstance(request.body, (bytes, bytearray)) else str(request.body)
+        except Exception as decode_err:
+            print("[MANUAL_SESSION] Body decode error:", decode_err)
+            decoded_body = str(request.body)
+        print("[MANUAL_SESSION] Raw body:", decoded_body)
+        try:
+            data = json.loads(decoded_body or '{}')
+        except json.JSONDecodeError as jde:
+            print("[MANUAL_SESSION] JSON decode error:", jde)
+            return JsonResponse({"error": "invalid_json", "details": str(jde)}, status=400)
+        print("[MANUAL_SESSION] Parsed JSON:", data)
         amount = data.get("amount")
         session_id = data.get("session_id")
         phone_number = data.get("phone_number")
         transaction_number = data.get("transaction_number")
+        print(f"[MANUAL_SESSION] amount={amount}, session_id={session_id}, phone_number={phone_number}, transaction_number={transaction_number}")
         manual_session = ManualSession.objects.create(
             amount=amount,
             session_id=session_id,
@@ -406,12 +431,14 @@ def manual_session(request):
             status="pending",
             transaction_number=transaction_number
         )
-        print("manual_session = ",manual_session)
+        print("[MANUAL_SESSION] manual_session created:", manual_session)
         manual_session.save()
         return JsonResponse({"message": "Session created successfully","session_id":manual_session.id}, status=200)
     except Exception as e:
-        print(f"Error processing Manual session: {e}")
-        return JsonResponse({"message": "Error processing session"}, status=500)
+        import traceback
+        print(f"[MANUAL_SESSION] Error processing Manual session: {e}")
+        traceback.print_exc()
+        return JsonResponse({"message": "Error processing session", "error": str(e)}, status=500)
 
 
 
