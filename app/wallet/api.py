@@ -354,8 +354,12 @@ def manual_success(request):
             return JsonResponse({"message": "Manual success processed"}, status=200)
         else:
             manual_session = ManualSession.objects.filter(session_id=session_id).first()
+            if not manual_session:
+                print(f"[MANUAL_SUCCESS] No manual session found to mark failed. session_id={session_id}")
+                return JsonResponse({"message": "No matching session found to mark failed"}, status=404)
             manual_session.status = "failed"
-            manual_session.save()
+            manual_session.save(update_fields=["status"])
+            print(f"[MANUAL_SUCCESS] Marked manual session as failed. session_id={session_id}")
             return JsonResponse({"message": "Manual failed data"}, status=200)
     except Exception as e:
         import traceback
