@@ -291,7 +291,7 @@ def manual_success(request):
             except Wallet.DoesNotExist:
                 print(f"DEBUG: Wallet not found for user: {user.username}")
                 return JsonResponse({"error": f"Wallet not found for user: {user.username}"}, status=404)
-            # Add 30% bonus to deposit amount
+            # Parse deposit amount
             raw_amount = details.get("amount")
             print(f"DEBUG: Telebirr raw amount value: {raw_amount} ({type(raw_amount)})")
             if isinstance(raw_amount, (int, float)):
@@ -300,19 +300,17 @@ def manual_success(request):
                 from re import sub
                 cleaned = sub(r"[^0-9.]", "", str(raw_amount))
                 deposit_amount = float(cleaned) if cleaned else 0.0
-            bonus_amount = deposit_amount * 0.30
-            total_amount = deposit_amount + bonus_amount
             
             # Update manual session with correct amount
             manual_session.amount = deposit_amount
-            wallet.balance += total_amount
+            wallet.balance += deposit_amount
             print("wallet balance = ",wallet.balance)
             wallet.save()
             manual_session.status = "success"
             manual_session.save()
             transaction = Transaction.objects.create(
                 user=user,
-                amount=total_amount,
+                amount=deposit_amount,
                 type="DEPOSIT",
                 status="success",
                 reference=manual_session.session_id
@@ -327,8 +325,7 @@ def manual_success(request):
                     message = (
                         f"🎉 Deposit Successful! 🎉\n\n"
                         f"💰 Amount: {deposit_amount} ETB\n"
-                        f"🎁 Bonus: {bonus_amount} ETB (30%)\n"
-                        f"💎 Total Credited: {total_amount} ETB\n"
+                        f"💎 Total Credited: {deposit_amount} ETB\n"
                         f"📊 New Balance: {wallet.balance} ETB\n"
                         f"🔗 Reference: {manual_session.session_id}\n\n"
                         f"✅ Your account has been credited successfully!"
@@ -513,7 +510,7 @@ def manual_cbe_success(request):
                 print(f"DEBUG: Wallet not found for user: {user.username}")
                 return JsonResponse({"error": f"Wallet not found for user: {user.username}"}, status=404)
             
-            # Add 30% bonus to deposit amount
+            # Parse deposit amount
             raw_amount = details.get("Transferred Amount")
             print(f"DEBUG: CBE raw amount value: {raw_amount} ({type(raw_amount)})")
             if isinstance(raw_amount, (int, float)):
@@ -522,19 +519,17 @@ def manual_cbe_success(request):
                 from re import sub
                 cleaned = sub(r"[^0-9.]", "", str(raw_amount))
                 deposit_amount = float(cleaned) if cleaned else 0.0
-            bonus_amount = deposit_amount * 0.25
-            total_amount = deposit_amount + bonus_amount
             
             # Update manual session with correct amount
             manual_session.amount = deposit_amount
-            wallet.balance += total_amount
+            wallet.balance += deposit_amount
             print("wallet balance = ",wallet.balance)
             wallet.save()
             manual_session.status = "success"
             manual_session.save()
             transaction = Transaction.objects.create(
                 user=user,
-                amount=total_amount,
+                amount=deposit_amount,
                 type="DEPOSIT",
                 status="success",
                 reference=manual_session.session_id
@@ -546,7 +541,7 @@ def manual_cbe_success(request):
                 try:
                     bot_token = config('BOT_TOKEN')
                     telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                    message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {deposit_amount} ETB\n🎁 Bonus: {bonus_amount} ETB (25%)\n💎 Total Credited: {total_amount} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {manual_session.session_id}\n\n✅ Your account has been credited successfully!"
+                    message = f"🎉 Deposit Successful! 🎉\n\n💰 Amount: {deposit_amount} ETB\n💎 Total Credited: {deposit_amount} ETB\n📊 New Balance: {wallet.balance} ETB\n🔗 Reference: {manual_session.session_id}\n\n✅ Your account has been credited successfully!"
                     telegram_payload = {
                         'chat_id': user.telegram_id,
                         'text': message,

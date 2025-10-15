@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from django.utils import timezone
 from users.models import User, SupportUser, ReferralBonus
 from game.models import Game
-from wallet.models import Transaction, WithdrawalRequest, Wallet
+from wallet.models import Transaction, WithdrawalRequest, Wallet, PaymentSettings, ManualSession
 from users.referral_services import ReferralService
 from .permissions import admin_required
 from django.shortcuts import render, get_object_or_404, redirect
@@ -28,6 +28,7 @@ from .permissions import (
             user_can_access_resource
      )
 from .tasks import send_message_to_all_players
+from decouple import config
 
 def fetch_transaction_data_from_api():
     """Fetch transaction data from API"""
@@ -353,6 +354,19 @@ def games(request):
     return render(request, 'dashboard/games.html', context)
 
 def payments(request):
+    # Save settings when posted
+    if request.method == 'POST':
+        settings_obj = PaymentSettings.get_solo()
+        try:
+            settings_obj.min_deposit_amount = float(request.POST.get('min_deposit_amount') or 0)
+            settings_obj.min_withdrawal_amount = float(request.POST.get('min_withdrawal_amount') or 0)
+            settings_obj.max_withdrawal_amount = float(request.POST.get('max_withdrawal_amount') or 0)
+            settings_obj.withdrawal_fee_percent = float(request.POST.get('withdrawal_fee_percent') or 0)
+            settings_obj.save()
+            messages.success(request, 'Payment settings saved successfully.')
+        except Exception as e:
+            messages.error(request, f'Failed to save settings: {e}')
+
     # Get filter parameters
     status_filter = request.GET.get('status', 'all')
     
@@ -365,15 +379,83 @@ def payments(request):
     paginator = Paginator(withdrawal_requests, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    settings_obj = PaymentSettings.get_solo()
+    # Manual deposits list (successful manual sessions)
+    manual_deposits = ManualSession.objects.filter(status="success").order_by('-created_at')[:100]
     
     context = {
         'withdrawal_requests': page_obj,
         'page_title': 'Payments',
         'page_obj': page_obj,
         'current_status': status_filter,
-        'status_choices': ['all', 'pending', 'success', 'failed']
+        'status_choices': ['all', 'pending', 'success', 'failed'],
+        'settings': settings_obj,
+        'manual_deposits': manual_deposits,
     }
     return render(request, 'dashboard/payments.html', context)
+
+
+@admin_or_support_required
+def add_manual_deposit(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid method'}, status=405)
+
+    try:
+        phone = request.POST.get('phone')
+        amount = float(request.POST.get('amount') or 0)
+        reference = request.POST.get('reference') or ''
+        if not phone or amount <= 0:
+            return JsonResponse({'success': False, 'message': 'Phone and positive amount required'}, status=400)
+
+        user = User.objects.filter(phone=phone).first()
+        if not user:
+            return JsonResponse({'success': False, 'message': 'User not found'}, status=404)
+
+        wallet = Wallet.objects.filter(user=user).first()
+        if not wallet:
+            wallet = Wallet.objects.create(user=user, balance=0)
+
+        wallet.balance += amount
+        wallet.save()
+
+        Transaction.objects.create(
+            user=user,
+            amount=amount,
+            type='DEPOSIT',
+            status='success',
+            reference=reference or 'manual-dashboard'
+        )
+
+        # Create a ManualSession record for visibility
+        ManualSession.objects.create(
+            session_id=reference or 'manual-dashboard',
+            phone_number=phone,
+            amount=amount,
+            transaction_number=None,
+            status='success'
+        )
+
+        # Notify user via Telegram if possible
+        if getattr(user, 'telegram_id', None):
+            try:
+                bot_token = config('BOT_TOKEN')
+                telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                message = (
+                    f"🎉 Deposit Successful! 🎉\n\n"
+                    f"💰 Amount: {amount} ETB\n"
+                    f"💎 Total Credited: {amount} ETB\n"
+                    f"📊 New Balance: {wallet.balance} ETB\n"
+                    f"🔗 Reference: {reference or 'manual-dashboard'}\n\n"
+                    f"✅ Your account has been credited successfully!"
+                )
+                requests.post(telegram_url, json={'chat_id': user.telegram_id, 'text': message, 'parse_mode': 'HTML'})
+            except Exception:
+                pass
+
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 
 def transcations(request):

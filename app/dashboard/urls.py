@@ -21,6 +21,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('withdrawal-requests/<int:request_id>/approve/', views.approve_withdrawal_request, name='approve_withdrawal_request'),
     path('withdrawal-requests/<int:request_id>/reject/', views.reject_withdrawal_request, name='reject_withdrawal_request'),
+    path('manual-deposits/add/', views.add_manual_deposit, name='add_manual_deposit'),
     
     # Referral bonus management URLs
     path('unwithdrawable-bonuses/', views.unwithdrawable_bonuses, name='unwithdrawable_bonuses'),

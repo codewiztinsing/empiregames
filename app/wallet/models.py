@@ -1,5 +1,6 @@
 from platform import python_implementation
 from django.db import models
+from django.utils import timezone
 from users.models import User
 
 class Wallet(models.Model):
@@ -56,6 +57,8 @@ class ManualSession(models.Model):
     amount = models.FloatField()
     transaction_number = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     
     class Meta:
         verbose_name = "Manual Session"
@@ -97,3 +100,17 @@ class WithdrawalRequest(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.amount} - {self.status}"
+
+
+class PaymentSettings(models.Model):
+    """Editable payment configuration for the dashboard."""
+    min_deposit_amount = models.FloatField(default=0.0)
+    min_withdrawal_amount = models.FloatField(default=0.0)
+    max_withdrawal_amount = models.FloatField(default=0.0)
+    withdrawal_fee_percent = models.FloatField(default=0.0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def get_solo(cls):
+        obj, _ = cls.objects.get_or_create(id=1)
+        return obj
