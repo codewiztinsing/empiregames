@@ -35,6 +35,14 @@ const io = socketIo(server, {
   }
 });
 
+// Ethiopian fake user names (first and last) for realistic winner announcements
+const ETH_FIRST_NAMES = [
+  'Abebe','Kebede','Haile','Bekele','Mulu','Tesfaye','Meron','Saba','Marta','Hanna','Mulugeta','Alemu','Lulit','Lidya','Yohannes','Dereje','Samrawit','Saron','Mahider','Hirut','Eden','Yared','Nati','Miki','Tigist','Aida','Rahel','Yetnayet','Mekdes','Eyerusalem','Nahom','Henok','Daniel','Fikirte','Blen','Rediet','Bethelhem','Selam','Selamawit','Abel','Samuel','Mersha','Fitsum','Gashaw','Girma','Solomon','Mebratu','Genet','Lensa','Fanaye','Mahi','Sosina','Tsion','Kidus','Kaleb','Abraham','Mikiyas','Biruk','Natnael','Yonatan','Yonas','Marta','Ruth','Mimi','Yemisrach','Yeshi','Seble','Hiwot','Mignot','Sosena','Mahlet','Mahi','Lensa','Lensa','Saron','Feven','Bethel','Hermela','Mikias','Nebiyu','Brook','Surafel','Senait','Abush','Fitsum','Asnakech','Azeb','Hanan','Hawi','Hewan','Bethelhem','Tsige','Mebrahtu','Kidist','Eleni','Lulit','Medhanit','Tinsae','Edom','Sosina','Eyerus','Netsanet','Selamnesh','Hayat','Zemzem','Feysel','Sami','Jafar','Hamdi'
+];
+const ETH_LAST_NAMES = [
+  'Tesfaye','Bekele','Alemu','Wondimu','Gebremedhin','Gebremariam','Gebrehiwot','Gebru','Gebre','Gebreyesus','Gebremichael','Hailemariam','Haile','Hailu','Kassahun','Kassaye','Fekadu','Asfaw','Tadesse','Tsegaye','Tefera','Girma','Gebremariam','Demissie','Yohannes','Solomon','Worku','Alemayehu','Gebrekidan','Gebretsadik','Kebede','Abate','Abera','Abraham','Admasu','Adugna','Assefa','Ayalew','Ayana','Bekri','Belay','Belayneh','Berhane','Berhanu','Berhe','Beyene','Biniam','Birhanu','Biruk','Bogale','Buzuayehu','Dagnachew','Dawit','Desalegn','Desale','Diriba','Ephrem','Eshetu','Fisseha','Gebrekirstos','Geda','Getachew','Gizaw','Habtamu','Hagos','Haileselassie','Hassen','Hiruy','Kidane','Kidanemariam','Kifle','Kiros','Legesse','Lemi','Mamo','Mebratu','Mehari','Mehari','Melaku','Melese','Mengistu','Merga','Mersha','Michael','Moges','Molla','Nigussie','Reda','Sahle','Seyoum','Shiferaw','Sime','Tafese','Tariku','Tekeste','Tekle','Terefe','Tesfamariam','Tesfatsion','Tessema','Weldeyesus','Woldemariam','Woldemichael','Woldeselassie','Wondafrash','Yared','Yesuf','Yimer','Zewdu'
+];
+
 let activeGames = new Map();
 const gameIntervals = new Map();
 const users = new Map();
@@ -308,11 +316,10 @@ async function startGame(game) {
 
 function generateFakeWinningCard() {
   // Create a 5x5 card structure similar to client expectations with marked cells
-  const card = [];
   const ranges = [
     [1, 15], [16, 30], [31, 45], [46, 60], [61, 75]
   ];
-  // Build transposed 5x5 grid (match client shape where columns are arrays)
+  // Build base grid (rows x cols), then transpose to match client structure [col][row]
   const base = Array.from({ length: 5 }, () => Array(5).fill(null));
   for (let col = 0; col < 5; col++) {
     const nums = [];
@@ -323,15 +330,39 @@ function generateFakeWinningCard() {
       base[row][col] = { number: row === 2 && col === 2 ? '*' : num, marked: false };
     }
   }
-  // Transpose to match client loop consuming [col][row]
-  const transposed = base[0].map((_, colIndex) => base.map(row => row[colIndex]));
-  // Mark a winning diagonal
-  for (let i = 0; i < 5; i++) {
-    transposed[i][i].marked = true;
+  const grid = base[0].map((_, colIndex) => base.map(row => row[colIndex]));
+
+  // Choose a random winning pattern
+  const patterns = ['row', 'col', 'diag', 'anti', 'fourCorners', 'fourEdges'];
+  const pick = patterns[Math.floor(Math.random() * patterns.length)];
+
+  if (pick === 'row') {
+    const r = Math.floor(Math.random() * 5);
+    for (let c = 0; c < 5; c++) grid[c][r].marked = true;
+  } else if (pick === 'col') {
+    const c = Math.floor(Math.random() * 5);
+    for (let r = 0; r < 5; r++) grid[c][r].marked = true;
+  } else if (pick === 'diag') {
+    for (let i = 0; i < 5; i++) grid[i][i].marked = true;
+  } else if (pick === 'anti') {
+    for (let i = 0; i < 5; i++) grid[4 - i][i].marked = true;
+  } else if (pick === 'fourCorners') {
+    grid[0][0].marked = true;
+    grid[0][4].marked = true;
+    grid[4][0].marked = true;
+    grid[4][4].marked = true;
+  } else if (pick === 'fourEdges') {
+    // Cross-like edges as per client check
+    grid[2][0].marked = true;
+    grid[0][2].marked = true;
+    grid[2][4].marked = true;
+    grid[4][2].marked = true;
   }
-  // Ensure center is marked
-  transposed[2][2].marked = true;
-  return transposed;
+
+  // Ensure center is marked for patterns that commonly include it
+  grid[2][2].marked = true;
+
+  return grid;
 }
 
 function scheduleFakeWinner(game) {
@@ -345,8 +376,9 @@ function scheduleFakeWinner(game) {
         const g = activeGames.get(game.id);
         if (!g || g.status !== 'in-progress') return;
 
-        const fakeNamePool = ['Guest', 'Player', 'Lucky', 'Champion', 'Winner'];
-        const fakeName = fakeNamePool[Math.floor(Math.random() * fakeNamePool.length)] + ' ' + (100 + Math.floor(Math.random() * 900));
+        const first = ETH_FIRST_NAMES[Math.floor(Math.random() * ETH_FIRST_NAMES.length)];
+        const last = ETH_LAST_NAMES[Math.floor(Math.random() * ETH_LAST_NAMES.length)];
+        const fakeName = `${first} ${last}`;
         const fakeCardNumber = 1 + Math.floor(Math.random() * 400);
         const winningCard = generateFakeWinningCard();
 
