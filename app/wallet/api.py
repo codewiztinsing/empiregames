@@ -253,8 +253,8 @@ def manual_success(request):
                     telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
                     message = (
                         f"🎉 Deposit Successful! 🎉\n\n"
-                        f"💰 Amount: {deposit_amount} ETB\n"
-                        f"💎 Total Credited: {deposit_amount} ETB\n"
+                        f"💰 Amount: {net_amount} ETB\n"
+                        f"💎 Total Credited: {net_amount} ETB\n"
                         f"📊 New Balance: {wallet.balance} ETB\n"
                         f"🔗 Reference: {manual_session.session_id}\n\n"
                         f"✅ Your account has been credited successfully!"
