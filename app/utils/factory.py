@@ -13,18 +13,23 @@ async def handle_manual_payment(update: Update, context: ContextTypes.DEFAULT_TY
     manual_payment_url = config("MANUAL_BASE_URL")
     MANUAL_API_KEY = config("MANUAL_API_KEY")
     
+    
     # Debug: Log all user_data keys to understand what's available
     print(f"DEBUG: User data keys: {list(context.user_data.keys())}")
     print(f"DEBUG: Deposit amount: {context.user_data.get('deposit_amount', 'NOT FOUND')}")
     print(f"DEBUG: Payment method: {manual_payment_method}")
     if manual_payment_method == "manual_telebirr":
         manual_payment_url = manual_payment_url + "receipts/verify/telebirr/"
+        callbackurl = "https://akerbingo.com/api/v1/wallet/manual/callback/success/"
+        errorUrl    = "https://akerbingo.com/api/v1/wallet/manual/callback/error/"
     elif manual_payment_method == "manual_cbe":
         manual_payment_url = manual_payment_url + "receipts/verify/cbe/"
-    # callbackurl = "https://akerbingo.com/api/v1/wallet/manual/callback/success/"
-    callbackurl = "https://webhook.site/c4d3fb2b-3d0b-4fd7-b6fd-775f1ed34937"
-    # errorUrl    = "https://akerbingo.com/api/v1/wallet/manual/callback/error/"
-    errorUrl    = "https://webhook.site/c4d3fb2b-3d0b-4fd7-b6fd-775f1ed34937"
+        callbackurl = "https://akerbingo.com/api/v1/wallet/manual/callback/cbe/success/"
+        errorUrl    = "https://akerbingo.com/api/v1/wallet/manual/callback/cbe/error/"
+    # #callbackurl = "https://akerbingo.com/api/v1/wallet/manual/callback/success/"
+    # callbackurl = "https://webhook.site/c4d3fb2b-3d0b-4fd7-b6fd-775f1ed34937"
+    # # errorUrl    = "https://akerbingo.com/api/v1/wallet/manual/callback/error/"
+    # errorUrl    = "https://webhook.site/c4d3fb2b-3d0b-4fd7-b6fd-775f1ed34937"
     data = {
         "message": update.message.text,
         "callbackurl": callbackurl,
