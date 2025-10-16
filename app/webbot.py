@@ -3,6 +3,8 @@ import requests
 import logging
 import random
 import string
+import os
+import django
 from telegram.constants import ParseMode
 from decouple import config
 from telegram import (
@@ -15,7 +17,8 @@ from telegram import (
 )
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from datetime import datetime, timedelta
-from utils import initialize_payment,get_bot_seetings,get_user_phone,get_user_phone
+# Removed payment gateway integrations; keep only needed utils
+from utils import get_bot_seetings, get_user_phone
 # Removed Chapa/AddisPay integrations
 from telegram.ext import (
     Application,
@@ -27,6 +30,16 @@ from telegram.ext import (
     ConversationHandler,
 )
 from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player,get_game_type
+from asgiref.sync import sync_to_async
+from django.conf import settings as dj_settings
+from django.utils import timezone
+
+# Ensure Django is configured when running this script directly
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
+django.setup()
+
+from users.models import User
+from wallet.models import Wallet, WithdrawalRequest, PaymentSettings, Transaction
 from utils.factory import handle_manual_payment
 from datetime import datetime
 from telegram import BotCommand
@@ -43,6 +56,57 @@ logger = logging.getLogger(__name__)
 
 
 
+
+# ============ Local mode (no external API calls) ============
+LOCAL_MODE = True  # set True to use ORM instead of HTTP API
+
+def local_get_user_by_telegram(telegram_id: int):
+    try:
+        return User.objects.get(telegram_id=str(telegram_id))
+    except User.DoesNotExist:
+        return None
+
+def local_get_wallet_by_telegram(telegram_id: int):
+    user = local_get_user_by_telegram(telegram_id)
+    if not user:
+        return {"balance": 0.0, "total_referral_earnings": 0.0}
+    wallet, _ = Wallet.objects.get_or_create(user=user)
+    # total_referral_earnings kept on user model
+    return {
+        "balance": float(wallet.balance or 0.0),
+        "total_referral_earnings": float(user.total_referral_earnings or 0.0),
+        "referral_bonus": float(user.total_referral_earnings or 0.0),
+    }
+
+def local_get_payment_settings():
+    ps = PaymentSettings.get_solo()
+    return {
+        "min_deposit_amount": float(ps.min_deposit_amount or 0.0),
+        "min_withdrawal_amount": float(ps.min_withdrawal_amount or 0.0),
+        "max_withdrawal_amount": float(ps.max_withdrawal_amount or 0.0),
+        "withdrawal_fee_percent": float(ps.withdrawal_fee_percent or 0.0),
+    }
+
+def local_create_withdrawal_request(telegram_id: int, amount: float, withdraw_account: str = ""):
+    user = local_get_user_by_telegram(telegram_id)
+    if not user:
+        return {"success": False, "message": "User not found"}
+    try:
+        wr = WithdrawalRequest.objects.create(user=user, amount=amount, status="pending")
+        return {"success": True, "id": wr.id}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+def local_get_user_games_week_count(telegram_id: int):
+    user = local_get_user_by_telegram(telegram_id)
+    if not user:
+        return 0
+    today = timezone.now().date()
+    start_of_week = today - timezone.timedelta(days=today.weekday())
+    end_of_week = start_of_week + timezone.timedelta(days=6)
+    return Transaction.objects.filter(
+        user=user, type="BET", created_at__date__gte=start_of_week, created_at__date__lte=end_of_week
+    ).count()
 
 def generate_nonce(length=64):
     characters = string.ascii_letters + string.digits + string.punctuation
@@ -173,21 +237,28 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Get user's wallet balance
     telegram_id = update.effective_user.id
     BACK_URL = get_bot_seetings().get("bot_url")
-
+    
     logger.info(f"Back url {BACK_URL}")
     logger.info(f"telegram_id {telegram_id}")
     logger.info(f"amount {amount}")
  
     try:
-        # Fetch wallet and payment settings
-        settings_resp = requests.get(f'{BACK_URL}/api/v1/wallet/payment-settings/', timeout=10)
-        settings_json = settings_resp.json() if settings_resp.status_code == 200 else {}
-        min_withdrawal = float(settings_json.get('min_withdrawal_amount', 50))
-        max_withdrawal = float(settings_json.get('max_withdrawal_amount', 100))
+        if LOCAL_MODE:
+            settings_json = await sync_to_async(local_get_payment_settings, thread_sensitive=True)()
+            min_withdrawal = float(settings_json.get('min_withdrawal_amount', 50))
+            max_withdrawal = float(settings_json.get('max_withdrawal_amount', 100))
+            wallet_response = await sync_to_async(local_get_wallet_by_telegram, thread_sensitive=True)(telegram_id)
+            balance = float(wallet_response.get('balance', 0)) + float(wallet_response.get('total_referral_earnings', 0)) if float(wallet_response.get('total_referral_earnings', 0)) > 500 else float(wallet_response.get('balance', 0))
+        else:
+            # Fetch wallet and payment settings via API
+            settings_resp = requests.get(f'{BACK_URL}/api/v1/wallet/payment-settings/', timeout=10)
+            settings_json = settings_resp.json() if settings_resp.status_code == 200 else {}
+            min_withdrawal = float(settings_json.get('min_withdrawal_amount', 50))
+            max_withdrawal = float(settings_json.get('max_withdrawal_amount', 100))
 
-        _resp = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}', timeout=10)
-        wallet_response = _resp.json() if _resp.headers.get('content-type','').startswith('application/json') else {}
-        balance = float(wallet_response.get('balance', 0)) + float(wallet_response.get('total_referral_earnings', 0)) if float(wallet_response.get('total_referral_earnings', 0)) > 500 else float(wallet_response.get('balance', 0))
+            _resp = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}', timeout=10)
+            wallet_response = _resp.json() if _resp.headers.get('content-type','').startswith('application/json') else {}
+            balance = float(wallet_response.get('balance', 0)) + float(wallet_response.get('total_referral_earnings', 0)) if float(wallet_response.get('total_referral_earnings', 0)) > 500 else float(wallet_response.get('balance', 0))
 
 
         daily_limit = daily_withdraw_limit(telegram_id)
@@ -195,23 +266,23 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         if int(daily_limit) > 3:
             await update.message.reply_text(f"You have reached the daily withdraw limit. Please try again tomorrow.")
             return WITHDRAW_AMOUNT_CONFIRM
-        # is_deposited = is_deposited_player(telegram_id)
-        # if not is_deposited:
-        #     await update.message.reply_text(f"You need to deposit first. 20 ETB minimum deposit is required to withdraw.")
-        #     return WITHDRAW_AMOUNT_CONFIRM
+        is_deposited = is_deposited_player(telegram_id)
+        if not is_deposited:
+            await update.message.reply_text(f"You need to deposit first. 20 ETB minimum deposit is required to withdraw.")
+            return WITHDRAW_AMOUNT_CONFIRM
 
  
 
-        # number_game_played = numnber_of_game_played(telegram_id)
-        # number_game_won = number_of_game_won(telegram_id)
+        number_game_played = numnber_of_game_played(telegram_id)
+        number_game_won = number_of_game_won(telegram_id)
 
-        # if int(number_game_played) < 5:
-        #     await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት")
-        #     return WITHDRAW_AMOUNT_CONFIRM
+        if int(number_game_played) < 5:
+            await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት")
+            return WITHDRAW_AMOUNT_CONFIRM
 
-        # if int(number_game_won) < 2:
-        #     await update.message.reply_text(f"2 ጨወታ ማሽነፍ አለብዎት")
-        #     return WITHDRAW_AMOUNT_CONFIRM
+        if int(number_game_won) < 2:
+            await update.message.reply_text(f"2 ጨወታ ማሽነፍ አለብዎት")
+            return WITHDRAW_AMOUNT_CONFIRM
 
         # Enforce PaymentSettings min/max
         if float(amount) > max_withdrawal and max_withdrawal > 0:
@@ -266,15 +337,18 @@ async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYP
         withdraw_amount = float(context.user_data['withdraw_amount'])
         user_telegram_id = update.effective_user.id
 
-        # Save withdrawal request in backend (no Chapa/CBE processing here)
-        payload = {"telegram_id": user_telegram_id, "amount": withdraw_amount}
-        headers = {"Content-Type": "application/json", "Accept": "application/json"}
-        try:
-            resp = requests.post(f"{BACK_URL}/api/v1/wallet/withdrawal/request/", json=payload, headers=headers, timeout=15)
-            ok = resp.status_code == 200 and resp.headers.get('content-type','').startswith('application/json')
-            data = resp.json() if ok else {"success": False, "message": resp.text}
-        except Exception as http_err:
-            data = {"success": False, "message": str(http_err)}
+        if LOCAL_MODE:
+            data = await sync_to_async(local_create_withdrawal_request, thread_sensitive=True)(user_telegram_id, withdraw_amount, account_number)
+        else:
+            # Save withdrawal request in backend via API
+            payload = {"telegram_id": user_telegram_id, "amount": withdraw_amount, "withdraw_account": account_number}
+            headers = {"Content-Type": "application/json", "Accept": "application/json"}
+            try:
+                resp = requests.post(f"{BACK_URL}/api/v1/wallet/withdrawal/request/", json=payload, headers=headers, timeout=15)
+                ok = resp.status_code == 200 and resp.headers.get('content-type','').startswith('application/json')
+                data = resp.json() if ok else {"success": False, "message": resp.text}
+            except Exception as http_err:
+                data = {"success": False, "message": str(http_err)}
 
         if data.get("success"):
             await update.message.reply_text(
@@ -620,57 +694,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
             return DEPOSIT_AMOUNT
 
-        elif query.data == "chapa":
-            BACK_URL = get_bot_seetings().get("bot_url")
-            url = "/api/v1/wallet/chapa/create-session"
-            full_url = f"{BACK_URL}{url}"
-            
-
-            _ufa = requests.get(f"{BACK_URL}/api/v1/users/{query.from_user.id}")
-            user_from_api = _ufa.json() if _ufa.headers.get('content-type','').startswith('application/json') else {}
-            phone_number = user_from_api.get("phone")
-           
-            data = {
-                "amount": context.user_data['deposit_amount'],
-                "currency": "ETB",
-                "first_name": query.from_user.first_name,
-                "last_name": query.from_user.last_name or query.from_user.username,
-                "email": f"{query.from_user.username}@gmail.com",
-                "phone_number": phone_number,
-                "tx_ref":generate_tx_ref(),
-                "return_url":f"https://t.me/akerbingobotbotbot",
-                "customization":{
-                    "title": "Aker Bingo",
-                    "description": "Deposit to Aker Bingo",
-                    "logo": "https://akerbingo.com/static/media/logo.png"
-                },
-                # "callback_url": "https://webhook.site/6bca0770-2235-4096-b8f6-41b861ec40e9"
-                "callback_url": f"{BACK_URL}/api/v1/wallet/webhook/chapa/callback/"
-            }
-
-            response = requests.post(full_url, json=data)
-            logger.info(f"response = {response}")
-            if response.status_code == 200:
-                chapa_session = initialize_payment(**data)
-                logger.info(f"data = {chapa_session}")
-
-                data = chapa_session.get("data")
-            
-                checkout_url = data.get("checkout_url")
-                keyboard = [
-                    [InlineKeyboardButton("Pay with Chapa", url=checkout_url)]
-                ]
-                reply_markup = InlineKeyboardMarkup(keyboard)
-                await query.edit_message_text(
-                    text="Click the button below to complete your payment:",
-                    reply_markup=reply_markup
-                )
-
-                return ConversationHandler.END
-
-            else:
-                await query.edit_message_text(text="An error occurred. Please try again.")
-                return ConversationHandler.END
+        # Removed legacy Chapa branch
     
  
         
@@ -1226,21 +1250,28 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
     
     try:
         # Get wallet balance
-        wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
-        logger.info(f"Wallet API response status: {wallet_response.status_code}")
-        wallet_data = wallet_response.json() if wallet_response.headers.get('content-type','').startswith('application/json') else {}
+        if LOCAL_MODE:
+            wallet_data = await sync_to_async(local_get_wallet_by_telegram, thread_sensitive=True)(telegram_id)
+        else:
+            wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
+            logger.info(f"Wallet API response status: {wallet_response.status_code}")
+            wallet_data = wallet_response.json() if wallet_response.headers.get('content-type','').startswith('application/json') else {}
         balance = wallet_data.get('balance', 0)
         logger.info(f"Balance retrieved: {balance}")
         
         # Get user info and game statistics
-        user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
-        logger.info(f"User API response status: {user_response.status_code}")
-        user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
-        games_played_this_week = user_data.get('games_played_this_week', 0) or 0
+        if LOCAL_MODE:
+            # Not used directly: u
+            games_played_this_week = await sync_to_async(local_get_user_games_week_count, thread_sensitive=True)(telegram_id)
+        else:
+            user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
+            logger.info(f"User API response status: {user_response.status_code}")
+            user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
+            games_played_this_week = user_data.get('games_played_this_week', 0) or 0
         logger.info(f"Games played this week: {games_played_this_week}")
 
         # Referral bonus (float) - handle None values
-        total_referral_earnings_raw = user_data.get('total_referral_earnings', 0) or 0
+        total_referral_earnings_raw = (wallet_data.get('referral_bonus', 0) if LOCAL_MODE else user_data.get('total_referral_earnings', 0)) or 0
         total_referral_earnings = float(total_referral_earnings_raw) if isinstance(total_referral_earnings_raw, (int, float, str)) else 0.0
 
         # Compute balances per policy - handle None values
