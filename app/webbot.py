@@ -104,7 +104,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             logger.warning(f"Invalid referrer ID format: {context.args[0]}")
     # Send welcome image instead of text
     try:
-        with open('wellcomenote.jpeg', 'rb') as photo:
+        with open('wellcomenote.jpg', 'rb') as photo:
             await update.message.reply_photo(photo=photo, caption='Select an option:', reply_markup=reply_markup)
     except FileNotFoundError:
         # Fallback to text if image not found
@@ -1203,7 +1203,7 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Send welcome image first
     try:
-        with open('wellcomenote.jpeg', 'rb') as photo:
+        with open('wellcomenote.jpg', 'rb') as photo:
             await update.message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
     except FileNotFoundError:
         # Fallback if image not found
@@ -1349,7 +1349,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Send welcome image first
         try:
-            with open('wellcomenote.jpeg', 'rb') as photo:
+            with open('wellcomenote.jpg', 'rb') as photo:
                 await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
         except FileNotFoundError:
             # Fallback if image not found
@@ -1367,7 +1367,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         # Send welcome image first
         try:
-            with open('wellcomenote.jpeg', 'rb') as photo:
+            with open('wellcomenote.jpg', 'rb') as photo:
                 await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
         except FileNotFoundError:
             # Fallback if image not found
