@@ -1,7 +1,7 @@
 from functools import wraps
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.contrib import messages
 
 
@@ -14,7 +14,7 @@ def admin_required(view_func):
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_staff:
             messages.error(request, "You don't have permission to access this page.")
-            return redirect('dashboard:dashboard')
+            return render(request, 'dashboard/forbidden.html', status=403)
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
@@ -30,7 +30,7 @@ def support_required(view_func):
         if not (request.user.is_staff or 
                 request.user.groups.filter(name='Support').exists()):
             messages.error(request, "You don't have permission to access this page.")
-            return redirect('dashboard:dashboard')
+            return render(request, 'dashboard/forbidden.html', status=403)
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
@@ -45,7 +45,7 @@ def admin_or_support_required(view_func):
         if not (request.user.is_staff or 
                 request.user.groups.filter(name__in=['Support', 'Admin', 'Finance']).exists()):
             messages.error(request, "You don't have permission to access this page.")
-            return redirect('dashboard:dashboard')
+            return render(request, 'dashboard/forbidden.html', status=403)
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
@@ -59,7 +59,7 @@ def superuser_required(view_func):
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_superuser:
             messages.error(request, "You don't have permission to access this page.")
-            return redirect('dashboard:dashboard')
+            return render(request, 'dashboard/forbidden.html', status=403)
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
@@ -74,7 +74,7 @@ def has_permission(permission_name):
         def _wrapped_view(request, *args, **kwargs):
             if not request.user.has_perm(permission_name):
                 messages.error(request, "You don't have permission to access this page.")
-                return redirect('dashboard:dashboard')
+                return render(request, 'dashboard/forbidden.html', status=403)
             return view_func(request, *args, **kwargs)
         return _wrapped_view
     return decorator
@@ -132,7 +132,7 @@ def roles_required(*roles):
                 has_role = True
             if not has_role:
                 messages.error(request, "You don't have permission to perform this action.")
-                return redirect('dashboard:dashboard')
+                return render(request, 'dashboard/forbidden.html', status=403)
             return view_func(request, *args, **kwargs)
         return _wrapped_view
     return decorator

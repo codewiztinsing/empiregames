@@ -907,7 +907,8 @@ def user_details(request, user_id):
     }
     return render(request, 'dashboard/user_details.html', context)
 def bingo_cards(request):
-    return render(request, 'dashboard/bingo_cards.html')
+    from django.http import HttpResponseNotFound
+    return HttpResponseNotFound()
 
 def referrals(request):
     # Get filter parameters

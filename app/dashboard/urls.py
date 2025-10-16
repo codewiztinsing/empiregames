@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 
@@ -15,7 +16,7 @@ urlpatterns = [
     path('users/<int:user_id>/delete/', views.user_delete, name='user_delete'),
     path('users/<int:user_id>/details/', views.user_details, name='user_details'),
     path('users/create/', views.user_create, name='user_create'),
-    path('bingo_cards/', views.bingo_cards, name='bingo_cards'),
+    # Backward-compat: if any template still references bingo_cards, send users to dashboard
     path('referrals/', views.referrals, name='referrals'),
     path('messages/', views.messages_view, name='messages'),
     path('contact/', views.contact, name='contact'),
