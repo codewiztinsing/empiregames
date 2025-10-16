@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import timedelta
-from .models import Game, PlayerGame,GameSettings,GameType
+from .models import Game, GameSettings,GameType
 from .tasks import charge_player,push_transaction,update_player_balance
 from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema,GameTypeSchema
 from ninja.errors import HttpError  # Correct import
@@ -17,6 +17,42 @@ from ninja.errors import HttpError  # Correct import
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 game_router = Router()
+@game_router.post("/update-metrics/")
+def update_metrics(request):
+    """Persist metrics sent from Node server: real/fake/total players and win amount."""
+    try:
+        body = json.loads(request.body.decode() or "{}")
+        game_id = body.get("game_id")
+        if not game_id:
+            # For compatibility: accept bet_amount-only, resolve current game
+            bet_amount = body.get("bet_amount")
+            if bet_amount is None:
+                return JsonResponse({"success": False, "error": "game_id or bet_amount required"}, status=400)
+            game = Game.objects.filter(entry_fee=bet_amount, ended=False).last()
+            if not game:
+                return JsonResponse({"success": False, "error": "Game not found for bet_amount"}, status=404)
+        else:
+            game = get_object_or_404(Game, id=game_id)
+
+        real_players = int(body.get("real_players") or 0)
+        fake_players = int(body.get("fake_players") or 0)
+        total_players = int(body.get("total_players") or (real_players + fake_players))
+        win_amount = float(body.get("win_amount") or 0)
+
+        game.real_players = real_players
+        game.fake_players = fake_players
+        game.total_players = total_players
+        game.total_win_amount = win_amount
+        game.started = True
+      
+        game.save(update_fields=[
+            "real_players", "fake_players", "total_players", "total_win_amount", "updated_at","started"
+        ])
+
+        return JsonResponse({"success": True, "game_id": game.id}, status=200)
+    except Exception as e:
+        logger.error(f"update_metrics error: {e}")
+        return JsonResponse({"success": False, "error": str(e)}, status=400)
 
 @game_router.post("/join-game/",response=GameSchema)
 def join_game(request, data: BetSchema):
@@ -30,11 +66,29 @@ def join_game(request, data: BetSchema):
     
     logger.info(f"Players dict: {players_dict}")
     
-    # Update game with total_players if provided
-    if data.total_players is not None:
-        game.total_players = data.total_players
-        game.save()
-        logger.info(f"Updated game {game.id} with total_players: {data.total_players}")
+    # Update game metrics (real/fake/total/win_amount)
+    try:
+        real_players = len(players_dict.keys())
+        total_players = int(data.total_players) if data.total_players is not None else real_players
+        fake_players = max(0, total_players - real_players)
+        try:
+            entry_fee = float(game.entry_fee)
+        except Exception:
+            entry_fee = 0.0
+        total_win_amount = float(total_players) * entry_fee * 0.78
+
+        game.real_players = real_players
+        game.fake_players = fake_players
+        game.total_players = total_players
+        game.total_win_amount = total_win_amount
+        game.save(update_fields=[
+            "real_players","fake_players","total_players","total_win_amount","updated_at"
+        ])
+        logger.info(
+            f"Updated game {game.id} metrics real={real_players} fake={fake_players} total={total_players} win={total_win_amount}"
+        )
+    except Exception as e:
+        logger.error(f"Failed updating game metrics: {e}")
     
     charge_player.delay(players_dict,game.entry_fee,game.id)
     return GameSchema(bet_amount=game.entry_fee,game_id=game.id)    
@@ -114,11 +168,11 @@ def get_games_stats(request):
         total_revenue = Game.objects.filter(ended=True).aggregate(Sum('entry_fee'))['entry_fee__sum'] or 0
         revenue_last_30_days = Game.objects.filter(ended=True, created_at__gte=thirty_days_ago).aggregate(Sum('entry_fee'))['entry_fee__sum'] or 0
         
-        # Player statistics
-        total_players = PlayerGame.objects.values('user').distinct().count()
-        active_players_today = PlayerGame.objects.filter(
-            game__created_at__gte=timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        ).values('user').distinct().count()
+        # Player statistics (PlayerGame removed); using aggregated totals from Game
+        total_players = Game.objects.aggregate(total=Sum('total_players'))['total'] or 0
+        active_players_today = Game.objects.filter(
+            created_at__gte=timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        ).aggregate(total=Sum('total_players'))['total'] or 0
         
         # Win statistics
         games_with_winners = Game.objects.filter(ended=True, winner__isnull=False).count()
@@ -154,8 +208,8 @@ def get_recent_games(request, limit: int = 20):
         
         games_list = []
         for game in games:
-            # Get player count for this game
-            player_count = PlayerGame.objects.filter(game=game).count()
+            # Player count from aggregated field
+            player_count = game.total_players
             
             # Get winner info
             winner_info = None
@@ -199,8 +253,8 @@ def get_games_by_status(request, status: str = None):
         
         games_list = []
         for game in games:
-            # Get player count for this game
-            player_count = PlayerGame.objects.filter(game=game).count()
+            # Player count for this game
+            player_count = game.total_players
             
             # Get winner info
             winner_info = None
@@ -245,12 +299,10 @@ def get_games_by_user(request, user_id: int = None, telegram_id: str = None):
         else:
             return JsonResponse({"error": "Either user_id or telegram_id is required"}, status=400)
         
-        # Get games where user participated
-        player_games = PlayerGame.objects.filter(user=user).select_related('game', 'game__winner')
-        
+        # PlayerGame removed; return recent games as fallback for user
+        games = Game.objects.select_related('winner').order_by('-created_at')[:20]
         games_list = []
-        for player_game in player_games:
-            game = player_game.game
+        for game in games:
             
             # Get winner info
             winner_info = None
@@ -268,7 +320,7 @@ def get_games_by_user(request, user_id: int = None, telegram_id: str = None):
                 "status": game.status,
                 "started": game.started,
                 "ended": game.ended,
-                "has_bingo": player_game.has_bingo,
+                "has_bingo": False,
                 "winner": winner_info,
                 "created_at": game.created_at.isoformat(),
                 "players": game.players if game.players else []
@@ -293,20 +345,12 @@ def get_games_by_user(request, user_id: int = None, telegram_id: str = None):
 def get_detailed_games(request, limit: int = 20):
     """Get detailed games information with all related data"""
     try:
-        games = Game.objects.select_related('winner').prefetch_related('playergame_set__user').order_by('-created_at')[:limit]
+        games = Game.objects.select_related('winner').order_by('-created_at')[:limit]
         
         games_list = []
         for game in games:
-            # Get all players for this game
+            # PlayerGame removed; omit per-player listing in this view
             players = []
-            for player_game in game.playergame_set.all():
-                players.append({
-                    "id": player_game.user.id,
-                    "username": player_game.user.username,
-                    "phone": player_game.user.phone,
-                    "telegram_id": player_game.user.telegram_id,
-                    "has_bingo": player_game.has_bingo
-                })
             
             # Get winner info
             winner_info = None

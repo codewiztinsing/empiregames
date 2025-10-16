@@ -75,7 +75,7 @@ const getCurrentGame = async (betAmount)=>{
 }
 
 
-const gameLossWallet = async (players, betAmount, totalPlayers = null)=>{
+const gameLossWallet = async (players, betAmount, totalPlayers = null, fakePlayers = 0)=>{
   const current_game = await getCurrentGame(betAmount)
   console.log("current_game",current_game)
   const game_id = current_game.game_id
@@ -84,8 +84,10 @@ const gameLossWallet = async (players, betAmount, totalPlayers = null)=>{
       players: players,
       bet_amount: betAmount,
       game_id: game_id,
-      total_players: totalPlayers
+      total_players: totalPlayers,
+      fake_players: fakePlayers
   };
+  console.log("data",data)
 
 
   try{
@@ -107,18 +109,47 @@ const gameLossWallet = async (players, betAmount, totalPlayers = null)=>{
 
 
 const updateLastGame = async (roomId)=>{
+  console.log("updateLastGame roomId = ", roomId)
   const backUrl = process.env.BACK_URL
   const updateLastGameUrl = backUrl + 'game/update-last-game/'
-  const params = {
-    params: {
-      bet_amount: `${roomId}`
-    }
-  }
-  const response = await axios.get(updateLastGameUrl, params)
+  console.log("updateLastGameUrl = ", updateLastGameUrl)
+  const response = await axios.get(updateLastGameUrl, { params: { bet_amount: `${roomId}` } })
+  console.log("updateLastGame response = ", response.data)
   const data = response.data;
+  console.log("updateLastGame data = ", data)
   return data;  
 }
 
+
+const updateGameMetrics = async (betAmount, realPlayers, fakePlayers, totalPlayers, winAmount) => {
+  console.log("updateGameMetrics betAmount = ", betAmount)
+  console.log("updateGameMetrics realPlayers = ", realPlayers)
+  console.log("updateGameMetrics fakePlayers = ", fakePlayers)
+  console.log("updateGameMetrics totalPlayers = ", totalPlayers)
+  console.log("updateGameMetrics winAmount = ", winAmount)
+  try {
+    const current = await getCurrentGame(betAmount);
+    const game_id = current?.game_id;
+    if (!game_id) return null;
+    const backUrl = process.env.BACK_URL;
+    const url = backUrl + 'game/update-metrics/';
+    const payload = {
+      game_id,
+      bet_amount: betAmount,
+      real_players: realPlayers,
+      fake_players: fakePlayers,
+      total_players: totalPlayers,
+      win_amount: winAmount
+    };
+    await axios.post(url, payload).then(res => {
+      console.log('updateGameMetrics res', res.data);
+    });
+    return true;
+  } catch (e) {
+    console.log('updateGameMetrics error', e?.message || e);
+    return null;
+  }
+};
 
 
 const getGameSettings = async ()=>{
@@ -138,6 +169,7 @@ const getGameSettings = async ()=>{
     checkBalance,
     gameLossWallet,
     updateLastGame,
-    getGameSettings
+    getGameSettings,
+    updateGameMetrics
   };
   

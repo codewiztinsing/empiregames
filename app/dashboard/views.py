@@ -9,7 +9,7 @@ from users.referral_services import ReferralService
 from .permissions import admin_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
-from game.models import PlayerGame
+from game.models import Game
 import requests
 import json
 from django.shortcuts import render, redirect
@@ -857,7 +857,9 @@ def user_details(request, user_id):
     transactions = Transaction.objects.filter(user=user).order_by('-created_at')[:50]
     referral_bonuses = ReferralBonus.objects.filter(referrer=user).order_by('-created_at')[:50]
     referral_withdrawals = WithdrawalRequest.objects.filter(user=user).order_by('-created_at')[:50]
-    player_games = PlayerGame.objects.filter(user=user).select_related('game').order_by('-game__created_at')[:50]
+    # PlayerGame removed; show recent games instead
+    player_games = []
+    recent_games = Game.objects.order_by('-created_at')[:50]
 
     # Get all users referred by this user with their generation levels
     referred_users = []

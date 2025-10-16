@@ -1,6 +1,6 @@
 import logging
 from celery import shared_task
-from game.models import PlayerGame,Game
+from game.models import Game
 from wallet.models import Transaction,Wallet
 from users.models import User
 from users.referral_services import ReferralService
@@ -91,37 +91,7 @@ def update_player_balance(player_id,win_amount,game_id):
         return True,wallet.balance
 
 
-@shared_task
-def create_player_games(game_id, players_dict):
-    """
-    Create PlayerGame records for all players in a game
-    """
-    logger.info(f"Creating player games for game {game_id} with players {players_dict}")
-    try:
-        game = get_object_or_404(Game, id=game_id)
-        
-        for player_id, number_of_boards in players_dict.items():
-            try:
-                player = get_object_or_404(User, telegram_id=player_id)
-                player_game, created = PlayerGame.objects.get_or_create(
-                    user=player,
-                    game=game,
-                    defaults={
-                        'boards_count': number_of_boards,
-                        'total_bet': float(game.entry_fee) * number_of_boards
-                    }
-                )
-                if created:
-                    logger.info(f"Created PlayerGame for player {player_id} in game {game_id}")
-                else:
-                    logger.info(f"PlayerGame already exists for player {player_id} in game {game_id}")
-            except Exception as e:
-                logger.error(f"Error creating PlayerGame for player {player_id}: {e}")
-        
-        return True
-    except Exception as e:
-        logger.error(f"Error in create_player_games: {e}")
-        return False
+"""PlayerGame removed: create_player_games task no longer needed."""
 
 
 @shared_task

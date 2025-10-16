@@ -48,9 +48,8 @@ const PlayingBoard = () => {
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
   const [winnerCountdown, setWinnerCountdown] = useState(5);
 
-  // Include simulated (fake) players from selection screen for display purposes only
-  const simulatedCount = (typeof window !== 'undefined' && window.__simulatedPickedCount) ? window.__simulatedPickedCount : 0;
-  const displayedTotalPlayers = (totalPlayers || 0) + (simulatedCount || 0);
+  // Server now owns fake players; totals and win amount come from server gameState
+  const displayedTotalPlayers = totalPlayers || 0;
   const displayedWinAmount = (displayedTotalPlayers * (roomId || 0) * 0.78) || 0;
 
   // Generate Bingo board function
@@ -390,7 +389,7 @@ const PlayingBoard = () => {
   // ✅ Handle winner countdown and navigation
   useEffect(() => {
     if (!isBingo) {
-      setWinnerCountdown(5); // Reset countdown when not showing winner
+      setWinnerCountdown(20); // Reset countdown when not showing winner
       return;
     }
 
