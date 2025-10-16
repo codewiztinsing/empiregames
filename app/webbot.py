@@ -683,7 +683,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         elif query.data == "register":
             # Send welcome image first
             try:
-                with open('wellcomenote.jpeg', 'rb') as photo:
+                with open('wellcomenote.jpg', 'rb') as photo:
                     await query.message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
             except FileNotFoundError:
                 # Fallback if image not found
