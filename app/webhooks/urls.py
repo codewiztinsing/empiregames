@@ -1,6 +1,6 @@
 from django.urls import path
-from . import views
+from . import api as views
 
 urlpatterns = [
-    path('', views.chapa_callback, name='chapa_callback'),
+    path('', views.callbacks_disabled, name='callbacks_disabled'),
 ]

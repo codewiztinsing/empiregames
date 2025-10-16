@@ -14,6 +14,7 @@ urlpatterns = [
     path('users/<int:user_id>/edit/', views.user_edit, name='user_edit'),
     path('users/<int:user_id>/delete/', views.user_delete, name='user_delete'),
     path('users/<int:user_id>/details/', views.user_details, name='user_details'),
+    path('users/create/', views.user_create, name='user_create'),
     path('bingo_cards/', views.bingo_cards, name='bingo_cards'),
     path('referrals/', views.referrals, name='referrals'),
     path('messages/', views.messages_view, name='messages'),
@@ -31,4 +32,10 @@ urlpatterns = [
     path('referral-bonuses/<int:bonus_id>/reject/', views.reject_referral_bonus, name='reject_referral_bonus'),
     path('referral-bonuses/bulk-approve/', views.bulk_approve_bonuses, name='bulk_approve_bonuses'),
     path('process-tuesday-bonuses/', views.process_tuesday_bonuses, name='process_tuesday_bonuses'),
+
+    # Roles management
+    path('roles/', views.roles, name='roles'),
+    path('roles/create/', views.create_role, name='create_role'),
+    path('roles/<int:user_id>/assign/', views.assign_role, name='assign_role'),
+    path('roles/<int:user_id>/remove/', views.remove_role, name='remove_role'),
     ]

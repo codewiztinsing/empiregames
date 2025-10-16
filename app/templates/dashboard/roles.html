@@ -1,0 +1,105 @@
+{% extends 'dashboard/base.html' %}
+
+{% block page_title %}Roles{% endblock %}
+
+{% block content %}
+<div class="bg-gray-900 rounded-lg border border-gray-700 p-6">
+  <h2 class="text-xl font-semibold text-white mb-4">Manage Roles</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+      <h3 class="text-white font-medium mb-3">Create Role</h3>
+      <form id="createRoleForm" method="post" action="{% url 'dashboard:create_role' %}">
+        {% csrf_token %}
+        <div class="flex gap-2">
+          <input name="name" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2" placeholder="Role name (e.g., Finance)">
+          <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">Create</button>
+        </div>
+        <div class="mt-4">
+          <h4 class="text-gray-200 text-sm font-medium mb-2">Grant CRUD Permissions</h4>
+          <div class="max-h-64 overflow-auto border border-gray-700 rounded-md p-2 bg-gray-800">
+            {% for row in permissions_matrix %}
+              <div class="mb-2">
+                <div class="text-xs text-gray-400 mb-1">{{ row.app_label }}.{{ row.model_name }}</div>
+                <div class="flex flex-wrap gap-3">
+                  {% for perm in row.permissions %}
+                    <label class="inline-flex items-center gap-1 text-xs text-gray-300">
+                      <input type="checkbox" name="permissions" value="{{ perm.id }}" class="rounded border-gray-600 bg-gray-700"> {{ perm.codename }}
+                    </label>
+                  {% endfor %}
+                </div>
+              </div>
+            {% empty %}
+              <div class="text-gray-400 text-sm">No permissions found.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </form>
+      <p class="text-xs text-gray-400 mt-2">Uses Django Groups under the hood.</p>
+    </div>
+
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+      <h3 class="text-white font-medium mb-3">Roles</h3>
+      <ul class="space-y-2 max-h-64 overflow-auto">
+        {% for g in groups %}
+          <li class="text-gray-200 text-sm">{{ g.name }}</li>
+        {% empty %}
+          <li class="text-gray-400 text-sm">No roles yet</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+      <h3 class="text-white font-medium mb-3">Assign/Remove Role</h3>
+      <form id="assignForm" class="space-y-3">
+        {% csrf_token %}
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">User</label>
+          <select id="userSelect" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2">
+            {% for u in users %}
+              <option value="{{ u.id }}">{{ u.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Role</label>
+          <select id="groupSelect" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2">
+            {% for g in groups %}
+              <option value="{{ g.name }}">{{ g.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="assignRole()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">Assign</button>
+          <button type="button" onclick="removeRole()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm">Remove</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+async function assignRole() {
+  const userId = document.getElementById('userSelect').value;
+  const group = document.getElementById('groupSelect').value;
+  const formData = new FormData();
+  formData.append('group', group);
+  formData.append('csrfmiddlewaretoken', document.querySelector('#assignForm [name=csrfmiddlewaretoken]').value);
+  const resp = await fetch(`/dashboard/roles/${userId}/assign/`, { method: 'POST', body: formData });
+  const data = await resp.json();
+  alert(data.success ? 'Assigned' : (data.message || 'Failed'));
+}
+async function removeRole() {
+  const userId = document.getElementById('userSelect').value;
+  const group = document.getElementById('groupSelect').value;
+  const formData = new FormData();
+  formData.append('group', group);
+  formData.append('csrfmiddlewaretoken', document.querySelector('#assignForm [name=csrfmiddlewaretoken]').value);
+  const resp = await fetch(`/dashboard/roles/${userId}/remove/`, { method: 'POST', body: formData });
+  const data = await resp.json();
+  alert(data.success ? 'Removed' : (data.message || 'Failed'));
+}
+</script>
+{% endblock %}
+
+

@@ -1,0 +1,36 @@
+{% extends 'dashboard/base.html' %}
+
+{% block page_title %}Create User{% endblock %}
+
+{% block content %}
+<div class="bg-gray-800 rounded-lg border border-gray-700 max-w-lg mx-auto p-6">
+  <h2 class="text-xl font-semibold text-white mb-4">Create User</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Username</label>
+        <input name="username" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2" required>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Phone</label>
+        <input name="phone" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2" required>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Telegram ID</label>
+        <input name="telegram_id" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2" required>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Password</label>
+        <input type="password" name="password" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2" required>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <a href="{% url 'dashboard:users' %}" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-md text-sm">Cancel</a>
+        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm" type="submit">Create</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+

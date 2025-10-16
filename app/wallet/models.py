@@ -15,39 +15,7 @@ class Wallet(models.Model):
         return f"{self.user.username} - {self.balance}"
 
 
-class ChapaSession(models.Model):
-    session_id = models.CharField(max_length=100, blank=True, null=True)
-    amount = models.FloatField()
-    currency = models.CharField(max_length=3)
-    email = models.EmailField()
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    phone_number = models.CharField(max_length=100)
-    tx_ref = models.CharField(max_length=100)
-    ref_id = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
-    def __str__(self):
-        return f"{self.tx_ref} - {self.status}"
-
-
-class AddisPaySession(models.Model):
-    session_id = models.CharField(max_length=100, blank=True, null=True)
-    amount = models.FloatField()
-    currency = models.CharField(max_length=3)
-    email = models.EmailField()
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    phone_number = models.CharField(max_length=100)
-    tx_ref = models.CharField(max_length=100)
-    ref_id = models.CharField(max_length=100)
-    callback_url = models.URLField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
-    def __str__(self):
-        return f"{self.tx_ref} - {self.status}"
+## Removed ChapaSession and AddisPaySession models (deprecated)
 
 
 

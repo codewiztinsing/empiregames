@@ -37,11 +37,6 @@ class ManualSessionAdmin(admin.ModelAdmin):
     search_fields = ('id', 'session_id', 'amount', 'status', 'phone_number')
     list_per_page = 10
 
-    
-    list_filter = ('status',)
-    search_fields = ('id', 'session_id', 'amount', 'status', 'phone_number')
-    list_per_page = 10
-
 
 class GameTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'bet_amount', 'commission')
@@ -51,5 +46,5 @@ class GameTypeAdmin(admin.ModelAdmin):
 
 admin.site.register(PlayerGame, PlayerGameAdmin)
 admin.site.register(GameSettings, GameSettingsAdmin)
-admin.site.register(ManualSession, ManualSessionAdmin)
+# ManualSession is registered in wallet.admin
 admin.site.register(GameType, GameTypeAdmin)

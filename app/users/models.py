@@ -1,11 +1,47 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.crypto import get_random_string
 from django.contrib.auth.models import Group, Permission
 from decimal import Decimal
 from django.core.validators import MinValueValidator
 
+
+class UserManager(BaseUserManager):
+    def create_user(self, username, phone, telegram_id, password=None, **extra_fields):
+        """Create a new user with phone and telegram_id"""
+        if not username:
+            raise ValueError('The username must be set')
+        if not phone:
+            raise ValueError('The phone must be set')
+        if not telegram_id:
+            raise ValueError('The telegram_id must be set')
+        
+        user = self.model(
+            username=username,
+            phone=phone,
+            telegram_id=telegram_id,
+            **extra_fields
+        )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, username, phone, telegram_id, password=None, **extra_fields):
+        """Create a new superuser with phone and telegram_id"""
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+        
+        return self.create_user(username, phone, telegram_id, password, **extra_fields)
+
+
 class User(AbstractUser):
+    objects = UserManager()
+    
     phone = models.CharField(max_length=15, unique=True)
     telegram_id = models.CharField(max_length=15, unique=True)
     referral_code = models.CharField(max_length=15, default=get_random_string(15))

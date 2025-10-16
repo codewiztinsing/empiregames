@@ -25,11 +25,15 @@ from .permissions import (
             superuser_required,
             has_permission,
             check_user_role,
-            user_can_access_resource
+            user_can_access_resource,
+            roles_required,
      )
 from .tasks import send_message_to_all_players
 from decouple import config
 import requests
+
+from django.contrib.auth.models import Group, Permission
+from django.apps import apps as django_apps
 
 def fetch_transaction_data_from_api():
     """Fetch transaction data from API"""
@@ -353,6 +357,7 @@ def games(request):
     }
     return render(request, 'dashboard/games.html', context)
 
+@roles_required('Admin', 'Support', 'Finance', 'superuser')
 def payments(request):
     # Save settings when posted
     if request.method == 'POST':
@@ -395,6 +400,88 @@ def payments(request):
     }
     return render(request, 'dashboard/payments.html', context)
 
+
+@superuser_required
+def roles(request):
+    groups = Group.objects.all().order_by('name')
+    users = User.objects.all().order_by('username')
+
+    # Build CRUD permissions matrix for project models
+    project_app_labels = {
+        'users', 'wallet', 'game', 'dashboard', 'promotion', 'promotions', 'referrals', 'webhooks'
+    }
+    permissions_matrix = []
+    for model in django_apps.get_models():
+        app_label = model._meta.app_label
+        model_name = model._meta.model_name
+        if app_label not in project_app_labels:
+            continue
+        # Fetch standard CRUD perms for this model
+        codenames = [f'add_{model_name}', f'change_{model_name}', f'delete_{model_name}', f'view_{model_name}']
+        perms = list(Permission.objects.filter(content_type__app_label=app_label, content_type__model=model_name, codename__in=codenames).order_by('codename'))
+        if not perms:
+            continue
+        permissions_matrix.append({
+            'app_label': app_label,
+            'model_name': model.__name__,
+            'model_key': f"{app_label}.{model_name}",
+            'permissions': perms,
+        })
+
+    context = {
+        'groups': groups,
+        'users': users,
+        'permissions_matrix': permissions_matrix,
+    }
+    return render(request, 'dashboard/roles.html', context)
+
+
+@superuser_required
+def create_role(request):
+    if request.method != 'POST':
+        return redirect('dashboard:roles')
+    name = (request.POST.get('name') or '').strip()
+    if not name:
+        messages.error(request, 'Role name required')
+        return redirect('dashboard:roles')
+    group, created = Group.objects.get_or_create(name=name)
+
+    # Assign selected permissions if provided
+    perm_ids = request.POST.getlist('permissions')
+    if perm_ids:
+        selected_perms = Permission.objects.filter(id__in=perm_ids)
+        group.permissions.set(selected_perms)
+    if created:
+        messages.success(request, f"Role '{group.name}' created")
+    else:
+        messages.info(request, f"Role '{group.name}' updated")
+    return redirect('dashboard:roles')
+
+
+@superuser_required
+def assign_role(request, user_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid method'}, status=405)
+    group_name = (request.POST.get('group') or '').strip()
+    user = get_object_or_404(User, id=user_id)
+    group = Group.objects.filter(name=group_name).first()
+    if not group:
+        return JsonResponse({'success': False, 'message': 'Role not found'}, status=404)
+    user.groups.add(group)
+    return JsonResponse({'success': True})
+
+
+@superuser_required
+def remove_role(request, user_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid method'}, status=405)
+    group_name = (request.POST.get('group') or '').strip()
+    user = get_object_or_404(User, id=user_id)
+    group = Group.objects.filter(name=group_name).first()
+    if not group:
+        return JsonResponse({'success': False, 'message': 'Role not found'}, status=404)
+    user.groups.remove(group)
+    return JsonResponse({'success': True})
 
 @admin_or_support_required
 def add_manual_deposit(request):
@@ -614,6 +701,42 @@ def users(request):
     }
     return render(request, 'dashboard/users.html', context)
 
+
+@admin_required
+def user_create(request):
+    context = { 'page_title': 'Create User' }
+    if request.method == 'POST':
+        username = (request.POST.get('username') or '').strip()
+        phone = (request.POST.get('phone') or '').strip()
+        telegram_id = (request.POST.get('telegram_id') or '').strip()
+        password = (request.POST.get('password') or '').strip()
+        if not username or not phone or not telegram_id or not password:
+            messages.error(request, 'All fields are required')
+            return render(request, 'dashboard/user_create.html', context)
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already exists')
+            return render(request, 'dashboard/user_create.html', context)
+        if User.objects.filter(phone=phone).exists():
+            messages.error(request, 'Phone already exists')
+            return render(request, 'dashboard/user_create.html', context)
+        if User.objects.filter(telegram_id=telegram_id).exists():
+            messages.error(request, 'Telegram ID already exists')
+            return render(request, 'dashboard/user_create.html', context)
+        try:
+            # Use Django's create_user method which properly handles password hashing
+            user = User.objects.create_user(
+                username=username,
+                phone=phone,
+                telegram_id=telegram_id,
+                password=password,
+            )
+            Wallet.objects.get_or_create(user=user)
+            messages.success(request, 'User created successfully')
+            return redirect('dashboard:users')
+        except Exception as e:
+            messages.error(request, f'Failed to create user: {e}')
+            return render(request, 'dashboard/user_create.html', context)
+    return render(request, 'dashboard/user_create.html', context)
 
 @admin_required
 def user_edit(request, user_id):

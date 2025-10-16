@@ -1,8 +1,7 @@
 from django.contrib import admin
-from .models import (Wallet, 
+from .models import (
+            Wallet, 
             Transaction,
-            ChapaSession,
-            AddisPaySession,
             ManualSession
             )
 
@@ -49,25 +48,6 @@ class TransactionAdmin(admin.ModelAdmin):
     get_user_telegram_id.admin_order_field = 'user__telegram_id'
 
 
-class ChapaSessionAdmin(admin.ModelAdmin):
-    list_display = ( 'amount', 'currency','first_name','phone_number', 'status', 'created_at')
-    ordering = ('-created_at',)
-    list_display_links = ("phone_number","status","created_at","amount","currency","first_name")
-   
-    search_fields = ( 'first_name','phone_number','status','created_at','amount','currency')
-    list_per_page = 10
-
-
-class AddisPaySessionAdmin(admin.ModelAdmin):
-    list_display = ( 'amount', 'currency','first_name','phone_number', 'status', 'created_at')
-    ordering = ('-created_at',)
-    list_display_links = ("phone_number","status","created_at","amount","currency","first_name")
-   
-    search_fields = ('first_name','phone_number','status','created_at','amount','currency')
-    list_per_page = 10
-    list_filter = ('status','created_at')
-
-
 class ManualSessionAdmin(admin.ModelAdmin):
     list_display = ('session_id', 'phone_number', 'amount', 'transaction_number', 'status')
     search_fields = ('session_id', 'phone_number', 'transaction_number')
@@ -75,6 +55,5 @@ class ManualSessionAdmin(admin.ModelAdmin):
     list_per_page = 10
 
 
-admin.site.register(Transaction, TransactionAdmin)  
-admin.site.register(ChapaSession, ChapaSessionAdmin)
-admin.site.register(AddisPaySession, AddisPaySessionAdmin)
+admin.site.register(Transaction, TransactionAdmin)
+admin.site.register(ManualSession, ManualSessionAdmin)
