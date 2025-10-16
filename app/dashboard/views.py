@@ -320,7 +320,7 @@ def games(request):
         data_source = "API"
     else:
         # Fallback to database
-    games = Game.objects.all().order_by('-id')
+        games = Game.objects.all().order_by('-id')
         if status_filter:
             games = games.filter(status=status_filter)
         paginator = Paginator(games, limit)

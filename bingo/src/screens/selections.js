@@ -55,8 +55,6 @@ const Selections = () => {
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [referralBonus, setReferralBonus] = useState(0);
   const [referralLoading, setReferralLoading] = useState(true);
-  const [fakePickedNumbers, setFakePickedNumbers] = useState([]);
-  const fakeTimersRef = React.useRef({ intervalId: null });
 
   // Generate numbers 1-100 (memoized since it's static)
   const numbers = Array.from({ length: 400 }, (_, i) => i + 1);
@@ -302,55 +300,7 @@ const Selections = () => {
     }
   }, [playerId]);
 
-  // Fake selection simulator: start as soon as the first real player (you) selects a card; picks are permanent
-  useEffect(() => {
-    const hasUserSelection = choosenNumbers && choosenNumbers.length >= 1;
-    const shouldSimulate = isSocketConnected && gameStatus === 'waiting' && hasUserSelection;
-    console.log('[FAKE_SIM] connected:', isSocketConnected, 'status:', gameStatus, 'hasUserSelection:', hasUserSelection, '=> shouldSimulate:', shouldSimulate);
-    // Cleanup helper
-    const clearTimers = () => {
-      if (fakeTimersRef.current.intervalId) {
-        clearInterval(fakeTimersRef.current.intervalId);
-        fakeTimersRef.current.intervalId = null;
-      }
-    };
-
-    if (!shouldSimulate) {
-      clearTimers();
-      // Keep existing fake picks to mimic permanence
-      return;
-    }
-
-    // Start interval to add random fake picks
-    fakeTimersRef.current.intervalId = setInterval(() => {
-      // Avoid spamming too many at once
-      if (fakePickedNumbers.length >= 30) {
-        return;
-      }
-      // Choose a candidate number not already truly picked or already faked, and not user-selected
-      const universe = Array.from({ length: 400 }, (_, i) => i + 1);
-      const taken = new Set([...(pickedNumbers || []), ...fakePickedNumbers, ...(choosenNumbers || [])]);
-      const candidates = universe.filter(n => !taken.has(n));
-      if (candidates.length === 0) return;
-      const idx = Math.floor(Math.random() * candidates.length);
-      const chosen = candidates[idx];
-      console.log('[FAKE_SIM] adding fake pick:', chosen);
-      setFakePickedNumbers(prev => [...prev, chosen]);
-    }, 900 + Math.floor(Math.random() * 700));
-
-    return () => {
-      clearTimers();
-    };
-  }, [isSocketConnected, gameStatus, selectedNumber, pickedNumbers, choosenNumbers, choosenNumbers?.length]);
-
-  // Expose simulated count globally for main screen to read
-  useEffect(() => {
-    try {
-      if (typeof window !== 'undefined') {
-        window.__simulatedPickedCount = fakePickedNumbers?.length || 0;
-      }
-    } catch (e) {}
-  }, [fakePickedNumbers]);
+  // Client no longer simulates fake picks; server broadcasts picked numbers
 
   // Countdown is controlled by the server; client only displays server-provided countDown
 
@@ -840,8 +790,7 @@ const handleGlobals = (state) => {
             {numbers.map(number => {
               // const isPicked = pickedNumbers && pickedNumbers.includes(number) || false;
               const realPicked = (pickedNumbers && pickedNumbers.length > 0) ? pickedNumbers.includes(number) : false;
-              const simulatedPicked = fakePickedNumbers.includes(number);
-              const effectivePicked = realPicked || simulatedPicked;
+              const effectivePicked = realPicked;
 
               const isSelected = selectedNumber === number;
               const isChoosen = choosenNumbers.includes(number);

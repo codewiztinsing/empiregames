@@ -98,6 +98,10 @@ const PlayingBoard = () => {
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
 
+  console.log("totalWinAmount",totalWinAmount)
+  console.log("totalPlayers",totalPlayers)
+  
+
   // ✅ Socket event bindings
   useEffect(() => {
     if (!socket) return;

@@ -71,7 +71,9 @@ async function createGame(roomId) {
     disconnectedPlayers: new Map(),
     fauldMadePlayers: new Map(),
     roomId,
-    fakeWinnerScheduled: false
+    fakeWinnerScheduled: false,
+    fakeSelectionActive: false,
+    fakeTargetCount: 0
   };
   activeGames.set(roomId, game);
   return game;
@@ -152,33 +154,86 @@ function startCountDown(game) {
       io.emit("gameState", {
         gameId: game.id,
         roomId: game.roomId,
-        pickedNumbers: game.selectedNumbers.filter(num => num !== null),
-        total_players: game.selectedNumbers.filter(num => num !== null).length,
         game_status: game.status,
         count_down: game.countDown
       });
       
-      io.emit("globals", {
-        roomId: game.roomId,
-        countDown: game.countDown
-      });
-      
+     
       return;
     }
+
+
+
+     // Broadcast fake selections while waiting: target random 30..50 unique numbers
+     if (game.status === 'waiting') {
+      if (!game.fakeSelectionActive) {
+        game.fakeSelectionActive = true;
+        game.fakeTargetCount = 30 + Math.floor(Math.random() * 21); // 30..50
+        console.log(`[FAKE_SIM] INIT room=${game.roomId} gameId=${game.id} target=${game.fakeTargetCount}`);
+      }
+      const cap = Math.max(30, Math.min(50, game.fakeTargetCount || 30));
+      const current = game.selectedNumbers.filter(n => n !== null).length;
+      console.log(`[FAKE_SIM] STATE room=${game.roomId} gameId=${game.id} current=${current} cap=${cap}`);
+      if (current < cap) {
+        const universe = Array.from({ length: 400 }, (_, i) => i + 1);
+        const taken = new Set(game.selectedNumbers.filter(n => n !== null));
+        const candidates = universe.filter(n => !taken.has(n));
+        console.log(`[FAKE_SIM] CAND room=${game.roomId} gameId=${game.id} candidates=${candidates.length}`);
+        if (candidates.length > 0) {
+          const missing = Math.min(cap - current, Math.min(3, candidates.length));
+          const chosenList = [];
+          for (let i = 0; i < missing; i++) {
+            const idx = Math.floor(Math.random() * candidates.length);
+            const chosen = candidates.splice(idx, 1)[0];
+            game.selectedNumbers.push(chosen);
+            chosenList.push(chosen);
+          }
+          console.log(`[FAKE_SIM] ADD room=${game.roomId} gameId=${game.id} chosen=${JSON.stringify(chosenList)} total=${game.selectedNumbers.filter(n=>n!==null).length}`);
+          io.emit('pickedNumbers', { roomId: game.roomId, numbers: game.selectedNumbers });
+          console.log(`[FAKE_SIM] EMIT pickedNumbers room=${game.roomId} count=${game.selectedNumbers.length}`);
+          // Update totals to include fake selections
+          game.total_players = game.selectedNumbers.filter(n => n !== null).length;
+          game.win_amount = game.total_players * game.roomId * 0.78;
+
+          io.emit('gameState', {
+            gameId: game.id,
+            roomId: game.roomId,
+            pickedNumbers: game.selectedNumbers,
+            game_status: game.status,
+            count_down: game.countDown,
+            total_players: game.total_players,
+            win_amount: game.total_winAmount,
+            total_winAmount: game.total_winAmount,
+          });
+          console.log(`[FAKE_SIM] EMIT gameState room=${game.roomId} total_players=${game.selectedNumbers.filter(n => n !== null).length} count_down=${game.countDown}`);
+        }
+      }
+    } else {
+      // Reset fake selection flags once game progresses
+      if (game.fakeSelectionActive) {
+        console.log(`[FAKE_SIM] RESET room=${game.roomId} gameId=${game.id}`);
+      }
+      game.fakeSelectionActive = false;
+      game.fakeTargetCount = 0;
+    }
+    // Compute totals (including fake selections) for broadcast
+    const broadcastSelected = game.selectedNumbers.filter(num => num !== null);
+    const broadcastTotalPlayers = broadcastSelected.length;
+    const broadcastWinAmount = broadcastTotalPlayers * game.roomId * 0.78;
+    game.total_players = broadcastTotalPlayers;
+    game.total_winAmount = broadcastWinAmount;
 
     io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
-      pickedNumbers: game.selectedNumbers.filter(num => num !== null),
-      total_players: game.selectedNumbers.filter(num => num !== null).length,
+      pickedNumbers: broadcastSelected,
+      total_players: broadcastTotalPlayers,
+      win_amount: broadcastWinAmount,
       game_status: game.status,
       count_down: game.countDown
     });
 
-    io.emit("globals", {
-      roomId: game.roomId,
-      countDown: game.countDown
-    })
+  
   
 
   
@@ -291,14 +346,15 @@ async function startGame(game) {
       game_status: game.status,
       count_down: game.countDown,
       win_amount: game.win_amount,
-      total_players: game.total_players,
+      total_players: Math.max(30, 50),
       lastBall: ball,
       called_numbers: game.calledNumbers,
       total_called_numbers: game.calledNumbers.length,
       playersWithSelectedNumbers:playersWithSelectedNumbers
 
     });
-   
+
+  
 
     if (game.calledNumbers.length >= 75) {
       io.emit("gameStatus", {
