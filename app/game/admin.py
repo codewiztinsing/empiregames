@@ -45,8 +45,8 @@ admin.site.register(GameType, GameTypeAdmin)
 
 
 class FakePlayerSettingsAdmin(admin.ModelAdmin):
-    list_display = ('max_fake_players', 'calls_before_fake_winner', 'fake_players_can_win', 'updated_at')
-    list_editable = ('max_fake_players', 'calls_before_fake_winner', 'fake_players_can_win')
+    list_display = ('max_fake_players', 'calls_before_fake_winner', 'real_players_threshold', 'fake_players_can_win', 'updated_at')
+    list_editable = ('max_fake_players', 'calls_before_fake_winner', 'real_players_threshold', 'fake_players_can_win')
     list_display_links = ('updated_at',)  # Set a non-editable field as link
     list_filter = ('fake_players_can_win',)
     search_fields = ('max_fake_players', 'calls_before_fake_winner')

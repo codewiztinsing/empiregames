@@ -1,10 +1,11 @@
 import logging
 from celery import shared_task
-from game.models import Game
+from game.models import Game, FakePlayerSettings
 from wallet.models import Transaction,Wallet
 from users.models import User
 from users.referral_services import ReferralService
 from django.shortcuts import get_object_or_404
+from django.db.models import Sum
 
 logger = logging.getLogger(__name__)
 
@@ -91,17 +92,34 @@ def update_player_balance(player_id,win_amount,game_id):
         return True,wallet.balance
 
 
-"""PlayerGame removed: create_player_games task no longer needed."""
+
+
+
+
+  
 
 
 @shared_task
-def process_tuesday_bonus_payments():
-    """Process bonus payments every Tuesday"""
-    logger.info("Processing Tuesday bonus payments")
+def activate_fake_players():
+    logger.info("Activating fake players")
     try:
-        success, message = ReferralService.process_tuesday_bonus_payments()
-        logger.info(f"Tuesday bonus processing result: {message}")
-        return success
+        fake_player_settings = FakePlayerSettings.get_solo()
+        fake_player_settings.fake_players_can_win = True
+        fake_player_settings.save()
+        return True
     except Exception as e:
-        logger.error(f"Error processing Tuesday bonuses: {e}")
+        logger.error(f"Error activating fake players: {e}")
+        return False
+   
+
+@shared_task
+def deactivate_fake_players():
+    logger.info("Deactivating fake players")
+    try:
+        fake_player_settings = FakePlayerSettings.get_solo()
+        fake_player_settings.fake_players_can_win = False
+        fake_player_settings.save()
+        return True
+    except Exception as e:
+        logger.error(f"Error deactivating fake players: {e}")
         return False

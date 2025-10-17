@@ -3,10 +3,13 @@ import logging
 from ninja import Router
 from users.models import User
 from wallet.models import Wallet
+from .models import FakePlayerSettings
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
+from utils.fake_players_factory import count_real_players_in_games
+from .tasks import activate_fake_players, deactivate_fake_players
 from datetime import timedelta
 from .models import Game, GameSettings,GameType
 from .tasks import charge_player,push_transaction,update_player_balance
@@ -37,6 +40,8 @@ def join_game(request, data: BetSchema):
         real_players = len(players_dict.keys())
         total_players = int(data.total_players) if data.total_players is not None else real_players
         fake_players = int(data.fake_players) if data.fake_players is not None else max(0, total_players - real_players)
+
+
         
         # Calculate win amount
         try:
@@ -52,6 +57,25 @@ def join_game(request, data: BetSchema):
         game.save(update_fields=[
             "real_players","fake_players","total_players","total_win_amount","updated_at"
         ])
+        # Activate/deactivate fake players based on real players since last REAL winner
+        real_players_count = count_real_players_in_games()
+        logger.info(f"Real players since last real-winner game: {real_players_count}")
+        fps = FakePlayerSettings.get_solo()
+        logger.info(f"Fake player settings: {fps}")
+        REAL_PLAYERS_THRESHOLD = int(getattr(fps, 'real_players_threshold', 10) or 10)
+        logger.info(f"Real players threshold: {REAL_PLAYERS_THRESHOLD}")
+        # Flip condition per requirement: if count > threshold -> ACTIVATE, else DEACTIVATE
+        if int(real_players_count or 0) <= REAL_PLAYERS_THRESHOLD:
+            logger.info(
+                f"Activating fake players (real_players_count {real_players_count} > threshold {REAL_PLAYERS_THRESHOLD})"
+            )
+            activate_fake_players.delay()
+        else:
+            logger.info(
+                f"Deactivating fake players (real_players_count {real_players_count} <= threshold {REAL_PLAYERS_THRESHOLD})"
+            )
+            deactivate_fake_players.delay()
+
         logger.info(
             f"Updated game {game.id} metrics real={real_players} fake={fake_players} total={total_players} win={total_win_amount}"
         )
@@ -148,6 +172,7 @@ def get_fake_player_settings(request):
         return JsonResponse({
             "max_fake_players": settings.max_fake_players,
             "calls_before_fake_winner": settings.calls_before_fake_winner,
+            "real_players_threshold": settings.real_players_threshold,
             "fake_players_can_win": settings.fake_players_can_win,
             "updated_at": settings.updated_at.isoformat()
         }, status=200)

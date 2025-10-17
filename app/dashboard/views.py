@@ -1274,6 +1274,8 @@ def game_settings(request):
             settings = FakePlayerSettings.get_solo()
             settings.max_fake_players = int(request.POST.get('max_fake_players', 50))
             settings.calls_before_fake_winner = int(request.POST.get('calls_before_fake_winner', 10))
+            # New: configurable threshold for activating fake players
+            settings.real_players_threshold = int(request.POST.get('real_players_threshold', settings.real_players_threshold or 10))
             settings.fake_players_can_win = request.POST.get('fake_players_can_win') == 'on'
             settings.save()
             

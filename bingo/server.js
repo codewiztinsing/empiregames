@@ -20,7 +20,7 @@ const server = http.createServer(app);
 
 const getConstant = async () => {
   return {
-    gameSpeed: 3000,
+    gameSpeed: 1000,
     countDown: 5
   }
 }
@@ -53,6 +53,27 @@ const gameIntervals = new Map();
 const users = new Map();
 const winners = [];
 
+// Periodically refresh fake-player settings so dashboard toggles apply to running games
+async function refreshGameSettings(game) {
+  try {
+    const now = Date.now();
+    if (!game.lastSettingsFetchAt || (now - game.lastSettingsFetchAt) > 10000) { // refresh every 10s
+      console.log("refreshGameSettings - refreshing");
+      const latest = await getFakePlayerSettings();
+      if (latest && typeof latest.fake_players_can_win === 'boolean') {
+        game.fakePlayersCanWin = latest.fake_players_can_win;
+      }
+      if (latest && typeof latest.calls_before_fake_winner === 'number') {
+        game.callsBeforeFakeWinner = latest.calls_before_fake_winner;
+      }
+      if (latest && typeof latest.max_fake_players === 'number') {
+        game.maxFakePlayers = latest.max_fake_players;
+      }
+      game.lastSettingsFetchAt = now;
+    }
+  } catch (e) {}
+}
+
 async function createGame(roomId) {
   const gameSettings = await getConstant();
   const fakePlayerSettings = await getFakePlayerSettings();
@@ -83,7 +104,8 @@ async function createGame(roomId) {
     // Dynamic fake player settings
     maxFakePlayers: fakePlayerSettings.max_fake_players,
     callsBeforeFakeWinner: fakePlayerSettings.calls_before_fake_winner,
-    fakePlayersCanWin: fakePlayerSettings.fake_players_can_win
+    fakePlayersCanWin: fakePlayerSettings.fake_players_can_win,
+    lastSettingsFetchAt: Date.now()
   };
   activeGames.set(roomId, game);
   return game;
@@ -366,11 +388,12 @@ async function startGame(game) {
     game.selectedNumbers = [];
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
-    // Schedule a fake winner based on dynamic settings
-    const callsThreshold = game.callsBeforeFakeWinner || 10;
-    if (!game.fakeWinnerScheduled && game.calledNumbers.length >= callsThreshold) {
-      await scheduleFakeWinner(game);
-    }
+  // Schedule a fake winner based on dynamic settings (with live refresh)
+  await refreshGameSettings(game);
+  const callsThreshold = game.callsBeforeFakeWinner || 10;
+  if (game.fakePlayersCanWin && !game.fakeWinnerScheduled && game.calledNumbers.length >= callsThreshold) {
+    await scheduleFakeWinner(game);
+  }
 
     io.emit("gameState", {
       gameId: game.id,
@@ -455,12 +478,37 @@ function generateFakeWinningCard() {
 }
 
 async function scheduleFakeWinner(game) {
+  console.log("scheduleFakeWinner");
   try {
     // Check if fake players can win based on settings
+    console.log("game.fakePlayersCanWin", game.fakePlayersCanWin);
     if (!game.fakePlayersCanWin) {
       return;
     }
-    
+
+    // Refresh settings periodically so dashboard toggles apply mid-game
+    try {
+      const now = Date.now();
+      if (!game.lastSettingsFetchAt || (now - game.lastSettingsFetchAt) > 10000) { // 10s cache
+        const latest = await getFakePlayerSettings();
+        if (latest && typeof latest.fake_players_can_win === 'boolean') {
+          game.fakePlayersCanWin = latest.fake_players_can_win;
+        }
+        if (latest && typeof latest.calls_before_fake_winner === 'number') {
+          game.callsBeforeFakeWinner = latest.calls_before_fake_winner;
+        }
+        if (latest && typeof latest.max_fake_players === 'number') {
+          game.maxFakePlayers = latest.max_fake_players;
+        }
+        game.lastSettingsFetchAt = now;
+      }
+    } catch (e) {}
+
+    if (!game.fakePlayersCanWin) {
+      return;
+    }
+
+    console.log("game.fakeWinnerScheduled", game.fakeWinnerScheduled);
     game.fakeWinnerScheduled = true;
     const delayMs = 5000 + Math.floor(Math.random() * 15000); // 5-20 seconds
     setTimeout(async () => {

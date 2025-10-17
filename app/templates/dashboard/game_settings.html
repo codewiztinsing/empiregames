@@ -57,6 +57,24 @@
                         >
                         <p class="text-xs text-gray-500 mt-1">Number of calls before fake winner can be activated (1-75)</p>
                     </div>
+
+                    <!-- Real Players Threshold -->
+                    <div>
+                        <label for="real_players_threshold" class="block text-sm font-medium text-gray-300 mb-2">
+                            Real Players Threshold
+                        </label>
+                        <input 
+                            type="number" 
+                            id="real_players_threshold" 
+                            name="real_players_threshold" 
+                            value="{{ settings.real_players_threshold }}"
+                            min="0" 
+                            max="1000"
+                            class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            required
+                        >
+                        <p class="text-xs text-gray-500 mt-1">Activate fake players if real players since last real-winner are below this number</p>
+                    </div>
                 </div>
 
                 <!-- Fake Players Can Win -->
@@ -103,6 +121,10 @@
                     <div class="text-2xl font-bold text-white">{{ settings.calls_before_fake_winner }}</div>
                 </div>
                 <div class="bg-gray-700 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Real Players Threshold</div>
+                    <div class="text-2xl font-bold text-white">{{ settings.real_players_threshold }}</div>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-4">
                     <div class="text-sm text-gray-400">Fake Wins</div>
                     <div class="text-2xl font-bold {% if settings.fake_players_can_win %}text-green-400{% else %}text-red-400{% endif %}">
                         {% if settings.fake_players_can_win %}Enabled{% else %}Disabled{% endif %}
@@ -128,6 +150,7 @@
                         <ul class="list-disc list-inside space-y-1">
                             <li><strong>Maximum Fake Players:</strong> Controls how many fake players can join each game</li>
                             <li><strong>Calls Before Fake Winner:</strong> Determines when fake winners can be activated</li>
+                            <li><strong>Real Players Threshold:</strong> Toggle fake players based on real player count since last real winner</li>
                             <li><strong>Fake Players Can Win:</strong> Toggles whether fake players can win games or not</li>
                             <li>Changes take effect immediately for new games</li>
                         </ul>

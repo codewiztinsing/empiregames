@@ -60,6 +60,7 @@ class FakePlayerSettings(models.Model):
     max_fake_players = models.IntegerField(default=50, help_text="Maximum number of fake players")
     calls_before_fake_winner = models.IntegerField(default=10, help_text="Number of calls before fake winner can be activated")
     fake_players_can_win = models.BooleanField(default=True, help_text="Whether fake players can win games")
+    real_players_threshold = models.IntegerField(default=10, help_text="Activate fake players if real players since last real-winner are below this")
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
