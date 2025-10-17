@@ -104,8 +104,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             logger.warning(f"Invalid referrer ID format: {context.args[0]}")
     # Send welcome image instead of text
     try:
-        with open('wellcomenote.jpg', 'rb') as photo:
-            await update.message.reply_photo(photo=photo, caption='Select an option:', reply_markup=reply_markup)
+        # Display a sequence of welcome images (page 1.jpg, page 2.jpg, page 3.jpg)
+        welcome_images = ['page 1.jpg', 'page 2.jpg', 'page 3.jpg']
+        for image_file in welcome_images:
+            try:
+                with open(image_file, 'rb') as photo:
+                    # Only show the reply_markup (menu) on the last page
+                    if image_file == welcome_images[-1]:
+                        await update.message.reply_photo(photo=photo, caption='Select an option:', reply_markup=reply_markup)
+                    else:
+                        await update.message.reply_photo(photo=photo)
+            except FileNotFoundError:
+                logger.warning(f"Welcome image not found: {image_file}")
+        # with open('wellcomenote.jpg', 'rb') as photo:
+        #     await update.message.reply_photo(photo=photo, caption='Select an option:', reply_markup=reply_markup)
     except FileNotFoundError:
         # Fallback to text if image not found
         await update.message.reply_text('Welcome to Aker Bingo! Select an option:', reply_markup=reply_markup)
@@ -683,8 +695,19 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         elif query.data == "register":
             # Send welcome image first
             try:
-                with open('wellcomenote.jpg', 'rb') as photo:
-                    await query.message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+                welcome_images = ['page 1.jpg', 'page 2.jpg', 'page 3.jpg']
+                for image_file in welcome_images:
+                    try:
+                        with open(image_file, 'rb') as photo:
+                            # Only show the reply_markup (menu) on the last page
+                            if image_file == welcome_images[-1]:
+                                await update.message.reply_photo(photo=photo, caption='Select an option:', reply_markup=reply_markup)
+                            else:
+                                await update.message.reply_photo(photo=photo)
+                    except FileNotFoundError:
+                        logger.warning(f"Welcome image not found: {image_file}")
+                    # await query.message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+                    
             except FileNotFoundError:
                 # Fallback if image not found
                 pass
@@ -1203,8 +1226,19 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Send welcome image first
     try:
-        with open('wellcomenote.jpg', 'rb') as photo:
-            await update.message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+        welcome_images = ['page 1.jpg', 'page 2.jpg', 'page 3.jpg']
+        for image_file in welcome_images:
+            try:
+                with open(image_file, 'rb') as photo:
+                    # Only show the reply_markup (menu) on the last page
+                    if image_file == welcome_images[-1]:
+                        await update.message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+                    else:
+                        await update.message.reply_photo(photo=photo)
+            except FileNotFoundError:
+                logger.warning(f"Welcome image not found: {image_file}")
+        # with open('wellcomenote.jpg', 'rb') as photo:
+        #     await update.message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
     except FileNotFoundError:
         # Fallback if image not found
         pass
