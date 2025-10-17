@@ -979,7 +979,6 @@ async def handle_new_sponsor_id(update: Update, context: ContextTypes.DEFAULT_TY
             await update.message.reply_text(
                 f"✅ <b>Sponsor Changed Successfully!</b>\n\n"
                 f"Your new sponsor is: {sponsor_username} (ID: {new_sponsor_id_int})\n\n"
-                f"💰 10 ETB has been moved from your wallet to referral earnings!\n"
                 f"⚠️ <i>Note:</i> You cannot change your sponsor again.",
                 parse_mode=ParseMode.HTML
             )

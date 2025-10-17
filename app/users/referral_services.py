@@ -124,25 +124,16 @@ class ReferralService:
     
     @staticmethod
     def process_sponsor_change_bonus(user):
-        """Process 10 birr bonus for sponsor change (one-time only)"""
+        """Process sponsor change bonus - DISABLED: No bonus given"""
+        # Sponsor change bonus has been disabled - no bonus is given
         if user.sponsor_change_bonus_claimed:
             return False, "Sponsor change bonus already claimed"
         
-        # Create and immediately approve sponsor change bonus
-        bonus = ReferralService._create_bonus(
-            user, user, float('10.00'), 'sponsor_change', 
-            'sponsor_change', float('1.00'), 0
-        )
-        
-        # Immediately approve the bonus
-        bonus.status = 'approved'
-        bonus.save()
-        
+        # Mark as claimed but don't give any bonus
         user.sponsor_change_bonus_claimed = True
         user.save()
         
-     
-        return True, "Sponsor change bonus processed: 10 ETB moved from wallet to referral earnings"
+        return True, "Sponsor change processed - no bonus given"
     
     @staticmethod
     def process_tuesday_bonus_payments():
