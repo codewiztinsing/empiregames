@@ -627,6 +627,85 @@ def withdrawal_request(request):
 
 
 # Transaction Statistics API Endpoints
+@router.get("/transactions/")
+def get_transactions(request, 
+                   page: int = 1, 
+                   limit: int = 20, 
+                   search: str = None, 
+                   transaction_type: str = None,
+                   status: str = None,
+                   date_from: str = None,
+                   date_to: str = None):
+    """Get transactions with search, filtering, and pagination"""
+    try:
+        from django.core.paginator import Paginator
+        from django.db.models import Q
+        
+        # Start with all transactions
+        transactions = Transaction.objects.select_related('user').order_by('-created_at')
+        
+        # Apply search filter
+        if search:
+            transactions = transactions.filter(
+                Q(user__username__icontains=search) |
+                Q(user__phone__icontains=search) |
+                Q(user__telegram_id__icontains=search) |
+                Q(reference__icontains=search)
+            )
+        
+        # Apply type filter
+        if transaction_type:
+            transactions = transactions.filter(type=transaction_type)
+        
+        # Apply status filter
+        if status:
+            transactions = transactions.filter(status=status)
+        
+        # Apply date filters
+        if date_from:
+            transactions = transactions.filter(created_at__gte=date_from)
+        if date_to:
+            transactions = transactions.filter(created_at__lte=date_to)
+        
+        # Pagination
+        paginator = Paginator(transactions, limit)
+        page_obj = paginator.get_page(page)
+        
+        # Build transaction list
+        transaction_list = []
+        for transaction in page_obj:
+            transaction_list.append({
+                "id": transaction.id,
+                "user": {
+                    "id": transaction.user.id,
+                    "username": transaction.user.username,
+                    "phone": transaction.user.phone,
+                    "telegram_id": transaction.user.telegram_id
+                },
+                "amount": float(transaction.amount),
+                "type": transaction.type,
+                "status": transaction.status,
+                "reference": transaction.reference,
+                "created_at": transaction.created_at.isoformat()
+            })
+        
+        return JsonResponse({
+            "transactions": transaction_list,
+            "count": paginator.count,
+            "total_pages": paginator.num_pages,
+            "current_page": page_obj.number,
+            "has_next": page_obj.has_next(),
+            "has_previous": page_obj.has_previous(),
+            "next_page": page_obj.next_page_number() if page_obj.has_next() else None,
+            "previous_page": page_obj.previous_page_number() if page_obj.has_previous() else None,
+            "start_index": page_obj.start_index(),
+            "end_index": page_obj.end_index()
+        }, status=200)
+    except Exception as e:
+        print(f"Error getting transactions: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
 @router.get("/transactions/stats/")
 def get_transaction_stats(request):
     """Get transaction statistics for dashboard"""

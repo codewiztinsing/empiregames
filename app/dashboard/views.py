@@ -466,6 +466,10 @@ def add_manual_deposit(request):
 def transcations(request):
     # Get filter parameters
     transaction_type = request.GET.get('type', '')
+    status_filter = request.GET.get('status', '')
+    search_query = request.GET.get('search', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
     limit = int(request.GET.get('limit', 20))
     page = int(request.GET.get('page', 1))
     
@@ -473,12 +477,23 @@ def transcations(request):
     api_data = None
     try:
         base_url = "http://localhost:8080"
-        api_url = f"{base_url}/api/v1/wallet/transactions/recent/"
+        api_url = f"{base_url}/api/v1/wallet/transactions/"
         
-        params = {'limit': limit * 2}  # Fetch more to account for pagination
+        params = {
+            'page': page,
+            'limit': limit,
+        }
+        
         if transaction_type:
-            api_url = f"{base_url}/api/v1/wallet/transactions/by-type/"
             params['transaction_type'] = transaction_type
+        if status_filter:
+            params['status'] = status_filter
+        if search_query:
+            params['search'] = search_query
+        if date_from:
+            params['date_from'] = date_from
+        if date_to:
+            params['date_to'] = date_to
             
         response = requests.get(api_url, params=params, timeout=10)
         if response.status_code == 200:
@@ -501,32 +516,56 @@ def transcations(request):
         transactions_list = api_data.get('transactions', [])
         total_count = api_data.get('count', 0)
         
-        # Simple pagination for API data
-        start_idx = (page - 1) * limit
-        end_idx = start_idx + limit
-        paginated_transactions = transactions_list[start_idx:end_idx]
-        
-        # Create a simple paginator-like object
+        # Create a simple paginator-like object for template compatibility
         class APIPaginator:
-            def __init__(self, data, per_page):
+            def __init__(self, data, per_page, total_count, current_page, has_next, has_previous, next_page, previous_page, start_index, end_index):
                 self.data = data
                 self.per_page = per_page
-                self.count = len(data)
-                self.num_pages = (self.count + per_page - 1) // per_page
-                
-            def get_page(self, page_num):
-                start_idx = (page_num - 1) * self.per_page
-                end_idx = start_idx + self.per_page
-                return self.data[start_idx:end_idx]
+                self.count = total_count
+                self.num_pages = (total_count + per_page - 1) // per_page
+                self.number = current_page
+                self.has_next = has_next
+                self.has_previous = has_previous
+                self.next_page_number = lambda: next_page
+                self.previous_page_number = lambda: previous_page
+                self.start_index = lambda: start_index
+                self.end_index = lambda: end_index
+                self.paginator = self
+                self.paginator.page_range = range(1, self.num_pages + 1)
         
-        paginator = APIPaginator(transactions_list, limit)
-        page_obj = paginator.get_page(page)
+        page_obj = APIPaginator(
+            transactions_list, 
+            limit, 
+            total_count, 
+            api_data.get('current_page', 1),
+            api_data.get('has_next', False),
+            api_data.get('has_previous', False),
+            api_data.get('next_page'),
+            api_data.get('previous_page'),
+            api_data.get('start_index', 1),
+            api_data.get('end_index', len(transactions_list))
+        )
         data_source = "API"
     else:
         # Fallback to database
-        transactions = Transaction.objects.all()
+        transactions = Transaction.objects.select_related('user').order_by('-created_at')
+        
+        # Apply filters
         if transaction_type:
             transactions = transactions.filter(type=transaction_type)
+        if status_filter:
+            transactions = transactions.filter(status=status_filter)
+        if search_query:
+            transactions = transactions.filter(
+                Q(user__username__icontains=search_query) |
+                Q(user__phone__icontains=search_query) |
+                Q(user__telegram_id__icontains=search_query) |
+                Q(reference__icontains=search_query)
+            )
+        if date_from:
+            transactions = transactions.filter(created_at__gte=date_from)
+        if date_to:
+            transactions = transactions.filter(created_at__lte=date_to)
         
         paginator = Paginator(transactions, limit)
         page_obj = paginator.get_page(page)
@@ -552,6 +591,10 @@ def transcations(request):
         'net_amount': net_amount,
         'data_source': data_source,
         'current_type': transaction_type,
+        'status_filter': status_filter,
+        'search_query': search_query,
+        'date_from': date_from,
+        'date_to': date_to,
     }
     return render(request, 'dashboard/transcations.html', context)
 

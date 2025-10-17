@@ -237,17 +237,12 @@ def get_number_of_game_won(request,user_id:int):
 def is_deposited(request, user_id: int):
     try:
         user = User.objects.get(telegram_id=user_id)
-        print("phone ",user.phone)
-        print("user ",user)
-        # Check if user has any successful deposit transactions via ChapaSession
-        has_deposited = ChapaSession.objects.filter(
-            phone_number=user.phone)
-
-        print("has deposited ",has_deposited)
-        has_deposited = ChapaSession.objects.filter(
-            phone_number=user.phone,
-            status='success'
-        ).exists()
+        print("phone ", user.phone)
+        print("user ", user)
+        transactions = Transaction.objects.filter(user=user, type='DEPOSIT', status='success')
+        print("transactions = ", transactions)
+        total_deposit = transactions.aggregate(total=Sum('amount'))['total'] or 0
+        has_deposited = total_deposit >= 50
 
         return {"is_deposited": has_deposited}
     except User.DoesNotExist:
