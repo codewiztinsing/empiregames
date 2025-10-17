@@ -1,5 +1,5 @@
 from datetime import timedelta
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.core.paginator import Paginator
 from django.utils import timezone
 from users.models import User, SupportUser, ReferralBonus
@@ -557,11 +557,45 @@ def transcations(request):
 
 def users(request):
     users = User.objects.all()
+    
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        users = users.filter(
+            Q(username__icontains=search_query) |
+            Q(phone__icontains=search_query) |
+            Q(telegram_id__icontains=search_query)
+        )
+    
+    # Status filter
+    status_filter = request.GET.get('status', '')
+    if status_filter == 'active':
+        users = users.filter(is_active=True)
+    elif status_filter == 'suspended':
+        users = users.filter(is_active=False)
+    elif status_filter == 'offline':
+        # Users who haven't been active recently (you can adjust this logic)
+        from django.utils import timezone
+        from datetime import timedelta
+        offline_threshold = timezone.now() - timedelta(days=7)
+        users = users.filter(last_login__lt=offline_threshold)
+    
+    # Date range filter
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    if date_from:
+        users = users.filter(date_joined__gte=date_from)
+    if date_to:
+        users = users.filter(date_joined__lte=date_to)
+    
+    # Sort by date joined (newest first)
+    users = users.order_by('-date_joined')
+    
     paginator = Paginator(users, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    total_users = users.count()
-    suspended_users = users.filter(is_active=False).count()
+    total_users = User.objects.count()  # Total count before filtering
+    suspended_users = User.objects.filter(is_active=False).count()  # Total suspended before filtering
     
     # Calculate referral bonuses and total balance for each user
     users_with_bonuses = []
@@ -615,7 +649,11 @@ def users(request):
         'next_page': next_page,
         'previous_page': previous_page,
         'has_next': has_next,
-        'has_previous': has_previous
+        'has_previous': has_previous,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'date_from': date_from,
+        'date_to': date_to,
     }
     return render(request, 'dashboard/users.html', context)
 

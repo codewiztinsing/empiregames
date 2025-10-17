@@ -1383,8 +1383,15 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Send welcome image first
         try:
-            with open('wellcomenote.jpg', 'rb') as photo:
-                await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+            # with open('wellcomenote.jpg', 'rb') as photo:
+            #     await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+            welcome_images = ['page 1.jpg', 'page 2.jpg', 'page 3.jpg']
+            for image_file in welcome_images:
+                try:
+                    with open(image_file, 'rb') as photo:
+                        await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+                except FileNotFoundError:
+                    logger.warning(f"Welcome image not found: {image_file}")
         except FileNotFoundError:
             # Fallback if image not found
             pass
@@ -1401,8 +1408,15 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         # Send welcome image first
         try:
-            with open('wellcomenote.jpg', 'rb') as photo:
-                await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+            # with open('wellcomenote.jpg', 'rb') as photo:
+            #     await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+            welcome_images = ['page 1.jpg', 'page 2.jpg', 'page 3.jpg']
+            for image_file in welcome_images:
+                try:
+                    with open(image_file, 'rb') as photo:
+                        await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+                except FileNotFoundError:
+                    logger.warning(f"Welcome image not found: {image_file}")
         except FileNotFoundError:
             # Fallback if image not found
             pass
