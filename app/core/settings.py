@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from kombu import Exchange, Queue
 
 load_dotenv()
 
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
     'users',
     'wallet',
     'promotion',
+    'referrals',
 ]
 
 
@@ -94,6 +96,27 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+# Celery queues and routing (payments get priority over notifications)
+CELERY_TASK_DEFAULT_QUEUE = 'payments'
+CELERY_TASK_QUEUES = (
+    Queue('payments', Exchange('payments'), routing_key='payments'),
+    Queue('notifications', Exchange('notifications'), routing_key='notifications'),
+)
+
+CELERY_TASK_ROUTES = {
+    # Payment-related tasks (high priority queue)
+    'game.tasks.push_transaction': {'queue': 'payments', 'routing_key': 'payments'},
+    'game.tasks.charge_player': {'queue': 'payments', 'routing_key': 'payments'},
+    'game.tasks.update_player_balance': {'queue': 'payments', 'routing_key': 'payments'},
+
+    # Dashboard notifications (lower priority queue)
+    'dashboard.tasks.send_message_to_all_players': {'queue': 'notifications', 'routing_key': 'notifications'},
+}
+
+# Reasonable worker behavior
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_ACKS_LATE = True
 
 
 

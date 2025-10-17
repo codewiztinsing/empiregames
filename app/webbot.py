@@ -15,7 +15,7 @@ from telegram import (
 )
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from datetime import datetime, timedelta
-from utils import initialize_payment,get_bot_seetings,get_user_phone,get_user_phone
+from utils import get_bot_seetings,get_user_phone
 # Removed Chapa/AddisPay integrations
 from telegram.ext import (
     Application,

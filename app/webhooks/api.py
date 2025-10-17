@@ -2,7 +2,7 @@ import json
 from django.shortcuts import render
 from django.http import JsonResponse
 from users.models import User
-from wallet.models import Wallet,ChapaSession,Transaction
+from wallet.models import Wallet,Transaction
 from ninja import Router
 from webhooks.tasks import handle_deposit_success
 
@@ -28,9 +28,8 @@ def chapa_callback(request):
         else:
             return JsonResponse({"message": "User not found"}, status=404)
     elif event_type == "charge.success":
-        tx_ref = data.get("tx_ref")
-        handle_deposit_success.delay(tx_ref)
-        return JsonResponse({"message": "Callback received"}, status=200)
+        # Chapa deposit callback removed
+        return JsonResponse({"message": "Callback disabled"}, status=410)
     else:
         return JsonResponse({"message": "Invalid event type"}, status=400)
        

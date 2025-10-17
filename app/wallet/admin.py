@@ -1,9 +1,9 @@
 from django.contrib import admin
 from .models import (Wallet, 
             Transaction,
-            ChapaSession,
-            AddisPaySession,
-            ManualSession
+            ManualSession,
+            WithdrawalRequest,
+            PaymentSettings,
             )
 
 class WalletAdmin(admin.ModelAdmin):
@@ -49,23 +49,7 @@ class TransactionAdmin(admin.ModelAdmin):
     get_user_telegram_id.admin_order_field = 'user__telegram_id'
 
 
-class ChapaSessionAdmin(admin.ModelAdmin):
-    list_display = ( 'amount', 'currency','first_name','phone_number', 'status', 'created_at')
-    ordering = ('-created_at',)
-    list_display_links = ("phone_number","status","created_at","amount","currency","first_name")
-   
-    search_fields = ( 'first_name','phone_number','status','created_at','amount','currency')
-    list_per_page = 10
 
-
-class AddisPaySessionAdmin(admin.ModelAdmin):
-    list_display = ( 'amount', 'currency','first_name','phone_number', 'status', 'created_at')
-    ordering = ('-created_at',)
-    list_display_links = ("phone_number","status","created_at","amount","currency","first_name")
-   
-    search_fields = ('first_name','phone_number','status','created_at','amount','currency')
-    list_per_page = 10
-    list_filter = ('status','created_at')
 
 
 class ManualSessionAdmin(admin.ModelAdmin):
@@ -76,5 +60,20 @@ class ManualSessionAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Transaction, TransactionAdmin)  
-admin.site.register(ChapaSession, ChapaSessionAdmin)
-admin.site.register(AddisPaySession, AddisPaySessionAdmin)
+admin.site.register(ManualSession, ManualSessionAdmin)
+
+
+class WithdrawalRequestAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'amount', 'status', 'withdraw_account', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('user__username', 'user__phone', 'user__telegram_id')
+    list_per_page = 20
+
+admin.site.register(WithdrawalRequest, WithdrawalRequestAdmin)
+
+
+class PaymentSettingsAdmin(admin.ModelAdmin):
+    list_display = ('min_deposit_amount', 'min_withdrawal_amount', 'max_withdrawal_amount', 'withdrawal_fee_percent', 'updated_at')
+    list_per_page = 10
+
+admin.site.register(PaymentSettings, PaymentSettingsAdmin)

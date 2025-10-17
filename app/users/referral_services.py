@@ -2,7 +2,7 @@ import logging
 from django.db import transaction, models
 from django.utils import timezone
 from datetime import date, timedelta
-from .models import User, ReferralBonus, WithdrawalRequest
+from .models import User, ReferralBonus
 from wallet.models import Wallet
 
 logger = logging.getLogger(__name__)
@@ -316,18 +316,12 @@ class ReferralService:
             return False, "Insufficient referral earnings"
         
         # Check for pending requests
-        pending_requests = WithdrawalRequest.objects.filter(
-            user=user, 
-            status__in=['pending', 'approved']
-        )
+        from referrals.models import ReferralWithdrawal as WithdrawalRequest
+        pending_requests = WithdrawalRequest.objects.filter(user=user, status__in=['pending', 'approved'])
         if pending_requests.exists():
             return False, "You have a pending withdrawal request"
         
-        withdrawal = WithdrawalRequest.objects.create(
-            user=user,
-            amount=amount,
-            status='pending'
-        )
+        withdrawal = WithdrawalRequest.objects.create(user=user, amount=amount, status='pending')
         
         return True, "Withdrawal request created successfully"
     

@@ -67,13 +67,12 @@ def player_wallet(request,telegram_id:int):
         
         # Get total bonus amount generated from sponsor change for this user
         sponsor_change_bonus_total = ReferralBonus.objects.filter(
-            referrer=user,
-            bonus_type='sponsor_change'
+            user=user
         ).aggregate(total=models.Sum('bonus_amount'))['total'] or 0
         
         # Get referral bonus amount
         referral_bonus = ReferralBonus.objects.filter(
-            referrer=user,
+            user=user,
         ).aggregate(total=models.Sum('bonus_amount'))['total'] or 0
         
         print("referral_bonus = ",referral_bonus)

@@ -17,24 +17,55 @@
         <h2 class="text-xl font-bold text-white mb-4">Broadcast Message</h2>
         <p class="text-gray-400 mb-4">Send a message to all users who have connected with the Telegram bot. Messages will be delivered through the Telegram bot.</p>
         
-        <div class="mb-4">
-            <label class="block text-gray-300 text-sm font-medium mb-2">Message Content</label>
-            <textarea 
-                class="w-full h-32 bg-dark-bg text-white p-4 rounded-lg border border-dark-border resize-none"
-                placeholder="Enter your message here. You can use HTML formatting (b-bold, br-new line, etc.)"
-            ></textarea>
-        </div>
+        <form method="post" action="{% url 'dashboard:messages' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label class="block text-gray-300 text-sm font-medium mb-2">Message Content</label>
+                <textarea 
+                    name="message"
+                    class="w-full h-32 bg-dark-bg text-white p-4 rounded-lg border border-dark-border resize-none"
+                    placeholder="Enter your message here. You can use HTML formatting (b-bold, br-new line, etc.)"
+                    required
+                ></textarea>
+            </div>
 
-        <div class="flex items-center mb-4">
-            <input type="checkbox" id="includeImage" class="mr-2 rounded">
-            <label for="includeImage" class="text-gray-300 text-sm">Include image with the message</label>
-        </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-gray-300 text-sm font-medium mb-2">Image URL (optional)</label>
+                    <input 
+                        type="url" 
+                        name="image_url"
+                        class="w-full bg-dark-bg text-white p-3 rounded-lg border border-dark-border"
+                        placeholder="https://example.com/image.jpg"
+                    />
+                </div>
+                <div>
+                    <label class="block text-gray-300 text-sm font-medium mb-2">Upload Image (optional)</label>
+                    <input 
+                        type="file" 
+                        name="image_file"
+                        accept="image/*"
+                        class="w-full bg-dark-bg text-white p-3 rounded-lg border border-dark-border"
+                    />
+                    <p class="text-xs text-gray-500 mt-1">If both URL and upload are provided, uploaded image will be used.</p>
+                </div>
+                <div>
+                    <label class="block text-gray-300 text-sm font-medium mb-2">Caption (optional)</label>
+                    <input 
+                        type="text" 
+                        name="caption"
+                        class="w-full bg-dark-bg text-white p-3 rounded-lg border border-dark-border"
+                        placeholder="Caption for the photo"
+                    />
+                </div>
+            </div>
 
-        <div class="flex justify-end">
-            <button class="px-6 py-2 bg-purple-primary text-white rounded-lg hover:bg-purple-hover transition-colors">
-                Broadcast Message
-            </button>
-        </div>
+            <div class="flex justify-end mt-4">
+                <button type="submit" class="px-6 py-2 bg-purple-primary text-white rounded-lg hover:bg-purple-hover transition-colors">
+                    Broadcast Message
+                </button>
+            </div>
+        </form>
     </div>
 
     <!-- Message History -->

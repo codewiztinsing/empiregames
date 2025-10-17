@@ -6,7 +6,8 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from decimal import Decimal
-from .models import ReferralBonus, ReferralWithdrawal, UserGameStats, ReferralSettings
+from users.models import ReferralBonus
+from .models import ReferralWithdrawal, UserGameStats, ReferralSettings
 from .services import ReferralService
 import json
 
@@ -21,7 +22,7 @@ def referrals_dashboard(request):
     can_withdraw = ReferralService.can_withdraw_referral_bonus(user)
     
     # Get recent bonuses
-    recent_bonuses = ReferralBonus.objects.filter(user=user).order_by('-created_at')[:10]
+    recent_bonuses = ReferralBonus.objects.filter(referrer=user).order_by('-created_at')[:10]
     
     # Get recent withdrawals
     recent_withdrawals = ReferralWithdrawal.objects.filter(user=user).order_by('-created_at')[:10]
@@ -51,7 +52,7 @@ def referrals_dashboard(request):
 @login_required
 def referral_bonuses(request):
     """View all referral bonuses"""
-    bonuses = ReferralBonus.objects.filter(user=request.user).order_by('-created_at')
+    bonuses = ReferralBonus.objects.filter(referrer=request.user).order_by('-created_at')
     
     context = {
         'bonuses': bonuses,

@@ -4,7 +4,8 @@ from django.shortcuts import get_object_or_404
 from decimal import Decimal
 from typing import List
 from pydantic import BaseModel
-from .models import User, ReferralBonus, WithdrawalRequest, ReferralAnnouncement
+from .models import User, ReferralBonus, ReferralAnnouncement
+from referrals.models import ReferralWithdrawal as WithdrawalRequest
 from .referral_services import ReferralService
 from wallet.models import Wallet
 

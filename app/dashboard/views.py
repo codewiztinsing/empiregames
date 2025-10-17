@@ -1,5 +1,6 @@
 from datetime import timedelta
 from django.db.models import Sum
+from django.db import models
 from django.core.paginator import Paginator
 from django.utils import timezone
 from users.models import User, SupportUser, ReferralBonus
@@ -10,6 +11,7 @@ from .permissions import admin_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from game.models import PlayerGame
+from users.models import ReferralBonus
 import requests
 import json
 from django.shortcuts import render, redirect
@@ -845,7 +847,24 @@ def referrals(request):
 def messages_view(request):
     if request.method == 'POST':
         message = request.POST.get('message')
-        send_message_to_all_players.delay(message)
+        image_url = request.POST.get('image_url') or None
+        caption = request.POST.get('caption') or None
+        # Handle uploaded image
+        uploaded = request.FILES.get('image_file')
+        saved_path = None
+        if uploaded and uploaded.size > 0:
+            from django.core.files.storage import default_storage
+            from django.core.files.base import ContentFile
+            from django.utils import timezone
+            import os
+            # Save under media/promotions/banners or media/messages
+            base_dir = 'messages'
+            filename = f"{timezone.now().strftime('%Y%m%d%H%M%S')}_{uploaded.name}"
+            saved_path = default_storage.save(os.path.join(base_dir, filename), ContentFile(uploaded.read()))
+
+        # Prefer uploaded image over URL
+        image_arg = saved_path if saved_path else image_url
+        send_message_to_all_players.delay(message, image_arg, caption)
         messages.success(request, 'Message sent successfully.')
         return redirect('dashboard:messages')
     return render(request, 'dashboard/messages.html')
@@ -892,8 +911,25 @@ def approve_withdrawal_request(request, request_id):
             
             # Update user's wallet balance
             wallet = withdrawal_request.user.wallet
+
+            # Referral bonus check removed - model not available here
+            total_referral_bonus = ReferralBonus.objects.filter(
+                referrer=withdrawal_request.user,
+            ).aggregate(total=models.Sum('bonus_amount'))['total'] or 0
+            print("total_referral_bonus = ",total_referral_bonus)
+
+            total_balance = wallet.balance + total_referral_bonus if total_referral_bonus >= 500 else 0
+            if total_balance < withdrawal_request.amount :
+                return JsonResponse({'success': False, 'message': 'Insufficient balance.'})
+
             wallet.balance -= withdrawal_request.amount
             wallet.save()
+
+            if total_referral_bonus >= 500:
+                ReferralBonus.objects.filter(user=withdrawal_request.user).delete()
+                withdrawal_request.user.total_referral_earnings = 0
+                withdrawal_request.user.save()
+
             # Notify user via Telegram
             try:
                 if getattr(withdrawal_request.user, 'telegram_id', None):

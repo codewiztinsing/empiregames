@@ -81,27 +81,6 @@ class ReferralBonus(models.Model):
         return f"{self.referrer.username} - {self.bonus_type} - {self.bonus_amount}"
 
 
-class WithdrawalRequest(models.Model):
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
-        ('completed', 'Completed'),
-    ]
-    
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='withdrawal_requests')
-    amount = models.FloatField(
-        validators=[MinValueValidator(Decimal('500.00'))]  # Minimum 500 birr
-    )
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    admin_notes = models.TextField(blank=True, null=True)
-    processed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='processed_withdrawals')
-    processed_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.user.username} - {self.amount} - {self.status}"
 
 
 class ReferralAnnouncement(models.Model):

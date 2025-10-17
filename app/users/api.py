@@ -12,7 +12,7 @@ from users.models import User
 from datetime import datetime, timedelta
 from django.contrib.auth import authenticate
 from django.conf import settings
-from wallet.models import Transaction,ChapaSession,Wallet,WithdrawalRequest
+from wallet.models import Transaction,Wallet,WithdrawalRequest
 from game.models import Game, PlayerGame
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
@@ -239,17 +239,8 @@ def is_deposited(request, user_id: int):
         user = User.objects.get(telegram_id=user_id)
         print("phone ",user.phone)
         print("user ",user)
-        # Check if user has any successful deposit transactions via ChapaSession
-        has_deposited = ChapaSession.objects.filter(
-            phone_number=user.phone)
-
-        print("has deposited ",has_deposited)
-        has_deposited = ChapaSession.objects.filter(
-            phone_number=user.phone,
-            status='success'
-        ).exists()
-
-        return {"is_deposited": has_deposited}
+        # Determine deposit by Transaction table (Chapa removed)
+        return {"is_deposited": Transaction.objects.filter(user=user, type='DEPOSIT', status='success').exists()}
     except User.DoesNotExist:
         return {"success": False, "message": "User not found"}
     except Exception as e:
