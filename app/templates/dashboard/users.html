@@ -175,31 +175,40 @@
         <!-- Pagination -->
         <div class="flex items-center justify-between p-4 border-t border-dark-border">
             <div class="text-sm text-gray-400">
-                Showing 1 to {{ users.count }} of {{ users.count }} results
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
             </div>
             <div class="flex items-center space-x-2">
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    Previous
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
-                    {% if page_obj.has_previous %}
-                    href="{% url 'accounts:users' %}?page={{ page_obj.previous_page_number }}"
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                        Previous
+                    </a>
+                {% else %}
+                    <span class="px-3 py-2 text-sm font-medium text-gray-500 bg-dark-card border border-dark-border rounded-lg cursor-not-allowed">
+                        Previous
+                    </span>
+                {% endif %}s
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
+                            {{ num }}
+                        </span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}" class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                            {{ num }}
+                        </a>
                     {% endif %}
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    {% if page_obj.has_next %}
-                    {% endif %}
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    {% if page_obj.has_next %}
-                    {% endif %}
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg"
+                {% endfor %}
+
                 {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                        Next
+                    </a>
+                {% else %}
+                    <span class="px-3 py-2 text-sm font-medium text-gray-500 bg-dark-card border border-dark-border rounded-lg cursor-not-allowed">
+                        Next
+                    </span>
                 {% endif %}
-                >
-                    Next
-                </button>
             </div>
         </div>
     </div>

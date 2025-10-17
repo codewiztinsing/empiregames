@@ -205,11 +205,16 @@ def game_types(request):
     
     # GET request - display all game types
     game_types = GameType.objects.all().order_by('-id')
+    paginator = Paginator(game_types, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     context = {
-        'game_types': game_types,
+        'game_types': page_obj,
+        'page_obj': page_obj,
         'page_title': 'Game Types'
     }
-    return render(request, 'dashboard/game_types.html',context)
+    return render(request, 'dashboard/game_types.html', context)
 
 
 def game_type_detail(request, game_type_id):
