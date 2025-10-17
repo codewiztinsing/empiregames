@@ -209,7 +209,7 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             return WITHDRAW_AMOUNT_CONFIRM
         is_deposited = is_deposited_player(telegram_id)
         if not is_deposited:
-            await update.message.reply_text(f"You need to deposit first. 20 ETB minimum deposit is required to withdraw.")
+            await update.message.reply_text(f"You need to deposit first. 50 ETB minimum deposit is required to withdraw.")
             return WITHDRAW_AMOUNT_CONFIRM
 
  
@@ -221,8 +221,8 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት")
             return WITHDRAW_AMOUNT_CONFIRM
 
-        if int(number_game_won) < 2:
-            await update.message.reply_text(f"2 ጨወታ ማሽነፍ አለብዎት")
+        if int(number_game_won) < 5:
+            await update.message.reply_text(f"5 ጨወታ ማሽነፍ አለብዎት")
             return WITHDRAW_AMOUNT_CONFIRM
 
         # Enforce PaymentSettings min/max
