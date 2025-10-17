@@ -207,10 +207,10 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         if int(daily_limit) > 3:
             await update.message.reply_text(f"You have reached the daily withdraw limit. Please try again tomorrow.")
             return WITHDRAW_AMOUNT_CONFIRM
-        # is_deposited = is_deposited_player(telegram_id)
-        # if not is_deposited:
-        #     await update.message.reply_text(f"You need to deposit first. 20 ETB minimum deposit is required to withdraw.")
-        #     return WITHDRAW_AMOUNT_CONFIRM
+        is_deposited = is_deposited_player(telegram_id)
+        if not is_deposited:
+            await update.message.reply_text(f"You need to deposit first. 20 ETB minimum deposit is required to withdraw.")
+            return WITHDRAW_AMOUNT_CONFIRM
 
  
 
