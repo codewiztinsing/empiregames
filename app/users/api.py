@@ -232,7 +232,7 @@ def get_number_of_game_won(request,user_id:int):
         return {"number_of_game_won": number_of_game_won}
     except Exception as e:
         return {"success": False, "message": "Failed to get number of game won"}    
-# is deposited user
+# is deposited usere
 @users_router.get("/{user_id}/is-deposited")
 def is_deposited(request, user_id: int):
     try:
@@ -241,6 +241,7 @@ def is_deposited(request, user_id: int):
         print("user ",user)
         # Check if user has any successful deposit transactions via Transactions
         has_deposited = Transaction.objects.filter(user=user, type='DEPOSIT', status='success').exists()
+        print("has_deposited = ",has_deposited)
 
         return {"is_deposited": has_deposited}
     except User.DoesNotExist:

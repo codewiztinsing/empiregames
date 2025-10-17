@@ -149,6 +149,8 @@ def manual_success(request):
             if manual_session.status == "success":
                 # Transaction already processed - notify user if possible
                 user = User.objects.filter(phone=manual_session.phone_number).first()
+
+                # create
                 try:
                     balance_text = None
                     if user:

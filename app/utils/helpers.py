@@ -29,6 +29,7 @@ def number_of_game_won(user_id):
 # is deposited player
 def is_deposited_player(user_id):
     response = requests.get(f"{BACK_URL}/api/v1/users/{user_id}/is-deposited")
+    print("is deposited response = ",response.json())
     if response.status_code == 200:
         return response.json().get("is_deposited")
     else:
