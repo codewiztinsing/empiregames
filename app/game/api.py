@@ -17,46 +17,11 @@ from ninja.errors import HttpError  # Correct import
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 game_router = Router()
-@game_router.post("/update-metrics/")
-def update_metrics(request):
-    """Persist metrics sent from Node server: real/fake/total players and win amount."""
-    try:
-        body = json.loads(request.body.decode() or "{}")
-        game_id = body.get("game_id")
-        if not game_id:
-            # For compatibility: accept bet_amount-only, resolve current game
-            bet_amount = body.get("bet_amount")
-            if bet_amount is None:
-                return JsonResponse({"success": False, "error": "game_id or bet_amount required"}, status=400)
-            game = Game.objects.filter(entry_fee=bet_amount, ended=False).last()
-            if not game:
-                return JsonResponse({"success": False, "error": "Game not found for bet_amount"}, status=404)
-        else:
-            game = get_object_or_404(Game, id=game_id)
-
-        real_players = int(body.get("real_players") or 0)
-        fake_players = int(body.get("fake_players") or 0)
-        total_players = int(body.get("total_players") or (real_players + fake_players))
-        win_amount = float(body.get("win_amount") or 0)
-
-        game.real_players = real_players
-        game.fake_players = fake_players
-        game.total_players = total_players
-        game.total_win_amount = win_amount
-        game.started = True
-      
-        game.save(update_fields=[
-            "real_players", "fake_players", "total_players", "total_win_amount", "updated_at","started"
-        ])
-
-        return JsonResponse({"success": True, "game_id": game.id}, status=200)
-    except Exception as e:
-        logger.error(f"update_metrics error: {e}")
-        return JsonResponse({"success": False, "error": str(e)}, status=400)
 
 @game_router.post("/join-game/",response=GameSchema)
 def join_game(request, data: BetSchema):
     logger.info(f"Join game: {data}")
+    logger.info(f"Join game - total_players: {data.total_players}, fake_players: {data.fake_players}")
     game = get_object_or_404(Game,id=data.game_id)
     
     players = data.players
@@ -65,18 +30,21 @@ def join_game(request, data: BetSchema):
         players_dict[player.playerId] = player.numberOfBoards
     
     logger.info(f"Players dict: {players_dict}")
+
     
     # Update game metrics (real/fake/total/win_amount)
     try:
         real_players = len(players_dict.keys())
         total_players = int(data.total_players) if data.total_players is not None else real_players
-        fake_players = max(0, total_players - real_players)
+        fake_players = int(data.fake_players) if data.fake_players is not None else max(0, total_players - real_players)
+        
+        # Calculate win amount
         try:
             entry_fee = float(game.entry_fee)
         except Exception:
             entry_fee = 0.0
         total_win_amount = float(total_players) * entry_fee * 0.78
-
+    
         game.real_players = real_players
         game.fake_players = fake_players
         game.total_players = total_players
@@ -99,12 +67,44 @@ def join_game(request, data: BetSchema):
 @game_router.post("/win-game/",response=GameSchema)
 def win_game(request, data: WinGameSchema):
     logger.info(f"Win game: {data}")
+    logger.info(f"Win game - Player: {data.player}, Game ID: {data.game_id}, Win Amount: {data.win_amount}")
     game = get_object_or_404(Game,id=data.game_id)
     player = data.player
     win_amount = data.win_amount
     logger.info(f"Game: {game}")
     logger.info(f"Player: {player}")
-    update_player_balance.delay(player,win_amount,game.id)
+    
+    # Update game winner and status
+    try:
+        # For fake players, don't set a real user as winner
+        if player != "BOT_FAKE":
+            # Try to find the user by telegram_id or player ID
+            from users.models import User
+            try:
+                winner_user = User.objects.get(telegram_id=str(player))
+                game.winner = winner_user
+                logger.info(f"Set winner: {winner_user.username} (ID: {winner_user.id})")
+            except User.DoesNotExist:
+                logger.warning(f"User with telegram_id {player} not found, setting winner to None")
+                game.winner = None
+        else:
+            # For fake winners, set winner to None
+            game.winner = None
+            logger.info("Fake player won, winner set to None")
+        
+        # Mark game as completed
+        game.status = 'completed'
+        game.ended = True
+        game.save(update_fields=['winner', 'status', 'ended', 'updated_at'])
+        logger.info(f"Game {game.id} marked as completed with winner: {game.winner}")
+        
+    except Exception as e:
+        logger.error(f"Error updating game winner: {e}")
+    
+    # Only update player balance for real players
+    if player != "BOT_FAKE":
+        update_player_balance.delay(player,win_amount,game.id)
+    
     return GameSchema(bet_amount=game.entry_fee,game_id=game.id)    
 
 @game_router.get("/next-game/",response=GameSchema)
@@ -121,17 +121,6 @@ def next_game(request):
 
 
 
-@game_router.get("/update-last-game/",response=GameSchema)
-def update_last_game(request):
-    bet_amount = request.GET.get("bet_amount")
-    game = Game.objects.filter(entry_fee=bet_amount).last()
-    logger.info(f"Game: {game.id}")
-   
-    game.ended = True
-    game.started = False
-    game.save()
-  
-    return GameSchema(bet_amount=game.entry_fee,game_id=game.id)
 
 
 @game_router.get("/game-settings/",response=GameSettingsSchema)
@@ -220,12 +209,19 @@ def get_recent_games(request, limit: int = 20):
                     "phone": game.winner.phone,
                     "telegram_id": game.winner.telegram_id
                 }
+            elif game.status == 'completed' and not game.winner:
+                winner_info = {
+                    "id": None,
+                    "username": "Fake Player",
+                    "phone": None,
+                    "telegram_id": "BOT_FAKE"
+                }
             
             games_list.append({
                 "id": game.id,
                 "entry_fee": float(game.entry_fee),
                 "status": game.status,
-                "started": game.started,
+                "started": bool(game.started_at),
                 "ended": game.ended,
                 "player_count": player_count,
                 "winner": winner_info,
@@ -265,12 +261,19 @@ def get_games_by_status(request, status: str = None):
                     "phone": game.winner.phone,
                     "telegram_id": game.winner.telegram_id
                 }
+            elif game.status == 'completed' and not game.winner:
+                winner_info = {
+                    "id": None,
+                    "username": "Fake Player",
+                    "phone": None,
+                    "telegram_id": "BOT_FAKE"
+                }
             
             games_list.append({
                 "id": game.id,
                 "entry_fee": float(game.entry_fee),
                 "status": game.status,
-                "started": game.started,
+                "started": bool(game.started_at),
                 "ended": game.ended,
                 "player_count": player_count,
                 "winner": winner_info,
@@ -313,12 +316,19 @@ def get_games_by_user(request, user_id: int = None, telegram_id: str = None):
                     "phone": game.winner.phone,
                     "telegram_id": game.winner.telegram_id
                 }
+            elif game.status == 'completed' and not game.winner:
+                winner_info = {
+                    "id": None,
+                    "username": "Fake Player",
+                    "phone": None,
+                    "telegram_id": "BOT_FAKE"
+                }
             
             games_list.append({
                 "id": game.id,
                 "entry_fee": float(game.entry_fee),
                 "status": game.status,
-                "started": game.started,
+                "started": bool(game.started_at),
                 "ended": game.ended,
                 "has_bingo": False,
                 "winner": winner_info,
@@ -361,12 +371,19 @@ def get_detailed_games(request, limit: int = 20):
                     "phone": game.winner.phone,
                     "telegram_id": game.winner.telegram_id
                 }
+            elif game.status == 'completed' and not game.winner:
+                winner_info = {
+                    "id": None,
+                    "username": "Fake Player",
+                    "phone": None,
+                    "telegram_id": "BOT_FAKE"
+                }
             
             games_list.append({
                 "id": game.id,
                 "entry_fee": float(game.entry_fee),
                 "status": game.status,
-                "started": game.started,
+                "started": bool(game.started_at),
                 "ended": game.ended,
                 "player_count": len(players),
                 "players": players,

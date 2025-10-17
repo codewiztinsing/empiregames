@@ -3,7 +3,9 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const gameWinWallet = async (player, bet_amount, win_amount, total_players)=>{
+  console.log("gameWinWallet called with:", {player, bet_amount, win_amount, total_players});
   const current_game = await getCurrentGame(bet_amount)
+  console.log("current_game:", current_game);
   const game_id = current_game.game_id
   const data = {
       player,
@@ -13,13 +15,19 @@ const gameWinWallet = async (player, bet_amount, win_amount, total_players)=>{
       game_id
   };
 
-  if(!data.player || !data.win_amount || !data.game_id) return null;
+  console.log("gameWinWallet data:", data);
+
+  if(!data.player || !data.win_amount || !data.game_id) {
+    console.log("gameWinWallet validation failed:", {player: data.player, win_amount: data.win_amount, game_id: data.game_id});
+    return null;
+  }
   
   try{
     const backUrl = process.env.BACK_URL
     console.log("backUrl",backUrl)
     const winUrl = backUrl + 'game/win-game/'
     console.log("winUrl",winUrl)
+    console.log("Sending POST request to win-game with data:", data);
     await axios.post(winUrl, data)
               .then(res=>{
                   console.log("gameWinWallet res",res.data)
@@ -87,7 +95,6 @@ const gameLossWallet = async (players, betAmount, totalPlayers = null, fakePlaye
       total_players: totalPlayers,
       fake_players: fakePlayers
   };
-  console.log("data",data)
 
 
   try{
@@ -108,48 +115,8 @@ const gameLossWallet = async (players, betAmount, totalPlayers = null, fakePlaye
 
 
 
-const updateLastGame = async (roomId)=>{
-  console.log("updateLastGame roomId = ", roomId)
-  const backUrl = process.env.BACK_URL
-  const updateLastGameUrl = backUrl + 'game/update-last-game/'
-  console.log("updateLastGameUrl = ", updateLastGameUrl)
-  const response = await axios.get(updateLastGameUrl, { params: { bet_amount: `${roomId}` } })
-  console.log("updateLastGame response = ", response.data)
-  const data = response.data;
-  console.log("updateLastGame data = ", data)
-  return data;  
-}
 
 
-const updateGameMetrics = async (betAmount, realPlayers, fakePlayers, totalPlayers, winAmount) => {
-  console.log("updateGameMetrics betAmount = ", betAmount)
-  console.log("updateGameMetrics realPlayers = ", realPlayers)
-  console.log("updateGameMetrics fakePlayers = ", fakePlayers)
-  console.log("updateGameMetrics totalPlayers = ", totalPlayers)
-  console.log("updateGameMetrics winAmount = ", winAmount)
-  try {
-    const current = await getCurrentGame(betAmount);
-    const game_id = current?.game_id;
-    if (!game_id) return null;
-    const backUrl = process.env.BACK_URL;
-    const url = backUrl + 'game/update-metrics/';
-    const payload = {
-      game_id,
-      bet_amount: betAmount,
-      real_players: realPlayers,
-      fake_players: fakePlayers,
-      total_players: totalPlayers,
-      win_amount: winAmount
-    };
-    await axios.post(url, payload).then(res => {
-      console.log('updateGameMetrics res', res.data);
-    });
-    return true;
-  } catch (e) {
-    console.log('updateGameMetrics error', e?.message || e);
-    return null;
-  }
-};
 
 
 const getGameSettings = async ()=>{
@@ -168,8 +135,6 @@ const getGameSettings = async ()=>{
     gameWinWallet,
     checkBalance,
     gameLossWallet,
-    updateLastGame,
-    getGameSettings,
-    updateGameMetrics
+    getGameSettings
   };
   

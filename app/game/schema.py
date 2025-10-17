@@ -13,7 +13,8 @@ class BetSchema(Schema):
     game_id: int
     bet_amount: float
     total_players: int = None
-    
+    fake_players: int = None
+  
 
     
 
@@ -24,9 +25,11 @@ class GameSchema(Schema):
 
 
 class WinGameSchema(Schema):
-    player: int
+    player: str  # Can be telegram_id (int as string) or "BOT_FAKE"
     game_id: int
     win_amount: float
+    bet_amount: float = None  # Optional field sent from Node.js
+    total_players: int = None  # Optional field sent from Node.js
 
 
 class NextGameSchema(Schema):

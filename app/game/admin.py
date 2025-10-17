@@ -8,9 +8,9 @@ admin.site.index_title = "Welcome to Wow Bingo Administration"
 
 
 class GameAdmin(admin.ModelAdmin):
-    list_display = ('id', 'created_at', 'started', 'ended', 'status', 'winner')
-    list_filter = ('started', 'ended')
-    search_fields = ('id',)
+    list_display = ('id', 'created_at', 'total_players', 'real_players', 'fake_players', 'total_win_amount', 'status', 'ended', 'get_winner_display')
+    list_filter = ( 'total_players', 'real_players', 'fake_players', 'total_win_amount', 'status', 'ended', 'winner')
+    search_fields = ('id', 'winner__username', 'winner__telegram_id')
     list_per_page = 10
 
 

@@ -7,13 +7,15 @@ const cors = require('cors');
 const { generateBalls } = require('./src/helpers/ball');
 const { checkBingo, markPlayerCard } = require('./src/helpers/bingo');
 const { checkSingleCardBingo } = require('./src/helpers/singleBingo');
-const { gameWinWallet,gameLossWallet,updateLastGame,getGameSettings, updateGameMetrics } = require('./api');
+const { gameWinWallet,gameLossWallet,getGameSettings } = require('./api');
 const ip = require('ip');
 const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
 app.use(cors());
 const server = http.createServer(app);
+
+
 
 
 const getConstant = async () => {
@@ -92,13 +94,34 @@ function clearGameIntervals(gameId) {
   }
 }
 
+function endGameDueToWinner(game) {
+  // Mark game as ended due to winner
+  game.gameOver = true;
+  game.status = "completed";
+  
+  // Clear intervals to stop the game
+  clearGameIntervals(game.id);
+  
+  // Emit game ended status
+  io.emit("gameStatus", {
+    status: "completed",
+    roomId: game.roomId,
+    gameId: game.id
+  });
+  
+  // After a delay, reset the game for next round
+  setTimeout(() => {
+    endGame(game);
+  }, 5000); // 5 second delay to show winner
+}
+
 async  function endGame(game) {
   clearGameIntervals(game.id);
   game.players.clear();
   game.calledNumbers = [];
   game.currentCall = null;
   game.status = "waiting";
-  game.gameOver = false;
+  game.gameOver = false; // Reset for next game
   game.winner = null;
   game.countDown = 30;
   game.isCountStart = false;
@@ -109,7 +132,7 @@ async  function endGame(game) {
     if (user.gameId === game.id) users.delete(socketId);
   }
 
-  const data = await updateLastGame(game.roomId);
+  // End the game in backend - no longer needed since we removed update-metrics endpoint
   startCountDown(game);
 
   io.emit("gameStatus", {
@@ -172,16 +195,13 @@ function startCountDown(game) {
       if (!game.fakeSelectionActive) {
         game.fakeSelectionActive = true;
         game.fakeTargetCount = 30 + Math.floor(Math.random() * 21); // 30..50
-        console.log(`[FAKE_SIM] INIT room=${game.roomId} gameId=${game.id} target=${game.fakeTargetCount}`);
       }
       const cap = Math.max(30, Math.min(50, game.fakeTargetCount || 30));
       const current = game.selectedNumbers.filter(n => n !== null).length;
-      console.log(`[FAKE_SIM] STATE room=${game.roomId} gameId=${game.id} current=${current} cap=${cap}`);
       if (current < cap) {
         const universe = Array.from({ length: 400 }, (_, i) => i + 1);
         const taken = new Set(game.selectedNumbers.filter(n => n !== null));
         const candidates = universe.filter(n => !taken.has(n));
-        console.log(`[FAKE_SIM] CAND room=${game.roomId} gameId=${game.id} candidates=${candidates.length}`);
         if (candidates.length > 0) {
           const missing = Math.min(cap - current, Math.min(3, candidates.length));
           const chosenList = [];
@@ -191,19 +211,16 @@ function startCountDown(game) {
             game.selectedNumbers.push(chosen);
             chosenList.push(chosen);
           }
-          console.log(`[FAKE_SIM] ADD room=${game.roomId} gameId=${game.id} chosen=${JSON.stringify(chosenList)} total=${game.selectedNumbers.filter(n=>n!==null).length}`);
           io.emit('pickedNumbers', { roomId: game.roomId, numbers: game.selectedNumbers });
-          console.log(`[FAKE_SIM] EMIT pickedNumbers room=${game.roomId} count=${game.selectedNumbers.length}`);
           // Totals and consolidated gameState will be emitted below once per tick
         }
       }
     } else {
       // Reset fake selection flags once game progresses
       if (game.fakeSelectionActive) {
-        console.log(`[FAKE_SIM] RESET room=${game.roomId} gameId=${game.id}`);
       }
       game.fakeSelectionActive = false;
-      game.fakeTargetCount = 0;
+      game.fakeTargetCount = 0;f
     }
     // Compute totals (including fake selections) for broadcast
     const broadcastSelected = game.selectedNumbers.filter(num => num !== null);
@@ -307,29 +324,32 @@ async function startGame(game) {
     numberOfBoards: 1
   }));
 
-  game.total_players = game.players.size
-  game.total_winAmount = game.selectedNumbers.length * game.roomId * 0.78
+  // Calculate total players (real + fake) based on selected numbers
+  const totalSelectedNumbers = game.selectedNumbers.filter(num => num !== null).length;
+  const realPlayers = game.players.size;
+  const fakePlayers = Math.max(0, totalSelectedNumbers - realPlayers);
+  
+  game.total_players = totalSelectedNumbers;
+  game.fake_players = fakePlayers;
+  game.total_winAmount = totalSelectedNumbers * game.roomId * 0.78;
 
   try {
-    await gameLossWallet(players, game.id, game.total_players, game.fake_players);
-    
-    // Calculate number of fake players (assuming fake players fill up to 50 total, rest are real)
-    const maxPlayers = 50;
-    const realPlayers = game.total_players;
-    const fakePlayers = Math.max(0, maxPlayers - realPlayers);
-    game.fake_players = fakePlayers;
-
-    updateGameMetrics(game.roomId, realPlayers, fakePlayers, realPlayers, game.total_winAmount);
-
+    await gameLossWallet(players, game.roomId, game.total_players, game.fake_players);
+  
   } catch (error) {
     console.error('Error charging players:', error);
   }
 
-  console.log("playersWithSelectedNumbers = ",playersWithSelectedNumbers)
 
  
 
   const gameInterval = setInterval(async () => {
+    // Check if game has ended (winner announced)
+    if (game.gameOver || game.status !== 'in-progress') {
+      clearInterval(gameInterval);
+      return;
+    }
+    
     const calledSet = new Set(game.calledNumbers.map(b => b.number));
     let ball = generateBalls();
     while (calledSet.has(ball.number)) {
@@ -341,7 +361,9 @@ async function startGame(game) {
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
     // Schedule a fake winner once at least 10 numbers have been called
-    if (!game.fakeWinnerScheduled && game.calledNumbers.length >= 20) {
+    console.log(`Game ${game.id}: calledNumbers.length = ${game.calledNumbers.length}, fakeWinnerScheduled = ${game.fakeWinnerScheduled}`);
+    if (!game.fakeWinnerScheduled && game.calledNumbers.length >= 10) {
+      console.log(`Scheduling fake winner for game ${game.id}`);
       await scheduleFakeWinner(game);
     }
 
@@ -428,11 +450,11 @@ function generateFakeWinningCard() {
 }
 
 async function scheduleFakeWinner(game) {
-  console.log("scheduleFakeWinner calledNumbers.length = ", game.calledNumbers.length)
+  console.log("scheduleFakeWinner")
   try {
     game.fakeWinnerScheduled = true;
     const delayMs = 5000 + Math.floor(Math.random() * 15000); // 5-20 seconds
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
         // Only announce if game still running and no real winner has been processed
         if (!activeGames.has(game.id)) return;
@@ -457,30 +479,31 @@ async function scheduleFakeWinner(game) {
           roomId: g.roomId
         });
 
-        // Persist metrics at fakw win moment and mark backend ended
+        // Persist metrics at fake win moment and mark backend ended
         try {
           const realPlayers = g.players ? g.players.size : 0;
-          const totalPlayers = (g.selectedNumbers || []).filter(n => n !== null).length;
-          const fakePlayers = Math.max(0, totalPlayers - realPlayers);
-          const winAmount = totalPlayers * g.roomId * 0.78;
-          g.total_players = totalPlayers;
-          g.total_winAmount = winAmount;
-          g.win_amount = winAmount;
-          // Persist to backend and end last game (no wallet ops for fake winners)
-          updateGameMetrics(g.roomId, realPlayers, fakePlayers, totalPlayers, winAmount);
-          updateLastGame(g.roomId);
-          console.log(`[END_GAME][FAKE_WIN] room=${g.roomId} real=${realPlayers} fake=${fakePlayers} total=${totalPlayers} win=${winAmount}`);
+          // Use stored values instead of recalculating from selectedNumbers (which gets reset)
+          const totalPlayers = g.total_players || 0;
+          const fakePlayers = g.fake_players || 0;
+          const winAmount = g.total_winAmount || 0;
+          
+          console.log("Fake winner metrics:", {realPlayers, totalPlayers, fakePlayers, winAmount});
+          
+          // (player, bet_amount, win_amount, total_players)
+          console.log("Calling gameWinWallet for fake winner:", "BOT_FAKE", g.roomId, winAmount, totalPlayers);
+          await gameWinWallet("BOT_FAKE",g.roomId, winAmount, totalPlayers);
+          console.log("gameWinWallet completed for fake winner");
+          
+          // End the game after fake winner
+          endGameDueToWinner(g);
         } catch (e) {
-          console.log('[METRICS][FAKE_WIN] error', e?.message || e);
-        }
-
-      
-
-        // End the game after announcing fake winner (no wallet ops for fake)
-        endGame(g);
+          console.error('Error announcing fake winner:', e);
+        }      
       } catch (err) {}
     }, delayMs);
-  } catch (e) {}
+  } catch (e) {
+    console.error('Error in scheduleFakeWinner:', e);
+  }
 }
 
 
@@ -533,8 +556,7 @@ io.on('connection', (socket) => {
       });
     }
     
-    console.log("📤 Emitting allPlayerSelections to player:", data.playerId);
-    console.log("📤 Player selections data:", playerSelections);
+  
     
     socket.emit("allPlayerSelections", {
       players: playerSelections,
@@ -638,7 +660,6 @@ io.on('connection', (socket) => {
     // If player previously made a false bingo, ignore further bingo attempts
     const gameForFaulCheck = activeGames.get(data.gameId);
     if (gameForFaulCheck && gameForFaulCheck.fauldMadePlayers && gameForFaulCheck.fauldMadePlayers.get && gameForFaulCheck.fauldMadePlayers.get(data.playerId) === true) {
-      console.log("🚫 Ignoring bingo from disqualified player due to faul:", data.playerId);
       socket.emit("disqualified", { message: "You are disqualified for this round due to false bingo.", roomId: data.roomId, gameId: data.gameId });
       return;
     }
@@ -695,7 +716,7 @@ io.on('connection', (socket) => {
         console.error("Error processing win wallet:", error);
       }
 
-      endGame(game);
+      endGameDueToWinner(game);
     }
 
     else{
@@ -717,7 +738,6 @@ socket.on("faulMadePlayer", (data) => {
   const game = Array.from(activeGames.values()).find(g => g.status === 'in-progress' && g.id === data.gameId);
   
   if (!game) {
-    console.log("❌ Game not found for faulMadePlayer event");
     return;
   }
 
@@ -742,23 +762,16 @@ socket.on("faulMadePlayer", (data) => {
     
     const game = activeGames.get(data.roomId);
     if (!game) {
-      console.log("❌ ERROR: Game not found for roomId:", data.roomId);
       return;
     }
     
-    console.log("Game found:", {
-      id: game.id,
-      status: game.status,
-      roomId: game.roomId
-    });
-  
+
     const playerId = data.playerId
     const selectedNumber = data.selectedNumber
     const selectedNumber2 = data.selectedNumber2 || null // Handle case where selectedNumber2 might not be provided
     
     // If game is in progress, preserve player data for potential reconnection
     if (game.status === 'in-progress') {
-      console.log("🔄 Game is in progress - preserving player data for reconnection");
       // Store player's game state for reconnection
       if (!game.disconnectedPlayers) {
         game.disconnectedPlayers = new Map();
@@ -774,13 +787,7 @@ socket.on("faulMadePlayer", (data) => {
         disconnectedAt: Date.now()
       };
       
-      console.log("💾 Storing player data:", {
-        playerId: playerData.playerId,
-        selectedNumber: playerData.selectedNumber,
-        hasBoards: !!playerData.boards,
-        markedCells: playerData.markedCells.length,
-        disconnectedAt: new Date(playerData.disconnectedAt).toISOString()
-      });
+ 
       
       game.disconnectedPlayers.set(playerId, playerData);
 
@@ -894,7 +901,6 @@ socket.on("faulMadePlayer", (data) => {
   });
 
   socket.on("getAllPlayerSelections", (data) => {
-    console.log("📥 Received getAllPlayerSelections request from player:", data.playerId);
     const game = activeGames.get(data.roomId);
     if (!game) {
       console.log("❌ Game not found for getAllPlayerSelections");
@@ -909,9 +915,7 @@ socket.on("faulMadePlayer", (data) => {
       });
     }
     
-    console.log("📤 Sending allPlayerSelections to requesting player:", data.playerId);
-    console.log("📤 Player selections data:", playerSelections);
-    console.log("📤 Game status:", game.status);
+  
     
     socket.emit("allPlayerSelections", {
       players: playerSelections,
@@ -921,29 +925,26 @@ socket.on("faulMadePlayer", (data) => {
 
   // Handle game rejoin
   socket.on("rejoinGame", (data) => {
-    console.log("🔄 Rejoin request from player:", data.playerId, "for room:", data.roomId);
     const game = activeGames.get(data.roomId);
     
     if (!game) {
-      console.log("❌ Game not found for rejoin");
       socket.emit("rejoinError", { message: "Game not found" });
       return;
     }
 
     // Check if player has disconnected data
     if (!game.disconnectedPlayers || !game.disconnectedPlayers.has(data.playerId)) {
-      console.log("❌ No rejoin data found for player:", data.playerId);
       socket.emit("rejoinError", { message: "No previous game data found" });
       return;
     }
 
     const playerData = game.disconnectedPlayers.get(data.playerId);
-    console.log("✅ Found rejoin data for player:", playerData);
 
+    
     // If player had made a false bingo (faul), disqualify and do not restore to active game
     const wasFaulMade = !!(game.fauldMadePlayers && game.fauldMadePlayers.get && game.fauldMadePlayers.get(data.playerId) === true);
     if (wasFaulMade) {
-      console.log("🚫 Player is disqualified due to false bingo, not restoring:", data.playerId);
+
       socket.emit("rejoinError", { message: "You are disqualified for this round due to false bingo.", disqualified: true });
       // Still provide state snapshot so client can reflect current game without enabling actions
       socket.emit("rejoinSuccess", {
