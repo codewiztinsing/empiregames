@@ -7,7 +7,7 @@ const cors = require('cors');
 const { generateBalls } = require('./src/helpers/ball');
 const { checkBingo, markPlayerCard } = require('./src/helpers/bingo');
 const { checkSingleCardBingo } = require('./src/helpers/singleBingo');
-const { gameWinWallet,gameLossWallet,getGameSettings } = require('./api');
+const { gameWinWallet,gameLossWallet,getGameSettings,getFakePlayerSettings } = require('./api');
 const ip = require('ip');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -55,6 +55,7 @@ const winners = [];
 
 async function createGame(roomId) {
   const gameSettings = await getConstant();
+  const fakePlayerSettings = await getFakePlayerSettings();
  
 
   const game = {
@@ -78,7 +79,11 @@ async function createGame(roomId) {
     roomId,
     fakeWinnerScheduled: false,
     fakeSelectionActive: false,
-    fakeTargetCount: 0
+    fakeTargetCount: 0,
+    // Dynamic fake player settings
+    maxFakePlayers: fakePlayerSettings.max_fake_players,
+    callsBeforeFakeWinner: fakePlayerSettings.calls_before_fake_winner,
+    fakePlayersCanWin: fakePlayerSettings.fake_players_can_win
   };
   activeGames.set(roomId, game);
   return game;
@@ -170,7 +175,6 @@ function startCountDown(game) {
   const countdownInterval = setInterval(() => {
     // Check if we still have at least 1 player during countdown
     if (game.players.size < 1) {
-      console.log("🔄 Less than 2 players during countdown - resetting countdown");
       clearInterval(countdownInterval);
       game.isCountStart = false;
       game.countDown = 30;
@@ -194,9 +198,12 @@ function startCountDown(game) {
      if (game.status === 'waiting') {
       if (!game.fakeSelectionActive) {
         game.fakeSelectionActive = true;
-        game.fakeTargetCount = 30 + Math.floor(Math.random() * 21); // 30..50
+        // Use dynamic max fake players from settings
+        const maxFake = game.maxFakePlayers || 50;
+        const minFake = Math.max(1, Math.floor(maxFake * 0.6)); // 60% of max as minimum
+        game.fakeTargetCount = minFake + Math.floor(Math.random() * (maxFake - minFake + 1));
       }
-      const cap = Math.max(30, Math.min(50, game.fakeTargetCount || 30));
+      const cap = Math.max(1, Math.min(game.maxFakePlayers || 50, game.fakeTargetCount || 30));
       const current = game.selectedNumbers.filter(n => n !== null).length;
       if (current < cap) {
         const universe = Array.from({ length: 400 }, (_, i) => i + 1);
@@ -247,7 +254,6 @@ function startCountDown(game) {
     if (game.countDown === 0) {
       // Final check before starting game - ensure we have at least 1 player
       if (game.players.size < 1) {
-        console.log("❌ Not enough players to start game - resetting countdown");
         clearInterval(countdownInterval);
         game.isCountStart = false;
         game.countDown = 30;
@@ -360,10 +366,9 @@ async function startGame(game) {
     game.selectedNumbers = [];
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
-    // Schedule a fake winner once at least 10 numbers have been called
-    console.log(`Game ${game.id}: calledNumbers.length = ${game.calledNumbers.length}, fakeWinnerScheduled = ${game.fakeWinnerScheduled}`);
-    if (!game.fakeWinnerScheduled && game.calledNumbers.length >= 10) {
-      console.log(`Scheduling fake winner for game ${game.id}`);
+    // Schedule a fake winner based on dynamic settings
+    const callsThreshold = game.callsBeforeFakeWinner || 10;
+    if (!game.fakeWinnerScheduled && game.calledNumbers.length >= callsThreshold) {
       await scheduleFakeWinner(game);
     }
 
@@ -374,7 +379,7 @@ async function startGame(game) {
       game_status: game.status,
       count_down: game.countDown,
       win_amount: game.win_amount,
-      total_players: Math.max(30, 50),
+      total_players: game.settings && game.settings.max_fake_players ? game.settings.max_fake_players : game.total_players,
       lastBall: ball,
       called_numbers: game.calledNumbers,
       total_called_numbers: game.calledNumbers.length,
@@ -450,8 +455,12 @@ function generateFakeWinningCard() {
 }
 
 async function scheduleFakeWinner(game) {
-  console.log("scheduleFakeWinner")
   try {
+    // Check if fake players can win based on settings
+    if (!game.fakePlayersCanWin) {
+      return;
+    }
+    
     game.fakeWinnerScheduled = true;
     const delayMs = 5000 + Math.floor(Math.random() * 15000); // 5-20 seconds
     setTimeout(async () => {
@@ -487,28 +496,23 @@ async function scheduleFakeWinner(game) {
           const fakePlayers = g.fake_players || 0;
           const winAmount = g.total_winAmount || 0;
           
-          console.log("Fake winner metrics:", {realPlayers, totalPlayers, fakePlayers, winAmount});
-          
           // (player, bet_amount, win_amount, total_players)
-          console.log("Calling gameWinWallet for fake winner:", "BOT_FAKE", g.roomId, winAmount, totalPlayers);
           await gameWinWallet("BOT_FAKE",g.roomId, winAmount, totalPlayers);
-          console.log("gameWinWallet completed for fake winner");
           
           // End the game after fake winner
           endGameDueToWinner(g);
         } catch (e) {
-          console.error('Error announcing fake winner:', e);
+          // Error announcing fake winner
         }      
       } catch (err) {}
     }, delayMs);
   } catch (e) {
-    console.error('Error in scheduleFakeWinner:', e);
+    // Error handling for scheduleFakeWinner
   }
 }
 
 
 function handleRefresh(data){
-  console.log("handleRefresh", data)
   const game = activeGames.get(data.gameId);
   if (!game) return;
   io.emit("gameState", {
@@ -817,16 +821,13 @@ socket.on("faulMadePlayer", (data) => {
           faulPlayers
         });
       } catch (e) {
-        console.log("Error marking player disqualified on leave:", e);
       }
    
       
       // Immediate verification
       const storedData = game.disconnectedPlayers.get(playerId);
       if (storedData) {
-        console.log("✅ Immediate verification successful xxxxxxxxx- data exists");
       } else {
-        console.log("❌ Immediate verification failed - data not found!");
       }
       
       // Remove from active players but keep in selectedNumbers for game continuity
@@ -838,11 +839,9 @@ socket.on("faulMadePlayer", (data) => {
       // This allows the game to continue with the same player count
       
     } else {
-      console.log("⏳ Game is waiting - removing player completely");
       // For waiting games, remove completely as before
       if (game?.players?.has(playerId)) {
         game.players.delete(playerId);
-        console.log("🗑️ Removed player from active players");
       }
       
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);
@@ -871,7 +870,6 @@ socket.on("faulMadePlayer", (data) => {
 
     // Check if countdown is running and we have less than 1 player
     if (game.isCountStart && game.players.size < 1) {
-      console.log("🔄 Less than 2 players during countdown - resetting countdown from 30");
       clearGameIntervals(game.id);
       game.isCountStart = false;
       game.countDown = 30;
@@ -903,7 +901,6 @@ socket.on("faulMadePlayer", (data) => {
   socket.on("getAllPlayerSelections", (data) => {
     const game = activeGames.get(data.roomId);
     if (!game) {
-      console.log("❌ Game not found for getAllPlayerSelections");
       return;
     }
 
@@ -995,7 +992,6 @@ socket.on("faulMadePlayer", (data) => {
       faulMade: hasFaulMade
     });
 
-    console.log("✅ Player successfully rejoined:", data.playerId);
   });
 
   socket.on("disconnect", () => {
@@ -1059,7 +1055,6 @@ socket.on("faulMadePlayer", (data) => {
 
           // Check if countdown is running and we have less than 1 player
           if (game.isCountStart && game.players.size < 1) {
-            console.log("🔄 Less than 2 players during countdown - resetting countdown from 30");
             clearGameIntervals(game.id);
             game.isCountStart = false;
             game.countDown = 30;
@@ -1095,7 +1090,10 @@ app.get('*', (req, res) => {
 
 const PORT = process.env.PORT || 5000
 const IP = ip.address();
-server.listen(PORT, () => console.log(`Server running on port ${PORT} and IP ${IP}`));
+server.listen(PORT, () => {
+  // Server running on port ${PORT} and IP ${IP}
+  console.log(`Server running on port ${PORT} and IP ${IP}`);
+});
 
 
 

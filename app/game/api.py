@@ -139,6 +139,23 @@ def game_types(request):
     return GameTypeSchema(game_types=game_types)
 
 
+@game_router.get("/fake-player-settings/")
+def get_fake_player_settings(request):
+    """Get fake player settings for dynamic control"""
+    try:
+        from .models import FakePlayerSettings
+        settings = FakePlayerSettings.get_solo()
+        return JsonResponse({
+            "max_fake_players": settings.max_fake_players,
+            "calls_before_fake_winner": settings.calls_before_fake_winner,
+            "fake_players_can_win": settings.fake_players_can_win,
+            "updated_at": settings.updated_at.isoformat()
+        }, status=200)
+    except Exception as e:
+        logger.error(f"Error getting fake player settings: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
 # Games Dashboard API Endpoints
 @game_router.get("/games/stats/")
 def get_games_stats(request):

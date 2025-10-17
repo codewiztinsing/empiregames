@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Game,GameSettings,GameType
+from .models import Game,GameSettings,GameType,FakePlayerSettings
 from wallet.models import ManualSession
 
 admin.site.site_header = "Wow Bingo Admin"
@@ -42,3 +42,23 @@ class GameTypeAdmin(admin.ModelAdmin):
 admin.site.register(GameSettings, GameSettingsAdmin)
 # ManualSession is registered in wallet.admin
 admin.site.register(GameType, GameTypeAdmin)
+
+
+class FakePlayerSettingsAdmin(admin.ModelAdmin):
+    list_display = ('max_fake_players', 'calls_before_fake_winner', 'fake_players_can_win', 'updated_at')
+    list_editable = ('max_fake_players', 'calls_before_fake_winner', 'fake_players_can_win')
+    list_display_links = ('updated_at',)  # Set a non-editable field as link
+    list_filter = ('fake_players_can_win',)
+    search_fields = ('max_fake_players', 'calls_before_fake_winner')
+    list_per_page = 10
+
+    def has_add_permission(self, request):
+        # Only allow one instance
+        return not FakePlayerSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        # Don't allow deletion of the only instance
+        return False
+
+
+admin.site.register(FakePlayerSettings, FakePlayerSettingsAdmin)

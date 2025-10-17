@@ -127,6 +127,14 @@ const getGameSettings = async ()=>{
   return data;
 }
 
+const getFakePlayerSettings = async ()=>{
+  const backUrl = process.env.BACK_URL
+  const fakePlayerSettingsUrl = backUrl + 'game/fake-player-settings/'
+  const response = await axios.get(fakePlayerSettingsUrl)
+  const data = response.data;
+  return data;
+}
+
 
 
   
@@ -135,6 +143,7 @@ const getGameSettings = async ()=>{
     gameWinWallet,
     checkBalance,
     gameLossWallet,
-    getGameSettings
+    getGameSettings,
+    getFakePlayerSettings
   };
   

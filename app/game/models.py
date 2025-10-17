@@ -53,4 +53,25 @@ class GameType(models.Model):
 
     def __str__(self):
         return f"{self.bet_amount}"
+
+
+class FakePlayerSettings(models.Model):
+    """Settings for fake player behavior in games"""
+    max_fake_players = models.IntegerField(default=50, help_text="Maximum number of fake players")
+    calls_before_fake_winner = models.IntegerField(default=10, help_text="Number of calls before fake winner can be activated")
+    fake_players_can_win = models.BooleanField(default=True, help_text="Whether fake players can win games")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Fake Player Settings"
+        verbose_name_plural = "Fake Player Settings"
+
+    @classmethod
+    def get_solo(cls):
+        """Get or create the single instance of fake player settings"""
+        obj, _ = cls.objects.get_or_create(id=1)
+        return obj
+
+    def __str__(self):
+        return f"Max: {self.max_fake_players}, Calls: {self.calls_before_fake_winner}, Can Win: {self.fake_players_can_win}"
     

@@ -1,0 +1,140 @@
+{% extends 'dashboard/base.html' %}
+{% block page_title %}Game Settings{% endblock %}
+{% block content %}
+<div class="bg-gray-900 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-white mb-8">Game Settings</h1>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-green-900 text-green-300{% elif message.tags == 'error' %}bg-red-900 text-red-300{% else %}bg-blue-900 text-blue-300{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Fake Player Settings Card -->
+        <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-8">
+            <h2 class="text-xl font-semibold text-white mb-6">Fake Player Configuration</h2>
+            <p class="text-gray-400 mb-6">Configure how fake players behave in games. Changes take effect for new games immediately.</p>
+            
+            <form method="post" action="{% url 'dashboard:game_settings' %}">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Maximum Fake Players -->
+                    <div>
+                        <label for="max_fake_players" class="block text-sm font-medium text-gray-300 mb-2">
+                            Maximum Fake Players
+                        </label>
+                        <input 
+                            type="number" 
+                            id="max_fake_players" 
+                            name="max_fake_players" 
+                            value="{{ settings.max_fake_players }}"
+                            min="1" 
+                            max="200"
+                            class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            required
+                        >
+                        <p class="text-xs text-gray-500 mt-1">Maximum number of fake players that can join a game (1-200)</p>
+                    </div>
+
+                    <!-- Calls Before Fake Winner -->
+                    <div>
+                        <label for="calls_before_fake_winner" class="block text-sm font-medium text-gray-300 mb-2">
+                            Calls Before Fake Winner
+                        </label>
+                        <input 
+                            type="number" 
+                            id="calls_before_fake_winner" 
+                            name="calls_before_fake_winner" 
+                            value="{{ settings.calls_before_fake_winner }}"
+                            min="1" 
+                            max="75"
+                            class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            required
+                        >
+                        <p class="text-xs text-gray-500 mt-1">Number of calls before fake winner can be activated (1-75)</p>
+                    </div>
+                </div>
+
+                <!-- Fake Players Can Win -->
+                <div class="mt-6">
+                    <div class="flex items-center">
+                        <input 
+                            type="checkbox" 
+                            id="fake_players_can_win" 
+                            name="fake_players_can_win" 
+                            {% if settings.fake_players_can_win %}checked{% endif %}
+                            class="h-4 w-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                        >
+                        <label for="fake_players_can_win" class="ml-3 text-sm font-medium text-gray-300">
+                            Fake Players Can Win Games
+                        </label>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1 ml-7">
+                        When enabled, fake players can win games. When disabled, only real players can win.
+                    </p>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="mt-8">
+                    <button 
+                        type="submit" 
+                        class="bg-purple-primary hover:bg-purple-hover text-white px-6 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                        Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Current Settings Display -->
+        <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Current Settings</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Max Fake Players</div>
+                    <div class="text-2xl font-bold text-white">{{ settings.max_fake_players }}</div>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Calls Threshold</div>
+                    <div class="text-2xl font-bold text-white">{{ settings.calls_before_fake_winner }}</div>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Fake Wins</div>
+                    <div class="text-2xl font-bold {% if settings.fake_players_can_win %}text-green-400{% else %}text-red-400{% endif %}">
+                        {% if settings.fake_players_can_win %}Enabled{% else %}Disabled{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 text-xs text-gray-500">
+                Last updated: {{ settings.updated_at|date:"M d, Y H:i" }}
+            </div>
+        </div>
+
+        <!-- Information Card -->
+        <div class="bg-blue-900 border border-blue-700 rounded-lg p-4 mt-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-300">How It Works</h3>
+                    <div class="mt-2 text-sm text-blue-200">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li><strong>Maximum Fake Players:</strong> Controls how many fake players can join each game</li>
+                            <li><strong>Calls Before Fake Winner:</strong> Determines when fake winners can be activated</li>
+                            <li><strong>Fake Players Can Win:</strong> Toggles whether fake players can win games or not</li>
+                            <li>Changes take effect immediately for new games</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

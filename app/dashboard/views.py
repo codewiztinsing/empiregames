@@ -1264,3 +1264,29 @@ def referral_bonuses(request):
     return render(request, 'dashboard/referral_bonuses.html', context)
 
 
+@admin_required
+def game_settings(request):
+    """Game settings page for managing fake player behavior"""
+    from game.models import FakePlayerSettings
+    
+    if request.method == 'POST':
+        try:
+            settings = FakePlayerSettings.get_solo()
+            settings.max_fake_players = int(request.POST.get('max_fake_players', 50))
+            settings.calls_before_fake_winner = int(request.POST.get('calls_before_fake_winner', 10))
+            settings.fake_players_can_win = request.POST.get('fake_players_can_win') == 'on'
+            settings.save()
+            
+            messages.success(request, 'Game settings updated successfully!')
+        except Exception as e:
+            messages.error(request, f'Error updating settings: {str(e)}')
+    
+    settings = FakePlayerSettings.get_solo()
+    
+    context = {
+        'settings': settings,
+        'page_title': 'Game Settings'
+    }
+    return render(request, 'dashboard/game_settings.html', context)
+
+
