@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
   
 
-@shared_task
+@shared_task(queue='payments')
 def push_transaction(player_id, entry_fee,amount,type,status,reference):
     logger.info(f"Push transaction: {player_id}, {entry_fee}, {amount}, {type}, {status}, {reference}")
     player = get_object_or_404(User,telegram_id=player_id)
@@ -25,7 +25,7 @@ def push_transaction(player_id, entry_fee,amount,type,status,reference):
     return transaction
 
 
-@shared_task
+@shared_task(queue='payments')
 def charge_player(players, entry_fee, game_id):
     logger.info(f"Charge player: {players}, {entry_fee}, {game_id}")
     logger.info(f"Players = {players}")
@@ -61,7 +61,7 @@ def charge_player(players, entry_fee, game_id):
 
 
 
-@shared_task
+@shared_task(queue='payments')
 def update_player_balance(player_id,win_amount,game_id):
     player = get_object_or_404(User,telegram_id=player_id)
     wallet = get_object_or_404(Wallet,user = player)
@@ -91,7 +91,7 @@ def update_player_balance(player_id,win_amount,game_id):
         return True,wallet.balance
 
 
-@shared_task
+@shared_task(queue='payments')
 def create_player_games(game_id, players_dict):
     """
     Create PlayerGame records for all players in a game

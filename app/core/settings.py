@@ -89,11 +89,42 @@ CORS_ALLOW_METHODS = [
 
 
 # Celery settings
+from kombu import Queue
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+# Task queues and routing to ensure broadcasts don't block payments
+CELERY_TASK_QUEUES = (
+    Queue('payments'),
+    Queue('broadcast'),
+)
+
+CELERY_TASK_ROUTES = {
+    # Payment-critical tasks
+    'game.tasks.push_transaction': {
+        'queue': 'payments',
+    },
+    'game.tasks.charge_player': {
+        'queue': 'payments',
+    },
+    'game.tasks.update_player_balance': {
+        'queue': 'payments',
+    },
+    'game.tasks.create_player_games': {
+        'queue': 'payments',
+    },
+    'game.tasks.process_tuesday_bonus_payments': {
+        'queue': 'payments',
+    },
+
+    # Non-blocking broadcasts
+    'dashboard.tasks.send_message_to_all_players': {
+        'queue': 'broadcast',
+    },
+}
 
 
 

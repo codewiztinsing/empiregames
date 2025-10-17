@@ -3,8 +3,8 @@ from decouple import config
 import requests
 import time
 
-apiKey = config("ADDISPAY_API_KEY")
-baseUrl = config("ADDISPAY_BASE_URL")
+apiKey = "akndsfjasdfnk"
+baseUrl = "asnlknsflasknflkans"
 
 
 def generate_nonce():

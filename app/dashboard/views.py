@@ -845,7 +845,25 @@ def referrals(request):
 def messages_view(request):
     if request.method == 'POST':
         message = request.POST.get('message')
-        send_message_to_all_players.delay(message)
+        image_url = request.POST.get('image_url') or None
+        caption = request.POST.get('caption') or None
+        # Handle uploaded image
+        uploaded = request.FILES.get('image_file')
+        saved_path = None
+        if uploaded and uploaded.size > 0:
+            from django.core.files.storage import default_storage
+            from django.core.files.base import ContentFile
+            import os
+            base_dir = 'messages'
+            filename = f"{timezone.now().strftime('%Y%m%d%H%M%S')}_{uploaded.name}"
+            saved_path = default_storage.save(os.path.join(base_dir, filename), ContentFile(uploaded.read()))
+
+        # Prefer uploaded image over URL
+        image_arg = saved_path if saved_path else image_url
+        print(f"Dashboard: Broadcasting message='{message}', image='{image_arg}', caption='{caption}'")
+        # Enqueue on broadcast queue so it won't block payment tasks
+        # For testing, you can also use: send_message_to_all_players.delay(message, image_arg, caption)
+        send_message_to_all_players.apply_async(args=[message, image_arg, caption], queue='broadcast')
         messages.success(request, 'Message sent successfully.')
         return redirect('dashboard:messages')
     return render(request, 'dashboard/messages.html')

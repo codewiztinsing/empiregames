@@ -3,8 +3,8 @@ import json
 # from app.utils.helpers import BACK_URL
 from decouple import config
 
-API_KEY = config("PROD_SECRET_KEY")
-ENCRYPTION_KEY = config("PROD_ENCRYPTION_KEY")
+API_KEY = "asldfjasdfaslkdnfksd"
+ENCRYPTION_KEY = "asdfnlasdknfasd"
 url = "https://api.chapa.co/v1/transaction/initialize"
 
 def initialize_payment(amount, currency, email, first_name, last_name, phone_number, tx_ref):
