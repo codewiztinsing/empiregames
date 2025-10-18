@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
 import checkPlayerBalance from '../api';
 import axios from 'axios';
+import { generateFixedCard } from '../helpers/fixedBingoCards';
 import config from '../config/api';
 
 const Selections = () => {
@@ -212,7 +213,7 @@ const Selections = () => {
       const selectedNumber = data.players.find(p => p.playerId === playerId)?.selectedNumbers[0];
       // navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
     };
-
+    
     socket.on('gameState', handleGameState);
     socket.on('pickedNumbers', handlePickedNumbers);
     socket.on("gameStatus", handleGameStatus);
@@ -308,13 +309,13 @@ const Selections = () => {
       setIsToast(true);
       return;
     }
-
+    
     if (balance < roomId && !isSelected) {
       setToast('Insufficient balance to select this card');
       setIsToast(true);
       return;
     }
-
+    
     if (isSelected) {
       // Unselect - emit leave event
       const leaveData = {
@@ -338,36 +339,9 @@ const Selections = () => {
       setChoosenNumbers([number]);
       setSelectedNumber(number);
       
-      // Generate card data
+      // Generate card data using fixed card system
       const generateCard = (cardNumber) => {
-        const card = [];
-        const ranges = [
-          { min: 1, max: 15 },   // B
-          { min: 16, max: 30 },  // I
-          { min: 31, max: 45 },  // N
-          { min: 46, max: 60 },  // G
-          { min: 61, max: 75 }   // O
-        ];
-        
-        for (let col = 0; col < 5; col++) {
-          const column = [];
-          const usedNumbers = new Set();
-          
-          for (let row = 0; row < 5; row++) {
-            if (col === 2 && row === 2) {
-              column.push('*'); // Free space
-            } else {
-              let num;
-              do {
-                num = Math.floor(Math.random() * (ranges[col].max - ranges[col].min + 1)) + ranges[col].min;
-              } while (usedNumbers.has(num));
-              usedNumbers.add(num);
-              column.push(num);
-            }
-          }
-          card.push(column);
-        }
-        return card;
+        return generateFixedCard(cardNumber);
       };
 
       const card = generateCard(number);
@@ -400,64 +374,64 @@ const Selections = () => {
         <div className="loading-text">Loading...</div>
       </div>}
 
-      {isBingo && (
-        <div className="bingo-winner-overlay">
-          <div className="bingo-winner-card">
-            <div className="winner-card-header">
-              <p className='winner-card-header-text'>Bingo Winner!</p>
-            </div>
-            <p className='winner-card-header-winner-number' style={{
-              color: "green",
-              fontSize: "1.6rem",
-              fontWeight: "bold"
-            }}>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
-            <p className='winner-card-header-text' style={{
-              color: "green",
-              fontSize: "1.6rem",
-              fontWeight: "bold"
-            }}>ስም : {winnerPlayerName},is Winner</p>
-            
-            <div className="winning-card">
-              <div className="winning-card-row">
-                {["B", "I", "N", "G", "O"].map((letter, index) => (
-                  <div key={index} className="winning-card-cell">
-                    <span>{letter}</span>
-                  </div>
-                ))}
-              </div>
+{isBingo && (
+  <div className="bingo-winner-overlay">
+    <div className="bingo-winner-card">
+      <div className="winner-card-header">
+        <p className='winner-card-header-text'>Bingo Winner!</p>
+      </div>
+      <p className='winner-card-header-winner-number' style={{
+        color: "green",
+        fontSize: "1.6rem",
+        fontWeight: "bold"
+      }}>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
+      <p className='winner-card-header-text' style={{
+          color: "green",
+        fontSize: "1.6rem",
+        fontWeight: "bold"
+      }}>ስም : {winnerPlayerName},is Winner</p>
+     
+<div className="winning-card">
+  <div className="winning-card-row">
+    {["B", "I", "N", "G", "O"].map((letter, index) => (
+      <div key={index} className="winning-card-cell">
+        <span>{letter}</span>
+      </div>
+    ))}
+  </div>
               {winningCard && winningCard[0] && winningCard[0].map((_, rowIndex) => (
-                <div key={rowIndex} className="winning-card-row">
-                  {winningCard.map((row, colIndex) => {
-                    const cell = row[rowIndex];
-                    const rowComplete = winningCard.every(r => r[rowIndex].marked);
-                    const colComplete = winningCard[colIndex].every(c => c.marked);
+    <div key={rowIndex} className="winning-card-row">
+      {winningCard.map((row, colIndex) => {
+        const cell = row[rowIndex];
+        const rowComplete = winningCard.every(r => r[rowIndex].marked);
+        const colComplete = winningCard[colIndex].every(c => c.marked);
                     const diagonalComplete = rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
                     const reverseDiagonalComplete = rowIndex + colIndex === 4 && winningCard.every((r, i) => r[4 - i].marked);
                     const fourCornersComplete = winningCard[0][0].marked && winningCard[0][4].marked && winningCard[4][0].marked && winningCard[4][4].marked;
                     const fourEdgesComplete = winningCard[0][2].marked && winningCard[2][0].marked && winningCard[2][4].marked && winningCard[4][2].marked;
 
-                    let bgColor = "white";
+        let bgColor = "white";
                     if (rowComplete || colComplete || diagonalComplete || reverseDiagonalComplete || fourCornersComplete || fourEdgesComplete) {
                       bgColor = "green";
-                    } else if (cell.marked) {
+        } else if (cell.marked) {
                       bgColor = "red";
-                    }
+        }
 
-                    return (
+        return (
                       <div key={colIndex} className="winning-card-cell" style={{ backgroundColor: bgColor }}>
-                        <span>{cell.number}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-            <div className="choosen-numbers">
-              <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
-            </div>
+            <span>{cell.number}</span>
           </div>
-        </div>
-      )}
+        );
+      })}
+    </div>
+  ))}
+</div>
+      <div className="choosen-numbers">
+        <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
+      </div>
+    </div>
+  </div>
+)}
 
       {!loading && (
         <div className="konjo-selections-container">
@@ -466,7 +440,7 @@ const Selections = () => {
             <div className="konjo-header-left">
               <div className="hamburger-menu" onClick={toggleSidebar}>
                 <FontAwesomeIcon icon={faBars} />
-              </div>
+            </div>
               <div className="konjo-logo">Liyu</div>
             </div>
             <div className="konjo-title">Liyu Bingo</div>
@@ -482,7 +456,7 @@ const Selections = () => {
           <div className="konjo-sub-header">
             <div className="back-button">
               <FontAwesomeIcon icon={faArrowLeft} />
-            </div>
+              </div>
             <div className="info-buttons">
               <div className="info-button">Wallet {parseInt(balance)} ብር</div>
               <div className="info-button">Stake {roomId} ብር</div>
@@ -502,18 +476,18 @@ const Selections = () => {
                 const isPicked = pickedNumbers.includes(number);
                 const isDisabled = isPicked || !isSocketConnected || (balance < roomId && !isSelected);
 
-                return (
-                  <button
-                    key={number}
+              return (
+                <button
+                  key={number}
                     className={`konjo-number-cell ${isPicked ? 'picked' : ''} ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
                     onClick={() => handleNumberClick(number)}
-                    disabled={isDisabled}
+                  disabled={isDisabled}
                   >
                     {number}
-                  </button>
-                );
-              })}
-            </div>
+                </button>
+              );
+            })}
+          </div>
 
             {/* Selected Card Preview */}
             {selectedNumber && (
@@ -540,7 +514,7 @@ const Selections = () => {
                 Game starts in: {countDown}
               </div>
             )}
-          </div>
+                  </div>
 
           {/* Bottom Message */}
           <div className="konjo-bottom-message">
@@ -565,22 +539,22 @@ const Selections = () => {
                 <div className="sidebar-item" onClick={() => handleNavigation('bingo')}>
                   <FontAwesomeIcon icon={faGamepad} className="sidebar-icon" />
                   <span>Bingo Game</span>
-                </div>
+                          </div>
                 <div className="sidebar-item" onClick={() => handleNavigation('profile')}>
                   <FontAwesomeIcon icon={faUser} className="sidebar-icon" />
                   <span>Profile</span>
-                </div>
+                      </div>
                 <div className="sidebar-item" onClick={() => handleNavigation('transactions')}>
                   <FontAwesomeIcon icon={faHistory} className="sidebar-icon" />
                   <span>Transaction History</span>
-                </div>
+                  </div>
                 <div className="sidebar-item" onClick={() => handleNavigation('invited-users')}>
                   <FontAwesomeIcon icon={faUsers} className="sidebar-icon" />
                   <span>Invited Users</span>
                 </div>
               </div>
             </div>
-          </div>
+        </div>
         </>
       )}
     </>

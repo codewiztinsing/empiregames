@@ -6,6 +6,7 @@ import './main.css';
 import { BingoContext } from '../contexts/bingoContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faVolumeMute, faVolumeUp, faSignOutAlt, faSync } from '@fortawesome/free-solid-svg-icons';
+import { generateFixedCard } from '../helpers/fixedBingoCards';
 
 const PlayingBoard = () => {
   const {
@@ -122,36 +123,9 @@ const PlayingBoard = () => {
       if (urlSelectedNumber) {
         const selectedNum = parseInt(urlSelectedNumber);
         setSelectedNumber(selectedNum);
-        // Generate card data
+        // Generate card data using fixed card system
         const generateCard = (cardNumber) => {
-          const card = [];
-          const ranges = [
-            { min: 1, max: 15 },   // B
-            { min: 16, max: 30 },  // I
-            { min: 31, max: 45 },  // N
-            { min: 46, max: 60 },  // G
-            { min: 61, max: 75 }   // O
-          ];
-          
-          for (let col = 0; col < 5; col++) {
-            const column = [];
-            const usedNumbers = new Set();
-            
-            for (let row = 0; row < 5; row++) {
-              if (col === 2 && row === 2) {
-                column.push('*'); // Free space
-              } else {
-                let num;
-                do {
-                  num = Math.floor(Math.random() * (ranges[col].max - ranges[col].min + 1)) + ranges[col].min;
-                } while (usedNumbers.has(num));
-                usedNumbers.add(num);
-                column.push(num);
-              }
-            }
-            card.push(column);
-          }
-          return card;
+          return generateFixedCard(cardNumber);
         };
         setSelectBoard(generateCard(selectedNum));
       }

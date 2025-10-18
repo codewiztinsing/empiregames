@@ -8,6 +8,7 @@ const { generateBalls } = require('./src/helpers/ball');
 const { checkBingo, markPlayerCard } = require('./src/helpers/bingo');
 const { checkSingleCardBingo } = require('./src/helpers/singleBingo');
 const { gameWinWallet,gameLossWallet,getGameSettings,getFakePlayerSettings } = require('./api');
+const { generateFixedCard } = require('./src/helpers/serverFixedBingoCards');
 const ip = require('ip');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -427,22 +428,12 @@ async function startGame(game) {
 }
 
 function generateFakeWinningCard() {
-  // Create a 5x5 card structure similar to client expectations with marked cells
-  const ranges = [
-    [1, 15], [16, 30], [31, 45], [46, 60], [61, 75]
-  ];
-  // Build base grid (rows x cols), then transpose to match client structure [col][row]
-  const base = Array.from({ length: 5 }, () => Array(5).fill(null));
-  for (let col = 0; col < 5; col++) {
-    const nums = [];
-    for (let n = ranges[col][0]; n <= ranges[col][1]; n++) nums.push(n);
-    for (let row = 0; row < 5; row++) {
-      const idx = Math.floor(Math.random() * nums.length);
-      const num = nums.splice(idx, 1)[0];
-      base[row][col] = { number: row === 2 && col === 2 ? '*' : num, marked: false };
-    }
-  }
-  const grid = base[0].map((_, colIndex) => base.map(row => row[colIndex]));
+  // Generate a fixed card for fake winner
+  const cardNumber = Math.floor(Math.random() * 5) + 1; // Random card 1-5
+  const card = generateFixedCard(cardNumber);
+  
+  // Convert to the format expected by the client
+  const grid = card[0].map((_, colIndex) => card.map(row => row[colIndex]));
 
   // Choose a random winning pattern
   const patterns = ['row', 'col', 'diag', 'anti', 'fourCorners', 'fourEdges'];
@@ -450,29 +441,29 @@ function generateFakeWinningCard() {
 
   if (pick === 'row') {
     const r = Math.floor(Math.random() * 5);
-    for (let c = 0; c < 5; c++) grid[c][r].marked = true;
+    for (let c = 0; c < 5; c++) grid[c][r] = { number: grid[c][r], marked: true };
   } else if (pick === 'col') {
     const c = Math.floor(Math.random() * 5);
-    for (let r = 0; r < 5; r++) grid[c][r].marked = true;
+    for (let r = 0; r < 5; r++) grid[c][r] = { number: grid[c][r], marked: true };
   } else if (pick === 'diag') {
-    for (let i = 0; i < 5; i++) grid[i][i].marked = true;
+    for (let i = 0; i < 5; i++) grid[i][i] = { number: grid[i][i], marked: true };
   } else if (pick === 'anti') {
-    for (let i = 0; i < 5; i++) grid[4 - i][i].marked = true;
+    for (let i = 0; i < 5; i++) grid[4 - i][i] = { number: grid[4 - i][i], marked: true };
   } else if (pick === 'fourCorners') {
-    grid[0][0].marked = true;
-    grid[0][4].marked = true;
-    grid[4][0].marked = true;
-    grid[4][4].marked = true;
+    grid[0][0] = { number: grid[0][0], marked: true };
+    grid[0][4] = { number: grid[0][4], marked: true };
+    grid[4][0] = { number: grid[4][0], marked: true };
+    grid[4][4] = { number: grid[4][4], marked: true };
   } else if (pick === 'fourEdges') {
     // Cross-like edges as per client check
-    grid[2][0].marked = true;
-    grid[0][2].marked = true;
-    grid[2][4].marked = true;
-    grid[4][2].marked = true;
+    grid[2][0] = { number: grid[2][0], marked: true };
+    grid[0][2] = { number: grid[0][2], marked: true };
+    grid[2][4] = { number: grid[2][4], marked: true };
+    grid[4][2] = { number: grid[4][2], marked: true };
   }
 
   // Ensure center is marked for patterns that commonly include it
-  grid[2][2].marked = true;
+  grid[2][2] = { number: '*', marked: true };
 
   return grid;
 }

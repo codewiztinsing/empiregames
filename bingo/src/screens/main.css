@@ -73,6 +73,8 @@ body {
   gap: 15px;
   flex: 1;
   margin-bottom: 15px;
+  max-width: 500px !important;
+  max-height: 550px !important;
 }
 
 /* Left Side - Main Bingo Board */
@@ -409,7 +411,7 @@ body {
 
 .action-btn {
   flex: 1;
-  padding: 15px;
+  padding: 10px;
   border: none;
   border-radius: 8px;
   font-size: 16px;
