@@ -1184,7 +1184,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Use ref_ prefix so start command can parse first-generation referrer
     invite_link = f"https://t.me/{bot_username}?start=ref_{telegram_id}"
     message = (
-        "Invite your friends to Aker Bingo and earn rewards!\n\n"
+        "Invite your friends to Aker Bingo!\n\n"
         "Tap the button below to share your invite link with others."
     )
     # Create a share button with the invite link

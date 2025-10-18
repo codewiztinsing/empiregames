@@ -96,31 +96,16 @@ class ReferralService:
     
     @staticmethod
     def process_signup_bonus(user):
-        """Process 10 birr signup bonus for new customers"""
+        """Process signup bonus - DISABLED: No bonus given"""
+        # Signup bonus has been disabled - no bonus is given
         if user.signup_bonus_claimed:
             return False, "Signup bonus already claimed"
         
-        # Create and immediately approve signup bonus
-        bonus = ReferralService._create_bonus(
-            user, user, float('10.00'), 'signup', 
-            'signup', float('1.00'), 0
-        )
-        
-        # Immediately approve the bonus
-        bonus.status = 'approved'
-        bonus.save()
-        
-        # Add to user's total referral earnings only (not wallet balance)
-        user.total_referral_earnings += float(bonus.bonus_amount)
+        # Mark as claimed but don't give any bonus
         user.signup_bonus_claimed = True
         user.save()
         
-        # Update wallet's total_referral_earnings field to keep it in sync
-        wallet, created = Wallet.objects.get_or_create(user=user)
-        wallet.total_referral_earnings += float(bonus.bonus_amount)
-        wallet.save()
-        
-        return True, "Signup bonus processed and added to referral earnings"
+        return True, "Signup processed - no bonus given"
     
     @staticmethod
     def process_sponsor_change_bonus(user):

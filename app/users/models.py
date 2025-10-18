@@ -56,7 +56,7 @@ class ReferralBonus(models.Model):
     BONUS_TYPE_CHOICES = [
         ('first_generation', 'First Generation (4%)'),
         ('second_generation', 'Second Generation (1%)'),
-        ('signup', 'Signup Bonus (10 birr)'),
+        ('signup', 'Signup Bonus (DISABLED)'),
         ('sponsor_change', 'Sponsor Change Bonus (9 birr)'),
     ]
     
