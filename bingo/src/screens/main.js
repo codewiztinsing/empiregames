@@ -111,18 +111,18 @@ const PlayingBoard = () => {
   // Initialize component with URL parameters
   useEffect(() => {
     const initializeFromURL = () => {
-      const queryParams = new URLSearchParams(window.location.search);
-      const urlPlayerId = queryParams.get('playerId');
-      const urlRoomId = queryParams.get('betAmount');
-      const urlPlayerName = queryParams.get('playerName');
-      const urlSelectedNumber = queryParams.get('selectedNumber');
-      
-      if (urlPlayerId) setPlayerId(urlPlayerId);
-      if (urlRoomId) setRoomId(parseInt(urlRoomId));
-      if (urlPlayerName && urlPlayerName !== 'null') setPlayerName(urlPlayerName);
-      if (urlSelectedNumber) {
-        const selectedNum = parseInt(urlSelectedNumber);
-        setSelectedNumber(selectedNum);
+    const queryParams = new URLSearchParams(window.location.search);
+    const urlPlayerId = queryParams.get('playerId');
+    const urlRoomId = queryParams.get('betAmount');
+    const urlPlayerName = queryParams.get('playerName');
+    const urlSelectedNumber = queryParams.get('selectedNumber');
+    
+    if (urlPlayerId) setPlayerId(urlPlayerId);
+    if (urlRoomId) setRoomId(parseInt(urlRoomId));
+    if (urlPlayerName && urlPlayerName !== 'null') setPlayerName(urlPlayerName);
+    if (urlSelectedNumber) {
+      const selectedNum = parseInt(urlSelectedNumber);
+      setSelectedNumber(selectedNum);
         // Generate card data using fixed card system
         const generateCard = (cardNumber) => {
           return generateFixedCard(cardNumber);
@@ -180,13 +180,13 @@ const PlayingBoard = () => {
           calledNumbers: [...prevState.calledNumbers, parseInt(calledNumber)]
         }));
         
-        setTimeout(() => {
-          const elementId = getElementIdForNumber(parseInt(calledNumber));
-          const element = document.getElementById(elementId);
-          if (element) {
-            animateNumber(element, 2000);
-          }
-        }, 100);
+          setTimeout(() => {
+            const elementId = getElementIdForNumber(parseInt(calledNumber));
+            const element = document.getElementById(elementId);
+            if (element) {
+              animateNumber(element, 2000);
+            }
+          }, 100);
       }
       
       updateGameState({ lastBall: data.lastBall });
@@ -225,19 +225,25 @@ const PlayingBoard = () => {
     try {
       if (number === '*' || isBingo || isDisqualified) return;
       
-      updateGameState(prevState => {
+      console.log('Cell clicked:', number);
+      
+      setGameState(prevState => {
         const newSelectedCell = new Set(prevState.selectedCell);
         if (newSelectedCell.has(number)) {
           newSelectedCell.delete(number);
+          console.log('Removed number:', number);
         } else {
           newSelectedCell.add(number);
+          console.log('Added number:', number);
         }
-        return { selectedCell: newSelectedCell };
+        
+        console.log('New selectedCell:', newSelectedCell);
+        return { ...prevState, selectedCell: newSelectedCell };
       });
     } catch (error) {
       console.error('Error handling cell click:', error);
     }
-  }, [isBingo, isDisqualified, updateGameState]);
+  }, [isBingo, isDisqualified]);
 
   const handleBingo = useCallback((board, cardNumber) => {
     try {
@@ -314,70 +320,70 @@ const PlayingBoard = () => {
     <div className="bingo-game-container">
       <Toaster />
 
-      {isBingo && (
-        <div className="bingo-winner-overlay">
-          <div className="bingo-winner-card">
-            <div className="winner-countdown">
-              <p>Returning to home in: {winnerCountdown} seconds</p>
-            </div>
-            <div className="winner-card-header">
-              <p className='winner-card-header-text'>Bingo Winner!</p>
-            </div>
-            <p className='winner-card-header-winner-number' style={{
-              color: "green",
-              fontSize: "1.6rem",
-              fontWeight: "bold"
-            }}>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
-            <p className='winner-card-header-text' style={{
-              color: "green",
-              fontSize: "1.6rem",
-              fontWeight: "bold"
-            }}>ስም : {winnerPlayerName},is Winner</p>
-            
-            <div className="winning-card">
-              <div className="winning-card-row">
-                {["B", "I", "N", "G", "O"].map((letter, index) => (
-                  <div key={index} className="winning-card-cell">
-                    <span>{letter}</span>
-                  </div>
-                ))}
-              </div>
+  {isBingo && (
+  <div className="bingo-winner-overlay">
+    <div className="bingo-winner-card">
+      <div className="winner-countdown">
+        <p>Returning to home in: {winnerCountdown} seconds</p>
+      </div>
+      <div className="winner-card-header">
+        <p className='winner-card-header-text'>Bingo Winner!</p>
+      </div>
+      <p className='winner-card-header-winner-number' style={{
+        color: "green",
+        fontSize: "1.6rem",
+        fontWeight: "bold"
+      }}>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
+      <p className='winner-card-header-text' style={{
+          color: "green",
+        fontSize: "1.6rem",
+        fontWeight: "bold"
+      }}>ስም : {winnerPlayerName},is Winner</p>
+     
+<div className="winning-card">
+  <div className="winning-card-row">
+    {["B", "I", "N", "G", "O"].map((letter, index) => (
+      <div key={index} className="winning-card-cell">
+        <span>{letter}</span>
+      </div>
+    ))}
+  </div>
               {winningCard && winningCard[0] && winningCard[0].map((_, rowIndex) => (
-                <div key={rowIndex} className="winning-card-row">
-                  {winningCard.map((row, colIndex) => {
-                    const cell = row[rowIndex];
-                    const rowComplete = winningCard.every(r => r[rowIndex].marked);
-                    const colComplete = winningCard[colIndex].every(c => c.marked);
+    <div key={rowIndex} className="winning-card-row">
+      {winningCard.map((row, colIndex) => {
+        const cell = row[rowIndex];
+        const rowComplete = winningCard.every(r => r[rowIndex].marked);
+        const colComplete = winningCard[colIndex].every(c => c.marked);
                     const diagonalComplete = rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
                     const reverseDiagonalComplete = rowIndex + colIndex === 4 && winningCard.every((r, i) => r[4 - i].marked);
                     const fourCornersComplete = winningCard[0][0].marked && winningCard[0][4].marked && winningCard[4][0].marked && winningCard[4][4].marked;
                     const fourEdgesComplete = winningCard[0][2].marked && winningCard[2][0].marked && winningCard[2][4].marked && winningCard[4][2].marked;
 
-                    let bgColor = "white";
+        let bgColor = "white";
                     if (rowComplete || colComplete || diagonalComplete || reverseDiagonalComplete || fourCornersComplete || fourEdgesComplete) {
                       bgColor = "green";
-                    } else if (cell.marked) {
+        } else if (cell.marked) {
                       bgColor = "red";
-                    }
+        }
 
-                    return (
+        return (
                       <div key={colIndex} className="winning-card-cell" style={{ backgroundColor: bgColor }}>
-                        <span>{cell.number}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-            <div className="choosen-numbers">
-              <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
-              <button className="close-winner-button" onClick={handleCloseWinner}>
-                <p>Close</p>
-              </button>
-            </div>
+            <span>{cell.number}</span>
           </div>
-        </div>
-      )}
+        );
+      })}
+    </div>
+  ))}
+</div>
+      <div className="choosen-numbers">
+        <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
+        <button className="close-winner-button" onClick={handleCloseWinner}>
+          <p>Close</p>
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Top Stats Bar */}
       <div className="top-stats-bar">
@@ -405,20 +411,20 @@ const PlayingBoard = () => {
           <div className="numbers-grid">
             {/* B Column */}
             <div className="number-column">
-              {Array.from({ length: 15 }, (_, i) => {
+            {Array.from({ length: 15 }, (_, i) => {
                 const number = i + 1;
                 const isCalled = calledNumbers?.includes(number);
-                return (
-                  <div 
+              return (
+                <div 
                     key={number} 
                     className={`number-cell ${isCalled ? 'called' : ''}`}
                     id={`B${number}`}
                   >
                     {number}
-                  </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
+          </div>
 
             {/* I Column */}
             <div className="number-column">
@@ -432,11 +438,11 @@ const PlayingBoard = () => {
                     id={`I${number}`}
                   >
                     {number}
-                  </div>
+              </div>
                 );
               })}
-            </div>
-
+        </div>
+    
             {/* N Column */}
             <div className="number-column">
               {Array.from({ length: 15 }, (_, i) => {
@@ -452,7 +458,7 @@ const PlayingBoard = () => {
                   </div>
                 );
               })}
-            </div>
+                    </div>
 
             {/* G Column */}
             <div className="number-column">
@@ -508,7 +514,7 @@ const PlayingBoard = () => {
               <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} />
               {isMuted ? 'un-mute' : 'mute'}
             </button>
-          </div>
+              </div>
 
           {/* Bonus and Countdown */}
           <div className="bonus-countdown">
@@ -547,33 +553,39 @@ const PlayingBoard = () => {
                 <div className="card-letter purple">O</div>
               </div>
 
-              {/* Player Card Grid */}
+             
               <div className="player-card-grid">
-                {selectBoard && selectBoard.map((row, rowIndex) => (
-                  <div key={rowIndex} className="card-row">
-                    {row.map((num, colIndex) => (
-                      <div 
-                        key={colIndex} 
-                        className={`card-cell ${num === '*' ? 'free-space' : ''} ${selectedCell.has(num) ? 'marked' : ''}`}
-                        onClick={() => handleCellClick(num)}
-                      >
-                        {num === '*' ? 'F' : num}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-
+                {selectBoard && selectBoard.map((row, rowIndex) => {
+                  console.log('Rendering row:', rowIndex, 'with data:', row);
+                  return (
+                    <div key={rowIndex} className="card-row">
+                      {row.map((num, colIndex) => {
+                        console.log('Rendering cell:', colIndex, 'with number:', num, 'isMarked:', selectedCell.has(num));
+                        return (
+                          <div 
+                            key={colIndex} 
+                            className={`card-cell ${num === '*' ? 'free-space' : ''} ${selectedCell.has(num) ? 'marked' : ''}`}
+                            onClick={() => handleCellClick(num)}
+                          >
+                            {num === '*' ? 'F' : num}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+          </div>
+          
               {/* Bingo Button */}
               <button 
                 className="bingo-button"
                 onClick={() => handleBingo(selectBoard, selectedNumber)}
                 disabled={firstBoardLost || isDisqualified || !selectedNumber}
-              >
+          >
                 Bingo
-              </button>
+          </button>
             </div>
-          )}
+      )}
         </div>
       </div>
 
@@ -587,7 +599,7 @@ const PlayingBoard = () => {
           <FontAwesomeIcon icon={faSync} />
           Refresh
         </button>
-      </div>
+</div>
     </div>
   );
 };
