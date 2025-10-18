@@ -57,7 +57,7 @@ class ReferralBonus(models.Model):
         ('first_generation', 'First Generation (4%)'),
         ('second_generation', 'Second Generation (1%)'),
         ('signup', 'Signup Bonus (10 birr)'),
-        ('sponsor_change', 'Sponsor Change Bonus (10 birr)'),
+        ('sponsor_change', 'Sponsor Change Bonus (9 birr)'),
     ]
     
     STATUS_CHOICES = [

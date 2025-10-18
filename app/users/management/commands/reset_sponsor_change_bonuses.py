@@ -4,7 +4,7 @@ from users.models import User, ReferralBonus
 
 
 class Command(BaseCommand):
-    help = 'Reset all ReferralBonus records of type "sponsor_change" (Sponsor Change Bonus 10 birr)'
+    help = 'Reset all ReferralBonus records of type "sponsor_change" (Sponsor Change Bonus 9 birr)'
 
     def add_arguments(self, parser):
         parser.add_argument(

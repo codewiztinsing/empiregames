@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Script to reset all ReferralBonus records of type 'sponsor_change' (Sponsor Change Bonus 10 birr)
+Script to reset all ReferralBonus records of type 'sponsor_change' (Sponsor Change Bonus 9 birr)
 
 This script will:
 1. Find all ReferralBonus records with bonus_type='sponsor_change'
