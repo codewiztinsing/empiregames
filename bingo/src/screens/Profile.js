@@ -43,8 +43,28 @@ const Profile = () => {
 
       try {
         setLoading(true);
-        const response = await axios.get(`${config.API_BASE_URL.replace(/\/$/, '')}/users/${parseInt(playerId)}/details/`);
-        setProfile(response.data);
+        const response = await axios.get(`${config.API_BASE_URL.replace(/\/$/, '')}/users/${parseInt(playerId)}`);
+        
+        // Transform the response data to match expected profile structure
+        const userData = response.data;
+        const transformedProfile = {
+          id: userData.id,
+          username: userData.username,
+          email: userData.email,
+          phone: userData.phone,
+          telegram_id: userData.telegram_id,
+          balance: 0, // Not provided by this endpoint
+          totalGames: userData.games_played_this_week || 0,
+          totalWins: 0, // Not provided by this endpoint
+          totalEarnings: userData.total_referral_earnings || 0,
+          referralCode: userData.username, // Use username as referral code
+          invitedBy: 'Unknown', // Not provided by this endpoint
+          invitedUsers: 0, // Not provided by this endpoint
+          joinDate: 'Unknown', // Not provided by this endpoint
+          lastLogin: 'Unknown' // Not provided by this endpoint
+        };
+        
+        setProfile(transformedProfile);
       } catch (error) {
         console.error('Error fetching profile:', error);
         setError('Failed to load profile data');

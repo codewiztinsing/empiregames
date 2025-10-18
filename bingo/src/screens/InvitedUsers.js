@@ -39,24 +39,23 @@ const InvitedUsers = () => {
       try {
         setLoading(true);
         
-        // For now, use the user details endpoint which has referral info
-        const userResponse = await axios.get(`${config.API_BASE_URL.replace(/\/$/, '')}/users/${parseInt(playerId)}/details/`);
+        // Use the telegram_id endpoint instead of user_id/details
+        const userResponse = await axios.get(`${config.API_BASE_URL.replace(/\/$/, '')}/users/${parseInt(playerId)}`);
         
-        // Extract referral data from user details
-        const userData = userResponse.data.user;
-        const referralData = userResponse.data.referrals;
+        // Extract referral data from user response
+        const userData = userResponse.data;
         
         // Set referral info
         setSummary({
-          totalInvited: referralData.total_referrals || 0,
-          activeUsers: referralData.total_referrals || 0, // For now, assume all are active
-          totalEarnings: referralData.total_earnings || 0,
-          referralCode: userData.referral_code || 'N/A'
+          totalInvited: 0, // This endpoint doesn't provide referral count
+          activeUsers: 0, // This endpoint doesn't provide active user count
+          totalEarnings: userData.total_referral_earnings || 0,
+          referralCode: userData.username || 'N/A' // Use username as referral code for now
         });
         
         // Set referral code and link
-        setReferralCode(userData.referral_code || 'N/A');
-        setReferralLink(`${window.location.origin}?ref=${userData.referral_code}`);
+        setReferralCode(userData.username || 'N/A');
+        setReferralLink(`${window.location.origin}?ref=${userData.username}`);
         
         // For now, show empty invited users list with a message
         setInvitedUsers([]);
