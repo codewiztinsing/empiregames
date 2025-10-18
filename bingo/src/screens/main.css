@@ -33,13 +33,18 @@ body {
 
 .stat-item {
   flex: 1;
-  padding: 8px 4px;
+  padding: 10px 6px;
   border-radius: 8px;
   text-align: center;
   font-weight: bold;
   font-size: 14px;
   color: white;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  min-height: fit-content;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .stat-item.purple {
@@ -561,9 +566,7 @@ body {
   
   .stat-item {
     font-size: 12px;
-    padding: 10px 4px;
-    padding: 4px 4px;
-    padding: 4px 4px;
+    padding: 8px 4px;
   }
   
   .bingo-letter {
@@ -692,6 +695,11 @@ body {
   
   .game-controls-section {
     flex: 0.95;
+  }
+  
+  .stat-item {
+    font-size: 9px;
+    padding: 4px 2px;
   }
   
   .number-cell {

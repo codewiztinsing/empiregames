@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faBars, faTimes, faGamepad, faUser, faHistory, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { SocketContext } from '../contexts/socket';
 import Toaster from '../components/Toaster';
 import './selections.css';
@@ -48,6 +48,7 @@ const Selections = () => {
   const [loading, setLoading] = useState(true);
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [totalCalledNumbers, setTotalCalledNumbers] = useState(0);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [totalWinAmount, setTotalWinAmount] = useState(0);
   const [isBingo, setIsBingo] = useState(false);
   const [winnerCardNumber, setWinnerCardNumber] = useState(null);
@@ -270,6 +271,31 @@ const Selections = () => {
     }
   }, [countDown, selectedNumber, gameStatus, playerId, roomId, playerName, gameId, navigate]);
 
+  // Sidebar functions
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const handleNavigation = (route) => {
+    setIsSidebarOpen(false);
+    switch (route) {
+      case 'bingo':
+        // Already on bingo game page
+        break;
+      case 'profile':
+        navigate('/profile');
+        break;
+      case 'transactions':
+        navigate('/transactions');
+        break;
+      case 'invited-users':
+        navigate('/invited-users');
+        break;
+      default:
+        break;
+    }
+  };
+
   // Handle number click
   const handleNumberClick = useCallback((number) => {
     if (isLoading || !isSocketConnected) return;
@@ -438,10 +464,12 @@ const Selections = () => {
           {/* Header */}
           <div className="konjo-header">
             <div className="konjo-header-left">
-              <div className="hamburger-menu">☰</div>
-              <div className="konjo-logo">KONJO</div>
+              <div className="hamburger-menu" onClick={toggleSidebar}>
+                <FontAwesomeIcon icon={faBars} />
+              </div>
+              <div className="konjo-logo">Liyu</div>
             </div>
-            <div className="konjo-title">KONJO Bingo</div>
+            <div className="konjo-title">Liyu Bingo</div>
             <div className="konjo-header-right">
               <div className="balance-button">
                 <span className="balance-amount">{parseInt(balance)} ETB</span>
@@ -465,11 +493,7 @@ const Selections = () => {
 
           {/* Main Content */}
           <div className="konjo-main-content">
-            {/* Waiting Message */}
-            <div className="waiting-message">
-              Waiting for players...
-            </div>
-
+           
             {/* Number Grid 1-100 */}
             <div className="konjo-number-grid">
               {Array.from({ length: 100 }, (_, i) => {
@@ -520,9 +544,44 @@ const Selections = () => {
 
           {/* Bottom Message */}
           <div className="konjo-bottom-message">
-            Welcome to Konjo Bingo Bot! Choose an option.
+            Welcome to Liyu Bingo Bot! Choose an option.
           </div>
         </div>
+      )}
+
+      {/* Sidebar */}
+      {isSidebarOpen && (
+        <>
+          <div className="sidebar-overlay" onClick={toggleSidebar}></div>
+          <div className="sidebar">
+            <div className="sidebar-header">
+              <div className="sidebar-title">Menu</div>
+              <button className="sidebar-close" onClick={toggleSidebar}>
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+            <div className="sidebar-content">
+              <div className="sidebar-menu">
+                <div className="sidebar-item" onClick={() => handleNavigation('bingo')}>
+                  <FontAwesomeIcon icon={faGamepad} className="sidebar-icon" />
+                  <span>Bingo Game</span>
+                </div>
+                <div className="sidebar-item" onClick={() => handleNavigation('profile')}>
+                  <FontAwesomeIcon icon={faUser} className="sidebar-icon" />
+                  <span>Profile</span>
+                </div>
+                <div className="sidebar-item" onClick={() => handleNavigation('transactions')}>
+                  <FontAwesomeIcon icon={faHistory} className="sidebar-icon" />
+                  <span>Transaction History</span>
+                </div>
+                <div className="sidebar-item" onClick={() => handleNavigation('invited-users')}>
+                  <FontAwesomeIcon icon={faUsers} className="sidebar-icon" />
+                  <span>Invited Users</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </>
   );

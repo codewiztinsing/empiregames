@@ -4,6 +4,9 @@ import { BingoProvider } from './contexts/bingoContext';
 import PlayingBoard from './screens/main';
 import SelectionScreen from './screens/selections';
 import Landing from './screens/landing';
+import Profile from './screens/Profile';
+import Transactions from './screens/Transactions';
+import InvitedUsers from './screens/InvitedUsers';
 import ReferralDashboard from './components/ReferralDashboard';
 import ReferralCodeInput from './components/ReferralCodeInput';
 import ReferralLanding from './components/ReferralLanding';
@@ -13,11 +16,10 @@ function App() {
       <Router>
         <Routes>
           <Route path="/play" element={<PlayingBoard />} />
-          {/* <Route path="/referrals" element={<ReferralDashboard />} /> */}
-          {/* <Route path="/referral-setup" element={<ReferralCodeInput />} /> */}
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/invited-users" element={<InvitedUsers />} />
           <Route path="/" element={<SelectionScreen />} />
-          {/* <Route path="/" element={<ReferralLanding />} /> */}
-          {/* <Route path="/" element={<Landing />} /> */}
         </Routes>
       </Router>
     </BingoProvider>
