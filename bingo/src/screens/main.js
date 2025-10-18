@@ -202,6 +202,8 @@ const PlayingBoard = () => {
   const handleBingoWinner = useCallback((data) => {
     try {
       console.log('Bingo winner received:', data);
+      console.log('Winning card data:', data.winningCard);
+      
       updateGameState({
         isBingo: true,
         winnerCardNumber: data.winnerCardNumber,
@@ -238,6 +240,98 @@ const PlayingBoard = () => {
       console.error('Error handling disqualified:', error);
     }
   }, [updateGameState, setToast, setIsToast]);
+
+  // Function to determine winning condition
+  const getWinningCondition = useCallback((card) => {
+    if (!card || !card[0]) return 'Unknown';
+    
+    // Check rows
+    for (let row = 0; row < 5; row++) {
+      if (card.every(col => col[row].marked)) {
+        return `Row ${row + 1} Complete`;
+      }
+    }
+    
+    // Check columns
+    for (let col = 0; col < 5; col++) {
+      if (card[col].every(cell => cell.marked)) {
+        return `Column ${String.fromCharCode(66 + col)} Complete`;
+      }
+    }
+    
+    // Check diagonal (top-left to bottom-right)
+    if (card.every((col, i) => col[i].marked)) {
+      return 'Diagonal Complete';
+    }
+    
+    // Check reverse diagonal (top-right to bottom-left)
+    if (card.every((col, i) => col[4 - i].marked)) {
+      return 'Reverse Diagonal Complete';
+    }
+    
+    // Check four corners
+    if (card[0][0].marked && card[0][4].marked && card[4][0].marked && card[4][4].marked) {
+      return 'Four Corners Complete';
+    }
+    
+    // Check four edges (cross pattern)
+    if (card[0][2].marked && card[2][0].marked && card[2][4].marked && card[4][2].marked) {
+      return 'Four Edges Complete';
+    }
+    
+    return 'Pattern Complete';
+  }, []);
+
+  // Function to render winning card properly
+  const renderWinningCard = useCallback((card) => {
+    console.log('Rendering winning card:', card);
+    
+    if (!card || !card[0]) {
+      console.log('No card data available');
+      return <div className="no-card-data">No winning card data available</div>;
+    }
+    
+    console.log('Card structure:', {
+      hasCard: !!card,
+      cardLength: card.length,
+      firstRowLength: card[0]?.length,
+      sampleCell: card[0]?.[0]
+    });
+    
+    return (
+      <div className="winning-card">
+        {/* Header Row */}
+        <div className="winning-card-row">
+          {["B", "I", "N", "G", "O"].map((letter, index) => (
+            <div key={index} className="winning-card-cell winning-card-header">
+              <span className="bingo-letter">{letter}</span>
+            </div>
+          ))}
+        </div>
+        
+        {/* Number Rows */}
+        {card[0].map((_, rowIndex) => (
+          <div key={rowIndex} className="winning-card-row">
+            {card.map((col, colIndex) => {
+              const cell = col[rowIndex];
+              const isMarked = cell.marked;
+              
+              console.log(`Cell [${colIndex}][${rowIndex}]:`, { cell, isMarked });
+              
+              return (
+                <div 
+                  key={colIndex} 
+                  className={`winning-card-cell ${isMarked ? 'marked' : ''}`}
+                >
+                  <span>{cell.number === '*' ? 'FREE' : cell.number}</span>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    );
+  }, []);
 
   // Socket event bindings
   useEffect(() => {
@@ -434,10 +528,6 @@ const PlayingBoard = () => {
         <div className="bingo-winner-overlay">
     <div className="bingo-winner-card">
       {/* Animated Countdown */}
-      <div className="winner-countdown">
-        <div className="countdown-icon">⏰</div>
-        <p>Returning to home in: <span className="countdown-number">{winnerCountdown}</span> seconds</p>
-      </div>
       
       {/* Winner Header with Celebration */}
       <div className="winner-card-header">
@@ -460,47 +550,16 @@ const PlayingBoard = () => {
           <span className="info-label">👤 Winner Name:</span>
           <span className="info-value">{winnerPlayerName}</span>
         </div>
+        <div className="winning-condition">
+          <span className="info-label">🎯 Winning Condition:</span>
+          <span className="info-value winning-condition-text">{getWinningCondition(winningCard)}</span>
+        </div>
       </div>
      
       {/* Winning Card Display */}
       <div className="winning-card-section">
         <h3 className="winning-card-title">🎲 Winning Bingo Card 🎲</h3>
-        <div className="winning-card">
-          <div className="winning-card-row">
-            {["B", "I", "N", "G", "O"].map((letter, index) => (
-              <div key={index} className="winning-card-cell winning-card-header">
-                <span className="bingo-letter">{letter}</span>
-              </div>
-            ))}
-          </div>
-              {winningCard && winningCard[0] && winningCard[0].map((_, rowIndex) => (
-    <div key={rowIndex} className="winning-card-row">
-      {winningCard.map((row, colIndex) => {
-        const cell = row[rowIndex];
-        const rowComplete = winningCard.every(r => r[rowIndex].marked);
-        const colComplete = winningCard[colIndex].every(c => c.marked);
-                    const diagonalComplete = rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
-                    const reverseDiagonalComplete = rowIndex + colIndex === 4 && winningCard.every((r, i) => r[4 - i].marked);
-                    const fourCornersComplete = winningCard[0][0].marked && winningCard[0][4].marked && winningCard[4][0].marked && winningCard[4][4].marked;
-                    const fourEdgesComplete = winningCard[0][2].marked && winningCard[2][0].marked && winningCard[2][4].marked && winningCard[4][2].marked;
-
-        let bgColor = "white";
-                    if (rowComplete || colComplete || diagonalComplete || reverseDiagonalComplete || fourCornersComplete || fourEdgesComplete) {
-                      bgColor = "green";
-        } else if (cell.marked) {
-                      bgColor = "red";
-        }
-
-        return (
-                      <div key={colIndex} className="winning-card-cell" style={{ backgroundColor: bgColor }}>
-            <span>{cell.number}</span>
-          </div>
-        );
-      })}
-    </div>
-  ))}
-</div>
-        </div>
+        {renderWinningCard(winningCard)}
       </div>
       
       {/* Action Buttons */}
@@ -515,6 +574,7 @@ const PlayingBoard = () => {
         </button>
       </div>
     </div>
+        </div>
       )}
 
       {/* Top Stats Bar */}
@@ -724,7 +784,7 @@ const PlayingBoard = () => {
                 Bingo
               </button>
             </div>
-          )}
+          )}f
         </div>
       </div>
 
