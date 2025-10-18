@@ -730,14 +730,14 @@ const PlayingBoard = () => {
 
       {/* Bottom Action Buttons */}
       <div className="bottom-actions">
-        {/* <button className="action-btn leave-btn" onClick={handleLeaveGame}>
+        <button className="action-btn leave-btn" onClick={handleLeaveGame}>
           <FontAwesomeIcon icon={faSignOutAlt} />
           Leave Game
-        </button> */}
-        {/* <button className="action-btn refresh-btn" onClick={handleRefresh}>
+        </button>
+        <button className="action-btn refresh-btn" onClick={handleRefresh}>
           <FontAwesomeIcon icon={faSync} />
           Refresh
-        </button> */}
+        </button>
       </div>
     </div>
   );
