@@ -9,6 +9,7 @@ import { BingoContext } from '../contexts/bingoContext';
 import checkPlayerBalance from '../api';
 import axios from 'axios';
 import config from '../config/api';
+
 const Selections = () => {
   const {
     selectedNumber,
@@ -34,6 +35,7 @@ const Selections = () => {
     isToast,
     setIsToast
   } = useContext(BingoContext);
+  
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
   const [pickedNumbers, setPickedNumbers] = useState([]);
@@ -50,31 +52,10 @@ const Selections = () => {
   const [isBingo, setIsBingo] = useState(false);
   const [winnerCardNumber, setWinnerCardNumber] = useState(null);
   const [winnerPlayerName, setWinnerPlayerName] = useState(null);
-  const [winningCard, setWinningCard] = useState([]);
-  const [calledNumbers, setCalledNumbers] = useState([]);
+  const [winningCard, setWinningCard] = useState(null);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
-  const [referralBonus, setReferralBonus] = useState(0);
-  const [referralLoading, setReferralLoading] = useState(true);
 
-  // Generate numbers 1-100 (memoized since it's static)
-  const numbers = Array.from({ length: 400 }, (_, i) => i + 1);
-
-  
-
-  // Check if cell clicking should be disabled (only for websocket connection)
-  const isCellClickDisabled = () => {
-    // Only disable if websocket is not connected
-    if (!isSocketConnected) {
-      return true;
-    }
-    
-    // Don't disable for balance issues - show message instead
-    return false;
-  };
-
-
-
-  // Socket connection state monitoring
+  // Socket connection handlers
   useEffect(() => {
     const handleConnect = () => {
       console.log('Socket connected');
@@ -95,9 +76,6 @@ const Selections = () => {
     socket.on('disconnect', handleDisconnect);
     socket.on('connect_error', handleConnectError);
 
-    // Check initial connection state
-    setIsSocketConnected(socket.connected);
-
     return () => {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
@@ -105,7 +83,7 @@ const Selections = () => {
     };
   }, [socket]);
 
-  // Socket listeners with cleanup
+  // Socket listeners
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const urlPlayerId = queryParams.get('playerId');
@@ -118,18 +96,104 @@ const Selections = () => {
    
     if (urlPlayerId && urlRoomId) {
       socket.emit("playerJoined", { playerId: urlPlayerId, roomId: urlRoomId });
-      
-      // Request all player selections
-      console.log("📥 Requesting all player selections...");
-      socket.emit("getAllPlayerSelections", { 
-        playerId: urlPlayerId, 
-        roomId: urlRoomId 
-      });
-      
-      // Try to rejoin if there's a previous game in progress
-      attemptRejoin(urlPlayerId, urlRoomId, urlPlayerName);
     }
-    
+
+    const handleGameState = (state) => {
+      console.log('handleGameState received:', state);
+      
+      if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
+        setPickedNumbers(state.pickedNumbers.numbers);
+      }
+      
+      if (state.game_status === "in-progress") {
+        if (gameStatus !== "in-progress") {
+          setToast("🎮 Game Started! Good luck!");
+          setIsToast(true);
+        }
+        setGameStatus("in-progress");
+      }
+      
+      if (state.game_status === "countdown") {
+        if (gameStatus !== "countdown") {
+          setToast("⏰ Countdown phase started! Game will begin shortly...");
+          setIsToast(true);
+        }
+        setGameStatus("countdown");
+      }
+      
+      if (state.game_status === "waiting") {
+        if (gameStatus !== "waiting") {
+          setToast("⏳ Game ended. Waiting for next round...");
+          setIsToast(true);
+        }
+        setGameStatus("waiting");
+      }
+     
+      if (state.game_status !== "in-progress") {
+        setPlayersLength(state.total_players);
+      }
+      
+      if (state.count_down !== undefined) {
+        const previousCountDown = countDown;
+        setCountDown(state.count_down);
+        
+        if (previousCountDown === 0 && state.count_down > 0) {
+          setToast("🚀 Countdown started! Game beginning soon...");
+          setIsToast(true);
+        }
+        
+        if (state.count_down === 5) {
+          setToast("⚡ 5 seconds left! Get ready!");
+          setIsToast(true);
+        } else if (state.count_down === 3) {
+          setToast("🔥 3 seconds! Almost there!");
+          setIsToast(true);
+        } else if (state.count_down === 1) {
+          setToast("🎯 Final second! Game starting NOW!");
+          setIsToast(true);
+        }
+      }
+    };
+
+    const handlePickedNumbers = (data) => {
+      console.log('handlePickedNumbers received:', data);
+      if (data.numbers) {
+        setPickedNumbers(data.numbers);
+      }
+    };
+
+    const handleGameStatus = (status) => {
+      console.log('Game status changed:', status);
+      setGameStatus(status);
+    };
+
+    const handleBingoWinner = (data) => {
+      console.log('Bingo winner:', data);
+      setWinnerCardNumber(data.winnerCardNumber);
+      setWinnerPlayerName(data.winnerPlayerName);
+      setWinningCard(data.winningCard);
+      setIsBingo(true);
+    };
+
+    const handleRejoinSuccess = (data) => {
+      console.log('Rejoin success:', data);
+      setSelectedNumber(data.selectedNumber);
+      setSelectBoard(data.selectBoard);
+      setChoosenNumbers([data.selectedNumber]);
+    };
+
+    const handleRejoinError = (error) => {
+      console.error('Rejoin error:', error);
+      setToast(error.message || 'Failed to rejoin game');
+      setIsToast(true);
+    };
+
+    const handleAllPlayerSelections = (data) => {
+      console.log('All player selections:', data);
+      const selectedNumber = data.players.find(p => p.playerId === playerId)?.selectedNumbers[0];
+      // navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
+    };
+
     socket.on('gameState', handleGameState);
     socket.on('pickedNumbers', handlePickedNumbers);
     socket.on("gameStatus", handleGameStatus);
@@ -137,12 +201,6 @@ const Selections = () => {
     socket.on('rejoinSuccess', handleRejoinSuccess);
     socket.on('rejoinError', handleRejoinError);
     socket.on('allPlayerSelections', handleAllPlayerSelections);
-    
-    // Test if the listener is working
-    console.log("🔍 Socket listeners set up. Listening for allPlayerSelections event");
-    console.log("🔍 Socket connected:", socket.connected);
-    console.log("🔍 Current playerId:", playerId);
-    console.log("🔍 Current roomId:", roomId);
 
     return () => {
       socket.off('gameState', handleGameState);
@@ -153,761 +211,252 @@ const Selections = () => {
       socket.off('rejoinError', handleRejoinError);
       socket.off('allPlayerSelections', handleAllPlayerSelections);
     };
-  }, [socket]);
-
-
-
-  // Attempt to rejoin a previous game
-  const attemptRejoin = (playerId, roomId, playerName) => {
-    console.log("attemptRejoin",playerId, roomId, playerName)
-    socket.emit('rejoinGame', {
-      playerId: playerId,
-      roomId: roomId,
-      playerName: playerName
-    });
-  };
-
-  // Handle successful rejoin
-  const handleRejoinSuccess = (data) => {
-    console.log("=== REJOIN SUCCESS DEBUG ===");
-    console.log("Rejoin success data:", data);
-    console.log("Setting game state...");
-    
-    setToast('Rejoined your previous game! Redirecting to play...');
-    setIsToast(true);
-    
-
-    
-    // Set the game state from rejoin data
-    setGameId(data.gameId);
-    setSelectedNumber(data.selectedNumber);
-    setSelectBoard(data.boards[0]);
-    setChoosenNumbers([data.selectedNumber]);
-    setChooseBoards(data.boards);
-        // Navigate directly to play screen with current game state
-    navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${data.selectedNumber2}`);
-  };
-
-  // Handle rejoin error
-  const handleRejoinError = (data) => {
-    console.log("=== REJOIN ERROR DEBUG ===");
-    console.log("Rejoin failed:", data.message);
-    console.log("This is normal for new users or expired games");
-  };
-
-  // Handle all player selections
-  const handleAllPlayerSelections = (data) => { 
-    console.log("=== ALL PLAYER SELECTIONS ===");
-    console.log("Received all player selections:", data);
-
-    // Get playerId, roomId, and playerName from query params
-    const searchParams = new URLSearchParams(window.location.search);
-    const playerId = searchParams.get('playerId');
-    const roomId = searchParams.get('betAmount');
-    const playerName = searchParams.get('playerName');
-    const game_status = data.game_status;
-    
-    console.log("Query params - playerId:", playerId, "roomId:", roomId, "playerName:", playerName);
-    console.log("Game status:", game_status);
-  
-    
-    if (data.players && Array.isArray(data.players)) {
-      console.log("Total players with selections:", data.players.length);
-      
-      // Process current player selection
-      const currentPlayerSelection = data.players.find(p => p.playerId === playerId);
-      console.log("Current player selection found:", currentPlayerSelection);
-      
-      if(currentPlayerSelection) {
-        const selectedNumber = currentPlayerSelection.selectedNumbers[0];
-        console.log("Selected number from data:", selectedNumber);
-        
-        if(selectedNumber && game_status == "in-progress") {
-          console.log("✅ Current player has a selection - navigating to play screen");
-          console.log("playerId:", playerId);
-          console.log("betAmount:", roomId);
-          console.log("playerName:", playerName);
-          console.log("selectedNumber:", selectedNumber);
-          
-          // Navigate to play screen with the selected number
-          navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
-        } else {
-          console.log("❌ Current player found but no selected number or game not in progress");
-          console.log("selectedNumber:", selectedNumber);
-          console.log("game_status:", game_status);
-          navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
-
-        }
-      } else {
-        console.log("❌ Current player not found in selections - staying on selection page");
-      }
-    } else {
-      console.log("No players data received or invalid format");
-    }
-  };
-
-  // Handle bingo winner timeout
-  useEffect(() => {
-    if (isBingo) {
-      const timer = setTimeout(() => {
-        setIsBingo(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [isBingo]);
+  }, [socket, playerId, roomId, playerName, setPlayerId, setPlayerName, setRoomId, gameStatus, countDown, setToast, setIsToast, setPlayersLength, setCountDown, navigate]);
 
   // Fetch balance when playerId is available
   useEffect(() => {
-    console.log('Balance useEffect triggered, playerId:', playerId);
-
     if (playerId) {
       const fetchBalance = async () => {
         const apiUrl = config.API_BASE_URL;
-        console.log('Fetching balance from:', `${apiUrl}wallet/player/${playerId}`);
-        
         try {
           const response = await axios.get(`${apiUrl}wallet/player/${parseInt(playerId)}`);
-          console.log('Balance response:', response.data);
           setBalance(response.data.total_balance);
-          
-      
           setLoading(false);
         } catch (error) {
-          console.error('Error fetching data:', error);
-          console.error('Error details:', {
-            message: error.message,
-            status: error.response?.status,
-            data: error.response?.data,
-            playerId: playerId,
-            parsedPlayerId: parseInt(playerId),
-            url: `${apiUrl}/wallet/player/${parseInt(playerId)}`
-          });
-          setBalance(0);
-          setReferralBonus(0);
+          console.error('Error fetching balance:', error);
           setLoading(false);
         }
       };
-      
       fetchBalance();
-    } else {
-      // If no playerId, still set loading to false after a short delay
-      console.log('No playerId available, setting loading to false');
-      const timer = setTimeout(() => {
-        setLoading(false);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
     }
   }, [playerId]);
 
-  // Client no longer simulates fake picks; server broadcasts picked numbers
+  // Handle number click
+  const handleNumberClick = useCallback((number) => {
+    if (isLoading || !isSocketConnected) return;
 
-  // Countdown is controlled by the server; client only displays server-provided countDown
-
-  // Countdown redirect logic - only navigate when countdown reaches exactly 00
-  useEffect(() => {
-    console.log("gameStatus",gameStatus)
-    if(gameStatus == "in-progress") {
-      console.log("allPlayerSelections called")
-      socket.on("allPlayerSelections", (data) => {
-        console.log("allPlayerSelections called",data)
-        const selectedNumber = data.players.find(p => p.playerId === playerId)?.selectedNumbers[0];
-        navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
-      });
-     
-    }
-    // Navigate when countdown reaches 0 and user has selected a number
-    if (countDown === 0 && gameStatus != "waiting") {
-      // Navigate to play section when countdown reaches 00
-      setToast("Game starting! Redirecting to play section...");
+    const isSelected = choosenNumbers.includes(number);
+    const isPicked = pickedNumbers.includes(number);
+    
+    if (isPicked) {
+      setToast(`Card ${number} is already selected by another player`);
       setIsToast(true);
-      navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
-    }
-    // If countdown is not 0, stay on selection page (no navigation)
-  }, [countDown, selectedNumber,gameStatus]);
-
-
-
-
-const handleGlobals = (state) => {
-  // Show global countdown and game state for all rooms
-  if (state.countDown !== undefined) {
-    setCountDown(state.countDown);
-  }
-  if (state.lastBall && state.lastBall?.number) {
-    // handlePlaySound(state.lastBall?.number)
-    setCurrentCall(state.lastBall?.number);
-    setCalledNumbers(state.calledNumbers);
-  }
- 
-  setTotalPlayers(state.totalPlayers);
-  setTotalCalledNumbers(state.totalCalledNumbers);
-  setTotalWinAmount(state.totalWinAmount);
-}
-
-  const handleBingoWinner = (state) => {
-    console.log("bingoWinner",state)
-    setIsBingo(true);
-    setWinnerCardNumber(state.winnerCardNumber);
-    setWinnerPlayerName(state.winnerPlayerName);
-    setWinningCard(state.winningCard);
-  }
-
-  const handleGameState = (state) => {
-    // Show game state for all rooms, prioritizing current room if available
-    if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
-      setPickedNumbers(state.pickedNumbers.numbers);
-    }
-    if (state.game_status == "in-progress") {
-      setGameStatus("in-progress");
-    }
-    if (state.game_status == "waiting") {
-      setGameStatus("waiting");
-    }
-   
-    if (state.game_status != "in-progress") {
-      setPlayersLength(state.total_players);
-    }
-    if (state.count_down !== undefined) {
-      setCountDown(state.count_down);
-    }
-  };
-
-  socket.on('globals', handleGlobals);
-
-  socket.on('activeGames', (state) => {
-    if (state?.activeGames?.length > 0) {
-      // Show active game status for all rooms
-      setGameStatus("in-progress");
-    }
-  });
-
-  socket.on('gameState', (state) => {
-
-    // Show game state for all rooms
-    if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
-      setPickedNumbers(state.pickedNumbers.numbers);
+      return;
     }
 
-    if (state.game_status != "in-progress") {
-      setPlayersLength(state.total_players);
+    if (balance < roomId && !isSelected) {
+      setToast('Insufficient balance to select this card');
+      setIsToast(true);
+      return;
     }
-    if (state.count_down !== undefined) {
-      setCountDown(state.count_down);
-    }
-  });
 
-
-
-  // Memoized board generation
-  const generateCombination = useCallback(() => {
-    const card = [];
-    const ranges = [
-      [1, 15],    // BfAlexo
-      [16, 30],   // I
-      [31, 45],   // N
-      [46, 60],   // G
-      [61, 75],   // O
-    ];
-
-    for (let col = 0; col < 5; col++) {
-      const nums = [];
-      for (let n = ranges[col][0]; n <= ranges[col][1]; n++) {
-        nums.push(n);
-      }
-
-      for (let row = 0; row < 5; row++) {
-        if (!card[row]) card[row] = [];
-        if (col === 2 && row === 2) {
-          card[row][col] = '*';
-        } else {
-          const idx = Math.floor(Math.random() * nums.length);
-          card[row][col] = nums.splice(idx, 1)[0];
+    if (isSelected) {
+      // Unselect
+      setChoosenNumbers(prev => prev.filter(n => n !== number));
+      setSelectedNumber(null);
+      setSelectBoard(null);
+      setChooseBoards([]);
+    } else {
+      // Select
+      setChoosenNumbers([number]);
+      setSelectedNumber(number);
+      
+      // Generate card data
+      const generateCard = (cardNumber) => {
+        const card = [];
+        const ranges = [
+          { min: 1, max: 15 },   // B
+          { min: 16, max: 30 },  // I
+          { min: 31, max: 45 },  // N
+          { min: 46, max: 60 },  // G
+          { min: 61, max: 75 }   // O
+        ];
+        
+        for (let col = 0; col < 5; col++) {
+          const column = [];
+          const usedNumbers = new Set();
+          
+          for (let row = 0; row < 5; row++) {
+            if (col === 2 && row === 2) {
+              column.push('*'); // Free space
+            } else {
+              let num;
+              do {
+                num = Math.floor(Math.random() * (ranges[col].max - ranges[col].min + 1)) + ranges[col].min;
+              } while (usedNumbers.has(num));
+              usedNumbers.add(num);
+              column.push(num);
+            }
+          }
+          card.push(column);
         }
-      }
+        return card;
+      };
+
+      const card = generateCard(number);
+      setSelectBoard(card);
+      setChooseBoards([card]);
     }
-    // return card;
-    // Transpose the card array
-    const transposedCard = card[0].map((_, colIndex) =>
-      card.map(row => row[colIndex])
-    );
-    return transposedCard;
-
-
-  }, []);
-
-
-  const handlePickedNumbers = (state) => {
-    // Show picked numbers for all rooms, not just the current one
-    setPickedNumbers(state.numbers);
-  }
-
-
-
-  socket.on('joinError', (error) => {
-    setToast(error.message);
-    setIsToast(true);
-    setJoinError(true);
-    return;
-  })
-
-  const handleNumberClick = async (number) => {
-    // Check if this number is already chosen (for unselecting)
-    const isCurrentlyChosen = choosenNumbers.includes(number);
-    
-    // Check if websocket is connected
-    if (!isSocketConnected) {
-      setToast("Please wait for connection to be established");
-      setIsToast(true);
-      return;
-    }
-
-    console.log("isCurrentlyChosen",isCurrentlyChosen)
-  
-    // If card already chosen by this user, do nothing (prevent unselect)
-    if (isCurrentlyChosen) {
-      setToast(`Card ${number} already selected`);
-      setIsToast(true);
-      return;
-    }
-    
-    // Balance checks only apply when selecting (not unselecting)
-    if (balance === 0) {
-      console.log("❌ Balance is zero");
-      if (loading) {
-        setToast("Please wait while we fetch your balance");
-      } else {
-        setToast("Your balance is zero. Please deposit to play");
-      }
-      setIsToast(true);
-      return;
-    }
-    
-    if (balance < parseInt(roomId)) {
-      console.log("❌ Insufficient balance");
-      setToast(`Insufficient balance. You need ${parseInt(roomId)} ETB but have ${balance} ETB. Please deposit more to play.`);
-      setIsToast(true);
-      return;
-    }
-    
-    if (pickedNumbers && pickedNumbers.length > 0 && pickedNumbers.includes(number)) {
-      console.log("❌ Number already picked by another player");
-      setToast(`Card number ${number} is already selected by another player. Please choose a different number.`);
-      setIsToast(true);
-      return;
-    }
-   
-    // Prevent switching to another card once one is selected
-    if (choosenNumbers.length >= 1) {
-      setToast(`You have already selected Card ${choosenNumbers[0]}`);
-      setIsToast(true);
-      return;
-    }
-  
-    // Add new number and generate new board (for first selection)
-    const newNumbers = [...choosenNumbers, number];
-    const newBoard = generateCombination();
-    const newBoards = [...choosenBoards, newBoard];
-  
-    setChoosenNumbers(newNumbers);
-    setChooseBoards(newBoards);
-  
-    // Set the single card
-    setSelectedNumber(newNumbers[0]);
-    setSelectBoard(newBoards[0]);
-    
-    // Join game immediately with the selected number
-    await handleJoinGame(newNumbers[0], newBoards[0]);
-  };
-
-  // Handle double click to unselect and leave game
-  const handleNumberDoubleClick = (number) => {
-    if (choosenNumbers.includes(number)) {
-      // Unselect the card and leave game
-      const index = choosenNumbers.indexOf(number);
-      if (index > -1) {
-        // Leave game before resetting states
-        handleLeaveGame();
-        
-        const newNumbers = [...choosenNumbers];
-        const newBoards = [...choosenBoards];
-        newNumbers.splice(index, 1);
-        newBoards.splice(index, 1);
-
-        setChoosenNumbers(newNumbers);
-        setChooseBoards(newBoards);
-        setSelectedNumber(null);
-        setSelectBoard([]);
-        
-        setToast(`Card ${number} unselected! Left the game.`);
-        setIsToast(true);
-      }
-    }
-  };
-
-  // Join game function - NEVER navigates, only joins and waits for countdown
-  const handleJoinGame = async (selectedNum = selectedNumber, selectBoardData = selectBoard) => {
-    console.log("handleJoinGame", "selectedNum:", selectedNum, "selectedNumber:", selectedNumber)
-    if (!selectedNum || !playerId || !gameId) {
-      console.log("Missing required data:", { selectedNum, playerId, gameId });
-      return;
-    }
-    
-    if (gameStatus === "in-progress") {
-      console.log("Game is already in progress")
-      setToast("Game is already in progress");
-      setIsToast(true);
-      return;
-    }
-
-    if (balance < parseInt(roomId) || balance === 0) {
-      console.log("Insufficient balance")
-      setToast("Insufficient balance");
-      setIsToast(true);
-      return;
-    }
-
-    try {
-      console.log("Joining game...")
-      setToast("Joining game...");
-      setIsToast(true);
-
-      const data = {
-        playerId,
-        gameId,
-        selectedNumber: selectedNum,
-        roomId,
-        selectBoard: selectBoardData,
-        numberOfBoards: choosenBoards.length 
-      }
-      console.log("data",data)
-      
-      socket.emit('joinGame', data);
-
-      setToast(`Card ${selectedNum} selected! Waiting for countdown to reach 00...`);
-      setIsToast(true);
-    } catch (error) {
-      console.error('Error joining game:', error);
-      setToast("Error joining game");
-      setIsToast(true);
-    }
-  };
-
-  // Leave game function
-  const handleLeaveGame = (isSwitchingCard = false) => {
-    if (selectedNumber) {
-      socket.emit('leave', { 
-        playerId, 
-        roomId, 
-        selectedNumber, 
-        reason: isSwitchingCard ? 'switching_card' : 'user_left' 
-      });
-      
-      // Only reset selection if not switching cards
-      if (!isSwitchingCard) {
-        setChoosenNumbers([]);
-        setChooseBoards([]);
-        setSelectedNumber(null);
-        setSelectBoard([]);
-        
-        setToast("Left the game");
-        setIsToast(true);
-      }
-    }
-  };
-  
-
-
-  const handleGameStatus = (state) => {
-    // Show game status for all rooms
-    setGameStatus(state.status);
-  }
-
-
-
-
-
-  // Debug useEffect to monitor state changes
-  useEffect(() => {
-  }, [choosenNumbers, selectedNumber, choosenBoards, selectBoard]);
+  }, [isLoading, isSocketConnected, choosenNumbers, pickedNumbers, balance, roomId, setChoosenNumbers, setSelectedNumber, setSelectBoard, setChooseBoards, setToast, setIsToast]);
 
   return (
     <>
-
       {isToast && <Toaster message={toast} />}
       {loading && <div className="loading-container">
         <div className="loading-spinner"></div>
         <div className="loading-text">Loading...</div>
-      </div>
+      </div>}
 
-      }
-
-{isBingo && (
-  <div className="bingo-winner-overlay">
-    <div className="bingo-winner-card">
-      <div className="winner-card-header">
-        <p className='winner-card-header-text'>Bingo Winner!</p>
-      </div>
-
-      <p className='winner-card-header-winner-number' style={{
-        color: "green",
-        fontSize: "1.6rem",
-        fontWeight: "bold"
-      }}>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
-      <p className='winner-card-header-text' style={{
-          color: "green",
-        fontSize: "1.6rem",
-        fontWeight: "bold"
-      }}>ስም : {winnerPlayerName},is Winner</p>
-
-     
-<div className="winning-card">
-  {/* Header row */}
-  <div className="winning-card-row">
-    {["B", "I", "N", "G", "O"].map((letter, index) => (
-      <div key={index} className="winning-card-cell">
-        <span>{letter}</span>
-      </div>
-    ))}
-  </div>
-
-  {winningCard[0] && winningCard[0].map((_, rowIndex) => (
-    <div key={rowIndex} className="winning-card-row">
-      {winningCard.map((row, colIndex) => {
-        const cell = row[rowIndex];
-        // Check win conditions
-        const rowComplete = winningCard.every(r => r[rowIndex].marked);
-        const colComplete = winningCard[colIndex].every(c => c.marked);
-        const diagonalComplete =
-          rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
-        const reverseDiagonalComplete =
-          rowIndex + colIndex === 4 && winningCard.every((r, i) => r[4 - i].marked);
-
-        const fourCornersComplete =
-          winningCard[0][0].marked &&
-          winningCard[0][4].marked &&
-          winningCard[4][0].marked &&
-          winningCard[4][4].marked;
-
-        const fourEdgesComplete =
-          winningCard[0][2].marked &&
-          winningCard[2][0].marked &&
-          winningCard[2][4].marked &&
-          winningCard[4][2].marked;
-
-        // Does this cell belong to a winning line?
-        const inWinningLine =
-          (rowComplete && cell.marked) ||
-          (colComplete && cell.marked) ||
-          (diagonalComplete && cell.marked) ||
-          (reverseDiagonalComplete && cell.marked) ||
-          (fourCornersComplete &&
-            cell.marked &&
-            ((colIndex === 0 && (rowIndex === 0 || rowIndex === 4)) ||
-             (colIndex === 4 && (rowIndex === 0 || rowIndex === 4)))) ||
-          (fourEdgesComplete &&
-            cell.marked &&
-            ((colIndex === 0 && rowIndex === 2) ||
-             (colIndex === 2 && (rowIndex === 0 || rowIndex === 4)) ||
-             (colIndex === 4 && rowIndex === 2)));
-
-        // Final background color
-        let bgColor = "white";
-        if (inWinningLine) {
-          bgColor = "green";   // part of winning line
-        } else if (cell.marked) {
-          bgColor = "red";     // marked but not winning
-        }
-
-        return (
-          <div
-            key={colIndex}
-            className="winning-card-cell"
-            style={{ backgroundColor: bgColor }}
-          >
-            <span>{cell.number}</span>
-          </div>
-        );
-      })}
-    </div>
-  ))}
-</div>
-
-      <div className="choosen-numbers">
-        <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
-      </div>
-    </div>
-  </div>
-)}
-     
-
-
-
-      {!loading && (
-        <>
-      
-          <div className="selections-container">
-          <div className="balance-container">
-
-            <div className="balance-text">
-              Balance {parseInt(balance)} ብር
+      {isBingo && (
+        <div className="bingo-winner-overlay">
+          <div className="bingo-winner-card">
+            <div className="winner-card-header">
+              <p className='winner-card-header-text'>Bingo Winner!</p>
             </div>
-
-            <div className="balance-text">
-              Stake {roomId} ብር
-            </div>
-
-          
+            <p className='winner-card-header-winner-number' style={{
+              color: "green",
+              fontSize: "1.6rem",
+              fontWeight: "bold"
+            }}>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
+            <p className='winner-card-header-text' style={{
+              color: "green",
+              fontSize: "1.6rem",
+              fontWeight: "bold"
+            }}>ስም : {winnerPlayerName},is Winner</p>
             
-            {/* Connection Status */}
-            <div className="connection-status">
-              <div className={`status-badge ${isSocketConnected ? 'connected' : 'disconnected'}`}>
-                {isSocketConnected ? 'Connected' : 'Disconnected'}
-              </div>
-            </div>
-            
-          
-          </div>
-
-          <div className="globals-container">
-
-          {gameStatus == "waiting" && (
-            <div className="countdown-container">
-              <div className="countdown-text">
-                {countDown !== undefined ? `Game starts in: ${countDown}` : ``}
-              </div>
-             
-            </div>
-            )}
-
-        
-        
-          </div>
-
-          <div className="numbers-grid">
-
-
-            {numbers.map(number => {
-              // const isPicked = pickedNumbers && pickedNumbers.includes(number) || false;
-              const realPicked = (pickedNumbers && pickedNumbers.length > 0) ? pickedNumbers.includes(number) : false;
-              const effectivePicked = realPicked;
-
-              const isSelected = selectedNumber === number;
-              const isChoosen = choosenNumbers.includes(number);
-              // Don't disable chosen cards for unselecting, only disable if picked by another player or no connection
-              const isDisabled = (effectivePicked && !isChoosen) || !isSocketConnected;
-              const hasInsufficientBalance = balance < parseInt(roomId) || balance === 0;
-              const isPicked = effectivePicked;
-
-              // Debug logging for selected numbers
-              if (isChoosen) {
-                console.log("Card",number,"is choosen")
-              }
-
-              return (
-                <button
-                  key={number}
-                  className={`number-cell
-                  ${isPicked ? 'picked' : ''}
-                  ${isSelected ? 'selected' : ''}
-                  ${isChoosen ? 'choosen' : ''}
-                  ${isDisabled ? 'disabled' : ''}
-                  ${hasInsufficientBalance ? 'insufficient-balance' : ''}
-                `}
-                  style={{ position: 'relative' }}
-                  onClick={(e) => {
-                  
-                    // Prevent default to avoid any potential issues
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    handleNumberClick(number);
-                  }}
-                  onDoubleClick={() => handleNumberDoubleClick(number)}
-                  disabled={isDisabled}
-                  title={
-                    isPicked 
-                      ? `Card number ${number} is already selected by another player` 
-                      : !isSocketConnected
-                        ? `Please wait for connection to be established` 
-                        : isChoosen
-                          ? `Click to unselect card ${number} (or double-click to unselect and leave game)`
-                          : `Select number ${number}`
-                  }
-                  aria-label={
-                    isPicked 
-                      ? `Number ${number} already picked` 
-                      : !isSocketConnected
-                        ? `Please wait for connection` 
-                        : isChoosen
-                          ? `Unselect card ${number}`
-                          : `Select number ${number}`
-                  }
-                >
-                  <span className='number-cell-text'>{number}</span>
-                  {isPicked && <span className="picked-badge"></span>}
-                  {/* No extra badge; simulated picks appear identical to real picks */}
-                </button>
-              );
-            })}
-          </div>
-
-          {choosenNumbers.length > 0 && selectedNumber && (
-            <div className='combination-boards-container-parent'>
-              <div className="combination-board-container">
-               
-                {/* Single Bingo Card Component */}
-                <div className="combination-board">
-                  <div className='card-number-container'>
-                    {/* <div className='card-number'># Card {selectedNumber}</div> */}
-                    <div className="combination-bingo-header">
-                      {['B', 'I', 'N', 'G', 'O'].map((letter, i) => (
-                        <div key={i} className="combination-bingo-header-text">{letter}</div>
-                      ))}
-                    </div>
+            <div className="winning-card">
+              <div className="winning-card-row">
+                {["B", "I", "N", "G", "O"].map((letter, index) => (
+                  <div key={index} className="winning-card-cell">
+                    <span>{letter}</span>
                   </div>
+                ))}
+              </div>
+              {winningCard && winningCard[0] && winningCard[0].map((_, rowIndex) => (
+                <div key={rowIndex} className="winning-card-row">
+                  {winningCard.map((row, colIndex) => {
+                    const cell = row[rowIndex];
+                    const rowComplete = winningCard.every(r => r[rowIndex].marked);
+                    const colComplete = winningCard[colIndex].every(c => c.marked);
+                    const diagonalComplete = rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
+                    const reverseDiagonalComplete = rowIndex + colIndex === 4 && winningCard.every((r, i) => r[4 - i].marked);
+                    const fourCornersComplete = winningCard[0][0].marked && winningCard[0][4].marked && winningCard[4][0].marked && winningCard[4][4].marked;
+                    const fourEdgesComplete = winningCard[0][2].marked && winningCard[2][0].marked && winningCard[2][4].marked && winningCard[4][2].marked;
 
-                  <div className="board-grid-selections">
-                    {selectBoard.map((row, rowIndex) => (
-                      <div key={rowIndex} className="board-row-selections">
-                        {row.map((num, colIndex) => (
-                          <div
-                            key={colIndex}
-                            className={`combination-number-cell ${pickedNumbers?.length > 1 && pickedNumbers.includes(num)
-                                ? 'picked-on-board'
-                                : ''
-                              }`}
-                          >
-                            {num}
-                            {pickedNumbers?.length > 1 && pickedNumbers.includes(num) && (
-                              <span className="picked-indicator">✓</span>
-                            )}
-                          </div>
-                        ))}
+                    let bgColor = "white";
+                    if (rowComplete || colComplete || diagonalComplete || reverseDiagonalComplete || fourCornersComplete || fourEdgesComplete) {
+                      bgColor = "green";
+                    } else if (cell.marked) {
+                      bgColor = "red";
+                    }
+
+                    return (
+                      <div key={colIndex} className="winning-card-cell" style={{ backgroundColor: bgColor }}>
+                        <span>{cell.number}</span>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-
-              </div>
-
-              {/* <div className="game-status-info">
-                <p>Joined! Waiting for countdown to reach 00...</p>
-                <p>Double-click your card number to leave the game</p>
-              </div> */}
+              ))}
             </div>
-          )}
-
-
-
+            <div className="choosen-numbers">
+              <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
+            </div>
+          </div>
         </div>
-        </>
       )}
 
+      {!loading && (
+        <div className="konjo-selections-container">
+          {/* Header */}
+          <div className="konjo-header">
+            <div className="konjo-header-left">
+              <div className="hamburger-menu">☰</div>
+              <div className="konjo-logo">KONJO</div>
+            </div>
+            <div className="konjo-title">KONJO Bingo</div>
+            <div className="konjo-header-right">
+              <div className="balance-button">
+                <span className="balance-amount">{parseInt(balance)} ETB</span>
+                <div className="user-icon">👤</div>
+              </div>
+            </div>
+          </div>
 
+          {/* Sub-header */}
+          <div className="konjo-sub-header">
+            <div className="back-button">
+              <FontAwesomeIcon icon={faArrowLeft} />
+            </div>
+            <div className="info-buttons">
+              <div className="info-button">Wallet {parseInt(balance)} ብር</div>
+              <div className="info-button">Stake {roomId} ብር</div>
+              <div className="info-button">⭐ Bonus</div>
+            </div>
+            <div className="action-button">ምረጥ</div>
+          </div>
 
+          {/* Main Content */}
+          <div className="konjo-main-content">
+            {/* Waiting Message */}
+            <div className="waiting-message">
+              Waiting for players...
+            </div>
 
+            {/* Number Grid 1-100 */}
+            <div className="konjo-number-grid">
+              {Array.from({ length: 100 }, (_, i) => {
+                const number = i + 1;
+                const isSelected = choosenNumbers.includes(number);
+                const isPicked = pickedNumbers.includes(number);
+                const isDisabled = isPicked || !isSocketConnected || (balance < roomId && !isSelected);
 
+                return (
+                  <button
+                    key={number}
+                    className={`konjo-number-cell ${isPicked ? 'picked' : ''} ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                    onClick={() => handleNumberClick(number)}
+                    disabled={isDisabled}
+                  >
+                    {number}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Selected Card Preview */}
+            {selectedNumber && (
+              <div className="konjo-card-preview">
+                <div className="card-preview-title">Your Selected Card</div>
+                <div className="card-preview-grid">
+                  {selectBoard.map((row, rowIndex) => (
+                    <div key={rowIndex} className="card-preview-row">
+                      {row.map((num, colIndex) => (
+                        <div key={colIndex} className={`card-preview-cell ${num === '*' ? 'free-space' : ''}`}>
+                          {num === '*' ? 'FREE' : num}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                <div className="card-preview-number">Card #{selectedNumber}</div>
+              </div>
+            )}
+
+            {/* Countdown */}
+            {gameStatus === "waiting" && countDown > 0 && (
+              <div className="konjo-countdown">
+                Game starts in: {countDown}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Message */}
+          <div className="konjo-bottom-message">
+            Welcome to Konjo Bingo Bot! Choose an option.
+          </div>
+        </div>
+      )}
     </>
   );
 };
