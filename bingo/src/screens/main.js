@@ -7,6 +7,7 @@ import { BingoContext } from '../contexts/bingoContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faVolumeMute, faVolumeUp, faSignOutAlt, faSync } from '@fortawesome/free-solid-svg-icons';
 import { generateFixedCard } from '../helpers/fixedBingoCards';
+import { hasBingo, checkBingoPatterns, markCardNumber } from '../helpers/fixedBingoCards';
 
 const PlayingBoard = () => {
   const {
@@ -75,6 +76,9 @@ const PlayingBoard = () => {
     isMuted,
     autoPlay
   } = gameState;
+
+  // Debug log for autoPlay state
+  console.log('Current autoPlay state:', autoPlay);
 
   // Computed values
   const displayedTotalPlayers = useMemo(() => totalPlayers || 0, [totalPlayers]);
@@ -197,6 +201,7 @@ const PlayingBoard = () => {
 
   const handleBingoWinner = useCallback((data) => {
     try {
+      console.log('Bingo winner received:', data);
       updateGameState({
         isBingo: true,
         winnerCardNumber: data.winnerCardNumber,
@@ -208,18 +213,48 @@ const PlayingBoard = () => {
     }
   }, [updateGameState]);
 
+  const handleFalseBingo = useCallback((data) => {
+    try {
+      console.log('False bingo received:', data);
+      setToast('❌ False Bingo! You are disqualified for this round.');
+      setIsToast(true);
+      updateGameState({
+        isDisqualified: true
+      });
+    } catch (error) {
+      console.error('Error handling false bingo:', error);
+    }
+  }, [updateGameState, setToast, setIsToast]);
+
+  const handleDisqualified = useCallback((data) => {
+    try {
+      console.log('Disqualified received:', data);
+      setToast('❌ You are disqualified for this round due to false bingo.');
+      setIsToast(true);
+      updateGameState({
+        isDisqualified: true
+      });
+    } catch (error) {
+      console.error('Error handling disqualified:', error);
+    }
+  }, [updateGameState, setToast, setIsToast]);
+
   // Socket event bindings
   useEffect(() => {
     if (!socket) return;
 
     socket.on('gameState', handleGameState);
     socket.on('bingoWinner', handleBingoWinner);
+    socket.on('falseBingo', handleFalseBingo);
+    socket.on('disqualified', handleDisqualified);
 
     return () => {
       socket.off('gameState', handleGameState);
       socket.off('bingoWinner', handleBingoWinner);
+      socket.off('falseBingo', handleFalseBingo);
+      socket.off('disqualified', handleDisqualified);
     };
-  }, [socket, handleGameState, handleBingoWinner]);
+  }, [socket, handleGameState, handleBingoWinner, handleFalseBingo, handleDisqualified]);
 
   const handleCellClick = useCallback((number) => {
     try {
@@ -247,14 +282,28 @@ const PlayingBoard = () => {
 
   const handleBingo = useCallback((board, cardNumber) => {
     try {
-      if (!board || !cardNumber || isBingo || isDisqualified) return;
+      console.log('handleBingo called with:', { board, cardNumber, isBingo, isDisqualified });
       
+      if (!board || !cardNumber || isBingo || isDisqualified) {
+        console.log('Bingo call blocked:', { 
+          hasBoard: !!board, 
+          hasCardNumber: !!cardNumber, 
+          isBingo, 
+          isDisqualified 
+        });
+        return;
+      }
+      
+      console.log('Emitting bingo event to server...');
       socket.emit('bingo', {
         playerId,
         gameId,
-        cardNumber,
-        board
+        boardNumber: cardNumber,
+        board,
+        playerName
       });
+      
+      console.log('Bingo event emitted successfully');
     } catch (error) {
       console.error('Error handling bingo:', error);
     }
@@ -294,8 +343,69 @@ const PlayingBoard = () => {
   }, [updateGameState]);
 
   const toggleAutoPlay = useCallback(() => {
-    updateGameState(prevState => ({ autoPlay: !prevState.autoPlay }));
-  }, [updateGameState]);
+    console.log('toggleAutoPlay clicked, current autoPlay:', autoPlay);
+    const newAutoPlayState = !autoPlay;
+    console.log('newAutoPlayState:', newAutoPlayState);
+    
+    // Direct state update for testing
+    setGameState(prevState => {
+      console.log('setGameState called, prevState:', prevState);
+      const newState = { ...prevState, autoPlay: newAutoPlayState };
+      console.log('newState:', newState);
+      return newState;
+    });
+    
+    // Show toast notification
+    if (newAutoPlayState) {
+      setToast('🤖 Autoplay enabled - System will mark cells automatically');
+    } else {
+      setToast('👤 Manual mode - Click cells to mark them');
+    }
+    setIsToast(true);
+  }, [autoPlay, setToast, setIsToast]);
+
+  // Effect to handle autoplay when called numbers change
+  useEffect(() => {
+    if (!autoPlay || !selectBoard || isBingo || isDisqualified) return;
+    
+    // Auto-mark cells when called numbers are received
+    const calledNumbersArray = calledNumbers.map(num => ({ number: num }));
+    const newSelectedCell = new Set(selectedCell);
+    let markedCount = 0;
+    
+    // Mark cells that match called numbers
+    selectBoard.forEach(row => {
+      row.forEach(cellNumber => {
+        if (cellNumber !== '*' && calledNumbers.includes(cellNumber) && !newSelectedCell.has(cellNumber)) {
+          newSelectedCell.add(cellNumber);
+          markedCount++;
+        }
+      });
+    });
+    
+    // Update state if there are new marked cells
+    if (markedCount > 0) {
+      updateGameState({ selectedCell: newSelectedCell });
+      setToast(`🤖 Autoplay marked ${markedCount} number(s)`);
+      setIsToast(true);
+    }
+    
+    // Check for bingo automatically
+    const markedCard = selectBoard.map(row => 
+      row.map(cellNumber => ({
+        number: cellNumber,
+        marked: cellNumber === '*' || newSelectedCell.has(cellNumber)
+      }))
+    );
+    
+    // Check if bingo is achieved
+    if (hasBingo(markedCard)) {
+      console.log('Auto-bingo detected!');
+      setToast('🎉 Autoplay detected BINGO!');
+      setIsToast(true);
+      handleBingo(selectBoard, selectedNumber);
+    }
+  }, [calledNumbers, autoPlay, selectBoard, selectedCell, isBingo, isDisqualified, selectedNumber, handleBingo, updateGameState, setToast, setIsToast]);
 
   // Winner countdown effect
   useEffect(() => {
@@ -320,34 +430,49 @@ const PlayingBoard = () => {
     <div className="bingo-game-container">
       <Toaster />
 
-  {isBingo && (
-  <div className="bingo-winner-overlay">
+      {isBingo && (
+        <div className="bingo-winner-overlay">
     <div className="bingo-winner-card">
+      {/* Animated Countdown */}
       <div className="winner-countdown">
-        <p>Returning to home in: {winnerCountdown} seconds</p>
+        <div className="countdown-icon">⏰</div>
+        <p>Returning to home in: <span className="countdown-number">{winnerCountdown}</span> seconds</p>
       </div>
+      
+      {/* Winner Header with Celebration */}
       <div className="winner-card-header">
-        <p className='winner-card-header-text'>Bingo Winner!</p>
+        <div className="celebration-icons">
+          <span className="celebration-icon">🎉</span>
+          <span className="celebration-icon">🏆</span>
+          <span className="celebration-icon">🎊</span>
+        </div>
+        <p className='winner-card-header-text'>🎯 BINGO WINNER! 🎯</p>
+        <div className="winner-divider"></div>
       </div>
-      <p className='winner-card-header-winner-number' style={{
-        color: "green",
-        fontSize: "1.6rem",
-        fontWeight: "bold"
-      }}>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
-      <p className='winner-card-header-text' style={{
-          color: "green",
-        fontSize: "1.6rem",
-        fontWeight: "bold"
-      }}>ስም : {winnerPlayerName},is Winner</p>
+      
+      {/* Winner Information */}
+      <div className="winner-info">
+        <div className="winner-card-number">
+          <span className="info-label">🏷️ Winning Card Number:</span>
+          <span className="info-value">{winnerCardNumber}</span>
+        </div>
+        <div className="winner-player-name">
+          <span className="info-label">👤 Winner Name:</span>
+          <span className="info-value">{winnerPlayerName}</span>
+        </div>
+      </div>
      
-<div className="winning-card">
-  <div className="winning-card-row">
-    {["B", "I", "N", "G", "O"].map((letter, index) => (
-      <div key={index} className="winning-card-cell">
-        <span>{letter}</span>
-      </div>
-    ))}
-  </div>
+      {/* Winning Card Display */}
+      <div className="winning-card-section">
+        <h3 className="winning-card-title">🎲 Winning Bingo Card 🎲</h3>
+        <div className="winning-card">
+          <div className="winning-card-row">
+            {["B", "I", "N", "G", "O"].map((letter, index) => (
+              <div key={index} className="winning-card-cell winning-card-header">
+                <span className="bingo-letter">{letter}</span>
+              </div>
+            ))}
+          </div>
               {winningCard && winningCard[0] && winningCard[0].map((_, rowIndex) => (
     <div key={rowIndex} className="winning-card-row">
       {winningCard.map((row, colIndex) => {
@@ -375,15 +500,22 @@ const PlayingBoard = () => {
     </div>
   ))}
 </div>
-      <div className="choosen-numbers">
-        <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
+        </div>
+      </div>
+      
+      {/* Action Buttons */}
+      <div className="winner-actions">
+        <div className="winner-summary">
+          <span className="summary-text">🎊 Congratulations! You won with Card #{winnerCardNumber} 🎊</span>
+        </div>
         <button className="close-winner-button" onClick={handleCloseWinner}>
-          <p>Close</p>
+          <span className="button-icon">✨</span>
+          <span className="button-text">Continue Playing</span>
+          <span className="button-icon">✨</span>
         </button>
       </div>
     </div>
-  </div>
-)}
+      )}
 
       {/* Top Stats Bar */}
       <div className="top-stats-bar">
@@ -502,10 +634,14 @@ const PlayingBoard = () => {
           <div className="control-buttons">
             <button 
               className={`control-btn ${autoPlay ? 'active' : ''}`}
-              onClick={toggleAutoPlay}
+              onClick={() => {
+                console.log('Button clicked!');
+                toggleAutoPlay();
+              }}
+              title={autoPlay ? 'Autoplay is ON - System will mark cells automatically' : 'Autoplay is OFF - Click to enable automatic marking'}
             >
               <FontAwesomeIcon icon={faCog} />
-              Play Auto
+              {autoPlay ? 'Auto Play ON' : 'Auto Play OFF'}
             </button>
             <button 
               className={`control-btn ${isMuted ? 'active' : ''}`}
@@ -538,9 +674,9 @@ const PlayingBoard = () => {
               )}
             </div>
           </div>
-
+    
           {/* Player Card */}
-          {selectedNumber && (
+      {selectedNumber && (
             <div className="player-card-section">
               <div className="card-title">Card Number {selectedNumber}</div>
               
@@ -571,7 +707,7 @@ const PlayingBoard = () => {
                           </div>
                         );
                       })}
-                    </div>
+          </div>
                   );
                 })}
           </div>
@@ -579,27 +715,30 @@ const PlayingBoard = () => {
               {/* Bingo Button */}
               <button 
                 className="bingo-button"
-                onClick={() => handleBingo(selectBoard, selectedNumber)}
+                onClick={() => {
+                  console.log('Bingo button clicked!');
+                  handleBingo(selectBoard, selectedNumber);
+                }}
                 disabled={firstBoardLost || isDisqualified || !selectedNumber}
-          >
+              >
                 Bingo
-          </button>
+              </button>
             </div>
-      )}
+          )}
         </div>
       </div>
 
       {/* Bottom Action Buttons */}
       <div className="bottom-actions">
-        <button className="action-btn leave-btn" onClick={handleLeaveGame}>
+        {/* <button className="action-btn leave-btn" onClick={handleLeaveGame}>
           <FontAwesomeIcon icon={faSignOutAlt} />
           Leave Game
-        </button>
-        <button className="action-btn refresh-btn" onClick={handleRefresh}>
+        </button> */}
+        {/* <button className="action-btn refresh-btn" onClick={handleRefresh}>
           <FontAwesomeIcon icon={faSync} />
           Refresh
-        </button>
-</div>
+        </button> */}
+      </div>
     </div>
   );
 };

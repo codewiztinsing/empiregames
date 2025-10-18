@@ -700,21 +700,38 @@ io.on('connection', (socket) => {
   
 
   socket.on("bingo", async (data) => {
+    console.log('Bingo event received:', data);
+    
     // If player previously made a false bingo, ignore further bingo attempts
     const gameForFaulCheck = activeGames.get(data.gameId);
     if (gameForFaulCheck && gameForFaulCheck.fauldMadePlayers && gameForFaulCheck.fauldMadePlayers.get && gameForFaulCheck.fauldMadePlayers.get(data.playerId) === true) {
+      console.log('Player is disqualified for false bingo:', data.playerId);
       socket.emit("disqualified", { message: "You are disqualified for this round due to false bingo.", roomId: data.roomId, gameId: data.gameId });
       return;
     }
 
     const game = activeGames.get(data.gameId);
-    if (!game || game.status !== 'in-progress') return;
+    if (!game || game.status !== 'in-progress') {
+      console.log('Game not found or not in progress:', { gameId: data.gameId, gameStatus: game?.status });
+      return;
+    }
+    
     const playerCards = game.players.get(data.playerId);
-    if (!playerCards || !Array.isArray(playerCards)) return;
+    if (!playerCards || !Array.isArray(playerCards)) {
+      console.log('Player cards not found:', { playerId: data.playerId, playerCards });
+      return;
+    }
+    
+    console.log('Processing bingo for player:', data.playerId);
     const board = data.board
     const boardNumber = data.boardNumber
+    console.log('Board data:', { board, boardNumber, calledNumbers: game.calledNumbers });
+    
     const markedSingleCard = markPlayerCard(board, game.calledNumbers)
+    console.log('Marked card:', markedSingleCard);
+    
     const isSingleBingo = checkSingleCardBingo(markedSingleCard)
+    console.log('Is single bingo:', isSingleBingo);
     if(isSingleBingo){
       io.emit("winBingo", {
             isBingo: true,
@@ -731,7 +748,7 @@ io.on('connection', (socket) => {
             total_winAmount: game.total_winAmount,
             total_players: game.total_players,
             roomId: data.roomId
-      })
+      });
 
     io.emit("bingoWinner", {
         isBingo: true,

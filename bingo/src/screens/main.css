@@ -21,6 +21,8 @@ body {
   display: flex;
   flex-direction: column;
   padding: 10px;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Top Stats Bar */
@@ -204,7 +206,16 @@ body {
 }
 
 .control-btn.active {
-  background-color: #27ae60;
+  background-color: #27ae60 !important;
+  color: white !important;
+  border-color: #1e7e34 !important;
+  box-shadow: 0 0 8px rgba(39, 174, 96, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+.control-btn.active:hover {
+  background-color: #229954 !important;
+  transform: translateY(-3px) !important;
 }
 
 .bonus-countdown {
@@ -255,20 +266,21 @@ body {
 }
 
 .ball-display {
-  width: 120px;
-  height: 120px;
-  border: 4px solid #3498db;
+  width: 160px;
+  height: 160px;
+  border: 6px solid #3498db;
   border-radius: 50%;
   background-color: #000000;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
 }
 
 .ball-number {
   color: white;
-  font-size: 18px;
+  font-size: 24px;
   font-weight: bold;
   text-align: center;
 }
@@ -470,15 +482,23 @@ body {
 /* Bottom Action Buttons */
 .bottom-actions {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  margin-top: 10px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10;
 }
 
 .action-btn {
-  flex: 1;
-  padding: 10px;
+  width: 100%;
+  padding: 12px 16px;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: bold;
   cursor: pointer;
   display: flex;
@@ -486,6 +506,7 @@ body {
   justify-content: center;
   gap: 8px;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .leave-btn {
@@ -515,52 +536,129 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(26, 35, 126, 0.8));
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
+  animation: fadeInOverlay 0.5s ease-out;
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(10px);
+  }
 }
 
 .bingo-winner-card {
-  background-color: white;
-  border-radius: 20px;
-  padding: 30px;
-  max-width: 500px;
-  width: 90%;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 25px;
+  padding: 40px;
+  max-width: 600px;
+  width: 95%;
   text-align: center;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  animation: slideInModal 0.6s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes slideInModal {
+  from {
+    transform: translateY(-50px) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.bingo-winner-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ff6b35, #f7931e, #ffd700, #f7931e, #ff6b35);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .winner-countdown {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  padding: 15px;
+  background: linear-gradient(135deg, #ff6b35, #f7931e);
+  border-radius: 15px;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 .winner-card-header {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  position: relative;
 }
 
 .winner-card-header-text {
-  font-size: 24px;
-  font-weight: bold;
-  color: #2c3e50;
-  margin-bottom: 10px;
+  font-size: 32px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ff6b35, #f7931e, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: textGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes textGlow {
+  from { filter: drop-shadow(0 0 5px rgba(255, 107, 53, 0.5)); }
+  to { filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8)); }
 }
 
 .winner-card-header-winner-number {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  color: #27ae60;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .winning-card {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 2px;
-  margin: 20px 0;
-  background-color: #f8f9fa;
-  padding: 10px;
-  border-radius: 10px;
+  gap: 3px;
+  margin: 25px 0;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.1),
+    0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(255, 215, 0, 0.2);
 }
 
 .winning-card-row {
@@ -568,44 +666,230 @@ body {
 }
 
 .winning-card-cell {
-  background-color: white;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  padding: 8px 4px;
-  font-size: 12px;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border: 2px solid #dee2e6;
+    border-radius: 8px;
+  padding: 10px 6px;
+    font-size: 14px;
   font-weight: bold;
   color: #2c3e50;
   text-align: center;
-  min-height: 28px;
+  min-height: 35px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.winning-card-cell:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .choosen-numbers {
-  margin-top: 20px;
+  margin-top: 25px;
+  padding: 20px;
+  background: linear-gradient(135deg, #e8f5e8, #d4edda);
+  border-radius: 15px;
+  border: 2px solid rgba(40, 167, 69, 0.3);
 }
 
 .choosen-number {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
-  color: #2c3e50;
+  color: #155724;
+  margin-bottom: 15px;
 }
 
 .close-winner-button {
-  background-color: #3498db;
+  background: linear-gradient(135deg, #3498db, #2980b9);
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 14px;
+    border-radius: 12px;
+  padding: 15px 30px;
+  font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 15px;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.close-winner-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.close-winner-button:hover::before {
+  left: 100%;
 }
 
 .close-winner-button:hover {
-  background-color: #2980b9;
+  background: linear-gradient(135deg, #2980b9, #1f618d);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+}
+
+.close-winner-button:active {
+  transform: translateY(0);
+}
+
+/* Additional Modal Enhancements */
+.countdown-icon {
+  font-size: 24px;
+  margin-right: 10px;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
+}
+
+.countdown-number {
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.celebration-icons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.celebration-icon {
+  font-size: 32px;
+  animation: celebrationBounce 2s ease-in-out infinite;
+}
+
+.celebration-icon:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.celebration-icon:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes celebrationBounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(-5deg); }
+  50% { transform: translateY(-5px) rotate(0deg); }
+  75% { transform: translateY(-15px) rotate(5deg); }
+}
+
+.winner-divider {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #ffd700, transparent);
+  margin: 15px 0;
+  border-radius: 2px;
+}
+
+.winner-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin: 20px 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 15px;
+  border: 2px solid rgba(255, 215, 0, 0.2);
+}
+
+.winner-card-number,
+.winner-player-name {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.info-label {
+  font-weight: bold;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.info-value {
+  font-weight: 900;
+  color: #27ae60;
+  font-size: 18px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.winning-card-section {
+  margin: 25px 0;
+}
+
+.winning-card-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.winning-card-header {
+  background: linear-gradient(135deg, #ff6b35, #f7931e) !important;
+  color: white !important;
+  font-weight: 900 !important;
+  font-size: 16px !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.bingo-letter {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.winner-actions {
+  margin-top: 25px;
+  text-align: center;
+}
+
+.winner-summary {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  border-radius: 15px;
+  border: 2px solid rgba(40, 167, 69, 0.3);
+}
+
+.summary-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: #155724;
+}
+
+.button-icon {
+  font-size: 18px;
+  margin: 0 5px;
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.2); }
+}
+
+.button-text {
+  font-size: 16px;
+  font-weight: bold;
 }
 
 /* Responsive Design */
@@ -658,12 +942,49 @@ body {
   }
   
   .ball-display {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
   }
   
   .ball-number {
+    font-size: 18px;
+  }
+  
+  /* Bottom actions responsive */
+  .bottom-actions {
+    padding: 8px;
+    gap: 6px;
+  }
+  
+  .action-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+  
+  /* Modal responsive */
+  .bingo-winner-card {
+    padding: 25px;
+    max-width: 90%;
+  }
+  
+  .winner-card-header-text {
+    font-size: 24px;
+  }
+  
+  .celebration-icon {
+    font-size: 24px;
+  }
+  
+  .winner-info {
+    padding: 15px;
+  }
+  
+  .info-label {
     font-size: 14px;
+  }
+  
+  .info-value {
+    font-size: 16px;
   }
 }
 
@@ -724,12 +1045,12 @@ body {
   }
   
   .ball-display {
-    width: 60px;
-    height: 60px;
+    width: 80px;
+    height: 80px;
   }
   
   .ball-number {
-    font-size: 12px;
+    font-size: 16px;
   }
   
   .control-btn {
@@ -743,8 +1064,45 @@ body {
   }
   
   .action-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  /* Bottom actions responsive */
+  .bottom-actions {
+    padding: 6px;
+    gap: 4px;
+  }
+  
+  /* Modal responsive */
+  .bingo-winner-card {
+    padding: 20px;
+    max-width: 95%;
+  }
+  
+  .winner-card-header-text {
+    font-size: 20px;
+  }
+  
+  .celebration-icon {
+    font-size: 20px;
+  }
+  
+  .winner-info {
     padding: 12px;
+  }
+  
+  .info-label {
+    font-size: 12px;
+  }
+  
+  .info-value {
     font-size: 14px;
+  }
+  
+  .winning-card-cell {
+    font-size: 12px;
+    min-height: 30px;
   }
 }
 
@@ -792,12 +1150,12 @@ body {
   }
   
   .ball-display {
-    width: 50px;
-    height: 50px;
+    width: 70px;
+    height: 70px;
   }
   
   .ball-number {
-    font-size: 10px;
+    font-size: 14px;
   }
   
   .control-btn {
@@ -811,7 +1169,49 @@ body {
   }
   
   .action-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  
+  /* Bottom actions responsive */
+  .bottom-actions {
+    padding: 4px;
+    gap: 3px;
+  }
+  
+  /* Modal responsive */
+  .bingo-winner-card {
+    padding: 15px;
+    max-width: 98%;
+  }
+  
+  .winner-card-header-text {
+    font-size: 18px;
+  }
+  
+  .celebration-icon {
+    font-size: 18px;
+  }
+  
+  .winner-info {
     padding: 10px;
-    font-size: 12px;
+  }
+  
+  .info-label {
+    font-size: 11px;
+  }
+  
+  .info-value {
+    font-size: 13px;
+  }
+  
+  .winning-card-cell {
+    font-size: 10px;
+    min-height: 25px;
+  }
+  
+  .close-winner-button {
+    padding: 12px 20px;
+    font-size: 14px;
   }
 }
