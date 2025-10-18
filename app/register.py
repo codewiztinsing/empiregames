@@ -133,7 +133,6 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # If user came through referral, show special message
                 if referrer_id:
                     await update.message.reply_text(f"🎉 Welcome! You were referred by user {referrer_id}")
-                    await update.message.reply_text("You've received 10 ETB in referral earnings for being referred!")
                 
                 await update.message.reply_text("Please use /play to start playing.")
                 return ConversationHandler.END

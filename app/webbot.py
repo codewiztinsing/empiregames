@@ -204,7 +204,7 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         daily_limit = daily_withdraw_limit(telegram_id)
         logger.info(f"daily_withdraw_limit {daily_limit}")
-        if int(daily_limit) > 3:
+        if int(daily_limit) > 1:
             await update.message.reply_text(f"You have reached the daily withdraw limit. Please try again tomorrow.")
             return WITHDRAW_AMOUNT_CONFIRM
         is_deposited = is_deposited_player(telegram_id)
