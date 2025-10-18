@@ -151,6 +151,24 @@ const Selections = () => {
         } else if (state.count_down === 1) {
           setToast("🎯 Final second! Game starting NOW!");
           setIsToast(true);
+        } else if (state.count_down === 0 && selectedNumber) {
+          // Redirect to play screen when countdown reaches 0
+          setToast("🚀 Game starting! Redirecting to play screen...");
+          setIsToast(true);
+          
+          // Build query parameters
+          const queryParams = new URLSearchParams({
+            playerId: playerId,
+            betAmount: roomId,
+            playerName: playerName,
+            selectedNumber: selectedNumber,
+            gameId: gameId || 'default'
+          });
+          
+          // Redirect to play screen
+          setTimeout(() => {
+            navigate(`/play?${queryParams.toString()}`);
+          }, 1000); // Small delay to show the toast message
         }
       }
     };
@@ -231,6 +249,27 @@ const Selections = () => {
     }
   }, [playerId]);
 
+  // Handle countdown redirect
+  useEffect(() => {
+    if (countDown === 0 && selectedNumber && gameStatus === "countdown") {
+      console.log('Countdown reached 0, redirecting to play screen');
+      
+      // Build query parameters
+      const queryParams = new URLSearchParams({
+        playerId: playerId,
+        betAmount: roomId,
+        playerName: playerName,
+        selectedNumber: selectedNumber,
+        gameId: gameId || 'default'
+      });
+      
+      // Redirect to play screen
+      setTimeout(() => {
+        navigate(`/play?${queryParams.toString()}`);
+      }, 500); // Small delay to ensure state is updated
+    }
+  }, [countDown, selectedNumber, gameStatus, playerId, roomId, playerName, gameId, navigate]);
+
   // Handle number click
   const handleNumberClick = useCallback((number) => {
     if (isLoading || !isSocketConnected) return;
@@ -251,11 +290,23 @@ const Selections = () => {
     }
 
     if (isSelected) {
-      // Unselect
+      // Unselect - emit leave event
+      const leaveData = {
+        playerId: playerId,
+        gameId: gameId || 'default',
+        roomId: roomId
+      };
+      
+      console.log('Emitting leave with data:', leaveData);
+      socket.emit('leave', leaveData);
+      
       setChoosenNumbers(prev => prev.filter(n => n !== number));
       setSelectedNumber(null);
       setSelectBoard(null);
       setChooseBoards([]);
+      
+      setToast(`Card ${number} unselected. Left the game.`);
+      setIsToast(true);
     } else {
       // Select
       setChoosenNumbers([number]);
@@ -296,8 +347,24 @@ const Selections = () => {
       const card = generateCard(number);
       setSelectBoard(card);
       setChooseBoards([card]);
+      
+      // Emit join game event
+      const joinData = {
+        playerId: playerId,
+        gameId: gameId || 'default',
+        selectedNumber: number,
+        roomId: roomId,
+        selectBoard: card,
+        numberOfBoards: 1
+      };
+      
+      console.log('Emitting joinGame with data:', joinData);
+      socket.emit('joinGame', joinData);
+      
+      setToast(`Card ${number} selected! Joining game...`);
+      setIsToast(true);
     }
-  }, [isLoading, isSocketConnected, choosenNumbers, pickedNumbers, balance, roomId, setChoosenNumbers, setSelectedNumber, setSelectBoard, setChooseBoards, setToast, setIsToast]);
+  }, [isLoading, isSocketConnected, choosenNumbers, pickedNumbers, balance, roomId, playerId, gameId, socket, setChoosenNumbers, setSelectedNumber, setSelectBoard, setChooseBoards, setToast, setIsToast]);
 
   return (
     <>
