@@ -108,6 +108,20 @@ const Selections = () => {
    
     if (urlPlayerId && urlRoomId) {
       socket.emit("playerJoined", { playerId: urlPlayerId, roomId: urlRoomId });
+      
+      // Request all player selections
+      console.log("📥 Requesting all player selections...");
+      socket.emit("getAllPlayerSelections", { 
+        playerId: urlPlayerId, 
+        roomId: urlRoomId 
+      });
+      
+      // Try to rejoin if there's a previous game in progress
+      console.log("🔄 Attempting to rejoin game...");
+      socket.emit("rejoinGame", { 
+        playerId: urlPlayerId, 
+        roomId: urlRoomId 
+      });
     }
 
     const handleGameState = (state) => {

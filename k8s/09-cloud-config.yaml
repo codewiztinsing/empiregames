@@ -1,0 +1,74 @@
+# Cloud-specific Kubernetes configuration for /var/www/empiregames
+
+# Update this file with your actual cloud configuration
+# Copy to k8s/cloud-config.yaml and customize
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-config
+  namespace: liyu-bingo
+data:
+  # Cloud provider specific settings
+  CLOUD_PROVIDER: "aws"  # aws, gcp, azure, or custom
+  REGION: "us-west-2"
+  CLUSTER_NAME: "liyu-bingo-cluster"
+  
+  # Container registry
+  REGISTRY_URL: "your-account.dkr.ecr.us-west-2.amazonaws.com"
+  IMAGE_TAG: "latest"
+  
+  # Domain configuration
+  DOMAIN: "akerbingo.com"
+  SSL_CERT_ISSUER: "letsencrypt-prod"
+  
+  # Resource limits
+  DJANGO_CPU_LIMIT: "500m"
+  DJANGO_MEMORY_LIMIT: "1Gi"
+  BOT_CPU_LIMIT: "200m"
+  BOT_MEMORY_LIMIT: "512Mi"
+  NODEJS_CPU_LIMIT: "500m"
+  NODEJS_MEMORY_LIMIT: "1Gi"
+  REACT_CPU_LIMIT: "200m"
+  REACT_MEMORY_LIMIT: "256Mi"
+  
+  # Scaling configuration
+  DJANGO_MIN_REPLICAS: "3"
+  DJANGO_MAX_REPLICAS: "10"
+  BOT_MIN_REPLICAS: "2"
+  BOT_MAX_REPLICAS: "5"
+  NODEJS_MIN_REPLICAS: "3"
+  NODEJS_MAX_REPLICAS: "15"
+  REACT_MIN_REPLICAS: "3"
+  REACT_MAX_REPLICAS: "10"
+  
+  # Health check configuration
+  HEALTH_CHECK_INTERVAL: "30s"
+  HEALTH_CHECK_TIMEOUT: "30s"
+  HEALTH_CHECK_RETRIES: "3"
+  
+  # Logging configuration
+  LOG_LEVEL: "INFO"
+  LOG_FORMAT: "json"
+  
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloud-secrets
+  namespace: liyu-bingo
+type: Opaque
+data:
+  # Base64 encoded secrets - replace with actual values
+  BOT_TOKEN: eW91ci1ib3QtdG9rZW4taGVyZQ==
+  POSTGRES_PASSWORD: bGl5dV9wYXNzd29yZA==
+  MANUAL_API_KEY: eW91ci1tYW51YWwtYXBpLWtleQ==
+  MANUAL_BASE_URL: aHR0cHM6Ly95b3VyLW1hbnVhbC1hcGkuY29tLw==
+  DJANGO_SECRET_KEY: eW91ci1kamFuZ28tc2VjcmV0LWtleQ==
+  
+  # Cloud-specific secrets
+  AWS_ACCESS_KEY_ID: eW91ci1hd3MtYWNjZXNzLWtleQ==
+  AWS_SECRET_ACCESS_KEY: eW91ci1hd3Mtc2VjcmV0LWtleQ==
+  GCP_SERVICE_ACCOUNT_KEY: eW91ci1nY3Atc2VydmljZS1hY2NvdW50LWtleQ==
+  AZURE_CLIENT_ID: eW91ci1henVyZS1jbGllbnQtaWQ==
+  AZURE_CLIENT_SECRET: eW91ci1henVyZS1jbGllbnQtc2VjcmV0==

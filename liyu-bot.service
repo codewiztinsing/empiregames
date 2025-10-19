@@ -1,0 +1,24 @@
+[Unit]
+Description=Liyu Bingo Telegram Bot
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/home/tinsae/Desktop/projects/empiregames/app
+Environment=PATH=/home/tinsae/Desktop/projects/empiregames/app/venv/bin
+ExecStart=/home/tinsae/Desktop/projects/empiregames/app/venv/bin/python manage.py run_bot
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=liyu-bot
+
+# Environment variables
+Environment=DJANGO_SETTINGS_MODULE=core.settings
+Environment=PYTHONPATH=/home/tinsae/Desktop/projects/empiregames/app
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,120 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegram-bot
+  namespace: liyu-bingo
+  labels:
+    app: telegram-bot
+spec:
+  replicas: 2  # Multiple bot instances for redundancy
+  selector:
+    matchLabels:
+      app: telegram-bot
+  template:
+    metadata:
+      labels:
+        app: telegram-bot
+    spec:
+      containers:
+      - name: bot
+        image: liyu-bingo/bot:latest  # Replace with your image
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: "core.settings_production"
+        - name: DATABASE_URL
+          value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres-service:5432/$(POSTGRES_DB)"
+        - name: REDIS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: liyu-config
+              key: REDIS_URL
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            configMapKeyRef:
+              name: liyu-config
+              key: DJANGO_SECRET_KEY
+        - name: BACK_URL
+          valueFrom:
+            configMapKeyRef:
+              name: liyu-config
+              key: BACK_URL
+        - name: BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: liyu-secrets
+              key: BOT_TOKEN
+        - name: MANUAL_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: liyu-secrets
+              key: MANUAL_API_KEY
+        - name: MANUAL_BASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: liyu-secrets
+              key: MANUAL_BASE_URL
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: liyu-config
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            configMapKeyRef:
+              name: liyu-config
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: liyu-secrets
+              key: POSTGRES_PASSWORD
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import requests; requests.get('http://localhost:8000/health/', timeout=5)"
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import requests; requests.get('http://localhost:8000/health/', timeout=5)"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      restartPolicy: Always
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: bot-hpa
+  namespace: liyu-bingo
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: telegram-bot
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
