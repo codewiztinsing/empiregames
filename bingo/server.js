@@ -436,12 +436,76 @@ async function startGame(game) {
 }
 
 function generateFakeWinningCard() {
-  // Generate a fixed card for fake winner
-  const cardNumber = Math.floor(Math.random() * 5) + 1; // Random card 1-5
-  const card = generateFixedCard(cardNumber);
+  // Generate a real bingo card with proper number ranges
+  const grid = [];
   
-  // Convert to the format expected by the client
-  const grid = card[0].map((_, colIndex) => card.map(row => row[colIndex]));
+  // B column: 1-15
+  const bNumbers = generateRandomNumbers(1, 15, 5);
+  // I column: 16-30
+  const iNumbers = generateRandomNumbers(16, 30, 5);
+  // N column: 31-45 (center is FREE)
+  const nNumbers = generateRandomNumbers(31, 45, 4); // Only 4 numbers, center will be FREE
+  // G column: 46-60
+  const gNumbers = generateRandomNumbers(46, 60, 5);
+  // O column: 61-75
+  const oNumbers = generateRandomNumbers(61, 75, 5);
+  
+  // Create the grid structure
+  for (let row = 0; row < 5; row++) {
+    const rowCells = [];
+    
+    // B column
+    rowCells.push({
+      number: bNumbers[row],
+      marked: false
+    });
+    
+    // I column
+    rowCells.push({
+      number: iNumbers[row],
+      marked: false
+    });
+    
+    // N column
+    if (row === 2) {
+      // Center cell is FREE
+      rowCells.push({
+        number: '*',
+        marked: false
+      });
+    } else {
+      // Use N numbers for other rows
+      const nIndex = row > 2 ? row - 1 : row; // Adjust index for center row
+      rowCells.push({
+        number: nNumbers[nIndex],
+        marked: false
+      });
+    }
+    
+    // G column
+    rowCells.push({
+      number: gNumbers[row],
+      marked: false
+    });
+    
+    // O column
+    rowCells.push({
+      number: oNumbers[row],
+      marked: false
+    });
+    
+    grid.push(rowCells);
+  }
+  
+  // Convert to column-major format (as expected by client)
+  const columnGrid = [];
+  for (let col = 0; col < 5; col++) {
+    const column = [];
+    for (let row = 0; row < 5; row++) {
+      column.push(grid[row][col]);
+    }
+    columnGrid.push(column);
+  }
 
   // Choose a random winning pattern
   const patterns = ['row', 'col', 'diag', 'anti', 'fourCorners', 'fourEdges'];
@@ -449,31 +513,47 @@ function generateFakeWinningCard() {
 
   if (pick === 'row') {
     const r = Math.floor(Math.random() * 5);
-    for (let c = 0; c < 5; c++) grid[c][r] = { number: grid[c][r], marked: true };
+    for (let c = 0; c < 5; c++) columnGrid[c][r].marked = true;
   } else if (pick === 'col') {
     const c = Math.floor(Math.random() * 5);
-    for (let r = 0; r < 5; r++) grid[c][r] = { number: grid[c][r], marked: true };
+    for (let r = 0; r < 5; r++) columnGrid[c][r].marked = true;
   } else if (pick === 'diag') {
-    for (let i = 0; i < 5; i++) grid[i][i] = { number: grid[i][i], marked: true };
+    for (let i = 0; i < 5; i++) columnGrid[i][i].marked = true;
   } else if (pick === 'anti') {
-    for (let i = 0; i < 5; i++) grid[4 - i][i] = { number: grid[4 - i][i], marked: true };
+    for (let i = 0; i < 5; i++) columnGrid[4 - i][i].marked = true;
   } else if (pick === 'fourCorners') {
-    grid[0][0] = { number: grid[0][0], marked: true };
-    grid[0][4] = { number: grid[0][4], marked: true };
-    grid[4][0] = { number: grid[4][0], marked: true };
-    grid[4][4] = { number: grid[4][4], marked: true };
+    columnGrid[0][0].marked = true;
+    columnGrid[0][4].marked = true;
+    columnGrid[4][0].marked = true;
+    columnGrid[4][4].marked = true;
   } else if (pick === 'fourEdges') {
     // Cross-like edges as per client check
-    grid[2][0] = { number: grid[2][0], marked: true };
-    grid[0][2] = { number: grid[0][2], marked: true };
-    grid[2][4] = { number: grid[2][4], marked: true };
-    grid[4][2] = { number: grid[4][2], marked: true };
+    columnGrid[2][0].marked = true;
+    columnGrid[0][2].marked = true;
+    columnGrid[2][4].marked = true;
+    columnGrid[4][2].marked = true;
   }
 
-  // Ensure center is marked for patterns that commonly include it
-  grid[2][2] = { number: '*', marked: true };
+  // Ensure center is always marked
+  columnGrid[2][2].marked = true;
 
-  return grid;
+  return columnGrid;
+}
+
+// Helper function to generate random numbers within a range
+function generateRandomNumbers(min, max, count) {
+  const numbers = [];
+  const used = new Set();
+  
+  while (numbers.length < count) {
+    const num = Math.floor(Math.random() * (max - min + 1)) + min;
+    if (!used.has(num)) {
+      used.add(num);
+      numbers.push(num);
+    }
+  }
+  
+  return numbers.sort((a, b) => a - b);
 }
 
 async function scheduleFakeWinner(game) {

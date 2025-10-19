@@ -328,6 +328,60 @@ const PlayingBoard = () => {
     return 'Pattern Complete';
   }, []);
 
+  // Function to determine which cells are part of the winning pattern
+  const getWinningPattern = useCallback((card) => {
+    if (!card || !card[0]) return [];
+    
+    const winningCells = [];
+    
+    // Check rows
+    for (let row = 0; row < 5; row++) {
+      if (card.every(col => col[row].marked)) {
+        for (let col = 0; col < 5; col++) {
+          winningCells.push({ row, col });
+        }
+        return winningCells;
+      }
+    }
+    
+    // Check columns
+    for (let col = 0; col < 5; col++) {
+      if (card[col].every(cell => cell.marked)) {
+        for (let row = 0; row < 5; row++) {
+          winningCells.push({ row, col });
+        }
+        return winningCells;
+      }
+    }
+    
+    // Check diagonal (top-left to bottom-right)
+    if (card.every((col, i) => col[i].marked)) {
+      for (let i = 0; i < 5; i++) {
+        winningCells.push({ row: i, col: i });
+      }
+      return winningCells;
+    }
+    
+    // Check reverse diagonal (top-right to bottom-left)
+    if (card.every((col, i) => col[4 - i].marked)) {
+      for (let i = 0; i < 5; i++) {
+        winningCells.push({ row: i, col: 4 - i });
+      }
+      return winningCells;
+    }
+    
+    // Check four corners
+    if (card[0][0].marked && card[0][4].marked && card[4][0].marked && card[4][4].marked) {
+      winningCells.push({ row: 0, col: 0 });
+      winningCells.push({ row: 0, col: 4 });
+      winningCells.push({ row: 4, col: 0 });
+      winningCells.push({ row: 4, col: 4 });
+      return winningCells;
+    }
+    
+    return winningCells;
+  }, []);
+
   // Function to render winning card properly
   const renderWinningCard = useCallback((card) => {
     console.log('Rendering winning card:', card);
@@ -343,6 +397,9 @@ const PlayingBoard = () => {
       firstRowLength: card[0]?.length,
       sampleCell: card[0]?.[0]
     });
+    
+    const winningPattern = getWinningPattern(card);
+    console.log('Winning pattern:', winningPattern);
     
     return (
       <div className="winning-card">
@@ -361,15 +418,42 @@ const PlayingBoard = () => {
             {card.map((col, colIndex) => {
               const cell = col[rowIndex];
               const isMarked = cell.marked;
+              const isWinningCell = winningPattern.some(wc => wc.row === rowIndex && wc.col === colIndex);
               
-              console.log(`Cell [${colIndex}][${rowIndex}]:`, { cell, isMarked });
+              // Get the actual number for this cell position
+              let displayNumber;
+              if (cell.number === '*') {
+                displayNumber = 'FREE';
+              } else if (cell.number !== undefined && cell.number !== null) {
+                displayNumber = cell.number;
+              } else {
+                // If number is missing, try to get it from the card structure
+                // This is a fallback for incomplete card data
+                displayNumber = '?';
+              }
+              
+              console.log(`Cell [${colIndex}][${rowIndex}]:`, { 
+                cell, 
+                number: cell.number, 
+                displayNumber,
+                marked: cell.marked,
+                isMarked, 
+                isWinningCell 
+              });
+              
+              let cellClass = 'winning-card-cell';
+              if (isWinningCell) {
+                cellClass += ' winning-complete';
+              } else if (isMarked) {
+                cellClass += ' winning-marked';
+              }
               
               return (
                 <div 
                   key={colIndex} 
-                  className={`winning-card-cell ${isMarked ? 'marked' : ''}`}
+                  className={cellClass}
                 >
-                  <span>{cell.number === '*' ? 'FREE' : cell.number}</span>
+                  <span>{displayNumber}</span>
                 </div>
               );
             })}
@@ -377,7 +461,7 @@ const PlayingBoard = () => {
         ))}
       </div>
     );
-  }, []);
+  }, [getWinningPattern]);
 
   // Socket event bindings
   useEffect(() => {
@@ -466,10 +550,13 @@ const PlayingBoard = () => {
         winnerPlayerName: null,
         winningCard: null
       });
+      
+      // Navigate to home screen with all query parameters
+      navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
     } catch (error) {
       console.error('Error closing winner:', error);
     }
-  }, [updateGameState]);
+  }, [updateGameState, navigate, playerId, roomId, playerName]);
 
   const handleLeaveGame = useCallback(() => {
     try {
@@ -620,7 +707,13 @@ const PlayingBoard = () => {
       {/* Action Buttons */}
       <div className="winner-actions">
         <div className="winner-summary">
-          <span className="summary-text">🎊 Congratulations! You won with Card #{winnerCardNumber} 🎊</span>
+          <span className="summary-text">
+            {winnerPlayerName === playerName ? (
+              <>🎊 Congratulations! You won with Card #{winnerCardNumber} 🎊</>
+            ) : (
+              <>🏆 {winnerPlayerName} won with Card #{winnerCardNumber} 🏆</>
+            )}
+          </span>
         </div>
         <button className="close-winner-button" onClick={handleCloseWinner}>
           <span className="button-icon">✨</span>

@@ -506,7 +506,13 @@ const Selections = () => {
           color: "green",
         fontSize: "1.6rem",
         fontWeight: "bold"
-      }}>ስም : {winnerPlayerName},is Winner</p>
+      }}>
+        {winnerPlayerName === playerName ? (
+          <>🎉 Congratulations! You won! 🎉</>
+        ) : (
+          <>ስም : {winnerPlayerName} is Winner</>
+        )}
+      </p>
      
 <div className="winning-card">
   <div className="winning-card-row">
@@ -609,7 +615,56 @@ const Selections = () => {
               <div className="info-button">Stake {roomId} ብር</div>
               <div className="info-button">⭐ Bonus</div>
             </div>
-            <div className="action-button">ምረጥ</div>
+            <div className="action-buttons">
+              <button 
+                className="start-button"
+                onClick={() => {
+                  if (hasSelectedCard && selectedNumber) {
+                    if (balance >= parseInt(roomId)) {
+                      navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
+                    } else {
+                      setToast("Insufficient balance to start the game. Please deposit more.");
+                      setIsToast(true);
+                    }
+                  } else {
+                    setToast("Please select a card first!");
+                    setIsToast(true);
+                  }
+                }}
+                disabled={!hasSelectedCard || !selectedNumber}
+              >
+                🚀 Start Game
+              </button>
+              <button 
+                className="exit-button"
+                onClick={() => {
+                  if (hasSelectedCard && selectedNumber) {
+                    // Leave the game if user has selected a card
+                    const leaveData = {
+                      playerId: playerId,
+                      gameId: gameId || 'default',
+                      roomId: roomId
+                    };
+                    socket.emit('leave', leaveData);
+                    
+                    // Reset selection
+                    setChoosenNumbers([]);
+                    setSelectedNumber(null);
+                    setSelectBoard(null);
+                    setChooseBoards([]);
+                    setHasSelectedCard(false);
+                    
+                    setToast("Left the game successfully!");
+                    setIsToast(true);
+                  } else {
+                    // Just navigate back to main menu
+                    navigate('/');
+                  }
+                }}
+              >
+                🚪 Exit
+              </button>
+            </div>
           </div>
 
           {/* Main Content */}

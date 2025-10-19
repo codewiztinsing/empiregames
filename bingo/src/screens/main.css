@@ -700,8 +700,8 @@ body {
 }
 
 .winning-card {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 3px;
   margin: 25px 0;
   background: linear-gradient(135deg, #f8f9fa, #e9ecef);
@@ -711,27 +711,82 @@ body {
     inset 0 2px 4px rgba(0, 0, 0, 0.1),
     0 4px 8px rgba(0, 0, 0, 0.1);
   border: 2px solid rgba(255, 215, 0, 0.2);
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .winning-card-row {
-  display: contents;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
 }
 
 .winning-card-cell {
-  background: linear-gradient(145deg, #ffffff, #f8f9fa);
-  border: 2px solid #dee2e6;
-    border-radius: 8px;
+  background: linear-gradient(145deg, #2c3e50, #34495e);
+  border: 2px solid #1a252f;
+  border-radius: 8px;
   padding: 10px 6px;
-    font-size: 14px;
+  font-size: 14px;
   font-weight: bold;
-  color: #2c3e50;
+  color: white;
   text-align: center;
   min-height: 35px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.winning-card-header {
+  background: linear-gradient(135deg, #3498db, #2980b9) !important;
+  color: white !important;
+  font-weight: 900 !important;
+  border-color: #1f618d !important;
+  box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3) !important;
+}
+
+.winning-card-cell span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: white !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  text-align: center;
+  line-height: 1;
+  z-index: 1;
+  position: relative;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.winning-card-cell.winning-complete span {
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.winning-card-cell.winning-marked span {
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.winning-card-cell.marked span {
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.bingo-letter {
+  font-size: 16px;
+  font-weight: 900;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  color: white !important;
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  line-height: 1;
 }
 
 .winning-card-cell:hover {
@@ -740,11 +795,42 @@ body {
 }
 
 .winning-card-cell.marked {
+  background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+  color: white !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.6) !important;
+  transform: scale(1.02) !important;
+}
+
+/* Winning pattern styles */
+.winning-card-cell.winning-complete {
   background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
   color: white !important;
   font-weight: 900 !important;
-  box-shadow: 0 0 10px rgba(39, 174, 96, 0.5) !important;
+  box-shadow: 0 0 15px rgba(39, 174, 96, 0.8) !important;
+  transform: scale(1.05) !important;
+  border: 3px solid #1e8449 !important;
+  animation: winningPulse 2s infinite;
+}
+
+.winning-card-cell.winning-marked {
+  background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+  color: white !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.6) !important;
   transform: scale(1.02) !important;
+  border: 2px solid #a93226 !important;
+}
+
+@keyframes winningPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(39, 174, 96, 0.8);
+    transform: scale(1.05);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(39, 174, 96, 1);
+    transform: scale(1.08);
+  }
 }
 
 .choosen-numbers {
@@ -900,6 +986,8 @@ body {
 
 .winning-card-section {
   margin: 25px 0;
+  display: block;
+  visibility: visible;
 }
 
 .winning-card-title {
@@ -908,6 +996,41 @@ body {
   color: #2c3e50;
   margin-bottom: 15px;
   text-align: center;
+}
+
+/* Responsive winning card */
+@media (max-width: 768px) {
+  .winning-card {
+    max-width: 350px;
+    padding: 10px;
+  }
+  
+  .winning-card-cell {
+    min-height: 30px;
+    font-size: 12px;
+    padding: 8px 4px;
+  }
+  
+  .bingo-letter {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .winning-card {
+    max-width: 300px;
+    padding: 8px;
+  }
+  
+  .winning-card-cell {
+    min-height: 25px;
+    font-size: 11px;
+    padding: 6px 3px;
+  }
+  
+  .bingo-letter {
+    font-size: 12px;
+  }
 }
 
 .no-card-data {
