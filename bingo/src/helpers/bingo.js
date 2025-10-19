@@ -23,18 +23,29 @@ function turnMarkedCellsToCard(markedCells){
 
 
 function markPlayerCard(playerCard,calledNumbers){
-
-    const calledNumbersOnly = calledNumbers.map(num => num.number || num);
+    console.log('markPlayerCard called with:', { playerCard, calledNumbers });
+    
+    // Ensure calledNumbers is an array of numbers
+    const calledNumbersOnly = calledNumbers.map(num => {
+        if (typeof num === 'object' && num.number !== undefined) {
+            return num.number;
+        }
+        return num;
+    });
+    
+    console.log('Called numbers processed:', calledNumbersOnly);
+    
     const markedCard = playerCard.map(row => {
-     
         return row.map(cell => {
+            const isMarked = calledNumbersOnly.includes(cell) || cell === "*";
             return {
                 number: cell,
-                marked: calledNumbersOnly.includes(cell) || cell == "*"
+                marked: isMarked
             };
         });
     });
     
+    console.log('Marked card result:', markedCard);
     return markedCard;
 }
 

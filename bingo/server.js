@@ -552,7 +552,10 @@ async function scheduleFakeWinner(game) {
 
 
 function handleRefresh(data){
-  const game = activeGames.get(data.gameId);
+  // Use roomId for game lookup since games are stored by roomId
+  // Convert to string to match how games are stored (as string keys)
+  const gameLookupId = String(data.roomId || data.gameId);
+  const game = activeGames.get(gameLookupId);
   if (!game) return;
   io.emit("gameState", {
     gameId: game.id,
@@ -573,10 +576,12 @@ function handleRefresh(data){
 
 io.on('connection', (socket) => {
   socket.on("playerJoined", async (data) => {
-    let game = activeGames.get(data.roomId);
+    // Ensure roomId is a string for consistent key storage
+    const roomIdStr = String(data.roomId);
+    let game = activeGames.get(roomIdStr);
     if (!game) {
-      game = await createGame(data.roomId);
-      activeGames.set(data.roomId, game);
+      game = await createGame(roomIdStr);
+      activeGames.set(roomIdStr, game);
     }
     const inProgressGames = [...activeGames.values()].filter(g => g.status === 'in-progress');
     socket.emit("activeGames", { activeGames: inProgressGames });
@@ -621,7 +626,9 @@ io.on('connection', (socket) => {
   socket.emit("waitingGames", waitingGames);
 
   socket.on("joinGame", (data) => {
-    const game = activeGames.get(data.roomId);
+    // Ensure roomId is a string for consistent key storage
+    const roomIdStr = String(data.roomId);
+    const game = activeGames.get(roomIdStr);
     if (!data.playerId || !game) return;
 
     if (game.status === 'in-progress') {
@@ -702,55 +709,114 @@ io.on('connection', (socket) => {
   socket.on("bingo", async (data) => {
     console.log('Bingo event received:', data);
     
+    // Use roomId for game lookup since games are stored by roomId
+    // Convert to string to match how games are stored (as string keys)
+    const gameLookupId = String(data.roomId || data.gameId);
+    console.log('Looking up game with ID:', gameLookupId, 'Type:', typeof gameLookupId);
+    
     // If player previously made a false bingo, ignore further bingo attempts
-    const gameForFaulCheck = activeGames.get(data.gameId);
+    const gameForFaulCheck = activeGames.get(gameLookupId);
     if (gameForFaulCheck && gameForFaulCheck.fauldMadePlayers && gameForFaulCheck.fauldMadePlayers.get && gameForFaulCheck.fauldMadePlayers.get(data.playerId) === true) {
       console.log('Player is disqualified for false bingo:', data.playerId);
       socket.emit("disqualified", { message: "You are disqualified for this round due to false bingo.", roomId: data.roomId, gameId: data.gameId });
       return;
     }
 
-    const game = activeGames.get(data.gameId);
-    if (!game || game.status !== 'in-progress') {
-      console.log('Game not found or not in progress:', { gameId: data.gameId, gameStatus: game?.status });
+    const game = activeGames.get(gameLookupId);
+    console.log('Game lookup result:', { 
+      gameLookupId, 
+      gameType: typeof gameLookupId,
+      gameExists: !!game,
+      gameValue: game,
+      gameStatus: game?.status,
+      gameKeys: game ? Object.keys(game) : 'N/A'
+    });
+    
+    if (!game) {
+      console.log('Game not found:', { 
+        gameLookupId, 
+        availableGames: Array.from(activeGames.keys()),
+        gameExists: !!game
+      });
+      socket.emit("bingoError", { 
+        message: `Game not found. Game ID: ${gameLookupId}`, 
+        roomId: data.roomId, 
+        gameId: data.gameId 
+      });
       return;
     }
     
-    const playerCards = game.players.get(data.playerId);
-    if (!playerCards || !Array.isArray(playerCards)) {
-      console.log('Player cards not found:', { playerId: data.playerId, playerCards });
+    if (game.status !== 'in-progress') {
+      console.log('Game not in progress:', { 
+        gameLookupId, 
+        gameStatus: game.status,
+        gameExists: !!game
+      });
+      socket.emit("bingoError", { 
+        message: `Game is not in progress. Current status: ${game.status}`, 
+        roomId: data.roomId, 
+        gameId: data.gameId 
+      });
+      return;
+    }
+    
+    // Get player's boards - should be an array
+    const playerBoards = game.players.get(data.playerId);
+    if (!playerBoards || !Array.isArray(playerBoards)) {
+      console.log('Player boards not found or not an array:', { playerId: data.playerId, playerBoards });
+      socket.emit("bingoError", { message: "Player cards not found.", roomId: data.roomId, gameId: data.gameId });
       return;
     }
     
     console.log('Processing bingo for player:', data.playerId);
-    const board = data.board
-    const boardNumber = data.boardNumber
+    const board = data.board;
+    const boardNumber = data.boardNumber;
+    
+    // Validate board data
+    if (!board || !Array.isArray(board) || board.length !== 5) {
+      console.log('Invalid board data:', { board, boardNumber });
+      socket.emit("bingoError", { message: "Invalid board data.", roomId: data.roomId, gameId: data.gameId });
+      return;
+    }
+    
     console.log('Board data:', { board, boardNumber, calledNumbers: game.calledNumbers });
     
-    const markedSingleCard = markPlayerCard(board, game.calledNumbers)
+    // Convert called numbers to proper format for markPlayerCard
+    const calledNumbersForCheck = game.calledNumbers.map(ball => ball.number || ball);
+    console.log('Called numbers for check:', calledNumbersForCheck);
+    
+    const markedSingleCard = markPlayerCard(board, calledNumbersForCheck);
     console.log('Marked card:', markedSingleCard);
     
-    const isSingleBingo = checkSingleCardBingo(markedSingleCard)
+    const isSingleBingo = checkSingleCardBingo(markedSingleCard);
     console.log('Is single bingo:', isSingleBingo);
+    
     if(isSingleBingo){
+      console.log('Valid bingo! Player wins:', data.playerId);
+      
+      // Mark player as winner and end game
+      game.status = 'waiting';
+      game.winner = data.playerId;
+      game.gameOver = true;
+      
       io.emit("winBingo", {
-            isBingo: true,
-            playerId: data.playerId,
-            markedCells: markedSingleCard,
-            winningCard: markedSingleCard,
-            winner: data.playerId,
-            calledNumbers: game.calledNumbers,
-            playerCard: boardNumber,
-            winner_Number: boardNumber,
-            playerName: data.playerName,
-            currentCall: game.currentCall,
-            gameId: data.gameId,
-            total_winAmount: game.total_winAmount,
-            total_players: game.total_players,
-            roomId: data.roomId
+        isBingo: true,
+        playerId: data.playerId,
+        markedCells: markedSingleCard,
+        winningCard: markedSingleCard,
+        winner: data.playerId,
+        calledNumbers: game.calledNumbers,
+        playerCard: boardNumber,
+        winner_Number: boardNumber,
+        playerName: data.playerName,
+        currentCall: game.currentCall,
+        gameId: data.gameId,
+        total_winAmount: game.total_winAmount,
+        total_players: game.total_players,
+        roomId: data.roomId
       });
 
-    io.emit("bingoWinner", {
+      io.emit("bingoWinner", {
         isBingo: true,
         playerId: data.playerId,
         markedCells: markedSingleCard,
@@ -761,9 +827,7 @@ io.on('connection', (socket) => {
         winningCard: markedSingleCard,
         gameId: data.gameId,
         roomId: data.roomId
-      })
-
-    
+      });
 
       try {
         const response = await gameWinWallet(
@@ -772,26 +836,36 @@ io.on('connection', (socket) => {
           game.win_amount,
           game.total_players
         );
+        console.log('Win wallet processed:', response);
       } catch (error) {
         console.error("Error processing win wallet:", error);
       }
 
       endGameDueToWinner(game);
-    }
-
-    else{
+    } else {
+      console.log('False bingo! Disqualifying player:', data.playerId);
+      
+      // Mark player as disqualified
+      if (!game.fauldMadePlayers) {
+        game.fauldMadePlayers = new Map();
+      }
       game.fauldMadePlayers.set(data.playerId, true);
+      
       io.emit("falseBingo", {
         isBingo: false,
         playerId: data.playerId,
         losser_board: boardNumber,
-      })
-    }
+        message: "False bingo! You are disqualified for this round."
+      });
       
-
-  
-    
-});
+      // Also send disqualified event to the specific player
+      socket.emit("disqualified", { 
+        message: "You are disqualified for this round due to false bingo.", 
+        roomId: data.roomId, 
+        gameId: data.gameId 
+      });
+    }
+  });
   
 
 socket.on("faulMadePlayer", (data) => {
@@ -955,7 +1029,9 @@ socket.on("faulMadePlayer", (data) => {
   });
 
   socket.on("getAllPlayerSelections", (data) => {
-    const game = activeGames.get(data.roomId);
+    // Ensure roomId is a string for consistent key storage
+    const roomIdStr = String(data.roomId);
+    const game = activeGames.get(roomIdStr);
     if (!game) {
       return;
     }
@@ -978,7 +1054,9 @@ socket.on("faulMadePlayer", (data) => {
 
   // Handle game rejoin
   socket.on("rejoinGame", (data) => {
-    const game = activeGames.get(data.roomId);
+    // Ensure roomId is a string for consistent key storage
+    const roomIdStr = String(data.roomId);
+    const game = activeGames.get(roomIdStr);
     
     if (!game) {
       socket.emit("rejoinError", { message: "Game not found" });

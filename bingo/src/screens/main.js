@@ -245,6 +245,16 @@ const PlayingBoard = () => {
     }
   }, [updateGameState, setToast, setIsToast]);
 
+  const handleBingoError = useCallback((data) => {
+    try {
+      console.log('Bingo error received:', data);
+      setToast(`❌ Bingo Error: ${data.message || 'Unknown error occurred.'}`);
+      setIsToast(true);
+    } catch (error) {
+      console.error('Error handling bingo error:', error);
+    }
+  }, [setToast, setIsToast]);
+
   const handleGameStateUpdate = useCallback((data) => {
     try {
       console.log('Game state update received:', data);
@@ -384,6 +394,7 @@ const PlayingBoard = () => {
     socket.on('bingoWinner', handleBingoWinner);
     socket.on('falseBingo', handleFalseBingo);
     socket.on('disqualified', handleDisqualified);
+    socket.on('bingoError', handleBingoError);
 
     return () => {
       socket.off('gameState', handleGameState);
@@ -391,8 +402,9 @@ const PlayingBoard = () => {
       socket.off('bingoWinner', handleBingoWinner);
       socket.off('falseBingo', handleFalseBingo);
       socket.off('disqualified', handleDisqualified);
+      socket.off('bingoError', handleBingoError);
     };
-  }, [socket, handleGameState, handleGameStateUpdate, handleBingoWinner, handleFalseBingo, handleDisqualified]);
+  }, [socket, handleGameState, handleGameStateUpdate, handleBingoWinner, handleFalseBingo, handleDisqualified, handleBingoError]);
 
   const handleCellClick = useCallback((number) => {
     try {
@@ -442,6 +454,7 @@ const PlayingBoard = () => {
       socket.emit('bingo', {
         playerId,
         gameId,
+        roomId, // Add roomId for proper game lookup
         boardNumber: cardNumber,
         board,
         playerName
@@ -451,7 +464,7 @@ const PlayingBoard = () => {
     } catch (error) {
       console.error('Error handling bingo:', error);
     }
-  }, [socket, playerId, gameId, isBingo, isDisqualified, playerName]);
+  }, [socket, playerId, gameId, roomId, isBingo, isDisqualified, playerName]);
 
   const handleCloseWinner = useCallback(() => {
     try {
