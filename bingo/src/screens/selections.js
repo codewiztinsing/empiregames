@@ -137,6 +137,13 @@ const Selections = () => {
     socket.on('rejoinSuccess', handleRejoinSuccess);
     socket.on('rejoinError', handleRejoinError);
     socket.on('allPlayerSelections', handleAllPlayerSelections);
+    socket.on('globals', handleGlobals);
+    socket.on('joinError', (error) => {
+      setToast(error.message);
+      setIsToast(true);
+      setJoinError(true);
+      return;
+    });
     
     // Test if the listener is working
     console.log("🔍 Socket listeners set up. Listening for allPlayerSelections event");
@@ -152,6 +159,8 @@ const Selections = () => {
       socket.off('rejoinSuccess', handleRejoinSuccess);
       socket.off('rejoinError', handleRejoinError);
       socket.off('allPlayerSelections', handleAllPlayerSelections);
+      socket.off('globals', handleGlobals);
+      socket.off('joinError');
     };
   }, [socket]);
 
@@ -200,15 +209,9 @@ const Selections = () => {
     console.log("=== ALL PLAYER SELECTIONS ===");
     console.log("Received all player selections:", data);
 
-    // Get playerId, roomId, and playerName from query params
-    const searchParams = new URLSearchParams(window.location.search);
-    const playerId = searchParams.get('playerId');
-    const roomId = searchParams.get('betAmount');
-    const playerName = searchParams.get('playerName');
-    const game_status = data.game_status;
-    
-    console.log("Query params - playerId:", playerId, "roomId:", roomId, "playerName:", playerName);
-    console.log("Game status:", game_status);
+    // Use current user's playerId from context, not from URL
+    console.log("Current user playerId:", playerId);
+    console.log("Game status:", data.game_status);
   
     
     if (data.players && Array.isArray(data.players)) {
@@ -222,22 +225,21 @@ const Selections = () => {
         const selectedNumber = currentPlayerSelection.selectedNumbers[0];
         console.log("Selected number from data:", selectedNumber);
         
-        if(selectedNumber && game_status == "in-progress") {
-          console.log("✅ Current player has a selection - navigating to play screen");
+        // Only navigate if this is the current user AND they have a selection AND game is in progress
+        if(selectedNumber && data.game_status == "in-progress") {
+          console.log("✅ Current user has a selection - navigating to play screen");
           console.log("playerId:", playerId);
           console.log("betAmount:", roomId);
           console.log("playerName:", playerName);
           console.log("selectedNumber:", selectedNumber);
           
-          // Navigate to play screen with the selected number
+          // Navigate to play screen with the selected number - USER SPECIFIC
           navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
         } else {
-          console.log("❌ Current player found but no selected number or game not in progress");
+          console.log("❌ Current user found but no selected number or game not in progress");
           console.log("selectedNumber:", selectedNumber);
-          console.log("game_status:", game_status);
-          
-          // navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
-
+          console.log("game_status:", data.game_status);
+          // Don't navigate - let user stay on selection page
         }
       } else {
         console.log("❌ Current player not found in selections - staying on selection page");
@@ -304,24 +306,16 @@ const Selections = () => {
   // Countdown redirect logic - only navigate when countdown reaches exactly 00
   useEffect(() => {
     console.log("gameStatus",gameStatus)
-    if(gameStatus == "in-progress") {
-      console.log("allPlayerSelections called")
-      socket.on("allPlayerSelections", (data) => {
-        console.log("allPlayerSelections called",data)
-        const selectedNumber = data.players.find(p => p.playerId === playerId)?.selectedNumbers[0];
-        navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
-      });
-     
-    }
+    
     // Navigate when countdown reaches 0 and user has selected a number
-    if (countDown === 0 && gameStatus != "waiting") {
+    if (countDown === 0 && gameStatus != "waiting" && selectedNumber) {
       // Navigate to play section when countdown reaches 00
       setToast("Game starting! Redirecting to play section...");
       setIsToast(true);
       navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
     }
     // If countdown is not 0, stay on selection page (no navigation)
-  }, [countDown, selectedNumber,gameStatus]);
+  }, [countDown, selectedNumber, gameStatus, playerId, roomId, playerName, navigate]);
 
 
 
@@ -370,32 +364,6 @@ const handleGlobals = (state) => {
     }
   };
 
-  socket.on('globals', handleGlobals);
-
-  socket.on('activeGames', (state) => {
-    if (state?.activeGames?.length > 0) {
-      // Show active game status for all rooms
-      setGameStatus("in-progress");
-    }
-  });
-
-  socket.on('gameState', (state) => {
-
-    // Show game state for all rooms
-    if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
-      setPickedNumbers(state.pickedNumbers.numbers);
-    }
-
-    if (state.game_status != "in-progress") {
-      setPlayersLength(state.total_players);
-    }
-    if (state.count_down !== undefined) {
-      setCountDown(state.count_down);
-    }
-  });
-
-
-
   // Memoized board generation
   const generateCombination = useCallback(() => {
     const card = [];
@@ -439,14 +407,6 @@ const handleGlobals = (state) => {
     setPickedNumbers(state.numbers);
   }
 
-
-
-  socket.on('joinError', (error) => {
-    setToast(error.message);
-    setIsToast(true);
-    setJoinError(true);
-    return;
-  })
 
   const handleNumberClick = async (number) => {
     // Check if this number is already chosen (for unselecting)
