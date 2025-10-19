@@ -126,7 +126,11 @@ const PlayingBoard = () => {
     const urlSelectedNumber = queryParams.get('selectedNumber');
     
     if (urlPlayerId) setPlayerId(urlPlayerId);
-    if (urlRoomId) setRoomId(parseInt(urlRoomId));
+    if (urlRoomId) {
+      const roomIdValue = parseInt(urlRoomId);
+      setRoomId(roomIdValue);
+      setGameId(roomIdValue); // Set gameId to roomId since server uses roomId as game key
+    }
     if (urlPlayerName && urlPlayerName !== 'null') setPlayerName(urlPlayerName);
     if (urlSelectedNumber) {
       const selectedNum = parseInt(urlSelectedNumber);
@@ -442,6 +446,7 @@ const PlayingBoard = () => {
       socket.emit('bingo', {
         playerId,
         gameId,
+        roomId, // Add roomId for proper game lookup
         boardNumber: cardNumber,
         board,
         playerName
@@ -451,7 +456,7 @@ const PlayingBoard = () => {
     } catch (error) {
       console.error('Error handling bingo:', error);
     }
-  }, [socket, playerId, gameId, isBingo, isDisqualified, playerName]);
+  }, [socket, playerId, gameId, roomId, isBingo, isDisqualified, playerName]);
 
   const handleCloseWinner = useCallback(() => {
     try {

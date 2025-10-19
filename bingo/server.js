@@ -108,7 +108,15 @@ async function createGame(roomId) {
     fakePlayersCanWin: fakePlayerSettings.fake_players_can_win,
     lastSettingsFetchAt: Date.now()
   };
+  console.log(`=== CREATING NEW GAME ===`);
+  console.log(`Game roomId: ${roomId}`);
+  console.log(`Game ID: ${game.id}`);
+  console.log(`Game status: ${game.status}`);
   activeGames.set(roomId, game);
+  console.log(`Game stored with key: ${roomId}`);
+  console.log(`Total active games: ${activeGames.size}`);
+  console.log(`Active games keys: ${Array.from(activeGames.keys())}`);
+  console.log(`=== END CREATING GAME ===`);
   return game;
 }
 
@@ -573,11 +581,27 @@ function handleRefresh(data){
 
 io.on('connection', (socket) => {
   socket.on("playerJoined", async (data) => {
-    let game = activeGames.get(data.roomId);
+    console.log(`=== PLAYER JOINED DEBUG ===`);
+    console.log(`Player joined with roomId: ${data.roomId}`);
+    console.log(`Current active games keys: ${Array.from(activeGames.keys())}`);
+    
+    const roomIdStr = String(data.roomId); // Convert to string for consistent lookup
+    let game = activeGames.get(roomIdStr);
+    console.log(`Existing game found: ${!!game}`);
+    
     if (!game) {
-      game = await createGame(data.roomId);
-      activeGames.set(data.roomId, game);
+      console.log(`Creating new game for roomId: ${data.roomId}`);
+      game = await createGame(roomIdStr);
+      activeGames.set(roomIdStr, game);
+      console.log(`New game created and stored with key: ${roomIdStr}`);
+    } else {
+      console.log(`Using existing game for roomId: ${data.roomId}`);
     }
+    
+    console.log(`Game status: ${game.status}`);
+    console.log(`Game players: ${game.players?.size || 0}`);
+    console.log(`=== END PLAYER JOINED DEBUG ===`);
+    
     const inProgressGames = [...activeGames.values()].filter(g => g.status === 'in-progress');
     socket.emit("activeGames", { activeGames: inProgressGames });
     socket.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
@@ -621,16 +645,33 @@ io.on('connection', (socket) => {
   socket.emit("waitingGames", waitingGames);
 
   socket.on("joinGame", (data) => {
-    const game = activeGames.get(data.roomId);
-    if (!data.playerId || !game) return;
+    console.log(`=== JOIN GAME DEBUG ===`);
+    console.log(`Join game request:`, data);
+    console.log(`Looking for game with roomId: ${data.roomId}`);
+    console.log(`Current active games keys: ${Array.from(activeGames.keys())}`);
+    
+    const roomIdStr = String(data.roomId); // Convert to string for consistent lookup
+    const game = activeGames.get(roomIdStr);
+    console.log(`Game found: ${!!game}`);
+    console.log(`Game status: ${game?.status}`);
+    console.log(`Game players: ${game?.players?.size || 0}`);
+    
+    if (!data.playerId || !game) {
+      console.log(`❌ Missing playerId or game not found`);
+      console.log(`playerId: ${data.playerId}, game: ${!!game}`);
+      return;
+    }
 
     if (game.status === 'in-progress') {
+      console.log(`❌ Game already in progress`);
       socket.emit('joinError', {
         roomId: data.roomId,
         message: 'Game is already in progress. Please wait for the next round.'
       });
       return;
     }
+    
+    console.log(`✅ Game found and ready for joining`);
 
     if (game.players.has(data.playerId)) {
       socket.emit('joinError', {
@@ -700,21 +741,48 @@ io.on('connection', (socket) => {
   
 
   socket.on("bingo", async (data) => {
+    console.log('=== BINGO EVENT DEBUG ===');
     console.log('Bingo event received:', data);
+    console.log('Active games keys:', Array.from(activeGames.keys()));
+    console.log('Active games count:', activeGames.size);
+    
+    // Debug: Log all active games
+    console.log('=== ALL ACTIVE GAMES ===');
+    for (const [key, game] of activeGames.entries()) {
+      console.log(`Game key: ${key}, Status: ${game.status}, Players: ${game.players?.size || 0}`);
+    }
+    console.log('=== END ACTIVE GAMES ===');
     
     // If player previously made a false bingo, ignore further bingo attempts
-    const gameForFaulCheck = activeGames.get(data.gameId);
+    console.log(`Looking for disqualification check with roomId: ${data.roomId}`);
+    const roomIdStr = String(data.roomId); // Convert to string for consistent lookup
+    const gameForFaulCheck = activeGames.get(roomIdStr);
+    console.log('Game for fault check found:', !!gameForFaulCheck);
+    
     if (gameForFaulCheck && gameForFaulCheck.fauldMadePlayers && gameForFaulCheck.fauldMadePlayers.get && gameForFaulCheck.fauldMadePlayers.get(data.playerId) === true) {
       console.log('Player is disqualified for false bingo:', data.playerId);
       socket.emit("disqualified", { message: "You are disqualified for this round due to false bingo.", roomId: data.roomId, gameId: data.gameId });
       return;
     }
 
-    const game = activeGames.get(data.gameId);
+    console.log(`Looking for game with roomId: ${data.roomId} (converted to string: ${roomIdStr})`);
+    const game = activeGames.get(roomIdStr);
+    console.log('Game found:', !!game);
+    console.log('Game status:', game?.status);
+    console.log('Game players:', game?.players?.size || 0);
+    
     if (!game || game.status !== 'in-progress') {
-      console.log('Game not found or not in progress:', { gameId: data.gameId, gameStatus: game?.status });
+      console.log('❌ Game not found or not in progress:', { 
+        roomId: data.roomId, 
+        roomIdStr: roomIdStr,
+        gameStatus: game?.status,
+        gameExists: !!game,
+        activeGamesKeys: Array.from(activeGames.keys())
+      });
       return;
     }
+    
+    console.log('✅ Game found and in progress!');
     
     const playerCards = game.players.get(data.playerId);
     if (!playerCards || !Array.isArray(playerCards)) {
@@ -818,9 +886,8 @@ socket.on("faulMadePlayer", (data) => {
 
 
   socket.on("leave",(data) => {
-  
-    
-    const game = activeGames.get(data.roomId);
+    const roomIdStr = String(data.roomId); // Convert to string for consistent lookup
+    const game = activeGames.get(roomIdStr);
     if (!game) {
       return;
     }
@@ -955,7 +1022,8 @@ socket.on("faulMadePlayer", (data) => {
   });
 
   socket.on("getAllPlayerSelections", (data) => {
-    const game = activeGames.get(data.roomId);
+    const roomIdStr = String(data.roomId); // Convert to string for consistent lookup
+    const game = activeGames.get(roomIdStr);
     if (!game) {
       return;
     }
@@ -978,7 +1046,8 @@ socket.on("faulMadePlayer", (data) => {
 
   // Handle game rejoin
   socket.on("rejoinGame", (data) => {
-    const game = activeGames.get(data.roomId);
+    const roomIdStr = String(data.roomId); // Convert to string for consistent lookup
+    const game = activeGames.get(roomIdStr);
     
     if (!game) {
       socket.emit("rejoinError", { message: "Game not found" });

@@ -300,13 +300,12 @@ body {
 }
 
 .konjo-number-cell {
-  background-color: #ffffff;
-  border: 3px solid #007bff;
+  background-color: #b1a9a9;
   border-radius: 6px;
   padding: clamp(6px, 1.5vw, 12px);
   font-size: clamp(12px, 3vw, 16px);
   font-weight: bold;
-  color: #007bff;
+  color: #2e3135;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
