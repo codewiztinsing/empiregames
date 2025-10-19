@@ -700,13 +700,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         
         elif query.data == "register":
-            # Send welcome image first
-            try:
-                with open('wellcomenote.jpeg', 'rb') as photo:
-                    await query.message.reply_photo(photo=photo, caption="Welcome to Liyu Bingo!")
-            except FileNotFoundError:
-                # Fallback if image not found
-                pass
+           
             
             # Use a ReplyKeyboardMarkup with request_contact to actually receive phone number
             contact_keyboard = ReplyKeyboardMarkup(
