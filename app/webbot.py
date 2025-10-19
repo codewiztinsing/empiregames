@@ -45,7 +45,39 @@ from datetime import datetime
 from telegram import BotCommand
 from register import *
 
+# Language selection states
+LANGUAGE_SELECTION = 0
 
+# Global user data storage for language preferences
+user_data = {}
+
+# Language texts
+LANGUAGE_TEXTS = {
+    'en': {
+        'welcome': 'Welcome to Liyu Bingo!',
+        'select_language': 'Please select your language:',
+        'play': '🎮 Play',
+        'register': '📝 Register',
+        'check_balance': '💰 Check Balance',
+        'deposit': '💳 Deposit',
+        'contact_support': '📞 Contact Support',
+        'instructions': '📚 Instructions',
+        'english': '🇺🇸 English',
+        'amharic': '🇪🇹 Amharic'
+    },
+    'am': {
+        'welcome': 'ወደ ሊዩ ቢንጎ እንኳን ደህና መጡ!',
+        'select_language': 'እባክዎ ቋንቋዎን ይምረጡ:',
+        'play': '🎮 ተጫውት',
+        'register': '📝 ይመዝገቡ',
+        'check_balance': '💰 ሚዛን ይፈትሹ',
+        'deposit': '💳 ገንዘብ ያስገቡ',
+        'contact_support': '📞 ድጋፍ ያግኙ',
+        'instructions': '📚 መመሪያዎች',
+        'english': '🇺🇸 English',
+        'amharic': '🇪🇹 አማርኛ'
+    }
+}
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -54,8 +86,37 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
+def get_user_language(user_id):
+    """Get user's language preference from user_data, default to English"""
+    return user_data.get(user_id, {}).get('language', 'en')
 
+def get_text(user_id, key):
+    """Get localized text for user"""
+    lang = get_user_language(user_id)
+    return LANGUAGE_TEXTS[lang].get(key, LANGUAGE_TEXTS['en'][key])
 
+def language_selection_keyboard():
+    """Create language selection keyboard"""
+    keyboard = [
+        [InlineKeyboardButton("🇺🇸 English", callback_data='lang_en')],
+        [InlineKeyboardButton("🇪🇹 አማርኛ", callback_data='lang_am')]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+def main_menu_keyboard(user_id):
+    """Create main menu keyboard based on user's language"""
+    lang = get_user_language(user_id)
+    texts = LANGUAGE_TEXTS[lang]
+    
+    keyboard = [
+        [InlineKeyboardButton(texts['play'], callback_data='play'),
+         InlineKeyboardButton(texts['register'], callback_data='register')],
+        [InlineKeyboardButton(texts['check_balance'], callback_data='check_balance'),
+         InlineKeyboardButton(texts['deposit'], callback_data='deposit')],
+        [InlineKeyboardButton(texts['contact_support'], callback_data='contact_support'),
+         InlineKeyboardButton(texts['instructions'], callback_data='instructions')],
+    ]
+    return InlineKeyboardMarkup(keyboard)
 
 # ============ Local mode (no external API calls) ============
 LOCAL_MODE = True  # set True to use ORM instead of HTTP API
@@ -143,31 +204,42 @@ async def conversation_timeout(context):
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    keyboard = [
-        [InlineKeyboardButton("🎮 Play", callback_data='play'),
-         InlineKeyboardButton("📝 Register",callback_data = "register")],
-        [InlineKeyboardButton("💰 Check Balance", callback_data='check_balance'),
-         InlineKeyboardButton("💳 Deposit", callback_data='deposit')],
-        [InlineKeyboardButton("📞 Contact Support", callback_data='contact_support'),
-         InlineKeyboardButton("📚 Instruction", callback_data='instructions')],
-        # [InlineKeyboardButton("🔗 Join Group", url='https://t.me/wowbingos')]
-    ]
+    user_id = update.effective_user.id
     
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    # https://t.me/akerbingobot?start=1464395537
     # Extract referral info from deep link if present
     referrer_id = None
     if context.args and len(context.args) > 0:
         try:
             referrer_id = int(context.args[0])
             print("referrer_id = ",referrer_id)
-
             # Store referrer ID in user data for later use
             context.user_data['referrer_id'] = referrer_id
         except ValueError:
             logger.warning(f"Invalid referrer ID format: {context.args[0]}")
-    # Send welcome image instead of text
-    await update.message.reply_text('Welcome to Liyu  Bingo! Select an option:', reply_markup=reply_markup)
+    
+    # Check if user has already selected a language
+    if user_id in user_data and 'language' in user_data[user_id]:
+        # User has language preference, show main menu
+        await show_main_menu(update, context)
+    else:
+        # Show language selection
+        await show_language_selection(update, context)
+
+async def show_language_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show language selection menu"""
+    reply_markup = language_selection_keyboard()
+    await update.message.reply_text(
+        'Welcome to Liyu Bingo!\n\nPlease select your language:\nእባክዎ ቋንቋዎን ይምረጡ:',
+        reply_markup=reply_markup
+    )
+
+async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show main menu based on user's language"""
+    user_id = update.effective_user.id
+    reply_markup = main_menu_keyboard(user_id)
+    welcome_text = get_text(user_id, 'welcome')
+    
+    await update.message.reply_text(f'{welcome_text}! Select an option:', reply_markup=reply_markup)
     context.job_queue.run_once(conversation_timeout, CONVERSATION_TIMEOUT, chat_id=update.effective_chat.id)
     return SOME_STATE
 
@@ -503,16 +575,43 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         elif query.data == 'withdraw_confirm':
             return WITHDRAW_AMOUNT_CONFIRM
-        if query.data == 'play' :
+            
+        # Handle language selection
+        if query.data == 'lang_en':
+            user_id = query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]['language'] = 'en'
             await query.edit_message_text(
-                text="Choose a play option:",
+                text="Language set to English! 🇺🇸\n\nWelcome to Liyu Bingo! Select an option:",
+                reply_markup=main_menu_keyboard(user_id)
+            )
+            return SOME_STATE
+            
+        elif query.data == 'lang_am':
+            user_id = query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]['language'] = 'am'
+            await query.edit_message_text(
+                text="ቋንቋ ወደ አማርኛ ተቀይሯል! 🇪🇹\n\nወደ ሊዩ ቢንጎ እንኳን ደህና መጡ! አማራጭ ይምረጡ:",
+                reply_markup=main_menu_keyboard(user_id)
+            )
+            return SOME_STATE
+            
+        if query.data == 'play' :
+            user_id = query.from_user.id
+            play_text = get_text(user_id, 'play')
+            await query.edit_message_text(
+                text=f"{play_text} - Choose a play option:",
                 reply_markup=play_options_keyboard(update)
             )
 
         elif query.data == 'contact_support':
-            # redirect user to @AkerBingo
+            user_id = query.from_user.id
+            support_text = get_text(user_id, 'contact_support')
             await query.edit_message_text(
-                text="Contact us using support button",
+                text=f"{support_text} - Contact us using support button",
                 reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📞 Support",  url='https://t.me/AkerBingo')]])
             )
             return
@@ -521,8 +620,10 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
           
         
         elif query.data == 'instructions':
+            user_id = query.from_user.id
+            instructions_text = get_text(user_id, 'instructions')
             await query.edit_message_text(
-                text="Choose an instruction option:",
+                text=f"{instructions_text} - Choose an instruction option:",
                 reply_markup=instructions_options_keyboard()
             )
         
@@ -700,7 +801,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         
         elif query.data == "register":
-           
+            user_id = query.from_user.id
+            register_text = get_text(user_id, 'register')
             
             # Use a ReplyKeyboardMarkup with request_contact to actually receive phone number
             contact_keyboard = ReplyKeyboardMarkup(
@@ -709,7 +811,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 one_time_keyboard=True
             )
             await query.message.reply_text(
-                text="Tap the button below to share your phone number.",
+                text=f"{register_text} - Tap the button below to share your phone number.",
                 reply_markup=contact_keyboard
             )
             return REGISTER
@@ -798,7 +900,7 @@ async def show_id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         print(f"DEBUG: user_id = {user_id}, username = {username}")
         
-        # Create the unique ID in the format Aker_telegramid
+        # Create the unique ID in the format Liyu_telegramid
         unique_id = f"Liyu_{user_id}"
         
         message = (
