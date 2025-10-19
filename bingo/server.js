@@ -60,7 +60,7 @@ async function refreshGameSettings(game) {
     const now = Date.now();
     if (!game.lastSettingsFetchAt || (now - game.lastSettingsFetchAt) > 10000) { // refresh every 10s
       console.log("refreshGameSettings - refreshing");
-      const latest = await getFakePlayerSettings();
+      const latest = await getConstant();
       if (latest && typeof latest.fake_players_can_win === 'boolean') {
         game.fakePlayersCanWin = latest.fake_players_can_win;
       }
@@ -69,15 +69,17 @@ async function refreshGameSettings(game) {
       }
       if (latest && typeof latest.max_fake_players === 'number') {
         game.maxFakePlayers = latest.max_fake_players;
+        console.log(`Updated maxFakePlayers to: ${game.maxFakePlayers}`);
       }
       game.lastSettingsFetchAt = now;
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error("Error refreshing game settings:", e);
+  }
 }
 
 async function createGame(roomId) {
   const gameSettings = await getConstant();
-  const fakePlayerSettings = await getFakePlayerSettings();
  
 
   const game = {
@@ -103,14 +105,16 @@ async function createGame(roomId) {
     fakeSelectionActive: false,
     fakeTargetCount: 0,
     // Dynamic fake player settings
-    maxFakePlayers: fakePlayerSettings.max_fake_players,
-    callsBeforeFakeWinner: fakePlayerSettings.calls_before_fake_winner,
-    fakePlayersCanWin: fakePlayerSettings.fake_players_can_win,
+    maxFakePlayers: gameSettings.max_fake_players,
+    callsBeforeFakeWinner: gameSettings.calls_before_fake_winner,
+    fakePlayersCanWin: gameSettings.fake_players_can_win,
     lastSettingsFetchAt: Date.now()
   };
   console.log(`=== CREATING NEW GAME ===`);
   console.log(`Game roomId: ${roomId}`);
   console.log(`Game ID: ${game.id}`);
+  console.log(`Max Fake Players from API: ${gameSettings.max_fake_players}`);
+  console.log(`Game maxFakePlayers: ${game.maxFakePlayers}`);
   console.log(`Game status: ${game.status}`);
   activeGames.set(roomId, game);
   console.log(`Game stored with key: ${roomId}`);
@@ -159,7 +163,7 @@ async  function endGame(game) {
   game.status = "waiting";
   game.gameOver = false; // Reset for next game
   game.winner = null;
-  game.countDown = 30;
+  game.countDown = game.countDown || 30;
   game.isCountStart = false;
   game.fauldMadePlayers.clear();
   game.fakeWinnerScheduled = false;
@@ -200,7 +204,7 @@ function startCountDown(game) {
  
   if (game.isCountStart || !game.players || game.players.size < 1) return;
   clearGameIntervals(game.id);
-  game.countDown = 30; // Always reset to 30 when starting countdown
+  game.countDown = game.countDown || 30; // Use game's countdown time or default to 30
   game.isCountStart = true;
 
   const countdownInterval = setInterval(() => {
@@ -208,7 +212,7 @@ function startCountDown(game) {
     if (game.players.size < 1) {
       clearInterval(countdownInterval);
       game.isCountStart = false;
-      game.countDown = 30;
+      game.countDown = game.countDown || 30;
       game.status = "waiting";
       
       // Emit updated game state
@@ -225,23 +229,32 @@ function startCountDown(game) {
 
 
 
-     // Broadcast fake selections while waiting: target random 30..50 unique numbers
+     // Broadcast fake selections while waiting: use max fake players from API
+     console.log(`Game status: ${game.status}, fakeSelectionActive: ${game.fakeSelectionActive}`);
+     
      if (game.status === 'waiting') {
       if (!game.fakeSelectionActive) {
         game.fakeSelectionActive = true;
-        // Use dynamic max fake players from settings
-        const maxFake = game.maxFakePlayers || 50;
-        const minFake = Math.max(1, Math.floor(maxFake * 0.6)); // 60% of max as minimum
-        game.fakeTargetCount = minFake + Math.floor(Math.random() * (maxFake - minFake + 1));
+        // Use max fake players from API settings
+        game.fakeTargetCount = game.maxFakePlayers || 50;
+        console.log(`Starting fake selection with target: ${game.fakeTargetCount}`);
       }
-      const cap = Math.max(1, Math.min(game.maxFakePlayers || 50, game.fakeTargetCount || 30));
+      const cap = game.maxFakePlayers || 50;
       const current = game.selectedNumbers.filter(n => n !== null).length;
+      console.log(`Fake player selection: current=${current}, cap=${cap}, maxFakePlayers=${game.maxFakePlayers}, gameStatus=${game.status}`);
+      
       if (current < cap) {
-        const universe = Array.from({ length: 400 }, (_, i) => i + 1);
+        const universe = Array.from({ length: 800 }, (_, i) => i + 1);
         const taken = new Set(game.selectedNumbers.filter(n => n !== null));
         const candidates = universe.filter(n => !taken.has(n));
+        console.log(`Available candidates: ${candidates.length}, taken: ${taken.size}`);
+        
         if (candidates.length > 0) {
-          const missing = Math.min(cap - current, Math.min(3, candidates.length));
+          // Increase selection rate: select up to 20 players per tick instead of 3
+          const maxPerTick = Math.min(20, cap - current);
+          const missing = Math.min(maxPerTick, candidates.length);
+          console.log(`Selecting ${missing} fake players (maxPerTick=${maxPerTick}, candidates=${candidates.length})`);
+          
           const chosenList = [];
           for (let i = 0; i < missing; i++) {
             const idx = Math.floor(Math.random() * candidates.length);
@@ -249,20 +262,27 @@ function startCountDown(game) {
             game.selectedNumbers.push(chosen);
             chosenList.push(chosen);
           }
+          console.log(`Selected fake players: ${chosenList.join(', ')}`);
+          console.log(`Total selectedNumbers length after selection: ${game.selectedNumbers.length}`);
           io.emit('pickedNumbers', { roomId: game.roomId, numbers: game.selectedNumbers });
           // Totals and consolidated gameState will be emitted below once per tick
+        } else {
+          console.log(`No more candidates available for fake selection`);
         }
+      } else {
+        console.log(`Fake selection complete: ${current}/${cap} players selected`);
       }
     } else {
       // Reset fake selection flags once game progresses
       if (game.fakeSelectionActive) {
       }
       game.fakeSelectionActive = false;
-      game.fakeTargetCount = 0;f
+      game.fakeTargetCount = 0;
     }
-    // Compute totals (including fake selections) for broadcast
-    const broadcastSelected = game.selectedNumbers.filter(num => num !== null);
-    const broadcastTotalPlayers = broadcastSelected.length;
+    // Compute totals using max fake players from API settings
+    const realPlayers = game.players ? game.players.size : 0;
+    const maxFakePlayers = game.maxFakePlayers || 50;
+    const broadcastTotalPlayers = realPlayers + maxFakePlayers;
     const broadcastWinAmount = broadcastTotalPlayers * game.roomId * 0.78;
     game.total_players = broadcastTotalPlayers;
     game.total_winAmount = broadcastWinAmount;
@@ -270,7 +290,7 @@ function startCountDown(game) {
     io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
-      pickedNumbers: broadcastSelected,
+      pickedNumbers: game.selectedNumbers.filter(num => num !== null),
       total_players: broadcastTotalPlayers,
       win_amount: broadcastWinAmount,
       game_status: game.status,
@@ -287,14 +307,14 @@ function startCountDown(game) {
       if (game.players.size < 1) {
         clearInterval(countdownInterval);
         game.isCountStart = false;
-        game.countDown = 30;
+        game.countDown = game.countDown || 30;
         game.status = "waiting";
         
         io.emit("gameState", {
           gameId: game.id,
           roomId: game.roomId,
           pickedNumbers: game.selectedNumbers.filter(num => num !== null),
-          total_players: game.selectedNumbers.filter(num => num !== null).length,
+          total_players: game.total_players,
           
           game_status: game.status,
           count_down: game.countDown
@@ -308,15 +328,15 @@ function startCountDown(game) {
       clearInterval(countdownInterval);
       game.isCountStart = false;
       game.status = "waiting";
-      game.countDown = 30; // Reset countdown for next game
+      game.countDown = game.countDown || 30; // Reset countdown for next game
       game.currentCall = null;
       game.calledNumbers = [];
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== null);
 
       // Freeze metrics at start (include fakes)
       const realPlayersAtStart = game.players ? game.players.size : 0;
-      const totalPlayersAtStart = game.selectedNumbers.length;
-      const fakePlayersAtStart = Math.max(0, totalPlayersAtStart - realPlayersAtStart);
+      const maxFakePlayers = game.maxFakePlayers || 50;
+      const totalPlayersAtStart = realPlayersAtStart + maxFakePlayers;
       const winAmountAtStart = totalPlayersAtStart * game.roomId * 0.78;
 
       game.total_players = totalPlayersAtStart;
@@ -361,14 +381,14 @@ async function startGame(game) {
     numberOfBoards: 1
   }));
 
-  // Calculate total players (real + fake) based on selected numbers
-  const totalSelectedNumbers = game.selectedNumbers.filter(num => num !== null).length;
+  // Calculate total players (real + max fake from API)
   const realPlayers = game.players.size;
-  const fakePlayers = Math.max(0, totalSelectedNumbers - realPlayers);
+  const maxFakePlayers = game.maxFakePlayers || 50;
+  const totalPlayers = realPlayers + maxFakePlayers;
   
-  game.total_players = totalSelectedNumbers;
-  game.fake_players = fakePlayers;
-  game.total_winAmount = totalSelectedNumbers * game.roomId * 0.78;
+  game.total_players = totalPlayers;
+  game.fake_players = maxFakePlayers;
+  game.total_winAmount = totalPlayers * game.roomId * 0.78;
 
   try {
     await gameLossWallet(players, game.roomId, game.total_players, game.fake_players);
@@ -411,7 +431,7 @@ async function startGame(game) {
       game_status: game.status,
       count_down: game.countDown,
       win_amount: game.win_amount,
-      total_players: game.settings && game.settings.max_fake_players ? game.settings.max_fake_players : game.total_players,
+      total_players: game.total_players,
       lastBall: ball,
       called_numbers: game.calledNumbers,
       total_called_numbers: game.calledNumbers.length,
@@ -773,7 +793,9 @@ io.on('connection', (socket) => {
       return;
     }
 
-    const total_players = game.selectedNumbers.filter(num => num !== null).length
+    const realPlayers = game.players ? game.players.size : 0;
+    const maxFakePlayers = game.maxFakePlayers || 50;
+    const total_players = realPlayers + maxFakePlayers;
 
     const win_amount = total_players * game.roomId * 0.78
     game.total_winAmount = win_amount
@@ -1059,7 +1081,7 @@ socket.on("faulMadePlayer", (data) => {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers,
-      total_players: game.selectedNumbers.length,
+      total_players: game.total_players,
       game_status: game.status,
     })
   
@@ -1075,7 +1097,7 @@ socket.on("faulMadePlayer", (data) => {
     if (game.isCountStart && game.players.size < 1) {
       clearGameIntervals(game.id);
       game.isCountStart = false;
-      game.countDown = 30;
+      game.countDown = game.countDown || 30;
       game.status = "waiting";
       
       // Emit updated game state
@@ -1083,7 +1105,7 @@ socket.on("faulMadePlayer", (data) => {
         gameId: game.id,
         roomId: game.roomId,
         pickedNumbers: game.selectedNumbers,
-        total_players: game.selectedNumbers.length,
+        total_players: game.total_players,
         game_status: game.status,
         count_down: game.countDown
       });
@@ -1242,7 +1264,7 @@ socket.on("faulMadePlayer", (data) => {
               if (selectedNumber2 && num === selectedNumber2) return false;
               return true;
             }),
-            total_players: game.selectedNumbers.length,
+            total_players: game.total_players,
             game_status: game.status,
             count_down: game.countDown,
             total_players: game.total_players
@@ -1262,7 +1284,7 @@ socket.on("faulMadePlayer", (data) => {
           if (game.isCountStart && game.players.size < 1) {
             clearGameIntervals(game.id);
             game.isCountStart = false;
-            game.countDown = 30;
+            game.countDown = game.countDown || 30;
             game.status = "waiting";
             
             // Emit updated game state
@@ -1270,7 +1292,7 @@ socket.on("faulMadePlayer", (data) => {
               gameId: game.id,
               roomId: game.roomId,
               pickedNumbers: game.selectedNumbers,
-              total_players: game.selectedNumbers.length,
+              total_players: game.total_players,
               game_status: game.status,
               count_down: game.countDown
             });
