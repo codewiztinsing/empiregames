@@ -786,7 +786,20 @@ socket.on("faulMadePlayer", (data) => {
     // Restore player to active game
     game.players.set(data.playerId, playerData.boards);
     game.numberOfBoardsToPlayer.set(data.playerId, playerData.numberOfBoards);
-    game.selectedNumbersToPlayer.set(data.playerId, [playerData.selectedNumber]);
+    game.selectedNumbersToPlayer.set(data.playerId, [playerData.selectedNumber, playerData.selectedNumber2]);
+    
+    // Ensure selected numbers are back in the game's selectedNumbers array
+    if (playerData.selectedNumber && !game.selectedNumbers.includes(playerData.selectedNumber)) {
+      game.selectedNumbers.push(playerData.selectedNumber);
+      console.log(`✅ Restored selectedNumber ${playerData.selectedNumber} to game array`);
+    }
+    if (playerData.selectedNumber2 && !game.selectedNumbers.includes(playerData.selectedNumber2)) {
+      game.selectedNumbers.push(playerData.selectedNumber2);
+      console.log(`✅ Restored selectedNumber2 ${playerData.selectedNumber2} to game array`);
+    }
+    
+    console.log(`🔄 Player ${data.playerId} rejoined with numbers: ${playerData.selectedNumber}, ${playerData.selectedNumber2}`);
+    console.log(`📊 Game selectedNumbers array length: ${game.selectedNumbers.length}`);
     
     // Remove from disconnected players
     game.disconnectedPlayers.delete(data.playerId);
@@ -831,15 +844,17 @@ socket.on("faulMadePlayer", (data) => {
      
  
       if (game?.players.has(user.playerId)) {
+        let selectedNumber = null;
+        let selectedNumber2 = null;
+        
+        if(game.selectedNumbersToPlayer.has(playerId)){
+          selectedNumber = game.selectedNumbersToPlayer.get(playerId)[0]
+          selectedNumber2 = game.selectedNumbersToPlayer.get(playerId)[1]
+        }
+        
         if(game.status === "waiting") {
+          // For waiting games, remove player completely
           game.players.delete(user.playerId);
-          let selectedNumber = null;
-          let selectedNumber2 = null;
-          
-          if(game.selectedNumbersToPlayer.has(playerId)){
-            selectedNumber = game.selectedNumbersToPlayer.get(playerId)[0]
-            selectedNumber2 = game.selectedNumbersToPlayer.get(playerId)[1]
-          }
           
           if (selectedNumber) {
             game.selectedNumbers = game?.selectedNumbers?.filter(num => num !== selectedNumber);
@@ -847,7 +862,6 @@ socket.on("faulMadePlayer", (data) => {
           if (selectedNumber2) {
             game.selectedNumbers = game?.selectedNumbers?.filter(num => num !== selectedNumber2);
           }
-    
     
           io.emit("gameState", {
             message: `User ${user.playerId} disconnected`,
@@ -860,18 +874,11 @@ socket.on("faulMadePlayer", (data) => {
             }),
             total_players: game.selectedNumbers.length,
             game_status: game.status,
-            count_down: game.countDown,
-            total_players: game.total_players
+            count_down: game.countDown
           });
 
-
-        
           game.selectedNumbersToPlayer.delete(playerId)
-          game.selectedNumbersToPlayer.delete(playerId)
-         
           io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
-          users.delete(socket.id);
-          users.delete(socket.id);
           users.delete(socket.id);
 
           // Check if countdown is running and we have less than 2 players
@@ -897,7 +904,65 @@ socket.on("faulMadePlayer", (data) => {
               startCountDown(game);
             }
           }
+        } else if(game.status === "in-progress") {
+          // For in-progress games, store player data for rejoin
+          console.log("🔄 Game is in progress - preserving player data for reconnection");
+          
+          // Store player's game state for reconnection
+          if (!game.disconnectedPlayers) {
+            game.disconnectedPlayers = new Map();
+          }
+          
+          const playerData = {
+            playerId: playerId,
+            selectedNumber: selectedNumber,
+            selectedNumber2: selectedNumber2,
+            boards: game.players.get(playerId),
+            numberOfBoards: game.numberOfBoardsToPlayer.get(playerId),
+            markedCells: [], // Default empty array since we don't have this data in disconnect
+            disconnectedAt: Date.now()
+          };
+          
+          console.log("💾 Storing player data for rejoin:", {
+            playerId: playerData.playerId,
+            selectedNumber: playerData.selectedNumber,
+            selectedNumber2: playerData.selectedNumber2,
+            hasBoards: !!playerData.boards,
+            disconnectedAt: new Date(playerData.disconnectedAt).toISOString()
+          });
+          
+          game.disconnectedPlayers.set(playerId, playerData);
 
+          // Mark player as disqualified for the current round upon leaving mid-game
+          try {
+            if (!game.fauldMadePlayers) {
+              game.fauldMadePlayers = new Map();
+            }
+            game.fauldMadePlayers.set(playerId, true);
+
+            // Broadcast disqualification and the updated list of disqualified (faul) players
+            const faulPlayers = [];
+            for (const [pid, val] of game.fauldMadePlayers.entries()) {
+              if (val) faulPlayers.push(pid);
+            }
+
+            io.emit("disqualified", {
+              message: "You left during an active game. You are disqualified for this round.",
+              roomId: game.roomId,
+              gameId: game.id,
+              playerId: playerId
+            });
+
+            io.emit("faulMadePlayers", {
+              gameId: game.id,
+              roomId: game.roomId,
+              faulPlayers
+            });
+          } catch (e) {
+            console.log("Error marking player disqualified on disconnect:", e);
+          }
+          
+          users.delete(socket.id);
         }
        
     }
