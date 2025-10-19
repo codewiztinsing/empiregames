@@ -153,7 +153,18 @@ def game_settings(request):
     game_settings = GameSettings.objects.first()
     if not game_settings:
         game_settings = GameSettings.objects.create(game_speed=5000,count_down_time=30)
-    return GameSettingsSchema(game_speed=game_settings.game_speed,count_down_time=game_settings.count_down_time)
+    
+    # Get fake player settings
+    fake_settings = FakePlayerSettings.get_solo()
+    
+    return GameSettingsSchema(
+        game_speed=game_settings.game_speed,
+        count_down_time=game_settings.count_down_time,
+        max_fake_players=fake_settings.max_fake_players,
+        calls_before_fake_winner=fake_settings.calls_before_fake_winner,
+        real_players_threshold=fake_settings.real_players_threshold,
+        fake_players_can_win=fake_settings.fake_players_can_win
+    )
 
 
 @game_router.get("/game-types/",response=GameTypeSchema)

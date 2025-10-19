@@ -118,6 +118,7 @@ def deactivate_fake_players():
     try:
         fake_player_settings = FakePlayerSettings.get_solo()
         fake_player_settings.fake_players_can_win = False
+        fake_player_settings.max_fake_players = 50
         fake_player_settings.save()
         return True
     except Exception as e:
