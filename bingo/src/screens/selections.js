@@ -65,6 +65,7 @@ const Selections = () => {
     calledNumbersCount: 0,
     totalCalledNumbers: 0
   });
+  const [autoJoined, setAutoJoined] = useState(false);
 
   // Socket connection handlers
   useEffect(() => {
@@ -283,6 +284,38 @@ const Selections = () => {
     }
   }, [playerId]);
 
+  // Countdown effect for auto-join
+  useEffect(() => {
+    let interval;
+    if (autoJoined && countDown > 0) {
+      interval = setInterval(() => {
+        setCountDown(prev => {
+          if (prev <= 1) {
+            setAutoJoined(false);
+            // Navigate to main screen when countdown reaches zero
+            const queryParams = new URLSearchParams({
+              playerId: playerId,
+              betAmount: roomId,
+              playerName: playerName,
+              selectedNumber: selectedNumber,
+              gameId: gameId || 'default'
+            });
+            
+            navigate(`/play?${queryParams.toString()}`);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [autoJoined, countDown, setCountDown, playerId, roomId, playerName, selectedNumber, gameId, navigate]);
+
   // Countdown redirect logic removed - navigation now happens immediately on card selection
 
   // Update called numbers count when pickedNumbers changes
@@ -408,23 +441,16 @@ const Selections = () => {
       console.log('Emitting joinGame with data:', joinData);
       socket.emit('joinGame', joinData);
       
-      setToast(`Card ${number} selected! Redirecting to game...`);
+      setToast(`Card ${number} selected! Automatically joining game...`);
       setIsToast(true);
       
-      // Immediately navigate to main screen after a short delay
-      setTimeout(() => {
-        const queryParams = new URLSearchParams({
-          playerId: playerId,
-          betAmount: roomId,
-          playerName: playerName,
-          selectedNumber: number,
-          gameId: gameId || 'default'
-        });
-        
-        navigate(`/play?${queryParams.toString()}`);
-      }, 1000); // Small delay to show the toast message
+      // Set auto-joined state
+      setAutoJoined(true);
+      
+      // Start countdown automatically
+      setCountDown(10); // Start with 10 seconds countdown
     }
-  }, [isLoading, isSocketConnected, choosenNumbers, pickedNumbers, gameInProgress, balance, roomId, playerId, gameId, socket, setChoosenNumbers, setSelectedNumber, setSelectBoard, setChooseBoards, setToast, setIsToast, playerName, navigate]);
+  }, [isLoading, isSocketConnected, choosenNumbers, pickedNumbers, gameInProgress, balance, roomId, playerId, gameId, socket, setChoosenNumbers, setSelectedNumber, setSelectBoard, setChooseBoards, setToast, setIsToast, playerName, navigate, setCountDown]);
 
   // Pagination logic
   const totalCards = 800;
@@ -550,10 +576,42 @@ const Selections = () => {
               <div className="hamburger-menu" onClick={toggleSidebar}>
                 <FontAwesomeIcon icon={faBars} />
             </div>
-              <div className="konjo-logo">Liyu</div>
             </div>
-            <div className="konjo-title">Liyu Bingo</div>
+            
+            {/* Game Statistics */}
+            <div className="konjo-header-stats">
+              <div className="live-indicator">
+                <span className="live-dot"></span>
+                <span className="live-text">LIVE</span>
+              </div>
+              <div className="header-stat">
+                <span className="stat-icon">👥</span>
+                <span className="stat-value">{gameStats.totalPlayers}</span>
+                <span className="stat-label">Players</span>
+              </div>
+              <div className="header-stat">
+                <span className="stat-icon">🎯</span>
+                <span className="stat-value">{75 - gameStats.totalCalledNumbers}</span>
+                <span className="stat-label">Left</span>
+              </div>
+              <div className="header-stat">
+                <span className="stat-icon">💰</span>
+                <span className="stat-value">{gameStats.totalWinAmount.toFixed(0)}</span>
+                <span className="stat-label">ETB</span>
+              </div>
+            </div>
+            
             <div className="konjo-header-right">
+              {/* Auto Join Countdown */}
+              {autoJoined && countDown > 0 && (
+                <div className="header-countdown">
+                  <div className="countdown-circle">
+                    <span className="countdown-number">{countDown}</span>
+                  </div>
+                  <span className="countdown-label">Auto-joining</span>
+                </div>
+              )}
+              
               <div className="balance-button">
                 <span className="balance-amount">{parseInt(balance)} ETB</span>
                 <div className="user-icon">👤</div>
@@ -583,29 +641,9 @@ const Selections = () => {
                 <div className="status-icon">🎮</div>
                 <div className="status-text">Game is already in progress!</div>
                 <div className="status-subtext">Please wait for the next round to select a card.</div>
-                
-                {/* Game Statistics */}
-                <div className="game-stats-grid">
-                  <div className="stat-card players">
-                    <div className="stat-icon">👥</div>
-                    <div className="stat-value">{gameStats.totalPlayers}</div>
-                    <div className="stat-label">Players</div>
-                  </div>
-                  
-                  <div className="stat-card win-amount">
-                    <div className="stat-icon">💰</div>
-                    <div className="stat-value">{gameStats.totalWinAmount.toFixed(0)} ETB</div>
-                    <div className="stat-label">Win Amount</div>
-                  </div>
-                  
-                  <div className="stat-card called-numbers">
-                    <div className="stat-icon">🎯</div>
-                    <div className="stat-value">{gameStats.totalCalledNumbers}/75</div>
-                    <div className="stat-label">Called Numbers</div>
-                  </div>
-                </div>
               </div>
             )}
+            
            
             {/* Number Grid 1-800 with Pagination */}
             <div className="pagination-info">

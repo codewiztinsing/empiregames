@@ -6,8 +6,6 @@ from users.models import User
 class Wallet(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     balance = models.FloatField(default=0.00)  # Changed from 19.00 to 0.00
-    total_referral_earnings = models.FloatField(default=0.00)
-    unwithdrawable_bonus = models.FloatField(default=0.00)  # Bonus that can be used to play
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -42,7 +40,7 @@ class ManualSession(models.Model):
 class Transaction(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.FloatField()
-    type = models.CharField(choices=[("DEPOSIT", "Deposit"), ("WITHDRAW", "Withdraw"),("BET", "Bet"),("WIN", "Win"),("REFERRAL_BONUS", "Referral Bonus")], max_length=20)
+    type = models.CharField(choices=[("DEPOSIT", "Deposit"), ("WITHDRAW", "Withdraw"),("BET", "Bet"),("WIN", "Win")], max_length=20)
     status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
     reference = models.CharField(max_length=100,blank=True,null=True)
     created_at = models.DateTimeField(auto_now_add=True)

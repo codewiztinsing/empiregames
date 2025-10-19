@@ -43,6 +43,13 @@ Make sure to create a migration to delete this model if it exists in DB.
 class GameSettings(models.Model):
     game_speed = models.IntegerField()
     count_down_time = models.IntegerField()
+    
+    # Bonus settings
+    bonus_active = models.BooleanField(default=True, help_text="Whether bonus is currently active")
+    bonus_type = models.CharField(max_length=50, default='admin_bonus', help_text="Type of bonus (admin_bonus, daily_bonus, etc.)")
+    bonus_hours = models.IntegerField(default=24, help_text="Bonus period in hours")
+    bonus_days = models.IntegerField(default=7, help_text="Bonus period in days")
+    
     def __str__(self):
         return f"{self.game_speed} - {self.count_down_time}"
 

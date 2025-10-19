@@ -3,7 +3,6 @@ from celery import shared_task
 from game.models import Game, FakePlayerSettings
 from wallet.models import Transaction,Wallet
 from users.models import User
-from users.referral_services import ReferralService
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum
 
@@ -79,15 +78,6 @@ def update_player_balance(player_id,win_amount,game_id):
         game.save()
         push_transaction(player.telegram_id, win_amount,win_amount,"WIN","success",game_id)
         wallet.save()
-        
-        # Process referral bonuses
-        try:
-            ReferralService.process_win_bonus(player, float(win_amount), str(game_id))
-            logger.info(f"Processed referral bonuses for player {player_id}")
-        except Exception as e:
-            logger.error(f"Error processing referral bonuses: {e}")
-        
-      
         
         return True,wallet.balance
 

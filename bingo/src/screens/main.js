@@ -8,6 +8,22 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faVolumeMute, faVolumeUp, faSignOutAlt, faSync } from '@fortawesome/free-solid-svg-icons';
 import { generateFixedCard } from '../helpers/fixedBingoCards';
 import { hasBingo, checkBingoPatterns, markCardNumber } from '../helpers/fixedBingoCards';
+import config from '../config/api';
+
+// Helper function to format time in MM:SS or HH:MM:SS format
+const formatTime = (seconds) => {
+  if (seconds <= 0) return '00:00';
+  
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+  
+  if (hours > 0) {
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  } else {
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  }
+};
 
 const PlayingBoard = () => {
   const {
@@ -56,6 +72,21 @@ const PlayingBoard = () => {
     gameStatus: 'waiting'
   });
 
+  // Bonus countdown state (separate from game countdown)
+  const [bonusState, setBonusState] = useState(() => {
+    const now = new Date();
+    const initialEndTime = new Date(now.getTime() + (30 * 1000)); // 30 seconds from now
+    return {
+      bonusCountdown: 30,
+      bonusActive: true,
+      bonusType: 'admin_bonus',
+      bonusHours: 24,
+      bonusDays: 7,
+      bonusEndTime: initialEndTime,
+      currentCountdown: 30
+    };
+  });
+
   // Destructure for easier access
   const {
     calledNumbers,
@@ -80,6 +111,17 @@ const PlayingBoard = () => {
     gameCountdown,
     gameStatus
   } = gameState;
+
+  // Destructure bonus state
+  const {
+    bonusCountdown,
+    bonusActive,
+    bonusType,
+    bonusHours,
+    bonusDays,
+    bonusEndTime,
+    currentCountdown
+  } = bonusState;
 
   // Debug log for autoPlay state
   console.log('Current autoPlay state:', autoPlay);
@@ -141,6 +183,100 @@ const PlayingBoard = () => {
 
     initializeFromURL();
   }, [setPlayerId, setRoomId, setPlayerName, setSelectedNumber, setSelectBoard]);
+
+  // Fetch bonus countdown from admin settings
+  useEffect(() => {
+    const fetchBonusCountdown = async () => {
+      try {
+        console.log('Fetching bonus countdown...');
+        const response = await fetch(`${config.API_BASE_URL}/game/bonus-countdown/`);
+        console.log('Bonus countdown response status:', response.status);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Bonus countdown data received:', data);
+          
+          // Calculate bonus end time based on current time + bonus countdown
+          const now = new Date();
+          const bonusEndTime = new Date(now.getTime() + (data.bonus_countdown * 1000));
+          
+          setBonusState({
+            bonusCountdown: data.bonus_countdown,
+            bonusActive: data.bonus_active,
+            bonusType: data.bonus_type,
+            bonusHours: data.bonus_hours,
+            bonusDays: data.bonus_days,
+            bonusEndTime: bonusEndTime,
+            currentCountdown: data.bonus_countdown
+          });
+          console.log('Bonus state updated:', {
+            bonusCountdown: data.bonus_countdown,
+            bonusActive: data.bonus_active,
+            bonusType: data.bonus_type,
+            bonusHours: data.bonus_hours,
+            bonusDays: data.bonus_days,
+            bonusEndTime: bonusEndTime.toISOString(),
+            currentCountdown: data.bonus_countdown
+          });
+        } else {
+          console.error('Bonus countdown response not ok:', response.status);
+        }
+      } catch (error) {
+        console.error('Error fetching bonus countdown:', error);
+      }
+    };
+
+    fetchBonusCountdown();
+    
+    // Refresh bonus countdown every 30 seconds
+    const interval = setInterval(fetchBonusCountdown, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // Real-time bonus countdown timer
+  useEffect(() => {
+    let countdownInterval;
+    
+    if (bonusActive && bonusEndTime) {
+      countdownInterval = setInterval(() => {
+        const now = new Date();
+        const timeLeft = Math.max(0, Math.floor((bonusEndTime.getTime() - now.getTime()) / 1000));
+        
+        setBonusState(prevState => ({
+          ...prevState,
+          currentCountdown: timeLeft
+        }));
+        
+        // If countdown reaches zero, fetch new bonus settings
+        if (timeLeft === 0) {
+          console.log('Bonus countdown reached zero, fetching new settings...');
+          // Trigger a new fetch
+          fetch(`${config.API_BASE_URL}/game/bonus-countdown/`)
+            .then(response => response.json())
+            .then(data => {
+              const newEndTime = new Date(now.getTime() + (data.bonus_countdown * 1000));
+              setBonusState(prevState => ({
+                ...prevState,
+                bonusCountdown: data.bonus_countdown,
+                bonusActive: data.bonus_active,
+                bonusType: data.bonus_type,
+                bonusHours: data.bonus_hours,
+                bonusDays: data.bonus_days,
+                bonusEndTime: newEndTime,
+                currentCountdown: data.bonus_countdown
+              }));
+            })
+            .catch(error => console.error('Error fetching new bonus settings:', error));
+        }
+      }, 1000); // Update every second
+    }
+    
+    return () => {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+    };
+  }, [bonusActive, bonusEndTime]);
 
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -628,7 +764,11 @@ const PlayingBoard = () => {
       {/* Action Buttons */}
       <div className="winner-actions">
         <div className="winner-summary">
-          <span className="summary-text">🎊 Congratulations! You won with Card #{winnerCardNumber} 🎊</span>
+          {winner === playerId ? (
+            <span className="summary-text">🎊 Congratulations! You won with Card #{winnerCardNumber} 🎊</span>
+          ) : (
+            <span className="summary-text">🏆 {winnerPlayerName} won with Card #{winnerCardNumber} 🏆</span>
+          )}
         </div>
         <button className="close-winner-button" onClick={handleCloseWinner}>
           <span className="button-icon">✨</span>
@@ -779,13 +919,18 @@ const PlayingBoard = () => {
           <div className="bonus-countdown">
             <div className="bonus-indicator">
               <span className="star">⭐</span>
-              Bonus On
+              {bonusActive ? 'Bonus Active' : 'Bonus Inactive'}
+              <span className="bonus-info">({bonusType})</span>
             </div>
             <div className="countdown-display">
-              <span className="countdown-label">Count Down</span>
-              <span className={`countdown-timer ${gameStatus === 'in-progress' ? 'active' : ''}`}>
-                {gameCountdown || countDown || 0} : 01
+              <span className="countdown-label">Bonus Countdown</span>
+              <span className={`countdown-timer ${bonusActive ? 'active' : ''}`}>
+                {formatTime(currentCountdown)}
               </span>
+            </div>
+            {/* Debug info - remove in production */}
+            <div style={{fontSize: '10px', color: '#666', marginTop: '5px'}}>
+              Debug: bonusActive={String(bonusActive)}, currentCountdown={currentCountdown}, bonusType={bonusType}
             </div>
           </div>
 

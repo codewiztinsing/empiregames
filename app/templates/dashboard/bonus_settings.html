@@ -1,0 +1,289 @@
+{% extends 'dashboard/base.html' %}
+{% block page_title %}Bonus Settings{% endblock %}
+{% block content %}
+<div class="bg-gray-900 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-white mb-8">Bonus Settings</h1>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-green-900 text-green-300{% elif message.tags == 'error' %}bg-red-900 text-red-300{% else %}bg-blue-900 text-blue-300{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Bonus Settings Card -->
+        <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-8">
+            <h2 class="text-xl font-semibold text-white mb-6">Bonus Countdown Configuration</h2>
+            <p class="text-gray-400 mb-6">Configure bonus countdown settings that appear on the main game screen. These settings control the bonus period countdown displayed to players.</p>
+            
+            <form method="post" action="{% url 'dashboard:bonus_settings' %}">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Bonus Countdown Time -->
+                    <div>
+                        <label for="bonus_countdown" class="block text-sm font-medium text-gray-300 mb-2">
+                            Bonus Countdown Time (seconds)
+                        </label>
+                        <input 
+                            type="number" 
+                            id="bonus_countdown" 
+                            name="bonus_countdown" 
+                            value="{{ settings.count_down_time }}"
+                            min="1" 
+                            max="3600"
+                            class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            required
+                        >
+                        <p class="text-xs text-gray-500 mt-1">Countdown time in seconds for bonus period (1-3600 seconds)</p>
+                    </div>
+
+                    <!-- Game Speed -->
+                    <div>
+                        <label for="game_speed" class="block text-sm font-medium text-gray-300 mb-2">
+                            Game Speed (milliseconds)
+                        </label>
+                        <input 
+                            type="number" 
+                            id="game_speed" 
+                            name="game_speed" 
+                            value="{{ settings.game_speed }}"
+                            min="1000" 
+                            max="10000"
+                            class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            required
+                        >
+                        <p class="text-xs text-gray-500 mt-1">Speed of number calls in milliseconds (1000-10000 ms)</p>
+                    </div>
+
+                    <!-- Bonus Type -->
+                    <div>
+                        <label for="bonus_type" class="block text-sm font-medium text-gray-300 mb-2">
+                            Bonus Type
+                        </label>
+                        <select 
+                            id="bonus_type" 
+                            name="bonus_type" 
+                            class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        >
+                            <option value="admin_bonus" {% if settings.bonus_type == 'admin_bonus' %}selected{% endif %}>Admin Bonus</option>
+                            <option value="daily_bonus" {% if settings.bonus_type == 'daily_bonus' %}selected{% endif %}>Daily Bonus</option>
+                            <option value="weekly_bonus" {% if settings.bonus_type == 'weekly_bonus' %}selected{% endif %}>Weekly Bonus</option>
+                            <option value="special_bonus" {% if settings.bonus_type == 'special_bonus' %}selected{% endif %}>Special Bonus</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Type of bonus displayed to players</p>
+                    </div>
+
+                    <!-- Bonus Hours -->
+                    <div>
+                        <label for="bonus_hours" class="block text-sm font-medium text-gray-300 mb-2">
+                            Bonus Hours
+                        </label>
+                        <input 
+                            type="number" 
+                            id="bonus_hours" 
+                            name="bonus_hours" 
+                            value="{{ settings.bonus_hours }}"
+                            min="1" 
+                            max="168"
+                            class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            required
+                        >
+                        <p class="text-xs text-gray-500 mt-1">Bonus period in hours (1-168 hours)</p>
+                    </div>
+
+                    <!-- Bonus Days -->
+                    <div>
+                        <label for="bonus_days" class="block text-sm font-medium text-gray-300 mb-2">
+                            Bonus Days
+                        </label>
+                        <input 
+                            type="number" 
+                            id="bonus_days" 
+                            name="bonus_days" 
+                            value="{{ settings.bonus_days }}"
+                            min="1" 
+                            max="30"
+                            class="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            required
+                        >
+                        <p class="text-xs text-gray-500 mt-1">Bonus period in days (1-30 days)</p>
+                    </div>
+                </div>
+
+                <!-- Bonus Active Toggle -->
+                <div class="mt-6">
+                    <div class="flex items-center">
+                        <input 
+                            type="checkbox" 
+                            id="bonus_active" 
+                            name="bonus_active" 
+                            {% if settings.bonus_active %}checked{% endif %}
+                            class="h-4 w-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                        >
+                        <label for="bonus_active" class="ml-3 text-sm font-medium text-gray-300">
+                            Bonus Active
+                        </label>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1 ml-7">
+                        When enabled, bonus countdown is displayed on the main screen. When disabled, no bonus countdown is shown.
+                    </p>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="mt-8">
+                    <button 
+                        type="submit" 
+                        class="bg-purple-primary hover:bg-purple-hover text-white px-6 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                        Save Bonus Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Current Settings Display -->
+        <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Current Bonus Settings</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Bonus Countdown</div>
+                    <div class="text-2xl font-bold text-white">{{ settings.count_down_time }}s</div>
+                    <div class="text-xs text-gray-500 mt-1">Displayed on main screen</div>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Game Speed</div>
+                    <div class="text-2xl font-bold text-white">{{ settings.game_speed }}ms</div>
+                    <div class="text-xs text-gray-500 mt-1">Number call interval</div>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Bonus Type</div>
+                    <div class="text-lg font-bold text-white">{{ settings.bonus_type|title }}</div>
+                    <div class="text-xs text-gray-500 mt-1">Type of bonus</div>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Bonus Hours</div>
+                    <div class="text-2xl font-bold text-white">{{ settings.bonus_hours }}h</div>
+                    <div class="text-xs text-gray-500 mt-1">Bonus period</div>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Bonus Days</div>
+                    <div class="text-2xl font-bold text-white">{{ settings.bonus_days }}d</div>
+                    <div class="text-xs text-gray-500 mt-1">Bonus period</div>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <div class="text-sm text-gray-400">Status</div>
+                    <div class="text-lg font-bold {% if settings.bonus_active %}text-green-400{% else %}text-red-400{% endif %}">
+                        {% if settings.bonus_active %}Active{% else %}Inactive{% endif %}
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1">Bonus status</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Preview Card -->
+        <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mt-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Live Preview</h3>
+            <p class="text-gray-400 mb-4">This is how the bonus countdown will appear on the main game screen:</p>
+            
+            <div class="bg-gray-700 rounded-lg p-4 max-w-md">
+                <div class="bonus-countdown-preview">
+                    <div class="bonus-indicator-preview">
+                        <span class="star">⭐</span>
+                        {% if settings.bonus_active %}Bonus Active{% else %}Bonus Inactive{% endif %}
+                        <span class="bonus-info">({{ settings.bonus_type }})</span>
+                    </div>
+                    <div class="countdown-display-preview">
+                        <span class="countdown-label-preview">Bonus Countdown</span>
+                        <span class="countdown-timer-preview {% if settings.bonus_active %}active{% endif %}">
+                            {{ settings.count_down_time }} : 01
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Card -->
+        <div class="bg-blue-900 border border-blue-700 rounded-lg p-4 mt-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-300">How Bonus Settings Work</h3>
+                    <div class="mt-2 text-sm text-blue-200">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li><strong>Bonus Countdown:</strong> Controls the countdown timer displayed on the main game screen</li>
+                            <li><strong>Game Speed:</strong> Determines how fast numbers are called during games</li>
+                            <li><strong>Real-time Updates:</strong> Changes are reflected immediately on the main screen</li>
+                            <li><strong>Admin Control:</strong> Only administrators can modify these settings</li>
+                            <li><strong>API Integration:</strong> Settings are fetched by the main screen every 30 seconds</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bonus-countdown-preview {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 2px solid #e74c3c;
+    border-radius: 12px;
+    padding: 12px;
+    color: white;
+}
+
+.bonus-indicator-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #f39c12;
+}
+
+.bonus-info {
+    font-size: 10px;
+    opacity: 0.8;
+    margin-left: 4px;
+    font-style: italic;
+}
+
+.countdown-display-preview {
+    text-align: center;
+}
+
+.countdown-label-preview {
+    display: block;
+    font-size: 12px;
+    color: #bdc3c7;
+    margin-bottom: 5px;
+}
+
+.countdown-timer-preview {
+    font-size: 18px;
+    font-weight: bold;
+    color: #e74c3c;
+    font-family: 'Courier New', monospace;
+    border: 2px solid #e74c3c;
+    border-radius: 8px;
+    padding: 4px 8px;
+    display: inline-block;
+}
+
+.countdown-timer-preview.active {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+</style>
+{% endblock %}

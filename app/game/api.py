@@ -155,6 +155,36 @@ def game_settings(request):
         game_settings = GameSettings.objects.create(game_speed=5000,count_down_time=30)
     return GameSettingsSchema(game_speed=game_settings.game_speed,count_down_time=game_settings.count_down_time)
 
+@game_router.get("/bonus-countdown/")
+def get_bonus_countdown(request):
+    """Get bonus countdown settings for main screen"""
+    try:
+        game_settings = GameSettings.objects.first()
+        if not game_settings:
+            game_settings = GameSettings.objects.create(
+                game_speed=5000, 
+                count_down_time=30,
+                bonus_active=True,
+                bonus_type='admin_bonus',
+                bonus_hours=24,
+                bonus_days=7
+            )
+        
+        return JsonResponse({
+            "bonus_countdown": game_settings.count_down_time,
+            "bonus_active": game_settings.bonus_active,
+            "bonus_type": game_settings.bonus_type,
+            "bonus_hours": game_settings.bonus_hours,
+            "bonus_days": game_settings.bonus_days,
+            "settings": {
+                "game_speed": game_settings.game_speed,
+                "count_down_time": game_settings.count_down_time
+            }
+        }, status=200)
+    except Exception as e:
+        logger.error(f"Error getting bonus countdown: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
 
 @game_router.get("/game-types/",response=GameTypeSchema)
 def game_types(request):

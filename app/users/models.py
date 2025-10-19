@@ -44,14 +44,6 @@ class User(AbstractUser):
     
     phone = models.CharField(max_length=15, unique=True)
     telegram_id = models.CharField(max_length=15, unique=True)
-    referral_code = models.CharField(max_length=15, default=get_random_string(15))
-    referred_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='referrals')
-    is_agent = models.BooleanField(default=False)  # Default to customer, not agent
-    sponsor_changed = models.BooleanField(default=False)  # Can only change once
-    total_referral_earnings = models.FloatField(default=0.00)
-    signup_bonus_claimed = models.BooleanField(default=False)  # Track if signup bonus was claimed
-    sponsor_change_bonus_claimed = models.BooleanField(default=False)  # Track if sponsor change bonus was claimed
-    unwithdrawable_bonus = models.FloatField(default=0.00)  # Bonus that can be used to play
     total_games_played = models.PositiveIntegerField(default=0)
     games_played_today = models.PositiveIntegerField(default=0)
     games_played_this_week = models.PositiveIntegerField(default=0)
@@ -88,35 +80,6 @@ class SupportUser(models.Model):
         return self.user.username
 
 
-class ReferralBonus(models.Model):
-    BONUS_TYPE_CHOICES = [
-        ('first_generation', 'First Generation (4%)'),
-        ('second_generation', 'Second Generation (1%)'),
-        ('signup', 'Signup Bonus (10 birr)'),
-        ('sponsor_change', 'Sponsor Change Bonus (10 birr)'),
-    ]
-    
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
-    ]
-    
-    referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referral_bonuses')
-    winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='win_bonuses')
-    game_id = models.CharField(max_length=100)
-    win_amount = models.FloatField()
-    bonus_type = models.CharField(max_length=20, choices=BONUS_TYPE_CHOICES)
-    bonus_amount = models.FloatField()
-    generation_level = models.PositiveIntegerField()  # 1 for first generation, 2 for second
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.referrer.username} - {self.bonus_type} - {self.bonus_amount}"
-
-
 class WithdrawalRequest(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -140,13 +103,3 @@ class WithdrawalRequest(models.Model):
         return f"{self.user.username} - {self.amount} - {self.status}"
 
 
-class ReferralAnnouncement(models.Model):
-    title = models.CharField(max_length=200)
-    message = models.TextField()
-    is_active = models.BooleanField(default=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.title

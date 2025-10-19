@@ -6,7 +6,7 @@ from .models import (
             )
 
 class WalletAdmin(admin.ModelAdmin):
-    list_display = ('user', 'balance', 'unwithdrawable_bonus', 'total_referral_earnings', 'created_at','get_user_phone','get_user_telegram_id')
+    list_display = ('user', 'balance', 'created_at','get_user_phone','get_user_telegram_id')
     search_fields = ('user__username',"user__telegram_id","user__phone")
     list_filter = ('user__is_active', 'user__is_staff')
     list_per_page = 10

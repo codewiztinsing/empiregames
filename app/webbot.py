@@ -69,13 +69,10 @@ def local_get_user_by_telegram(telegram_id: int):
 def local_get_wallet_by_telegram(telegram_id: int):
     user = local_get_user_by_telegram(telegram_id)
     if not user:
-        return {"balance": 0.0, "total_referral_earnings": 0.0}
+        return {"balance": 0.0}
     wallet, _ = Wallet.objects.get_or_create(user=user)
-    # total_referral_earnings kept on user model
     return {
         "balance": float(wallet.balance or 0.0),
-        "total_referral_earnings": float(user.total_referral_earnings or 0.0),
-        "referral_bonus": float(user.total_referral_earnings or 0.0),
     }
 
 def local_get_payment_settings():
@@ -124,7 +121,7 @@ def generate_tx_ref(length=20):
 # Define conversation states
 DEPOSIT_AMOUNT = range(1)
 SCREENSHOT = range(2)
-GET_DEPOSIT_AMOUNT,WITHDRAW_AMOUNT_CONFIRM,WITHDRAW_AMOUNT_CANCEL,CHOOSE_PAYMENT_METHOD,GET_WITHDRAW_ACCOUNT,GET_TRANSCATION_DETAILS,PHONE,REGISTER,SOME_STATE,WAIT_FOR_PAYMENT,CHANGE_SPONSOR_WAIT_ID = range(2,13)
+GET_DEPOSIT_AMOUNT,WITHDRAW_AMOUNT_CONFIRM,WITHDRAW_AMOUNT_CANCEL,CHOOSE_PAYMENT_METHOD,GET_WITHDRAW_ACCOUNT,GET_TRANSCATION_DETAILS,PHONE,REGISTER,SOME_STATE,WAIT_FOR_PAYMENT = range(2,12)
 
 CONVERSATION_TIMEOUT = 300  # 5 minutes
 
@@ -154,18 +151,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     ]
     
     reply_markup = InlineKeyboardMarkup(keyboard)
-    # https://t.me/akerbingobot?start=1464395537
-    # Extract referral info from deep link if present
-    referrer_id = None
-    if context.args and len(context.args) > 0:
-        try:
-            referrer_id = int(context.args[0])
-            print("referrer_id = ",referrer_id)
-
-            # Store referrer ID in user data for later use
-            context.user_data['referrer_id'] = referrer_id
-        except ValueError:
-            logger.warning(f"Invalid referrer ID format: {context.args[0]}")
+    
     # Send welcome image instead of text
     try:
         with open('wellcomenote.jpeg', 'rb') as photo:
@@ -248,7 +234,7 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             min_withdrawal = float(settings_json.get('min_withdrawal_amount', 50))
             max_withdrawal = float(settings_json.get('max_withdrawal_amount', 100))
             wallet_response = await sync_to_async(local_get_wallet_by_telegram, thread_sensitive=True)(telegram_id)
-            balance = float(wallet_response.get('balance', 0)) + float(wallet_response.get('total_referral_earnings', 0)) if float(wallet_response.get('total_referral_earnings', 0)) > 500 else float(wallet_response.get('balance', 0))
+            balance = float(wallet_response.get('balance', 0))
         else:
             # Fetch wallet and payment settings via API
             settings_resp = requests.get(f'{BACK_URL}/api/v1/wallet/payment-settings/', timeout=10)
@@ -258,7 +244,7 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
 
             _resp = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}', timeout=10)
             wallet_response = _resp.json() if _resp.headers.get('content-type','').startswith('application/json') else {}
-            balance = float(wallet_response.get('balance', 0)) + float(wallet_response.get('total_referral_earnings', 0)) if float(wallet_response.get('total_referral_earnings', 0)) > 500 else float(wallet_response.get('balance', 0))
+            balance = float(wallet_response.get('balance', 0))
 
 
         daily_limit = daily_withdraw_limit(telegram_id)
@@ -476,7 +462,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             bet_amount = int(query.data)
             wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
             wallet_data = wallet_response.json()
-            balance = wallet_data.get('balance', 0) + wallet_data.get('total_referral_earnings', 0)
+            balance = wallet_data.get('balance', 0)
            
           
             if balance < bet_amount:
@@ -800,36 +786,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await query.edit_message_text(text="An error occurred. Please try again.")
 
 
-async def show_id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Command to show user's unique ID"""
-    try:
-        print("DEBUG: show_id_command called")
-        user_id = update.effective_user.id
-        username = update.effective_user.username or "User"
-        
-        print(f"DEBUG: user_id = {user_id}, username = {username}")
-        
-        # Create the unique ID in the format Aker_telegramid
-        unique_id = f"Aker_{user_id}"
-        
-        message = (
-            f"🆔 Your Unique ID\n\n"
-            f"ID: <code>{unique_id}</code>\n"
-            f"Username: {username}\n\n"
-            f"📋 You can copy the ID above to share with others.\n"
-            f"💡 Others can use this ID to refer you as their sponsor."
-        )
-        
-        print(f"DEBUG: Sending message: {message}")
-        await update.message.reply_text(message, parse_mode=ParseMode.HTML)
-        print("DEBUG: Message sent successfully")
-        
-    except Exception as e:
-        print(f"DEBUG: Error in show_id_command: {e}")
-        logger.error(f"Error in show_id_command: {e}")
-        await update.message.reply_text("❌ Error showing your ID. Please try again.")
-    
-    return ConversationHandler.END
 
 
 async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -848,157 +804,8 @@ async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
-async def change_sponsor_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Command to change user's sponsor/referrer"""
-    print("DEBUG: change_sponsor_command called")
-    user_id = update.effective_user.id
-    BACK_URL = get_bot_seetings().get("bot_url")
-    
-    try:
-        print(f"DEBUG: Processing change_sponsor for user {user_id}")
-        # Check if user is registered
-        user_response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
-        print(f"DEBUG: User response status: {user_response.status_code}")
-        
-        if user_response.status_code != 200:
-            await update.message.reply_text("❌ You need to register first. Use /register command.")
-            return ConversationHandler.END
-        
-        user_data = user_response.json()
-        if not user_data.get('phone'):
-            await update.message.reply_text("❌ You need to register first. Use /register command.")
-            return ConversationHandler.END
-        
-        # Check if user has already changed sponsor
-        if user_data.get('sponsor_changed', False):
-            await update.message.reply_text("❌ You have already changed your sponsor once. This can only be done once.")
-            return ConversationHandler.END
-        
-        # Check if user was invited by another user - don't allow sponsor change
-        # Check if user has a referred_by, and if so, whether it is the default sponsor (telegram_id == '0')
-        referred_by = user_data.get('referred_by')
-        if referred_by is not None and referred_by != '0':
-            # User was invited by a real user (not default sponsor)
-            await update.message.reply_text("❌ You were invited by another user and cannot change your sponsor.")
-            return ConversationHandler.END
-        # If user has default sponsor (telegram_id '0'), allow sponsor change (don't block)
-        print("DEBUG: Sending change sponsor instructions")
-        await update.message.reply_text(
-            "🔄 **Change Sponsor**\n\n"
-            "Please enter the Telegram ID of your new sponsor.\n"
-            "You can use either:\n"
-            "• Direct Telegram ID (e.g., 1464395537)\n"
-            "• Aker ID format (e.g., Aker_1464395537)\n\n"
-            "You can find someone's ID by asking them to use /show_id command.\n\n"
-            "⚠️ **Note:** You can only change your sponsor once!\n\n"
-            "Enter the sponsor ID:",
-            parse_mode=ParseMode.MARKDOWN
-        )
-        
-        print("DEBUG: Returning CHANGE_SPONSOR_WAIT_ID state")
-        return CHANGE_SPONSOR_WAIT_ID
-        
-    except Exception as e:
-        print(f"DEBUG: Error in change_sponsor_command: {e}")
-        logger.error(f"Error in change_sponsor_command: {e}")
-        await update.message.reply_text("❌ An error occurred. Please try again later.")
-        return ConversationHandler.END
 
 
-async def handle_new_sponsor_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle the new sponsor ID input"""
-    print("DEBUG: handle_new_sponsor_id function called")
-    user_id = update.effective_user.id
-    new_sponsor_input = update.message.text.strip()
-    BACK_URL = get_bot_seetings().get("bot_url")
-
-    
-    try:
-        # Extract Telegram ID from input - handle both formats
-        new_sponsor_id_int = None
-        
-        if new_sponsor_input.startswith("Aker_"):
-            # Handle Aker_telegramid format
-            try:
-                telegram_id_part = new_sponsor_input.replace("Aker_", "")
-                new_sponsor_id_int = int(telegram_id_part)
-                print(f"DEBUG: Extracted Telegram ID from Aker format: {new_sponsor_id_int}")
-            except ValueError:
-                await update.message.reply_text("❌ Invalid Aker ID format. Please use Aker_telegramid or just the Telegram ID.")
-                return CHANGE_SPONSOR_WAIT_ID
-        else:
-            # Handle direct Telegram ID format
-            try:
-                new_sponsor_id_int = int(new_sponsor_input)
-                print(f"DEBUG: Using direct Telegram ID: {new_sponsor_id_int}")
-            except ValueError:
-                await update.message.reply_text("❌ Please enter a valid Telegram ID (numbers only) or Aker ID (Aker_telegramid).")
-                return CHANGE_SPONSOR_WAIT_ID
-        
-        # Check if the new sponsor exists
-        sponsor_response = requests.get(f'{BACK_URL}/api/v1/users/{new_sponsor_id_int}')
-        if sponsor_response.status_code != 200:
-            await update.message.reply_text("❌ The sponsor with that ID doesn't exist or isn't registered.")
-            return CHANGE_SPONSOR_WAIT_ID
-        
-        sponsor_data = sponsor_response.json()
-        if not sponsor_data.get('phone'):
-            await update.message.reply_text("❌ The sponsor with that ID isn't registered.")
-            return CHANGE_SPONSOR_WAIT_ID
-        
-        # Check if user is trying to set themselves as sponsor
-        if new_sponsor_id_int == user_id:
-            await update.message.reply_text("❌ You cannot set yourself as your sponsor.")
-            return CHANGE_SPONSOR_WAIT_ID
-        
-        # Get current user's database ID for the update
-        current_user_response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
-        current_user_data = current_user_response.json()
-        current_user_db_id = current_user_data.get('id')
-        
-        if not current_user_db_id:
-            await update.message.reply_text("❌ Could not find user database ID. Please try again later.")
-            return ConversationHandler.END
-        
-        # Get sponsor's database ID
-        sponsor_db_id = sponsor_data.get('id')
-        if not sponsor_db_id:
-            await update.message.reply_text("❌ Could not find sponsor database ID. Please try again later.")
-            return CHANGE_SPONSOR_WAIT_ID
-        
-        # Update the user's sponsor using the new API endpoint
-        # The API will handle bidirectional sponsorship validation
-        update_data = {
-            'referred_by': sponsor_db_id,
-            'sponsor_changed': True
-        }
-        
-        update_response = requests.put(f'{BACK_URL}/api/v1/users/{current_user_db_id}/change-sponsor', json=update_data)
-        
-        if update_response.status_code == 200:
-            sponsor_username = sponsor_data.get('username', f'User {new_sponsor_id_int}')
-            await update.message.reply_text(
-                f"✅ <b>Sponsor Changed Successfully!</b>\n\n"
-                f"Your new sponsor is: {sponsor_username} (ID: {new_sponsor_id_int})\n\n"
-                f"💰 10 ETB has been moved from your wallet to referral earnings!\n"
-                f"⚠️ <i>Note:</i> You cannot change your sponsor again.",
-                parse_mode=ParseMode.HTML
-            )
-        else:
-            # Handle API error responses
-            try:
-                error_data = update_response.json()
-                error_message = error_data.get('error', 'Failed to change sponsor')
-                await update.message.reply_text(f"❌ {error_message}")
-            except:
-                await update.message.reply_text("❌ Failed to change sponsor. Please try again later.")
-        
-        return ConversationHandler.END
-        
-    except Exception as e:
-        logger.error(f"Error in handle_new_sponsor_id: {e}")
-        await update.message.reply_text("❌ An error occurred. Please try again later.")
-    return ConversationHandler.END
 
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     amount = update.message.text
@@ -1135,22 +942,6 @@ all_public_commands_descriptions = [
       BotCommand(
         "support", 
         "Contact us"
-        ),
-
-
-    BotCommand(
-        "invite", 
-        "Invite"
-        ),
-
-    BotCommand(
-        "change_sponsor", 
-        "Change Sponsor"
-        ),
-
-    BotCommand(
-        "show_id", 
-        "Show My ID"
         )
     ]
 
@@ -1162,44 +953,6 @@ async def post_init(app):
       
   
 
-async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    BACK_URL = get_bot_seetings().get("bot_url")
-    user_id = update.effective_user.id
-    referrer_id = context.user_data.get('referrer_id')
-    logger.info(f"referrer_id = {referrer_id}")
-
-    response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
-    if response.status_code != 200:
-        await update.message.reply_text(
-            "You need to register first before inviting others. Use the /register command."
-        )
-        return
-
-    # Get user's wallet balance
-    _wr = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
-    wallet_response = _wr.json() if _wr.headers.get('content-type','').startswith('application/json') else {}
-    balance = wallet_response.get('balance', 0)
-
-    telegram_id = update.effective_user.id
-    # Get bot username dynamically
-    bot_username = (await context.bot.get_me()).username
-    # Use ref_ prefix so start command can parse first-generation referrer
-    invite_link = f"https://t.me/{bot_username}?start=ref_{telegram_id}"
-    message = (
-        "Invite your friends to Aker Bingo and earn rewards!\n\n"
-        "Tap the button below to share your invite link with others."
-    )
-    # Create a share button with the invite link
-    share_button = InlineKeyboardButton(
-        text="🔗 Share Invite Link",
-        switch_inline_query=invite_link
-    )
-    reply_markup = InlineKeyboardMarkup([[share_button]])
-    await update.message.reply_text(
-        text=message,
-        reply_markup=reply_markup,
-        parse_mode="HTML"
-    )
 
 
 
@@ -1207,11 +960,6 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("DEBUG: register_command function called")
     user_id = update.effective_user.id
     BACK_URL = get_bot_seetings().get("bot_url")
-    # selambingobot ref_1464395537
-    referrer_id = context.args[0] if context.args else None
-    context.user_data['referrer_id'] = referrer_id
-    print("referrer_id = ",referrer_id)
-    
     
     # Check if user is already registered
     response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
@@ -1271,16 +1019,14 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         logger.info(f"Games played this week: {games_played_this_week}")
 
         # Referral bonus (float) - handle None values
-        total_referral_earnings_raw = (wallet_data.get('referral_bonus', 0) if LOCAL_MODE else user_data.get('total_referral_earnings', 0)) or 0
-        total_referral_earnings = float(total_referral_earnings_raw) if isinstance(total_referral_earnings_raw, (int, float, str)) else 0.0
+        total_referral_earnings = 0.0
 
         # Compute balances per policy - handle None values
         wallet_balance = float(balance or 0)
-        referral_bonus_raw = wallet_data.get('referral_bonus', 0) or 0
-        referral_bonus = float(referral_bonus_raw) if isinstance(referral_bonus_raw, (int, float, str)) else 0.0
-        threshold_met = referral_bonus >= 500.0
-        withdrawable_balance = wallet_balance + (referral_bonus if threshold_met else 0.0)
-        total_balance = wallet_balance + referral_bonus 
+        referral_bonus = 0.0
+        threshold_met = False
+        withdrawable_balance = wallet_balance
+        total_balance = wallet_balance 
         
     except requests.exceptions.RequestException as e:
         logger.error(f"API request error: {e}")
@@ -1305,20 +1051,12 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         f"💰 Hey {user_name}! Your Current Account Balance!\n"
         f"📱 **Phone Number:** {phone}\n"
         f"🎯 **Balance: {balance:.2f} ETB\n"
-        f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
-        f"🎯 **Total Balance: {total_balance:.2f} ETB\n"
-        f"💵 **Withdrawable Balance: {withdrawable_balance:.2f} ETB\n"
-
         )
     else:
         message = (
         f"💰 Hey {user_name}! Your Current Account Balance!\n"
         f"📱 **Phone Number:** {phone}\n"
         f"🎯 **Balance: {balance:.2f} ETB\n"
-        f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
-        f"🎯 **Total Balance: {total_balance:.2f} ETB\n"
-        f"💵 **Withdrawable Balance: {withdrawable_balance:.2f} ETB\n"
-       
         )
 
     await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
@@ -1337,21 +1075,6 @@ async def deposit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("DEBUG: start_command function called")
     user_id = update.effective_user.id
-    # @testselselambingobot ref_1464395537
-    # If the user started the bot with a referral link like @testselselambingobot ref_1464395537,
-    # extract the telegram id from the argument starting with "ref_"
-    referrer_id = None
-    if context.args and len(context.args) > 0 and context.args[0].startswith("ref_"):
-        print("DEBUG: Extracting referrer_id from context.args")
-        try:
-            referrer_id = int(context.args[0].split("_")[1])
-            context.user_data['referrer_id'] = referrer_id
-            print(f"DEBUG: Extracted referrer_id = {referrer_id}")
-        except Exception as e:
-            logger.error(f"Error extracting referrer_id: {e}")
-    args = context.args  # this will be ["ref_123"] if link clicked
-
-    print(f"DEBUG: args = {args}")
 
     # Check if user is already registered
     BACK_URL = get_bot_seetings().get("bot_url")
@@ -1366,53 +1089,23 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.error(f"Error checking user existence: {e}")
 
-    if args and len(args) > 0 and args[0].startswith("ref_"):      
-        referrer_id = int(args[0].split("_")[1])
-        context.user_data['referrer_id'] = referrer_id
-        # get user profile from telegram using referrer id
-        try:
-            user_profile = await context.bot.get_chat(referrer_id)
-            logger.info(f"user_profile = {user_profile}")
-            await update.effective_message.reply_text(f"Welcome! You were referred by user {user_profile.username}")
-        except Exception as e:
-            logger.error(f"Error getting referrer profile: {e}")
-            await update.effective_message.reply_text(f"Welcome! You were referred by user {referrer_id}")
-        
-        # Send welcome image first
-        try:
-            with open('wellcomenote.jpeg', 'rb') as photo:
-                await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
-        except FileNotFoundError:
-            # Fallback if image not found
-            pass
-        
-        await update.effective_message.reply_text(text="Please share your phone number to complete registration.")
-        contact_keyboard = ReplyKeyboardMarkup(
+    # Send welcome image first
+    try:
+        with open('wellcomenote.jpeg', 'rb') as photo:
+            await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+    except FileNotFoundError:
+        # Fallback if image not found
+        pass
+    
+    await update.effective_message.reply_text("Please share your phone number to complete registration.")
+    contact_keyboard = ReplyKeyboardMarkup(
                 [[KeyboardButton(text="📞 Share Phone Number", request_contact=True)]],
                 resize_keyboard=True,
                 one_time_keyboard=True
             )
-        await update.effective_message.reply_text(text="Tap the button below to share your phone number.", reply_markup=contact_keyboard)
-        print("DEBUG: Returning REGISTER state for referred user")
-        return REGISTER
-    else:
-        # Send welcome image first
-        try:
-            with open('wellcomenote.jpeg', 'rb') as photo:
-                await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
-        except FileNotFoundError:
-            # Fallback if image not found
-            pass
-        
-        await update.effective_message.reply_text("Please share your phone number to complete registration.")
-        contact_keyboard = ReplyKeyboardMarkup(
-                [[KeyboardButton(text="📞 Share Phone Number", request_contact=True)]],
-                resize_keyboard=True,
-                one_time_keyboard=True
-            )
-        await update.effective_message.reply_text(text="Tap the button below to share your phone number.", reply_markup=contact_keyboard)
-        print("DEBUG: Returning REGISTER state for regular user")
-        return REGISTER
+    await update.effective_message.reply_text(text="Tap the button below to share your phone number.", reply_markup=contact_keyboard)
+    print("DEBUG: Returning REGISTER state for regular user")
+    return REGISTER
 
 
 
@@ -1422,7 +1115,7 @@ def main() -> None:
  
 
     conversation_handler = ConversationHandler(
-        entry_points=[CallbackQueryHandler(button), CommandHandler('register', register_command), CommandHandler('start', start_command), CommandHandler('change_sponsor', change_sponsor_command)],
+        entry_points=[CallbackQueryHandler(button), CommandHandler('register', register_command), CommandHandler('start', start_command)],
         states={
             # get_deposit_amount
             DEPOSIT_AMOUNT          : [MessageHandler(filters.TEXT & ~filters.COMMAND, deposit_amount)],
@@ -1431,7 +1124,6 @@ def main() -> None:
             GET_TRANSCATION_DETAILS  : [MessageHandler(filters.TEXT & ~filters.COMMAND, get_transcation_details)],
             REGISTER                : [MessageHandler(filters.CONTACT, handle_phone)],
             WAIT_FOR_PAYMENT        : [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_manual_payment)],
-            CHANGE_SPONSOR_WAIT_ID  : [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_new_sponsor_id)],
         },
         fallbacks=[CommandHandler('cancel', cancel)],
         allow_reentry=True
@@ -1443,9 +1135,7 @@ def main() -> None:
     application.add_handler(CommandHandler('withdraw', withdraw_command))
     application.add_handler(CommandHandler('check_balance', check_balance_command))
     application.add_handler(CommandHandler('deposit', deposit_command))
-    application.add_handler(CommandHandler('show_id', show_id_command))
     application.add_handler(conversation_handler)
-    application.add_handler(CommandHandler('invite', handle_invite))  
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":

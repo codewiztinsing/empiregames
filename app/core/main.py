@@ -4,7 +4,6 @@ from wallet.api import router as wallet_router
 from users.api import users_router
 from game.api import game_router
 from webhooks.api import webhooks_router
-from users.referral_api import router as referral_router
 # base api
 api = NinjaAPI()
 
@@ -13,4 +12,3 @@ api.add_router("/users/", users_router)
 api.add_router("/wallet/", wallet_router)
 api.add_router("/game/", game_router)
 api.add_router("/webhooks/", webhooks_router)
-api.add_router("/referrals/", referral_router)

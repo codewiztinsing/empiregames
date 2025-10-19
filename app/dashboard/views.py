@@ -2,10 +2,9 @@ from datetime import timedelta
 from django.db.models import Sum
 from django.core.paginator import Paginator
 from django.utils import timezone
-from users.models import User, SupportUser, ReferralBonus
+from users.models import User, SupportUser
 from game.models import Game
 from wallet.models import Transaction, WithdrawalRequest, Wallet, PaymentSettings, ManualSession
-from users.referral_services import ReferralService
 from .permissions import admin_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
@@ -408,7 +407,7 @@ def roles(request):
 
     # Build CRUD permissions matrix for project models
     project_app_labels = {
-        'users', 'wallet', 'game', 'dashboard', 'promotion', 'promotions', 'referrals', 'webhooks'
+        'users', 'wallet', 'game', 'dashboard', 'promotion', 'promotions', 'webhooks'
     }
     permissions_matrix = []
     for model in django_apps.get_models():
@@ -645,23 +644,9 @@ def users(request):
     total_users = users.count()
     suspended_users = users.filter(is_active=False).count()
     
-    # Calculate referral bonuses and total balance for each user
+    # Calculate total balance for each user
     users_with_bonuses = []
     for user in page_obj:
-        # Get first generation bonuses
-        first_gen_bonuses = ReferralBonus.objects.filter(
-            referrer=user,
-            bonus_type='first_generation',
-            status='approved'
-        ).aggregate(total=Sum('bonus_amount'))['total'] or 0.0
-        
-        # Get second generation bonuses
-        second_gen_bonuses = ReferralBonus.objects.filter(
-            referrer=user,
-            bonus_type='second_generation',
-            status='approved'
-        ).aggregate(total=Sum('bonus_amount'))['total'] or 0.0
-        
         # Get wallet balance
         wallet_balance = 0.0
         try:
@@ -670,13 +655,11 @@ def users(request):
         except Wallet.DoesNotExist:
             pass
         
-        # Calculate total balance (wallet + referral earnings)
+        # Calculate total balance (wallet only)
         total_balance = wallet_balance
         
         users_with_bonuses.append({
             'user': user,
-            'first_gen_bonus': first_gen_bonuses,
-            'second_gen_bonus': second_gen_bonuses,
             'wallet_balance': wallet_balance,
             'total_balance': total_balance,
         })
@@ -1290,5 +1273,56 @@ def game_settings(request):
         'page_title': 'Game Settings'
     }
     return render(request, 'dashboard/game_settings.html', context)
+
+
+@admin_required
+def bonus_settings(request):
+    """Bonus settings page for managing bonus countdown and periods"""
+    from game.models import GameSettings
+    
+    if request.method == 'POST':
+        try:
+            # Get or create GameSettings instance
+            settings = GameSettings.objects.first()
+            if not settings:
+                settings = GameSettings.objects.create(
+                    game_speed=5000, 
+                    count_down_time=30,
+                    bonus_active=True,
+                    bonus_type='admin_bonus',
+                    bonus_hours=24,
+                    bonus_days=7
+                )
+            
+            # Update bonus settings
+            settings.count_down_time = int(request.POST.get('bonus_countdown', 30))
+            settings.game_speed = int(request.POST.get('game_speed', 5000))
+            settings.bonus_active = request.POST.get('bonus_active') == 'on'
+            settings.bonus_type = request.POST.get('bonus_type', 'admin_bonus')
+            settings.bonus_hours = int(request.POST.get('bonus_hours', 24))
+            settings.bonus_days = int(request.POST.get('bonus_days', 7))
+            settings.save()
+            
+            messages.success(request, 'Bonus settings updated successfully!')
+        except Exception as e:
+            messages.error(request, f'Error updating bonus settings: {str(e)}')
+    
+    # Get current settings
+    settings = GameSettings.objects.first()
+    if not settings:
+        settings = GameSettings.objects.create(
+            game_speed=5000, 
+            count_down_time=30,
+            bonus_active=True,
+            bonus_type='admin_bonus',
+            bonus_hours=24,
+            bonus_days=7
+        )
+    
+    context = {
+        'settings': settings,
+        'page_title': 'Bonus Settings'
+    }
+    return render(request, 'dashboard/bonus_settings.html', context)
 
 

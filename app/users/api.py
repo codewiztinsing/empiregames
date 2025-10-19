@@ -16,7 +16,6 @@ from wallet.models import Transaction,Wallet,WithdrawalRequest
 from game.models import Game
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
-from .referral_services import ReferralService
 
 from pydantic import BaseModel
 from typing import Optional, Union
@@ -50,44 +49,14 @@ def register(request, data: RegisterSchema):
             }, status=400)
 
         
-        referred_by = None
-        has_real_referrer = False  # Track if user has a real referrer (not default)
-        
-        print("referral id ",data.referred_by)
-        if data.referred_by:
-            try:
-                referred_by = User.objects.get(telegram_id=data.referred_by)
-                has_real_referrer = True  # User was actually referred by someone
-                print("referred_by = ",referred_by)
-            except User.DoesNotExist:
-                print(f"Referrer with telegram_id {data.referred_by} not found")
-                referred_by = None
-        
-        # If no referrer provided, assign default sponsor (Akerbingo)
-        if not referred_by:
-            from .referral_services import ReferralService
-            referred_by = ReferralService.get_or_create_default_sponsor()
-            # Default sponsor is assigned but user doesn't get signup bonus
-
-    
         # Create user with hashed password
         created_user, created = User.objects.get_or_create(
             username=data.username,
             phone=data.phone,
             telegram_id=data.telegram_id,
-            referred_by=referred_by,
             password=make_password(data.password)
         )
         
-        # Process signup bonus ONLY if:
-        # 1. User is newly created
-        # 2. User has a real referrer (NOT the default Akerbingo sponsor)
-        if created and has_real_referrer:
-            from .referral_services import ReferralService
-            success, message = ReferralService.process_signup_bonus(created_user)
-            print(f"Signup bonus (referred by {referred_by.username}): {message}")
-        elif created and not has_real_referrer:
-            print(f"User {created_user.username} has default sponsor (Akerbingo), NO signup bonus given")
         print("created_user = ",created_user)
         
         if created_user:
@@ -176,7 +145,7 @@ def get_user_by_telegram_id(request,telegram_id:int):
             created_at__date__lte=end_of_week
         ).count()
 
-        total_referral_earnings=ReferralService.get_referral_stats(user)['total_earnings']
+        total_referral_earnings = 0.0
         print("total_referral_earnings = ",total_referral_earnings)
         print("games_played_this_week remaining = ", games_played_this_week)
         print("27-games_played_this_week = ",27-games_played_this_week)
@@ -325,8 +294,8 @@ def get_user_details(request, user_id: int):
             })
         
         # Get referral information
-        total_referrals = User.objects.filter(referred_by=user).count()
-        total_referral_earnings = float(user.total_referral_earnings)
+        total_referrals = 0
+        total_referral_earnings = 0.0
         
         return JsonResponse({
             "user": {
@@ -343,9 +312,6 @@ def get_user_details(request, user_id: int):
                 "date_joined": user.date_joined.isoformat(),
                 "last_login": user.last_login.isoformat() if user.last_login else None,
                 "created_at": user.created_at.isoformat(),
-                "referral_code": user.referral_code,
-                "is_agent": user.is_agent,
-                "sponsor_changed": user.sponsor_changed
             },
             "wallet": {
                 "balance": wallet_balance
@@ -368,10 +334,6 @@ def get_user_details(request, user_id: int):
                 "games_played_this_week": games_played_this_week,
                 "games_won": games_won,
                 "recent_games": games_list
-            },
-            "referrals": {
-                "total_referrals": total_referrals,
-                "total_earnings": total_referral_earnings
             }
         }, status=200)
     except User.DoesNotExist:
@@ -500,72 +462,6 @@ def get_user_wallet(request, user_id: int):
 
 
 
-@users_router.put("/{user_id}/change-sponsor")
-def change_sponsor(request, user_id: int, data: ChangeSponsorSchema):
-    """Change user's sponsor/referrer"""
-    try:
-        user = User.objects.get(id=user_id)
-        print("user = ",user)
-        
-        # Check if user has already changed sponsor - limit to once only
-        if user.sponsor_changed:
-            return JsonResponse({"error": "You have already changed your sponsor once. This can only be done once."}, status=400)
-        
-        # Check if user was invited by another user - don't allow sponsor change
-        if user.referred_by is not None:
-            # Check if user was invited by a real user (not default sponsor)
-            from .referral_services import ReferralService
-            default_sponsor = ReferralService.get_or_create_default_sponsor()
-            if user.referred_by.id != default_sponsor.id:
-                return JsonResponse({"error": "You were invited by another user and cannot change your sponsor"}, status=400)
-            # If user has default sponsor, allow sponsor change (don't block)
-        
-        # Update referred_by if provided
-        if data.referred_by is not None:
-            try:
-                new_sponsor = User.objects.get(id=data.referred_by)
-
-                # check if new_sponsor is already referred by user
-                if new_sponsor.referred_by == user:
-                    return JsonResponse({"error": f"You cannot set {new_sponsor.username} as your sponsor because you are already referred by them."}, status=400)
-                
-                # Prevent self-sponsorship
-                if new_sponsor.id == user.id:
-                    return JsonResponse({"error": "Cannot set yourself as sponsor"}, status=400)
-             
-                user.referred_by = new_sponsor
-                user.sponsor_changed = True
-                user.save()
-            except User.DoesNotExist:
-                return JsonResponse({"error": "Sponsor not found"}, status=404)
-        
-        # Update sponsor_changed if provided
-        if data.sponsor_changed is not None:
-            user.sponsor_changed = data.sponsor_changed
-        
-        user.save()
-        
-        # Process sponsor change bonus if this is a sponsor change
-        if data.sponsor_changed:
-            from users.referral_services import ReferralService
-            bonus_success, bonus_message = ReferralService.process_sponsor_change_bonus(user)
-            if not bonus_success:
-                # Log the error but don't fail the sponsor change
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.warning(f"Failed to process sponsor change bonus for user {user.id}: {bonus_message}")
-        
-        return JsonResponse({
-            "success": True,
-            "message": "Sponsor changed successfully",
-            "referred_by": user.referred_by.id if user.referred_by else None,
-            "sponsor_changed": user.sponsor_changed
-        }, status=200)
-        
-    except User.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=404)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
 
 
 @users_router.put("/{user_id}/")
