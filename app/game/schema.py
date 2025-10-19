@@ -41,6 +41,11 @@ class NextGameSchema(Schema):
 class GameSettingsSchema(Schema):
     game_speed: int
     count_down_time: int
+    # Fake player settings
+    max_fake_players: int
+    calls_before_fake_winner: int
+    real_players_threshold: int
+    fake_players_can_win: bool
     
 
 class GameType(Schema):

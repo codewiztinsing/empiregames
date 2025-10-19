@@ -7,7 +7,7 @@ const cors = require('cors');
 const { generateBalls } = require('./src/helpers/ball');
 const { checkBingo, markPlayerCard } = require('./src/helpers/bingo');
 const { checkSingleCardBingo } = require('./src/helpers/singleBingo');
-const { gameWinWallet,gameLossWallet,getGameSettings,getFakePlayerSettings } = require('./api');
+const { gameWinWallet,gameLossWallet,getGameSettings } = require('./api');
 const { generateFixedCard } = require('./src/helpers/serverFixedBingoCards');
 const ip = require('ip');
 const dotenv = require('dotenv');
@@ -20,11 +20,40 @@ const server = http.createServer(app);
 
 
 const getConstant = async () => {
-  return {
-    gameSpeed: 2000,
-    countDown: 5
+  try {
+    const gameSettings = await getGameSettings();
+    console.log('Game settings from API:', gameSettings);
+    return {
+      gameSpeed: gameSettings.game_speed || 2000,
+      countDown: gameSettings.count_down_time || 30
+    }
+  } catch (error) {
+    console.error('Error fetching game settings, using defaults:', error);
+    return {
+      gameSpeed: 2000,
+      countDown: 30
+    }
   }
 }
+
+// Function to refresh game speed and countdown settings for all active games
+const refreshGameSpeedSettings = async () => {
+  try {
+    const gameSettings = await getGameSettings();
+    console.log('Refreshing game speed settings for all active games:', gameSettings);
+    
+    activeGames.forEach((game, gameId) => {
+      // Only update settings for games that are waiting or in progress
+      if (game.status === 'waiting' || game.status === 'in-progress') {
+        game.gameSpeed = gameSettings.game_speed || 2000;
+        game.countDown = gameSettings.count_down_time || 30;
+        console.log(`Updated settings for game ${gameId}: speed=${game.gameSpeed}, countdown=${game.countDown}`);
+      }
+    });
+  } catch (error) {
+    console.error('Error refreshing game speed settings:', error);
+  }
+};
 
 const io = socketIo(server, {
   cors: {
@@ -60,7 +89,7 @@ async function refreshGameSettings(game) {
     const now = Date.now();
     if (!game.lastSettingsFetchAt || (now - game.lastSettingsFetchAt) > 10000) { // refresh every 10s
       console.log("refreshGameSettings - refreshing");
-      const latest = await getFakePlayerSettings();
+      const latest = await getGameSettings();
       if (latest && typeof latest.fake_players_can_win === 'boolean') {
         game.fakePlayersCanWin = latest.fake_players_can_win;
       }
@@ -77,7 +106,13 @@ async function refreshGameSettings(game) {
 
 async function createGame(roomId) {
   const gameSettings = await getConstant();
-  const fakePlayerSettings = await getFakePlayerSettings();
+  // Fake player settings are now included in gameSettings
+  const fakePlayerSettings = {
+    max_fake_players: gameSettings.max_fake_players || 5,
+    calls_before_fake_winner: gameSettings.calls_before_fake_winner || 10,
+    fake_players_can_win: gameSettings.fake_players_can_win || true,
+    real_players_threshold: gameSettings.real_players_threshold || 2
+  };
  
 
   const game = {
@@ -151,7 +186,7 @@ async  function endGame(game) {
   game.status = "waiting";
   game.gameOver = false; // Reset for next game
   game.winner = null;
-  game.countDown = 30;
+  game.countDown = game.countDown || 30;
   game.isCountStart = false;
   game.fauldMadePlayers.clear();
   game.fakeWinnerScheduled = false;
@@ -192,7 +227,7 @@ function startCountDown(game) {
  
   if (game.isCountStart || !game.players || game.players.size < 1) return;
   clearGameIntervals(game.id);
-  game.countDown = 30; // Always reset to 30 when starting countdown
+  game.countDown = game.countDown || 30; // Use game's countdown setting
   game.isCountStart = true;
 
   const countdownInterval = setInterval(() => {
@@ -200,7 +235,7 @@ function startCountDown(game) {
     if (game.players.size < 1) {
       clearInterval(countdownInterval);
       game.isCountStart = false;
-      game.countDown = 30;
+      game.countDown = game.countDown || 30;
       game.status = "waiting";
       
       // Emit updated game state
@@ -279,7 +314,7 @@ function startCountDown(game) {
       if (game.players.size < 1) {
         clearInterval(countdownInterval);
         game.isCountStart = false;
-        game.countDown = 30;
+        game.countDown = game.countDown || 30;
         game.status = "waiting";
         
         io.emit("gameState", {
@@ -300,7 +335,7 @@ function startCountDown(game) {
       clearInterval(countdownInterval);
       game.isCountStart = false;
       game.status = "waiting";
-      game.countDown = 30; // Reset countdown for next game
+      game.countDown = game.countDown || 30; // Reset countdown for next game
       game.currentCall = null;
       game.calledNumbers = [];
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== null);
@@ -481,7 +516,7 @@ async function scheduleFakeWinner(game) {
     try {
       const now = Date.now();
       if (!game.lastSettingsFetchAt || (now - game.lastSettingsFetchAt) > 10000) { // 10s cache
-        const latest = await getFakePlayerSettings();
+        const latest = await getGameSettings();
         if (latest && typeof latest.fake_players_can_win === 'boolean') {
           game.fakePlayersCanWin = latest.fake_players_can_win;
         }
@@ -1002,7 +1037,7 @@ socket.on("faulMadePlayer", (data) => {
     if (game.isCountStart && game.players.size < 1) {
       clearGameIntervals(game.id);
       game.isCountStart = false;
-      game.countDown = 30;
+      game.countDown = game.countDown || 30;
       game.status = "waiting";
       
       // Emit updated game state
@@ -1026,6 +1061,18 @@ socket.on("faulMadePlayer", (data) => {
 
   socket.on("getWinners", () => {
     socket.emit("winners", winners);
+  });
+
+  // Socket event to refresh game settings (for admin use)
+  socket.on("refreshGameSettings", async () => {
+    try {
+      await refreshGameSpeedSettings();
+      socket.emit("gameSettingsRefreshed", { success: true });
+      console.log('Game speed settings refreshed via socket event');
+    } catch (error) {
+      socket.emit("gameSettingsRefreshed", { success: false, error: error.message });
+      console.error('Error refreshing game speed settings via socket:', error);
+    }
   });
 
   socket.on("getAllPlayerSelections", (data) => {
@@ -1191,7 +1238,7 @@ socket.on("faulMadePlayer", (data) => {
           if (game.isCountStart && game.players.size < 1) {
             clearGameIntervals(game.id);
             game.isCountStart = false;
-            game.countDown = 30;
+            game.countDown = game.countDown || 30;
             game.status = "waiting";
             
             // Emit updated game state
@@ -1227,6 +1274,13 @@ const IP = ip.address();
 server.listen(PORT, () => {
   // Server running on port ${PORT} and IP ${IP}
   console.log(`Server running on port ${PORT} and IP ${IP}`);
+  
+  // Refresh game settings every 30 seconds
+  setInterval(async () => {
+    await refreshGameSpeedSettings();
+  }, 30000);
+  
+  console.log('Game settings refresh interval started (every 30 seconds)');
 });
 
 

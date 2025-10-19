@@ -137,13 +137,14 @@ const getFakePlayerSettings = async ()=>{
 
 
 
+
+
   
   
   module.exports = {
     gameWinWallet,
     checkBalance,
     gameLossWallet,
-    getGameSettings,
-    getFakePlayerSettings
+    getGameSettings
   };
   

@@ -150,10 +150,34 @@ def next_game(request):
 @game_router.get("/game-settings/",response=GameSettingsSchema)
 def game_settings(request):
     logger.info(f"Game settings: {request}")
-    game_settings = GameSettings.objects.first()
-    if not game_settings:
-        game_settings = GameSettings.objects.create(game_speed=5000,count_down_time=30)
-    return GameSettingsSchema(game_speed=game_settings.game_speed,count_down_time=game_settings.count_down_time)
+    try:
+        # Get game settings
+        game_settings = GameSettings.objects.first()
+        if not game_settings:
+            game_settings = GameSettings.objects.create(game_speed=5000,count_down_time=30)
+        
+        # Get fake player settings
+        fake_settings = FakePlayerSettings.get_solo()
+        
+        return GameSettingsSchema(
+            game_speed=game_settings.game_speed,
+            count_down_time=game_settings.count_down_time,
+            max_fake_players=fake_settings.max_fake_players,
+            calls_before_fake_winner=fake_settings.calls_before_fake_winner,
+            real_players_threshold=fake_settings.real_players_threshold,
+            fake_players_can_win=fake_settings.fake_players_can_win
+        )
+    except Exception as e:
+        logger.error(f"Error getting game settings: {e}")
+        # Return default values if there's an error
+        return GameSettingsSchema(
+            game_speed=5000,
+            count_down_time=30,
+            max_fake_players=5,
+            calls_before_fake_winner=10,
+            real_players_threshold=2,
+            fake_players_can_win=True
+        )
 
 @game_router.get("/bonus-countdown/")
 def get_bonus_countdown(request):
@@ -191,24 +215,6 @@ def game_types(request):
     logger.info(f"Game types: {request}")
     game_types = GameType.objects.all().order_by('-id')
     return GameTypeSchema(game_types=game_types)
-
-
-@game_router.get("/fake-player-settings/")
-def get_fake_player_settings(request):
-    """Get fake player settings for dynamic control"""
-    try:
-        from .models import FakePlayerSettings
-        settings = FakePlayerSettings.get_solo()
-        return JsonResponse({
-            "max_fake_players": settings.max_fake_players,
-            "calls_before_fake_winner": settings.calls_before_fake_winner,
-            "real_players_threshold": settings.real_players_threshold,
-            "fake_players_can_win": settings.fake_players_can_win,
-            "updated_at": settings.updated_at.isoformat()
-        }, status=200)
-    except Exception as e:
-        logger.error(f"Error getting fake player settings: {e}")
-        return JsonResponse({"error": str(e)}, status=500)
 
 
 # Games Dashboard API Endpoints
