@@ -377,6 +377,12 @@ const PlayingBoard = () => {
   const handleBingo = useCallback((board, cardNumber) => {
     try {
       console.log('handleBingo called with:', { board, cardNumber, isBingo, isDisqualified });
+      console.log('Socket status:', { socket: !!socket, connected: socket?.connected });
+      
+      if (!socket) {
+        console.error('Socket not available');
+        return;
+      }
       
       if (!board || !cardNumber || isBingo || isDisqualified) {
         console.log('Bingo call blocked:', { 
@@ -401,7 +407,7 @@ const PlayingBoard = () => {
     } catch (error) {
       console.error('Error handling bingo:', error);
     }
-  }, [socket, playerId, gameId, isBingo, isDisqualified]);
+  }, [socket, playerId, gameId, isBingo, isDisqualified, playerName]);
 
   const handleCloseWinner = useCallback(() => {
     try {
@@ -774,17 +780,32 @@ const PlayingBoard = () => {
           
               {/* Bingo Button */}
               <button 
-                className="bingo-button"
+                className={`bingo-button ${(firstBoardLost || isDisqualified || !selectedNumber) ? 'disabled' : ''}`}
                 onClick={() => {
                   console.log('Bingo button clicked!');
+                  console.log('Current state:', { 
+                    firstBoardLost, 
+                    isDisqualified, 
+                    selectedNumber, 
+                    selectBoard,
+                    isBingo,
+                    playerId,
+                    gameId
+                  });
                   handleBingo(selectBoard, selectedNumber);
                 }}
                 disabled={firstBoardLost || isDisqualified || !selectedNumber}
+                title={
+                  firstBoardLost ? 'Board lost - cannot call bingo' :
+                  isDisqualified ? 'You are disqualified' :
+                  !selectedNumber ? 'No card selected' :
+                  'Call Bingo!'
+                }
               >
                 Bingo
               </button>
             </div>
-          )}f
+          )}
         </div>
       </div>
 

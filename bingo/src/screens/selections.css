@@ -196,58 +196,131 @@ body {
 
 /* Card Preview */
 .konjo-card-preview {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
   margin-top: 10px;
+  border: none;
+  position: relative;
+  overflow: visible;
 }
 
-.card-preview-title {
-  font-size: 16px;
-  font-weight: bold;
-  color: #2c3e50;
-  text-align: center;
-  margin-bottom: 12px;
+/* Bingo Card Styles */
+.bingo-card {
+  background-color: #fefefe; /* Off-white background like in the image */
+  border: 3px solid #ffd700; /* Bright yellow border like in the image */
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 5px;
+  position: relative;
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.card-preview-grid {
+.bingo-header {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 2px;
-  margin-bottom: 12px;
+  gap: 0;
+  margin-bottom: 4px;
+  background-color: #ffd700; /* Yellow background for BINGO letters */
+  padding: 4px 0;
+  border-radius: 4px;
 }
 
-.card-preview-row {
+.bingo-letter {
+  background-color: transparent;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  padding: 4px 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
+}
+
+.bingo-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  background-color: #f5f5f5; /* Light gray background for the grid */
+  padding: 0;
+  border-radius: 0;
+  border: 1px solid #333; /* Black border around the grid */
+}
+
+.bingo-row {
   display: contents;
 }
 
-.card-preview-cell {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  padding: 8px 4px;
+.bingo-cell {
+  background-color: #fefefe; /* Off-white cell background */
+  border: 1px solid #333; /* Black border lines like in the image */
+  border-radius: 0;
+  padding: 6px 4px;
   font-size: 12px;
   font-weight: bold;
-  color: #2c3e50;
+  color: #000; /* Black text like in the image */
   text-align: center;
   min-height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
-.card-preview-cell.free-space {
-  background-color: #28a745;
-  color: white;
-  border-color: #1e7e34;
+.bingo-cell:hover {
+  background-color: #f0f0f0;
+  transform: none; /* Remove hover transform to maintain grid alignment */
+}
+
+.bingo-cell.free-space {
+  background-color: #fefefe; /* Same background as other cells */
+  color: #000; /* Black text */
+  border-color: #333; /* Same border as other cells */
+  font-weight: bold;
+}
+
+.free-space-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.free-text {
+  font-size: 9px;
+  font-weight: bold;
+  color: #000;
+}
+
+.space-text {
+  font-size: 7px;
+  font-weight: bold;
+  color: #000;
 }
 
 .card-preview-number {
   text-align: center;
   font-size: 14px;
-  font-weight: bold;
-  color: #2c3e50;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ff6b35, #f7931e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-top: 5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 /* Countdown */
@@ -431,10 +504,26 @@ body {
     min-height: 28px;
   }
   
-  .card-preview-cell {
-    padding: 6px 2px;
-    font-size: 10px;
+  .bingo-cell {
+    padding: 5px 3px;
+    font-size: 11px;
     min-height: 24px;
+    border-radius: 0;
+  }
+  
+  .bingo-letter {
+    font-size: 12px;
+    padding: 3px 0;
+  }
+  
+  .bingo-card {
+    max-width: 240px;
+    padding: 6px;
+    margin-bottom: 3px;
+  }
+  
+  .card-preview-number {
+    font-size: 14px;
   }
 }
 
@@ -450,10 +539,26 @@ body {
     min-height: 24px;
   }
   
-  .card-preview-cell {
-    padding: 4px 1px;
-    font-size: 9px;
+  .bingo-cell {
+    padding: 4px 2px;
+    font-size: 10px;
     min-height: 20px;
+    border-radius: 0;
+  }
+  
+  .bingo-letter {
+    font-size: 10px;
+    padding: 2px 0;
+  }
+  
+  .bingo-card {
+    max-width: 200px;
+    padding: 4px;
+    margin-bottom: 2px;
+  }
+  
+  .card-preview-number {
+    font-size: 13px;
   }
 }
 

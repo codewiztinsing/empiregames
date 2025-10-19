@@ -492,17 +492,35 @@ const Selections = () => {
             {/* Selected Card Preview */}
             {selectedNumber && (
               <div className="konjo-card-preview">
-                <div className="card-preview-title">Your Selected Card</div>
-                <div className="card-preview-grid">
-                  {selectBoard.map((row, rowIndex) => (
-                    <div key={rowIndex} className="card-preview-row">
-                      {row.map((num, colIndex) => (
-                        <div key={colIndex} className={`card-preview-cell ${num === '*' ? 'free-space' : ''}`}>
-                          {num === '*' ? 'FREE' : num}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
+                <div className="bingo-card">
+                  {/* BINGO Header */}
+                  <div className="bingo-header">
+                    <div className="bingo-letter">B</div>
+                    <div className="bingo-letter">I</div>
+                    <div className="bingo-letter">N</div>
+                    <div className="bingo-letter">G</div>
+                    <div className="bingo-letter">O</div>
+                  </div>
+                  
+                  {/* Card Grid */}
+                  <div className="bingo-grid">
+                    {selectBoard.map((row, rowIndex) => (
+                      <div key={rowIndex} className="bingo-row">
+                        {row.map((num, colIndex) => (
+                          <div key={colIndex} className={`bingo-cell ${num === '*' ? 'free-space' : ''}`}>
+                            {num === '*' ? (
+                              <div className="free-space-content">
+                                <div className="free-text">FREE</div>
+                                <div className="space-text">SPACE</div>
+                              </div>
+                            ) : (
+                              num
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="card-preview-number">Card #{selectedNumber}</div>
               </div>

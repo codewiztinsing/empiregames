@@ -486,6 +486,17 @@ body {
   background-color: #95a5a6;
   cursor: not-allowed;
   transform: none;
+  opacity: 0.6;
+}
+
+.bingo-button.disabled {
+  background-color: #e74c3c;
+  opacity: 0.7;
+}
+
+.bingo-button.disabled:hover {
+  background-color: #c0392b;
+  transform: none;
 }
 
 /* Bottom Action Buttons */
