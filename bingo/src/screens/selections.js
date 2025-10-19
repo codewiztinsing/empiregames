@@ -111,10 +111,14 @@ const Selections = () => {
     const urlPlayerId = queryParams.get('playerId');
     const urlRoomId = queryParams.get('betAmount');
     const urlPlayerName = queryParams.get('playerName');
+    const urlSelectedNumber = queryParams.get('selectedNumber');
       
     setPlayerId(urlPlayerId);
     setRoomId(urlRoomId);
     setPlayerName(urlPlayerName);
+    
+    // Store URL parameters for later use (don't redirect immediately)
+    // Redirect logic will be handled in a separate useEffect based on game status
    
     if (urlPlayerId && urlRoomId) {
       socket.emit("playerJoined", { playerId: urlPlayerId, roomId: urlRoomId });
@@ -317,8 +321,20 @@ const Selections = () => {
     // If countdown is not 0, stay on selection page (no navigation)
   }, [countDown, selectedNumber, gameStatus, playerId, roomId, playerName, navigate]);
 
-
-
+  // Handle redirect for new users only when game is waiting
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const urlSelectedNumber = queryParams.get('selectedNumber');
+    
+    // Only redirect if:
+    // 1. We have playerId and roomId (from previous useEffect)
+    // 2. No selectedNumber in URL (new user)
+    // 3. Game status is "waiting" (not in progress)
+    if (playerId && roomId && !urlSelectedNumber && gameStatus === "in-progress") {
+      console.log("🔄 New user detected in waiting game - redirecting to main screen");
+      navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+    }
+  }, [gameStatus, playerId, roomId, playerName, navigate]);
 
 const handleGlobals = (state) => {
   // Show global countdown and game state for all rooms
