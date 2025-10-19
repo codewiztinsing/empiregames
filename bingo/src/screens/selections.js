@@ -753,40 +753,61 @@ const Selections = () => {
               </button>
             </div>
 
-            {/* Selected Card Preview */}
+            {/* Selected Card Preview Modal */}
             {selectedNumber && (
-              <div className="konjo-card-preview">
-                <div className="bingo-card">
-                  {/* BINGO Header */}
-                  <div className="bingo-header">
-                    <div className="bingo-letter">B</div>
-                    <div className="bingo-letter">I</div>
-                    <div className="bingo-letter">N</div>
-                    <div className="bingo-letter">G</div>
-                    <div className="bingo-letter">O</div>
+              <div 
+                className="konjo-card-preview show"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) {
+                    setSelectedNumber(null);
+                  }
+                }}
+              >
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h2 className="modal-title">Bingo Card Preview</h2>
+                    <button 
+                      className="modal-close" 
+                      onClick={() => setSelectedNumber(null)}
+                      aria-label="Close modal"
+                    >
+                      ×
+                    </button>
                   </div>
-                  
-                  {/* Card Grid */}
-                  <div className="bingo-grid">
-                    {selectBoard.map((row, rowIndex) => (
-                      <div key={rowIndex} className="bingo-row">
-                        {row.map((num, colIndex) => (
-                          <div key={colIndex} className={`bingo-cell ${num === '*' ? 'free-space' : ''}`}>
-                            {num === '*' ? (
-                              <div className="free-space-content">
-                                <div className="free-text">FREE</div>
-                                <div className="space-text">SPACE</div>
+                  <div className="modal-body">
+                    <div className="card-preview-number">Card #{selectedNumber}</div>
+                    <div className="bingo-card">
+                      {/* BINGO Header */}
+                      <div className="bingo-header">
+                        <div className="bingo-letter">B</div>
+                        <div className="bingo-letter">I</div>
+                        <div className="bingo-letter">N</div>
+                        <div className="bingo-letter">G</div>
+                        <div className="bingo-letter">O</div>
+                      </div>
+                      
+                      {/* Card Grid */}
+                      <div className="bingo-grid">
+                        {selectBoard.map((row, rowIndex) => (
+                          <div key={rowIndex} className="bingo-row">
+                            {row.map((num, colIndex) => (
+                              <div key={colIndex} className={`bingo-cell ${num === '*' ? 'free-space' : ''}`}>
+                                {num === '*' ? (
+                                  <div className="free-space-content">
+                                    <div className="free-text">FREE</div>
+                                    <div className="space-text">SPACE</div>
+                                  </div>
+                                ) : (
+                                  num
+                                )}
                               </div>
-                            ) : (
-                              num
-                            )}
+                            ))}
                           </div>
                         ))}
                       </div>
-                    ))}
+                    </div>
                   </div>
                 </div>
-                <div className="card-preview-number">Card #{selectedNumber}</div>
               </div>
             )}
 

@@ -396,9 +396,9 @@ body {
 .konjo-number-grid {
   display: grid;
   grid-template-columns: repeat(10, 1fr); /* Fixed 10 columns */
-  gap: clamp(2px, 0.5vw, 4px);
+  gap: clamp(8px, 2vw, 16px) clamp(6px, 1.5vw, 12px); /* row-gap column-gap */
   background-color: #f8f9fa;
-  padding: clamp(8px, 2vw, 20px);
+  padding: clamp(12px, 2vw, 24px);
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   margin-bottom: 15px;
@@ -409,8 +409,8 @@ body {
 
 .konjo-number-cell {
   background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
   padding: clamp(6px, 1.5vw, 12px);
   font-size: clamp(12px, 3vw, 16px);
   font-weight: bold;
@@ -420,10 +420,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: clamp(32px, 8vw, 44px);
+  min-height: clamp(32px, 8vw, 48px);
   aspect-ratio: 1;
   width: 100%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
 }
@@ -449,11 +449,13 @@ body {
   transform: translateY(-3px) scale(1.02);
   box-shadow: 0 6px 20px rgba(33, 150, 243, 0.3);
   color: #1976d2;
+  border-width: 1px;
 }
 
 .konjo-number-cell.selected {
   background: linear-gradient(135deg, #4caf50, #45a049);
   border-color: #388e3c;
+  border-width: 1px;
   color: white;
   box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
   transform: scale(1.05);
@@ -463,6 +465,7 @@ body {
 .konjo-number-cell.picked {
   background: linear-gradient(135deg, #ff5722, #f4511e);
   border-color: #d84315;
+  border-width: 1px;
   color: white;
   cursor: not-allowed;
   box-shadow: 0 6px 20px rgba(255, 87, 34, 0.4);
@@ -473,6 +476,7 @@ body {
 .konjo-number-cell.disabled {
   background: linear-gradient(135deg, #9e9e9e, #757575);
   border-color: #616161;
+  border-width: 1px;
   color: white;
   cursor: not-allowed;
   opacity: 0.7;
@@ -559,49 +563,186 @@ body {
   padding: 4px 2px;
 }
 
-/* Card Preview */
+/* Card Preview Modal */
 .konjo-card-preview {
-  background: transparent;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
-  margin-top: 10px;
-  border: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease-in-out;
+}
+
+.konjo-card-preview.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.konjo-card-preview .modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  transform: translateX(-100%);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: visible;
+}
+
+.konjo-card-preview.show .modal-content {
+  transform: translateX(0);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.modal-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background-color: #f8f9fa;
+  color: #2c3e50;
+  transform: scale(1.1);
+}
+
+.modal-body {
+  text-align: center;
+}
+
+.card-preview-number {
+  font-size: 18px;
+  font-weight: bold;
+  color: #3498db;
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border-radius: 25px;
+  display: inline-block;
+}
+
+/* Modal overlay click to close */
+.konjo-card-preview::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+/* Enhanced bingo cell styles for modal */
+.bingo-cell {
+  background-color: #fefefe;
+  border: 1px solid #333;
+  padding: 12px 8px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #2c3e50;
+  text-align: center;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.bingo-cell:hover {
+  background-color: #e3f2fd;
+  transform: scale(1.05);
+}
+
+.free-space {
+  background-color: #ffd700 !important;
+  color: #2c3e50 !important;
+}
+
+.free-space-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.free-text {
+  color: #2c3e50;
+  font-size: 10px;
+}
+
+.space-text {
+  color: #2c3e50;
+  font-size: 10px;
 }
 
 /* Bingo Card Styles */
 .bingo-card {
   background-color: #fefefe; /* Off-white background like in the image */
   border: 3px solid #ffd700; /* Bright yellow border like in the image */
-  border-radius: 8px;
-  padding: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 5px;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  margin: 0 auto;
   position: relative;
-  max-width: 280px;
-  margin-left: auto;
-  margin-right: auto;
+  max-width: 350px;
+  width: 100%;
 }
 
 .bingo-header {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   background-color: #ffd700; /* Yellow background for BINGO letters */
-  padding: 4px 0;
-  border-radius: 4px;
+  padding: 8px 0;
+  border-radius: 8px;
 }
 
 .bingo-letter {
   background-color: transparent;
   color: white;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: bold;
   text-align: center;
-  padding: 4px 0;
+  padding: 8px 0;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   letter-spacing: 0.5px;
 }
@@ -1531,54 +1672,143 @@ body {
   }
 }
 
-/* Responsive Breakpoints for Number Grid */
-@media (min-width: 1200px) {
+/* Extra Large screens (1600px and above) */
+@media (min-width: 1600px) {
   .konjo-number-grid {
     grid-template-columns: repeat(10, 1fr);
+    width: 100%;
+    max-width: none;
+    gap: 20px 16px; /* even more spacing for very large screens */
+    padding: 32px;
+  }
+  
+  .konjo-number-cell {
+    padding: 20px 16px; /* even larger padding */
+    font-size: 22px; /* larger font size */
+    min-height: 72px; /* taller cells */
+    border: 3px solid #dee2e6; /* thicker border */
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    color: #495057;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* stronger shadow */
+    font-weight: 700; /* bolder text */
+  }
+}
+
+/* Large screens (1200px and above) */
+@media (min-width: 1200px) and (max-width: 1599px) {
+  .konjo-number-grid {
+    grid-template-columns: repeat(10, 1fr);
+    width: 100%;
+    max-width: none;
+    gap: 16px 12px; /* row-gap column-gap - increased for large screens */
+    padding: 24px;
+  }
+  
+  .konjo-number-cell {
+    padding: 16px 12px; /* increased padding */
+    font-size: 18px; /* increased font size */
+    min-height: 60px; /* increased height */
+    border: 2px solid #dee2e6; /* thicker border */
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    color: #495057;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15); /* stronger shadow */
+    font-weight: 700; /* bolder text */
   }
 }
 
 @media (max-width: 1199px) and (min-width: 993px) {
   .konjo-number-grid {
     grid-template-columns: repeat(10, 1fr);
+    width: 100%;
+    gap: 10px 6px; /* row-gap column-gap */
+    padding: 18px;
+  }
+  
+  .konjo-number-cell {
+    padding: 10px 6px;
+    font-size: 14px;
+    min-height: 40px;
+    border: 1px solid #dee2e6;
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    color: #495057;
   }
 }
 
 @media (max-width: 992px) and (min-width: 769px) {
   .konjo-number-grid {
     grid-template-columns: repeat(10, 1fr);
+    width: 100%;
+    gap: 8px 5px; /* row-gap column-gap */
+    padding: 16px;
+  }
+  
+  .konjo-number-cell {
+    padding: 8px 5px;
+    font-size: 13px;
+    min-height: 36px;
+    border: 1px solid #dee2e6;
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    color: #495057;
   }
 }
 
 @media (max-width: 768px) {
   .konjo-number-grid {
     grid-template-columns: repeat(10, 1fr); /* Keep 10 columns on tablets */
+    width: 100%;
+    gap: 6px 4px; /* row-gap column-gap */
+    padding: 14px;
+  }
+  
+  .konjo-number-cell {
+    padding: 6px 4px;
+    font-size: 12px;
+    min-height: 32px;
   }
 }
 
 @media (max-width: 600px) {
   .konjo-number-grid {
     grid-template-columns: repeat(10, 1fr); /* 10 columns on small mobile */
+    width: 100%;
+    gap: 5px 3px; /* row-gap column-gap */
+    padding: 12px;
+  }
+  
+  .konjo-number-cell {
+    padding: 5px 3px;
+    font-size: 11px;
+    min-height: 28px;
   }
 }
 
 @media (max-width: 480px) {
   .konjo-number-grid {
     grid-template-columns: repeat(10, 1fr); /* 10 columns on very small mobile */
+    width: 100%;
+    gap: 4px 2px; /* row-gap column-gap */
+    padding: 10px;
+  }
+  
+  .konjo-number-cell {
+    padding: 4px 2px;
+    font-size: 10px;
+    min-height: 26px;
   }
 }
 
 @media (max-width: 420px) {
   .konjo-number-grid {
     grid-template-columns: repeat(10, 1fr); /* 10 columns for 412px screens */
-    gap: 1px;
-    padding: 6px;
+    width: 100%;
+    gap: 3px 2px; /* row-gap column-gap */
+    padding: 8px;
   }
   
   .konjo-number-cell {
     padding: 3px 2px;
     font-size: 9px;
-    min-height: 22px;
+    min-height: 24px;
     border-radius: 4px;
   }
 }
@@ -1586,6 +1816,16 @@ body {
 @media (max-width: 360px) {
   .konjo-number-grid {
     grid-template-columns: repeat(8, 1fr); /* Reduce to 8 columns on very small screens */
+    width: 100%;
+    gap: 3px 2px; /* row-gap column-gap */
+    padding: 6px;
+  }
+  
+  .konjo-number-cell {
+    padding: 3px 2px;
+    font-size: 8px;
+    min-height: 22px;
+    border-radius: 3px;
   }
 }
 
