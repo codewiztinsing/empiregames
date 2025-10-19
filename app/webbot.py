@@ -202,6 +202,11 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         balance = float(wallet_response.get('balance', 0)) + float(wallet_response.get('total_referral_earnings', 0)) if float(wallet_response.get('total_referral_earnings', 0)) > 500 else float(wallet_response.get('balance', 0))
 
 
+        # Ensure the user will have at least 20 ETB remaining after withdrawal
+        if float(balance) - float(amount) < 20:
+            await update.message.reply_text("You must leave at least 20 ETB in your wallet after withdrawing. Please enter a smaller amount.")
+            return WITHDRAW_AMOUNT_CONFIRM
+
         daily_limit = daily_withdraw_limit(telegram_id)
         logger.info(f"daily_withdraw_limit {daily_limit}")
         if int(daily_limit) > 1:
@@ -211,6 +216,8 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         if not is_deposited:
             await update.message.reply_text(f"You need to deposit first. 50 ETB minimum deposit is required to withdraw.")
             return WITHDRAW_AMOUNT_CONFIRM
+
+
 
  
 

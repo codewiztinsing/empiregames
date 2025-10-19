@@ -235,7 +235,8 @@ const Selections = () => {
           console.log("❌ Current player found but no selected number or game not in progress");
           console.log("selectedNumber:", selectedNumber);
           console.log("game_status:", game_status);
-          navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+          
+          // navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
 
         }
       } else {
@@ -500,7 +501,7 @@ const handleGlobals = (state) => {
       if (loading) {
         setToast("Please wait while we fetch your balance");
       } else {
-        setToast("Your balance is zero. Please deposit to play");
+        setToast("You can watch the game but cannot join. Please deposit to play.");
       }
       setIsToast(true);
       return;
@@ -508,7 +509,7 @@ const handleGlobals = (state) => {
     
     if (balance < parseInt(roomId)) {
       console.log("❌ Insufficient balance");
-      setToast(`Insufficient balance. You need ${parseInt(roomId)} ETB but have ${balance} ETB. Please deposit more to play.`);
+      setToast(`You can watch the game but cannot join. You need ${parseInt(roomId)} ETB but have ${balance} ETB. Please deposit more to play.`);
       setIsToast(true);
       return;
     }
@@ -600,7 +601,7 @@ const handleGlobals = (state) => {
 
     if (balance < parseInt(roomId) || balance === 0) {
       console.log("Insufficient balance")
-      setToast("Insufficient balance");
+      setToast("You can watch the game but cannot join. Please deposit to play.");
       setIsToast(true);
       return;
     }
@@ -836,7 +837,7 @@ const handleGlobals = (state) => {
               const isChoosen = choosenNumbers.includes(number);
               // Don't disable chosen cards for unselecting, only disable if picked by another player or no connection
               const isDisabled = (isPicked && !isChoosen) || !isSocketConnected;
-              const hasInsufficientBalance = balance < parseInt(roomId) || balance === 0;
+              // Allow viewing game even with insufficient balance - only prevent joining
 
               // Debug logging for selected numbers
               if (isChoosen) {
@@ -851,7 +852,6 @@ const handleGlobals = (state) => {
                   ${isSelected ? 'selected' : ''}
                   ${isChoosen ? 'choosen' : ''}
                   ${isDisabled ? 'disabled' : ''}
-                  ${hasInsufficientBalance ? 'insufficient-balance' : ''}
                 `}
                   onClick={(e) => {
                   
