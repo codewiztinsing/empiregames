@@ -203,8 +203,8 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
         # Ensure the user will have at least 20 ETB remaining after withdrawal
-        if float(balance) - float(amount) < 20:
-            await update.message.reply_text("You must leave at least 20 ETB in your wallet after withdrawing. Please enter a smaller amount.")
+        if float(balance) - float(amount) <= 21:
+            await update.message.reply_text("You must leave at least 21 ETB in your wallet after withdrawing. Please enter a smaller amount.")
             return WITHDRAW_AMOUNT_CONFIRM
 
         daily_limit = daily_withdraw_limit(telegram_id)
