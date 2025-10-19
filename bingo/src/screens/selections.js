@@ -59,6 +59,7 @@ const Selections = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const cardsPerPage = 100;
   const [gameInProgress, setGameInProgress] = useState(false);
+  const [hasSelectedCard, setHasSelectedCard] = useState(false);
   const [gameStats, setGameStats] = useState({
     totalPlayers: 0,
     totalWinAmount: 0,
@@ -378,13 +379,15 @@ const Selections = () => {
       setSelectedNumber(null);
       setSelectBoard(null);
       setChooseBoards([]);
+      setHasSelectedCard(false); // Set to false when unselecting
       
       setToast(`Card ${number} unselected. Left the game.`);
       setIsToast(true);
     } else {
-      // Select and immediately navigate to main screen
+      // Select card and wait for countdown
       setChoosenNumbers([number]);
       setSelectedNumber(number);
+      setHasSelectedCard(true); // Set to true when selecting
       
       // Generate card data using fixed card system
       const generateCard = (cardNumber) => {
@@ -408,23 +411,28 @@ const Selections = () => {
       console.log('Emitting joinGame with data:', joinData);
       socket.emit('joinGame', joinData);
       
-      setToast(`Card ${number} selected! Redirecting to game...`);
+      setToast(`Card ${number} selected! Waiting for countdown to reach zero...`);
       setIsToast(true);
       
-      // Immediately navigate to main screen after a short delay
-      setTimeout(() => {
-        const queryParams = new URLSearchParams({
-          playerId: playerId,
-          betAmount: roomId,
-          playerName: playerName,
-          selectedNumber: number,
-          gameId: gameId || 'default'
-        });
-        
-        navigate(`/play?${queryParams.toString()}`);
-      }, 1000); // Small delay to show the toast message
+      // Navigation will happen automatically when countdown reaches 0
+      // No immediate navigation - user stays on selection page
     }
-  }, [isLoading, isSocketConnected, choosenNumbers, pickedNumbers, gameInProgress, balance, roomId, playerId, gameId, socket, setChoosenNumbers, setSelectedNumber, setSelectBoard, setChooseBoards, setToast, setIsToast, playerName, navigate]);
+  }, [isLoading, isSocketConnected, choosenNumbers, pickedNumbers, gameInProgress, balance, roomId, playerId, gameId, socket, setChoosenNumbers, setSelectedNumber, setSelectBoard, setChooseBoards, setHasSelectedCard, setToast, setIsToast, playerName, navigate]);
+
+  // Handle navigation only when countdown reaches 0
+  useEffect(() => {
+    if (countDown === 0 && hasSelectedCard && selectedNumber && gameStatus === "in-progress") {
+      // Check balance before navigation
+      if (balance >= parseInt(roomId)) {
+        console.log("✅ Countdown reached zero - navigating to play screen");
+        navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
+      } else {
+        console.log("❌ Insufficient balance for navigation");
+        setToast("Insufficient balance to join the game. Please deposit more.");
+        setIsToast(true);
+      }
+    }
+  }, [countDown, hasSelectedCard, selectedNumber, gameStatus, balance, roomId, playerId, playerName, navigate, setToast, setIsToast]);
 
   // Pagination logic
   const totalCards = 800;
@@ -552,8 +560,38 @@ const Selections = () => {
             </div>
               <div className="konjo-logo">Liyu</div>
             </div>
-            <div className="konjo-title">Liyu Bingo</div>
             <div className="konjo-header-right">
+              {/* Game Stats */}
+              <div className="header-stats">
+                <div className="header-stat">
+                  <span className="stat-icon">👥</span>
+                  <span className="stat-value">{gameStats.totalPlayers}</span>
+                </div>
+                <div className="header-stat">
+                  <span className="stat-icon">💰</span>
+                  <span className="stat-value">{gameStats.totalWinAmount.toFixed(0)} ETB</span>
+                </div>
+              </div>
+              
+              {/* Interactive Live Indicator */}
+              <div className="live-indicator interactive" onClick={() => {
+                setToast("🎮 Live game in progress! Join now!");
+                setIsToast(true);
+              }}>
+                <div className="live-dot"></div>
+                <span className="live-text">LIVE</span>
+                <div className="live-pulse-ring"></div>
+              </div>
+              
+              {/* Countdown */}
+              {countDown > 0 && (
+                <div className="header-countdown">
+                  <div className="countdown-circle">
+                    <span className="countdown-number">{countDown}</span>
+                  </div>
+                </div>
+              )}
+              
               <div className="balance-button">
                 <span className="balance-amount">{parseInt(balance)} ETB</span>
                 <div className="user-icon">👤</div>
@@ -583,27 +621,6 @@ const Selections = () => {
                 <div className="status-icon">🎮</div>
                 <div className="status-text">Game is already in progress!</div>
                 <div className="status-subtext">Please wait for the next round to select a card.</div>
-                
-                {/* Game Statistics */}
-                <div className="game-stats-grid">
-                  <div className="stat-card players">
-                    <div className="stat-icon">👥</div>
-                    <div className="stat-value">{gameStats.totalPlayers}</div>
-                    <div className="stat-label">Players</div>
-                  </div>
-                  
-                  <div className="stat-card win-amount">
-                    <div className="stat-icon">💰</div>
-                    <div className="stat-value">{gameStats.totalWinAmount.toFixed(0)} ETB</div>
-                    <div className="stat-label">Win Amount</div>
-                  </div>
-                  
-                  <div className="stat-card called-numbers">
-                    <div className="stat-icon">🎯</div>
-                    <div className="stat-value">{gameStats.totalCalledNumbers}/75</div>
-                    <div className="stat-label">Called Numbers</div>
-                  </div>
-                </div>
               </div>
             )}
            
