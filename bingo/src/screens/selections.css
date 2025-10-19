@@ -142,6 +142,23 @@ body {
   margin-bottom: 10px;
 }
 
+/* Pagination Info */
+.pagination-info {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.page-info {
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #2c3e50;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 /* Number Grid */
 .konjo-number-grid {
   display: grid;
@@ -151,6 +168,7 @@ body {
   padding: 16px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
 }
 
 .konjo-number-cell {
@@ -192,6 +210,78 @@ body {
   color: white;
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+/* Pagination Controls */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #2980b9;
+  transform: translateY(-1px);
+}
+
+.pagination-btn:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pagination-numbers {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.pagination-number {
+  background-color: #ffffff;
+  color: #2c3e50;
+  border: 1px solid #dee2e6;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 40px;
+  text-align: center;
+}
+
+.pagination-number:hover {
+  background-color: #e9ecef;
+  border-color: #3498db;
+}
+
+.pagination-number.active {
+  background-color: #3498db;
+  color: white;
+  border-color: #2980b9;
+}
+
+.pagination-ellipsis {
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 4px;
 }
 
 /* Card Preview */
@@ -525,6 +615,28 @@ body {
   .card-preview-number {
     font-size: 14px;
   }
+  
+  .pagination-controls {
+    gap: 5px;
+    margin-bottom: 15px;
+  }
+  
+  .pagination-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-width: 60px;
+  }
+  
+  .pagination-number {
+    padding: 6px 8px;
+    font-size: 12px;
+    min-width: 32px;
+  }
+  
+  .page-info {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -559,6 +671,28 @@ body {
   
   .card-preview-number {
     font-size: 13px;
+  }
+  
+  .pagination-controls {
+    gap: 3px;
+    margin-bottom: 10px;
+  }
+  
+  .pagination-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+    min-width: 50px;
+  }
+  
+  .pagination-number {
+    padding: 4px 6px;
+    font-size: 10px;
+    min-width: 28px;
+  }
+  
+  .page-info {
+    font-size: 10px;
+    padding: 4px 8px;
   }
 }
 

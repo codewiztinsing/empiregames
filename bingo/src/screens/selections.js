@@ -56,6 +56,8 @@ const Selections = () => {
   const [winnerPlayerName, setWinnerPlayerName] = useState(null);
   const [winningCard, setWinningCard] = useState(null);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const cardsPerPage = 100;
 
   // Socket connection handlers
   useEffect(() => {
@@ -153,25 +155,8 @@ const Selections = () => {
         } else if (state.count_down === 1) {
           setToast("🎯 Final second! Game starting NOW!");
           setIsToast(true);
-        } else if (state.count_down === 0 && selectedNumber) {
-          // Redirect to play screen when countdown reaches 0
-          setToast("🚀 Game starting! Redirecting to play screen...");
-          setIsToast(true);
-          
-          // Build query parameters
-          const queryParams = new URLSearchParams({
-            playerId: playerId,
-            betAmount: roomId,
-            playerName: playerName,
-            selectedNumber: selectedNumber,
-            gameId: gameId || 'default'
-          });
-          
-          // Redirect to play screen
-          setTimeout(() => {
-            navigate(`/play?${queryParams.toString()}`);
-          }, 1000); // Small delay to show the toast message
         }
+        // Countdown logic removed - navigation now happens immediately on card selection
       }
     };
 
@@ -251,26 +236,7 @@ const Selections = () => {
     }
   }, [playerId]);
 
-  // Handle countdown redirect
-  useEffect(() => {
-    if (countDown === 0 && selectedNumber && gameStatus === "countdown") {
-      console.log('Countdown reached 0, redirecting to play screen');
-      
-      // Build query parameters
-      const queryParams = new URLSearchParams({
-        playerId: playerId,
-        betAmount: roomId,
-        playerName: playerName,
-        selectedNumber: selectedNumber,
-        gameId: gameId || 'default'
-      });
-      
-      // Redirect to play screen
-      setTimeout(() => {
-        navigate(`/play?${queryParams.toString()}`);
-      }, 500); // Small delay to ensure state is updated
-    }
-  }, [countDown, selectedNumber, gameStatus, playerId, roomId, playerName, gameId, navigate]);
+  // Countdown redirect logic removed - navigation now happens immediately on card selection
 
   // Sidebar functions
   const toggleSidebar = () => {
@@ -298,7 +264,7 @@ const Selections = () => {
   };
 
   // Handle number click
-  const handleNumberClick = useCallback((number) => {
+  const handleNumberClick = useCallback(async (number) => {
     if (isLoading || !isSocketConnected) return;
 
     const isSelected = choosenNumbers.includes(number);
@@ -310,8 +276,24 @@ const Selections = () => {
       return;
     }
     
-    if (balance < roomId && !isSelected) {
-      setToast('Insufficient balance to select this card');
+    // Check balance before proceeding
+    try {
+      const apiUrl = config.API_BASE_URL;
+      const response = await axios.get(`${apiUrl}wallet/player/${parseInt(playerId)}`);
+      const currentBalance = response.data.total_balance;
+      
+      if (currentBalance < roomId && !isSelected) {
+        setToast('Insufficient balance to select this card');
+        setIsToast(true);
+        return;
+      }
+      
+      // Update balance state
+      setBalance(currentBalance);
+      
+    } catch (error) {
+      console.error('Error checking balance:', error);
+      setToast('Error checking balance. Please try again.');
       setIsToast(true);
       return;
     }
@@ -335,7 +317,7 @@ const Selections = () => {
       setToast(`Card ${number} unselected. Left the game.`);
       setIsToast(true);
     } else {
-      // Select
+      // Select and immediately navigate to main screen
       setChoosenNumbers([number]);
       setSelectedNumber(number);
       
@@ -361,10 +343,72 @@ const Selections = () => {
       console.log('Emitting joinGame with data:', joinData);
       socket.emit('joinGame', joinData);
       
-      setToast(`Card ${number} selected! Joining game...`);
+      setToast(`Card ${number} selected! Redirecting to game...`);
       setIsToast(true);
+      
+      // Immediately navigate to main screen after a short delay
+      setTimeout(() => {
+        const queryParams = new URLSearchParams({
+          playerId: playerId,
+          betAmount: roomId,
+          playerName: playerName,
+          selectedNumber: number,
+          gameId: gameId || 'default'
+        });
+        
+        navigate(`/play?${queryParams.toString()}`);
+      }, 1000); // Small delay to show the toast message
     }
-  }, [isLoading, isSocketConnected, choosenNumbers, pickedNumbers, balance, roomId, playerId, gameId, socket, setChoosenNumbers, setSelectedNumber, setSelectBoard, setChooseBoards, setToast, setIsToast]);
+  }, [isLoading, isSocketConnected, choosenNumbers, pickedNumbers, balance, roomId, playerId, gameId, socket, setChoosenNumbers, setSelectedNumber, setSelectBoard, setChooseBoards, setToast, setIsToast, playerName, navigate]);
+
+  // Pagination logic
+  const totalCards = 800;
+  const totalPages = Math.ceil(totalCards / cardsPerPage);
+  
+  const getCurrentPageNumbers = () => {
+    const startIndex = (currentPage - 1) * cardsPerPage;
+    const endIndex = Math.min(startIndex + cardsPerPage, totalCards);
+    return Array.from({ length: endIndex - startIndex }, (_, i) => startIndex + i + 1);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
 
   return (
     <>
@@ -468,26 +512,66 @@ const Selections = () => {
           {/* Main Content */}
           <div className="konjo-main-content">
            
-            {/* Number Grid 1-100 */}
+            {/* Number Grid 1-800 with Pagination */}
+            <div className="pagination-info">
+              <div className="page-info">
+                Showing cards {((currentPage - 1) * cardsPerPage) + 1} - {Math.min(currentPage * cardsPerPage, totalCards)} of {totalCards}
+              </div>
+            </div>
+            
             <div className="konjo-number-grid">
-              {Array.from({ length: 100 }, (_, i) => {
-                const number = i + 1;
+              {getCurrentPageNumbers().map((number) => {
                 const isSelected = choosenNumbers.includes(number);
                 const isPicked = pickedNumbers.includes(number);
                 const isDisabled = isPicked || !isSocketConnected || (balance < roomId && !isSelected);
 
-              return (
-                <button
-                  key={number}
+                return (
+                  <button
+                    key={number}
                     className={`konjo-number-cell ${isPicked ? 'picked' : ''} ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
                     onClick={() => handleNumberClick(number)}
-                  disabled={isDisabled}
+                    disabled={isDisabled}
                   >
                     {number}
-                </button>
-              );
-            })}
-          </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="pagination-controls">
+              <button 
+                className="pagination-btn"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              
+              <div className="pagination-numbers">
+                {getPageNumbers().map((page, index) => (
+                  page === '...' ? (
+                    <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                  ) : (
+                    <button
+                      key={page}
+                      className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                      onClick={() => handlePageChange(page)}
+                    >
+                      {page}
+                    </button>
+                  )
+                ))}
+              </div>
+              
+              <button 
+                className="pagination-btn"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
 
             {/* Selected Card Preview */}
             {selectedNumber && (
@@ -526,12 +610,7 @@ const Selections = () => {
               </div>
             )}
 
-            {/* Countdown */}
-            {gameStatus === "waiting" && countDown > 0 && (
-              <div className="konjo-countdown">
-                Game starts in: {countDown}
-              </div>
-            )}
+            {/* Countdown removed - navigation happens immediately on card selection */}
                   </div>
 
           {/* Bottom Message */}

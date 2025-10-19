@@ -266,6 +266,38 @@ body {
   padding: 8px 12px;
   border-radius: 6px;
   font-family: 'Courier New', monospace;
+  animation: countdownPulse 1s ease-in-out infinite;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes countdownPulse {
+  0%, 100% { 
+    transform: scale(1);
+    color: #27ae60;
+  }
+  50% { 
+    transform: scale(1.1);
+    color: #2ecc71;
+  }
+}
+
+/* Active countdown styling when game is in progress */
+.countdown-timer.active {
+  animation: countdownActive 0.5s ease-in-out infinite;
+  color: #e74c3c;
+}
+
+@keyframes countdownActive {
+  0%, 100% { 
+    transform: scale(1);
+    color: #e74c3c;
+  }
+  50% { 
+    transform: scale(1.2);
+    color: #c0392b;
+    text-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+  }
 }
 
 /* Ball Display */

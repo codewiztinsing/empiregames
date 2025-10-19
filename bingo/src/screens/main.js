@@ -51,7 +51,9 @@ const PlayingBoard = () => {
     recentCalledNumbers: ['*', '*', '*'],
     winnerCountdown: 5,
     isMuted: false,
-    autoPlay: false
+    autoPlay: false,
+    gameCountdown: 0,
+    gameStatus: 'waiting'
   });
 
   // Destructure for easier access
@@ -74,7 +76,9 @@ const PlayingBoard = () => {
     recentCalledNumbers,
     winnerCountdown,
     isMuted,
-    autoPlay
+    autoPlay,
+    gameCountdown,
+    gameStatus
   } = gameState;
 
   // Debug log for autoPlay state
@@ -241,6 +245,44 @@ const PlayingBoard = () => {
     }
   }, [updateGameState, setToast, setIsToast]);
 
+  const handleGameStateUpdate = useCallback((data) => {
+    try {
+      console.log('Game state update received:', data);
+      
+      // Update countdown if provided
+      if (data.count_down !== undefined) {
+        updateGameState({
+          gameCountdown: data.count_down
+        });
+        setCountDown(data.count_down);
+      }
+      
+      // Update game status if provided
+      if (data.game_status) {
+        updateGameState({
+          gameStatus: data.game_status
+        });
+      }
+      
+      // Update total players if provided
+      if (data.total_players !== undefined) {
+        updateGameState({
+          totalPlayers: data.total_players
+        });
+      }
+      
+      // Update called numbers if provided
+      if (data.pickedNumbers && data.pickedNumbers.numbers) {
+        updateGameState({
+          calledNumbers: data.pickedNumbers.numbers
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error handling game state update:', error);
+    }
+  }, [updateGameState, setCountDown]);
+
   // Function to determine winning condition
   const getWinningCondition = useCallback((card) => {
     if (!card || !card[0]) return 'Unknown';
@@ -338,17 +380,19 @@ const PlayingBoard = () => {
     if (!socket) return;
 
     socket.on('gameState', handleGameState);
+    socket.on('gameState', handleGameStateUpdate); // Listen for countdown updates
     socket.on('bingoWinner', handleBingoWinner);
     socket.on('falseBingo', handleFalseBingo);
     socket.on('disqualified', handleDisqualified);
 
     return () => {
       socket.off('gameState', handleGameState);
+      socket.off('gameState', handleGameStateUpdate);
       socket.off('bingoWinner', handleBingoWinner);
       socket.off('falseBingo', handleFalseBingo);
       socket.off('disqualified', handleDisqualified);
     };
-  }, [socket, handleGameState, handleBingoWinner, handleFalseBingo, handleDisqualified]);
+  }, [socket, handleGameState, handleGameStateUpdate, handleBingoWinner, handleFalseBingo, handleDisqualified]);
 
   const handleCellClick = useCallback((number) => {
     try {
@@ -726,7 +770,9 @@ const PlayingBoard = () => {
             </div>
             <div className="countdown-display">
               <span className="countdown-label">Count Down</span>
-              <span className="countdown-timer">{countDown || 0} : 01</span>
+              <span className={`countdown-timer ${gameStatus === 'in-progress' ? 'active' : ''}`}>
+                {gameCountdown || countDown || 0} : 01
+              </span>
             </div>
           </div>
 
