@@ -224,6 +224,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     else:
         # Show language selection
         await show_language_selection(update, context)
+    
+    return SOME_STATE
 
 async def show_language_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show language selection menu"""
@@ -704,8 +706,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 # Get user info and game statistics
                 user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
                 logger.info(f"User API response status: {user_response.status_code}")
-                user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
-                games_played_this_week = user_data.get('games_played_this_week', 0)
+                user_info = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
+                games_played_this_week = user_info.get('games_played_this_week', 0)
                 
             except requests.exceptions.RequestException as e:
                 logger.error(f"API request error in check_balance callback: {e}")
@@ -948,13 +950,13 @@ async def change_sponsor_command(update: Update, context: ContextTypes.DEFAULT_T
             await update.message.reply_text("❌ You need to register first. Use /register command.")
             return ConversationHandler.END
         
-        user_data = user_response.json()
-        if not user_data.get('phone'):
+        user_info = user_response.json()
+        if not user_info.get('phone'):
             await update.message.reply_text("❌ You need to register first. Use /register command.")
             return ConversationHandler.END
         
         # Check if user has already changed sponsor
-        if user_data.get('sponsor_changed', False):
+        if user_info.get('sponsor_changed', False):
             await update.message.reply_text("❌ You have already changed your sponsor once. This can only be done once.")
             return ConversationHandler.END
         
@@ -1300,8 +1302,8 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Check if user is already registered
     response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
     if response.status_code == 200:
-        user_data = response.json()
-        if user_data.get('phone'):
+        user_info = response.json()
+        if user_info.get('phone'):
             await update.message.reply_text(
                 "✅ You are already registered!\n\n"
                 "🎮 Click /play to start the game"
@@ -1343,12 +1345,12 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         else:
             user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
             logger.info(f"User API response status: {user_response.status_code}")
-            user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
-            games_played_this_week = user_data.get('games_played_this_week', 0) or 0
+            user_info = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
+            games_played_this_week = user_info.get('games_played_this_week', 0) or 0
         logger.info(f"Games played this week: {games_played_this_week}")
 
         # Referral bonus (float) - handle None values
-        total_referral_earnings_raw = (wallet_data.get('referral_bonus', 0) if LOCAL_MODE else user_data.get('total_referral_earnings', 0)) or 0
+        total_referral_earnings_raw = (wallet_data.get('referral_bonus', 0) if LOCAL_MODE else user_info.get('total_referral_earnings', 0)) or 0
         total_referral_earnings = float(total_referral_earnings_raw) if isinstance(total_referral_earnings_raw, (int, float, str)) else 0.0
 
         # Compute balances per policy - handle None values
@@ -1486,7 +1488,7 @@ def main() -> None:
  
 
     conversation_handler = ConversationHandler(
-        entry_points=[CallbackQueryHandler(button), CommandHandler('register', register_command), CommandHandler('start', start_command), CommandHandler('change_sponsor', change_sponsor_command)],
+        entry_points=[CallbackQueryHandler(button), CommandHandler('register', register_command), CommandHandler('start', start), CommandHandler('change_sponsor', change_sponsor_command)],
         states={
             # get_deposit_amount
             DEPOSIT_AMOUNT          : [MessageHandler(filters.TEXT & ~filters.COMMAND, deposit_amount)],
@@ -1496,6 +1498,7 @@ def main() -> None:
             REGISTER                : [MessageHandler(filters.CONTACT, handle_phone)],
             WAIT_FOR_PAYMENT        : [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_manual_payment)],
             CHANGE_SPONSOR_WAIT_ID  : [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_new_sponsor_id)],
+            SOME_STATE              : [CallbackQueryHandler(button)],
         },
         fallbacks=[CommandHandler('cancel', cancel)],
         allow_reentry=True
