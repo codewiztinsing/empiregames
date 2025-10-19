@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch, faFilter, faDownload, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import config from '../config/api';
 import './Transactions.css';
@@ -10,6 +11,7 @@ import './Transactions.css';
 const Transactions = () => {
   const navigate = useNavigate();
   const { playerId } = useContext(BingoContext);
+  const { t } = useTranslation();
   
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +85,7 @@ const Transactions = () => {
         
       } catch (error) {
         console.error('Error fetching transaction data:', error);
-        setError('Failed to load transaction data');
+        setError(t('transactions.failedToLoadTransactionData'));
       } finally {
         setLoading(false);
       }
@@ -129,17 +131,17 @@ const Transactions = () => {
   const getTransactionInfo = (type) => {
     switch (type) {
       case 'deposit':
-        return { icon: faPlus, color: '#4CAF50', label: 'Deposit' };
+        return { icon: faPlus, color: '#4CAF50', label: t('transactions.deposit') };
       case 'withdrawal':
-        return { icon: faMinus, color: '#f44336', label: 'Withdrawal' };
+        return { icon: faMinus, color: '#f44336', label: t('transactions.withdrawal') };
       case 'winning':
-        return { icon: faPlus, color: '#2196F3', label: 'Winning' };
+        return { icon: faPlus, color: '#2196F3', label: t('transactions.winning') };
       case 'game_fee':
-        return { icon: faMinus, color: '#ff9800', label: 'Game Fee' };
+        return { icon: faMinus, color: '#ff9800', label: t('transactions.gameFee') };
       case 'bonus':
-        return { icon: faPlus, color: '#9c27b0', label: 'Bonus' };
+        return { icon: faPlus, color: '#9c27b0', label: t('transactions.bonus') };
       default:
-        return { icon: faPlus, color: '#666', label: 'Other' };
+        return { icon: faPlus, color: '#666', label: t('transactions.other') };
     }
   };
 
@@ -148,7 +150,7 @@ const Transactions = () => {
       <div className="transactions-container">
         <div className="loading-spinner">
           <div className="spinner"></div>
-          <p>Loading transactions...</p>
+          <p>{t('transactions.loadingTransactions')}</p>
         </div>
       </div>
     );
@@ -161,11 +163,11 @@ const Transactions = () => {
         <button className="back-button" onClick={handleBack}>
           <FontAwesomeIcon icon={faArrowLeft} />
         </button>
-        <h1 className="transactions-title">Transaction History</h1>
+        <h1 className="transactions-title">{t('transactions.transactionHistory')}</h1>
         <div className="header-actions">
           <button className="action-btn download-btn">
             <FontAwesomeIcon icon={faDownload} />
-            Export
+            {t('transactions.export')}
           </button>
         </div>
       </div>
@@ -183,7 +185,7 @@ const Transactions = () => {
           <div className="summary-icon deposit">💰</div>
           <div className="summary-content">
             <div className="summary-value">{summary.totalDeposits} ETB</div>
-            <div className="summary-label">Total Deposits</div>
+            <div className="summary-label">{t('transactions.totalDeposits')}</div>
           </div>
         </div>
         
@@ -191,7 +193,7 @@ const Transactions = () => {
           <div className="summary-icon withdrawal">💸</div>
           <div className="summary-content">
             <div className="summary-value">{summary.totalWithdrawals} ETB</div>
-            <div className="summary-label">Total Withdrawals</div>
+            <div className="summary-label">{t('transactions.totalWithdrawals')}</div>
           </div>
         </div>
         
@@ -199,7 +201,7 @@ const Transactions = () => {
           <div className="summary-icon winning">🏆</div>
           <div className="summary-content">
             <div className="summary-value">{summary.totalWinnings} ETB</div>
-            <div className="summary-label">Total Winnings</div>
+            <div className="summary-label">{t('transactions.totalWinnings')}</div>
           </div>
         </div>
         
@@ -207,7 +209,7 @@ const Transactions = () => {
           <div className="summary-icon games">🎮</div>
           <div className="summary-content">
             <div className="summary-value">{summary.totalGames}</div>
-            <div className="summary-label">Total Games</div>
+            <div className="summary-label">{t('transactions.totalGames')}</div>
           </div>
         </div>
       </div>
@@ -218,7 +220,7 @@ const Transactions = () => {
           <FontAwesomeIcon icon={faSearch} className="search-icon" />
           <input
             type="text"
-            placeholder="Search transactions..."
+            placeholder={t('transactions.searchTransactions')}
             value={searchTerm}
             onChange={handleSearch}
             className="search-input"
@@ -230,31 +232,31 @@ const Transactions = () => {
             className={`filter-btn ${filterType === 'all' ? 'active' : ''}`}
             onClick={() => handleFilterChange('all')}
           >
-            All
+            {t('transactions.all')}
           </button>
           <button
             className={`filter-btn ${filterType === 'deposit' ? 'active' : ''}`}
             onClick={() => handleFilterChange('deposit')}
           >
-            Deposits
+            {t('transactions.deposits')}
           </button>
           <button
             className={`filter-btn ${filterType === 'withdrawal' ? 'active' : ''}`}
             onClick={() => handleFilterChange('withdrawal')}
           >
-            Withdrawals
+            {t('transactions.withdrawals')}
           </button>
           <button
             className={`filter-btn ${filterType === 'winning' ? 'active' : ''}`}
             onClick={() => handleFilterChange('winning')}
           >
-            Winnings
+            {t('transactions.winnings')}
           </button>
           <button
             className={`filter-btn ${filterType === 'game_fee' ? 'active' : ''}`}
             onClick={() => handleFilterChange('game_fee')}
           >
-            Game Fees
+            {t('transactions.gameFees')}
           </button>
         </div>
       </div>
@@ -262,14 +264,14 @@ const Transactions = () => {
       {/* Transactions List */}
       <div className="transactions-content">
         <div className="transactions-header-info">
-          <h3>Transactions ({totalTransactions})</h3>
+          <h3>{t('transactions.transactionsCount', { count: totalTransactions })}</h3>
         </div>
         
         {transactions.length === 0 ? (
           <div className="no-transactions">
             <div className="no-transactions-icon">📊</div>
-            <h3>No transactions found</h3>
-            <p>Your transaction history will appear here</p>
+            <h3>{t('transactions.noTransactionsFound')}</h3>
+            <p>{t('transactions.transactionHistoryWillAppearHere')}</p>
           </div>
         ) : (
           <div className="transactions-list">
@@ -315,7 +317,7 @@ const Transactions = () => {
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
           >
-            Previous
+            {t('transactions.previous')}
           </button>
           
           <div className="page-numbers">
@@ -338,7 +340,7 @@ const Transactions = () => {
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
-            Next
+            {t('transactions.next')}
           </button>
         </div>
       )}

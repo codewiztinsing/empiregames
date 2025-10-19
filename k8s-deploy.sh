@@ -152,6 +152,18 @@ deploy_k8s() {
     # Wait for React to be ready
     kubectl wait --for=condition=ready pod -l app=react-frontend -n ${NAMESPACE} --timeout=300s
     
+    # Deploy RabbitMQ
+    info "Deploying RabbitMQ..."
+    kubectl apply -f k8s/11-rabbitmq-celery.yaml
+    
+    # Wait for RabbitMQ to be ready
+    kubectl wait --for=condition=ready pod -l app=rabbitmq -n ${NAMESPACE} --timeout=300s
+    
+    # Wait for Celery to be ready
+    kubectl wait --for=condition=ready pod -l app=celery-worker -n ${NAMESPACE} --timeout=300s
+    kubectl wait --for=condition=ready pod -l app=celery-beat -n ${NAMESPACE} --timeout=300s
+    kubectl wait --for=condition=ready pod -l app=celery-flower -n ${NAMESPACE} --timeout=300s
+    
     # Deploy Ingress
     info "Deploying Ingress..."
     kubectl apply -f k8s/08-ingress.yaml
@@ -190,6 +202,7 @@ scale_deployments() {
     local bot_replicas=${2:-2}
     local nodejs_replicas=${3:-3}
     local react_replicas=${4:-3}
+    local celery_replicas=${5:-3}
     
     log "Scaling deployments..."
     
@@ -197,6 +210,7 @@ scale_deployments() {
     kubectl scale deployment telegram-bot --replicas=${bot_replicas} -n ${NAMESPACE}
     kubectl scale deployment nodejs-server --replicas=${nodejs_replicas} -n ${NAMESPACE}
     kubectl scale deployment react-frontend --replicas=${react_replicas} -n ${NAMESPACE}
+    kubectl scale deployment celery-worker --replicas=${celery_replicas} -n ${NAMESPACE}
     
     log "Deployments scaled successfully!"
 }
@@ -209,6 +223,10 @@ rollback() {
     kubectl rollout undo deployment telegram-bot -n ${NAMESPACE}
     kubectl rollout undo deployment nodejs-server -n ${NAMESPACE}
     kubectl rollout undo deployment react-frontend -n ${NAMESPACE}
+    kubectl rollout undo deployment rabbitmq -n ${NAMESPACE}
+    kubectl rollout undo deployment celery-worker -n ${NAMESPACE}
+    kubectl rollout undo deployment celery-beat -n ${NAMESPACE}
+    kubectl rollout undo deployment celery-flower -n ${NAMESPACE}
     
     log "Rollback completed!"
 }
@@ -239,6 +257,18 @@ show_logs() {
         "react")
             kubectl logs -l app=react-frontend -n ${NAMESPACE} --tail=100
             ;;
+        "rabbitmq")
+            kubectl logs -l app=rabbitmq -n ${NAMESPACE} --tail=100
+            ;;
+        "celery")
+            kubectl logs -l app=celery-worker -n ${NAMESPACE} --tail=100
+            ;;
+        "celery-beat")
+            kubectl logs -l app=celery-beat -n ${NAMESPACE} --tail=100
+            ;;
+        "celery-flower")
+            kubectl logs -l app=celery-flower -n ${NAMESPACE} --tail=100
+            ;;
         "all")
             kubectl logs -l app=django-backend -n ${NAMESPACE} --tail=50
             echo "---"
@@ -247,9 +277,17 @@ show_logs() {
             kubectl logs -l app=nodejs-server -n ${NAMESPACE} --tail=50
             echo "---"
             kubectl logs -l app=react-frontend -n ${NAMESPACE} --tail=50
+            echo "---"
+            kubectl logs -l app=rabbitmq -n ${NAMESPACE} --tail=50
+            echo "---"
+            kubectl logs -l app=celery-worker -n ${NAMESPACE} --tail=50
+            echo "---"
+            kubectl logs -l app=celery-beat -n ${NAMESPACE} --tail=50
+            echo "---"
+            kubectl logs -l app=celery-flower -n ${NAMESPACE} --tail=50
             ;;
         *)
-            error "Invalid service. Use: django, bot, nodejs, react, or all"
+            error "Invalid service. Use: django, bot, nodejs, react, rabbitmq, celery, celery-beat, celery-flower, or all"
             exit 1
             ;;
     esac
@@ -298,16 +336,16 @@ main() {
             echo "  build        - Build and push Docker images"
             echo "  deploy       - Deploy to Kubernetes"
             echo "  status       - Check deployment status"
-            echo "  scale        - Scale deployments (django bot nodejs react)"
+            echo "  scale        - Scale deployments (django bot nodejs react celery)"
             echo "  rollback     - Rollback to previous version"
-            echo "  logs         - Show logs (django|bot|nodejs|react|all)"
+            echo "  logs         - Show logs (django|bot|nodejs|react|rabbitmq|celery|celery-beat|celery-flower|all)"
             echo "  cleanup      - Clean up deployment"
             echo "  full-deploy  - Build, push, and deploy everything"
             echo ""
             echo "Examples:"
             echo "  $0 full-deploy"
-            echo "  $0 scale 5 3 5 3"
-            echo "  $0 logs django"
+            echo "  $0 scale 5 3 5 3 5"
+            echo "  $0 logs celery"
             exit 1
             ;;
     esac

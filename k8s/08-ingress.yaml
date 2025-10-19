@@ -49,6 +49,20 @@ spec:
             name: django-service
             port:
               number: 8000
+      - path: /flower/
+        pathType: Prefix
+        backend:
+          service:
+            name: celery-flower-service
+            port:
+              number: 5555
+      - path: /rabbitmq/
+        pathType: Prefix
+        backend:
+          service:
+            name: rabbitmq-service
+            port:
+              number: 15672
   - host: www.akerbingo.com
     http:
       paths:

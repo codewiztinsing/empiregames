@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faUser, faEdit, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import config from '../config/api';
 import './Profile.css';
@@ -10,6 +11,7 @@ import './Profile.css';
 const Profile = () => {
   const navigate = useNavigate();
   const { playerId, playerName, setPlayerName } = useContext(BingoContext);
+  const { t } = useTranslation();
   
   const [profile, setProfile] = useState({
     id: null,
@@ -67,7 +69,7 @@ const Profile = () => {
         setProfile(transformedProfile);
       } catch (error) {
         console.error('Error fetching profile:', error);
-        setError('Failed to load profile data');
+        setError(t('profile.failedToLoadProfile'));
       } finally {
         setLoading(false);
       }
@@ -91,13 +93,13 @@ const Profile = () => {
       await axios.put(`${config.API_BASE_URL.replace(/\/$/, '')}/users/${parseInt(playerId)}`, updateData);
       
       setPlayerName(profile.username);
-      setSuccess('Profile updated successfully!');
+      setSuccess(t('profile.profileUpdated'));
       setIsEditing(false);
       
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Error updating profile:', error);
-      setError('Failed to update profile');
+      setError(t('profile.failedToUpdateProfile'));
     } finally {
       setSaving(false);
     }
@@ -121,7 +123,7 @@ const Profile = () => {
       <div className="profile-container">
         <div className="loading-spinner">
           <div className="spinner"></div>
-          <p>Loading profile...</p>
+          <p>{t('profile.loadingProfile')}</p>
         </div>
       </div>
     );
@@ -134,7 +136,7 @@ const Profile = () => {
         <button className="back-button" onClick={handleBack}>
           <FontAwesomeIcon icon={faArrowLeft} />
         </button>
-        <h1 className="profile-title">Profile</h1>
+        <h1 className="profile-title">{t('profile.profile')}</h1>
         <div className="profile-actions">
           {isEditing ? (
             <>
@@ -144,7 +146,7 @@ const Profile = () => {
                 disabled={saving}
               >
                 <FontAwesomeIcon icon={faSave} />
-                {saving ? 'Saving...' : 'Save'}
+                {saving ? t('profile.saving') : t('profile.save')}
               </button>
               <button 
                 className="action-btn cancel-btn" 
@@ -152,7 +154,7 @@ const Profile = () => {
                 disabled={saving}
               >
                 <FontAwesomeIcon icon={faTimes} />
-                Cancel
+                {t('profile.cancel')}
               </button>
             </>
           ) : (
@@ -161,7 +163,7 @@ const Profile = () => {
               onClick={() => setIsEditing(true)}
             >
               <FontAwesomeIcon icon={faEdit} />
-              Edit
+              {t('profile.edit')}
             </button>
           )}
         </div>
@@ -187,7 +189,7 @@ const Profile = () => {
             <FontAwesomeIcon icon={faUser} />
           </div>
           <div className="profile-info">
-            <h2 className="profile-name">{profile.username || 'User'}</h2>
+            <h2 className="profile-name">{profile.username || t('profile.user')}</h2>
             <p className="profile-id">ID: {profile.id}</p>
           </div>
         </div>
@@ -195,10 +197,10 @@ const Profile = () => {
         {/* Profile Details */}
         <div className="profile-details">
           <div className="detail-section">
-            <h3 className="section-title">Personal Information</h3>
+            <h3 className="section-title">{t('profile.personalInfo')}</h3>
             <div className="detail-grid">
               <div className="detail-item">
-                <label>Username</label>
+                <label>{t('profile.username')}</label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -207,12 +209,12 @@ const Profile = () => {
                     className="edit-input"
                   />
                 ) : (
-                  <span className="detail-value">{profile.username || 'Not set'}</span>
+                  <span className="detail-value">{profile.username || t('profile.notSet')}</span>
                 )}
               </div>
               
               <div className="detail-item">
-                <label>Email</label>
+                <label>{t('profile.email')}</label>
                 {isEditing ? (
                   <input
                     type="email"
@@ -221,12 +223,12 @@ const Profile = () => {
                     className="edit-input"
                   />
                 ) : (
-                  <span className="detail-value">{profile.email || 'Not set'}</span>
+                  <span className="detail-value">{profile.email || t('profile.notSet')}</span>
                 )}
               </div>
               
               <div className="detail-item">
-                <label>Phone</label>
+                <label>{t('profile.phone')}</label>
                 {isEditing ? (
                   <input
                     type="tel"
@@ -235,20 +237,20 @@ const Profile = () => {
                     className="edit-input"
                   />
                 ) : (
-                  <span className="detail-value">{profile.phone || 'Not set'}</span>
+                  <span className="detail-value">{profile.phone || t('profile.notSet')}</span>
                 )}
               </div>
             </div>
           </div>
 
           <div className="detail-section">
-            <h3 className="section-title">Account Statistics</h3>
+            <h3 className="section-title">{t('profile.accountStatistics')}</h3>
             <div className="stats-grid">
               <div className="stat-card">
                 <div className="stat-icon">💰</div>
                 <div className="stat-content">
                   <div className="stat-value">{profile.balance} ETB</div>
-                  <div className="stat-label">Current Balance</div>
+                  <div className="stat-label">{t('profile.currentBalance')}</div>
                 </div>
               </div>
               
@@ -256,7 +258,7 @@ const Profile = () => {
                 <div className="stat-icon">🎮</div>
                 <div className="stat-content">
                   <div className="stat-value">{profile.totalGames}</div>
-                  <div className="stat-label">Total Games</div>
+                  <div className="stat-label">{t('profile.totalGames')}</div>
                 </div>
               </div>
               
@@ -264,7 +266,7 @@ const Profile = () => {
                 <div className="stat-icon">🏆</div>
                 <div className="stat-content">
                   <div className="stat-value">{profile.totalWins}</div>
-                  <div className="stat-label">Total Wins</div>
+                  <div className="stat-label">{t('profile.totalWins')}</div>
                 </div>
               </div>
               
@@ -272,43 +274,43 @@ const Profile = () => {
                 <div className="stat-icon">💎</div>
                 <div className="stat-content">
                   <div className="stat-value">{profile.totalEarnings} ETB</div>
-                  <div className="stat-label">Total Earnings</div>
+                  <div className="stat-label">{t('profile.totalEarnings')}</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="detail-section">
-            <h3 className="section-title">Referral Information</h3>
+            <h3 className="section-title">{t('profile.referralInformation')}</h3>
             <div className="detail-grid">
               <div className="detail-item">
-                <label>Referral Code</label>
+                <label>{t('profile.referralCode')}</label>
                 <span className="detail-value referral-code">{profile.referralCode}</span>
               </div>
               
               <div className="detail-item">
-                <label>Invited By</label>
-                <span className="detail-value">{profile.invitedBy || 'No one'}</span>
+                <label>{t('profile.invitedBy')}</label>
+                <span className="detail-value">{profile.invitedBy || t('profile.noOne')}</span>
               </div>
               
               <div className="detail-item">
-                <label>Invited Users</label>
+                <label>{t('profile.invitedUsers')}</label>
                 <span className="detail-value">{profile.invitedUsers}</span>
               </div>
             </div>
           </div>
 
           <div className="detail-section">
-            <h3 className="section-title">Account Information</h3>
+            <h3 className="section-title">{t('profile.accountInformation')}</h3>
             <div className="detail-grid">
               <div className="detail-item">
-                <label>Join Date</label>
-                <span className="detail-value">{profile.joinDate || 'Unknown'}</span>
+                <label>{t('profile.joinDate')}</label>
+                <span className="detail-value">{profile.joinDate || t('profile.unknown')}</span>
               </div>
               
               <div className="detail-item">
-                <label>Last Login</label>
-                <span className="detail-value">{profile.lastLogin || 'Unknown'}</span>
+                <label>{t('profile.lastLogin')}</label>
+                <span className="detail-value">{profile.lastLogin || t('profile.unknown')}</span>
               </div>
             </div>
           </div>

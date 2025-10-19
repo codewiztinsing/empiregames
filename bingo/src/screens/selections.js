@@ -3,15 +3,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faBars, faTimes, faGamepad, faUser, faHistory, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { SocketContext } from '../contexts/socket';
 import Toaster from '../components/Toaster';
+import LanguageSelector from '../components/LanguageSelector';
 import './selections.css';
 import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
+import { useTranslation } from 'react-i18next';
 import checkPlayerBalance from '../api';
 import axios from 'axios';
 import { generateFixedCard } from '../helpers/fixedBingoCards';
 import config from '../config/api';
 
 const Selections = () => {
+  const { t } = useTranslation();
   const {
     selectedNumber,
     setSelectedNumber,
@@ -573,34 +576,24 @@ const Selections = () => {
       {!loading && (
         <div className="konjo-selections-container">
           {/* Header */}
+          
           <div className="konjo-header">
-            <div className="konjo-header-left">
+          <div className="konjo-header-left">
               <div className="hamburger-menu" onClick={toggleSidebar}>
                 <FontAwesomeIcon icon={faBars} />
-            </div>
+              </div>
               <div className="konjo-logo">Liyu</div>
             </div>
+            
             <div className="konjo-header-right">
               {/* Game Stats */}
               <div className="header-stats">
                 <div className="header-stat">
-                  <span className="stat-icon">👥</span>
                   <span className="stat-value">{gameStats.totalPlayers}</span>
                 </div>
                 <div className="header-stat">
-                  <span className="stat-icon">💰</span>
                   <span className="stat-value">{gameStats.totalWinAmount.toFixed(0)} ETB</span>
                 </div>
-              </div>
-              
-              {/* Interactive Live Indicator */}
-              <div className="live-indicator interactive" onClick={() => {
-                setToast("🎮 Live game in progress! Join now!");
-                setIsToast(true);
-              }}>
-                <div className="live-dot"></div>
-                <span className="live-text">LIVE</span>
-                <div className="live-pulse-ring"></div>
               </div>
               
               {/* Countdown */}
@@ -616,18 +609,24 @@ const Selections = () => {
                 <span className="balance-amount">{parseInt(balance)} ETB</span>
                 <div className="user-icon">👤</div>
               </div>
+              
+              {/* Interactive Live Indicator */}
+              <div className="live-indicator interactive" onClick={() => {
+                setToast("🎮 Live game in progress! Join now!");
+                setIsToast(true);
+              }}>
+                <div className="live-dot"></div>
+                <span className="live-text">LIVE</span>
+                <div className="live-pulse-ring"></div>
+              </div>
             </div>
           </div>
 
           {/* Sub-header */}
           <div className="konjo-sub-header">
-            <div className="back-button">
-              <FontAwesomeIcon icon={faArrowLeft} />
-              </div>
+            
             <div className="info-buttons">
-              <div className="info-button">Wallet {parseInt(balance)} ብር</div>
-              <div className="info-button">Stake {roomId} ብር</div>
-              <div className="info-button">⭐ Bonus</div>
+              <div className="info-button">{t('game.betAmount')} {roomId} {t('currency.birr')}</div>
             </div>
             <div className="action-buttons">
               <button 
@@ -637,17 +636,17 @@ const Selections = () => {
                     if (balance >= parseInt(roomId)) {
                       navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
                     } else {
-                      setToast("Insufficient balance to start the game. Please deposit more.");
+                      setToast(t('game.insufficientBalance'));
                       setIsToast(true);
                     }
                   } else {
-                    setToast("Please select a card first!");
+                    setToast(t('game.cardNotSelected'));
                     setIsToast(true);
                   }
                 }}
                 disabled={!hasSelectedCard || !selectedNumber}
               >
-                🚀 Start Game
+                🚀 {t('game.joinGame')}
               </button>
               <button 
                 className="exit-button"
@@ -794,10 +793,7 @@ const Selections = () => {
             {/* Countdown removed - navigation happens immediately on card selection */}
                   </div>
 
-          {/* Bottom Message */}
-          <div className="konjo-bottom-message">
-            Welcome to Liyu Bingo Bot! Choose an option.
-          </div>
+          
         </div>
       )}
 
@@ -807,7 +803,7 @@ const Selections = () => {
           <div className="sidebar-overlay" onClick={toggleSidebar}></div>
           <div className="sidebar">
             <div className="sidebar-header">
-              <div className="sidebar-title">Menu</div>
+              <div className="sidebar-title">{t('navigation.menu')}</div>
               <button className="sidebar-close" onClick={toggleSidebar}>
                 <FontAwesomeIcon icon={faTimes} />
               </button>
@@ -816,19 +812,23 @@ const Selections = () => {
               <div className="sidebar-menu">
                 <div className="sidebar-item" onClick={() => handleNavigation('bingo')}>
                   <FontAwesomeIcon icon={faGamepad} className="sidebar-icon" />
-                  <span>Bingo Game</span>
-                          </div>
+                  <span>{t('navigation.bingoGame')}</span>
+                </div>
                 <div className="sidebar-item" onClick={() => handleNavigation('profile')}>
                   <FontAwesomeIcon icon={faUser} className="sidebar-icon" />
-                  <span>Profile</span>
-                      </div>
+                  <span>{t('navigation.profile')}</span>
+                </div>
                 <div className="sidebar-item" onClick={() => handleNavigation('transactions')}>
                   <FontAwesomeIcon icon={faHistory} className="sidebar-icon" />
-                  <span>Transaction History</span>
-                  </div>
+                  <span>{t('navigation.transactionHistory')}</span>
+                </div>
                 <div className="sidebar-item" onClick={() => handleNavigation('invited-users')}>
                   <FontAwesomeIcon icon={faUsers} className="sidebar-icon" />
-                  <span>Invited Users</span>
+                  <span>{t('navigation.invitedUsers')}</span>
+                </div>
+                <div className="sidebar-language-section">
+                  <div className="sidebar-language-title">{t('navigation.language')}</div>
+                  <LanguageSelector />
                 </div>
               </div>
             </div>

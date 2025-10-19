@@ -40,6 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "corsheaders",
 
+    # Celery apps
+    'django_celery_beat',
+    'django_celery_results',
+
     # local apps
     'game',
     'users',
@@ -191,6 +195,42 @@ STATIC_ROOT = '/var/www/django_static'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Celery Configuration
+# CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'amqp://guest:guest@localhost:5672//')
+# CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'rpc://')
+# CELERY_ACCEPT_CONTENT = ['json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_TIMEZONE = 'UTC'
+# CELERY_ENABLE_UTC = True
+
+# Celery Beat Configuration
+# CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# Celery Worker Configuration
+# CELERY_WORKER_CONCURRENCY = 4
+# CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+# CELERY_TASK_ACKS_LATE = True
+# CELERY_WORKER_DISABLE_RATE_LIMITS = True
+
+# Celery Monitoring
+# CELERY_SEND_TASK_EVENTS = True
+# CELERY_TASK_SEND_SENT_EVENT = True
+
+# Celery Task Configuration
+# CELERY_TASK_TIME_LIMIT = 300  # 5 minutes
+# CELERY_TASK_SOFT_TIME_LIMIT = 240  # 4 minutes
+# CELERY_TASK_ALWAYS_EAGER = False  # Never execute tasks synchronously
+
+# RabbitMQ broker URL
+CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
+
+# Optional: result backend (store task results)
+CELERY_RESULT_BACKEND = 'rpc://'  # or 'django-db', 'redis://localhost:6379/0'
+
+# Timezone and task settings
+CELERY_TIMEZONE = 'UTC'
+CELERY_ENABLE_UTC = True
 
 
 

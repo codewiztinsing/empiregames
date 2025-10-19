@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSearch, faUserPlus, faCopy, faCheck, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import config from '../config/api';
 import './InvitedUsers.css';
@@ -10,6 +11,7 @@ import './InvitedUsers.css';
 const InvitedUsers = () => {
   const navigate = useNavigate();
   const { playerId } = useContext(BingoContext);
+  const { t } = useTranslation();
   
   const [invitedUsers, setInvitedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,7 @@ const InvitedUsers = () => {
         
       } catch (error) {
         console.error('Error fetching data:', error);
-        setError('Failed to load referral data');
+        setError(t('referrals.failedToLoadReferralData'));
       } finally {
         setLoading(false);
       }
@@ -124,13 +126,13 @@ const InvitedUsers = () => {
   const getUserStatusInfo = (status) => {
     switch (status) {
       case 'active':
-        return { color: '#4CAF50', label: 'Active' };
+        return { color: '#4CAF50', label: t('referrals.active') };
       case 'inactive':
-        return { color: '#f44336', label: 'Inactive' };
+        return { color: '#f44336', label: t('referrals.inactive') };
       case 'pending':
-        return { color: '#ff9800', label: 'Pending' };
+        return { color: '#ff9800', label: t('referrals.pending') };
       default:
-        return { color: '#666', label: 'Unknown' };
+        return { color: '#666', label: t('referrals.unknown') };
     }
   };
 
@@ -139,7 +141,7 @@ const InvitedUsers = () => {
       <div className="invited-users-container">
         <div className="loading-spinner">
           <div className="spinner"></div>
-          <p>Loading invited users...</p>
+          <p>{t('referrals.loadingInvitedUsers')}</p>
         </div>
       </div>
     );
@@ -152,11 +154,11 @@ const InvitedUsers = () => {
         <button className="back-button" onClick={handleBack}>
           <FontAwesomeIcon icon={faArrowLeft} />
         </button>
-        <h1 className="invited-users-title">Invited Users</h1>
+        <h1 className="invited-users-title">{t('referrals.invitedUsers')}</h1>
         <div className="header-actions">
           <button className="action-btn invite-btn">
             <FontAwesomeIcon icon={faUserPlus} />
-            Invite
+            {t('referrals.invite')}
           </button>
         </div>
       </div>
@@ -172,11 +174,11 @@ const InvitedUsers = () => {
       <div className="referral-section">
         <div className="referral-card">
           <div className="referral-header">
-            <h3>Your Referral Code</h3>
+            <h3>{t('referrals.yourReferralCode')}</h3>
             <button 
               className="copy-btn" 
               onClick={handleCopyCode}
-              title="Copy referral code"
+              title={t('referrals.copyReferralCode')}
             >
               <FontAwesomeIcon icon={copied ? faCheck : faCopy} />
             </button>
@@ -188,11 +190,11 @@ const InvitedUsers = () => {
         
         <div className="referral-card">
           <div className="referral-header">
-            <h3>Your Referral Link</h3>
+            <h3>{t('referrals.yourReferralLink')}</h3>
             <button 
               className="copy-btn" 
               onClick={handleCopyLink}
-              title="Copy referral link"
+              title={t('referrals.copyReferralLink')}
             >
               <FontAwesomeIcon icon={copied ? faCheck : faCopy} />
             </button>
@@ -209,7 +211,7 @@ const InvitedUsers = () => {
           <div className="summary-icon total">👥</div>
           <div className="summary-content">
             <div className="summary-value">{summary.totalInvited}</div>
-            <div className="summary-label">Total Invited</div>
+            <div className="summary-label">{t('referrals.totalInvited')}</div>
           </div>
         </div>
         
@@ -217,7 +219,7 @@ const InvitedUsers = () => {
           <div className="summary-icon active">✅</div>
           <div className="summary-content">
             <div className="summary-value">{summary.activeUsers}</div>
-            <div className="summary-label">Active Users</div>
+            <div className="summary-label">{t('referrals.activeUsers')}</div>
           </div>
         </div>
         
@@ -225,7 +227,7 @@ const InvitedUsers = () => {
           <div className="summary-icon earnings">💰</div>
           <div className="summary-content">
             <div className="summary-value">{summary.totalEarnings} ETB</div>
-            <div className="summary-label">Total Earnings</div>
+            <div className="summary-label">{t('referrals.totalEarnings')}</div>
           </div>
         </div>
         
@@ -233,7 +235,7 @@ const InvitedUsers = () => {
           <div className="summary-icon pending">⏳</div>
           <div className="summary-content">
             <div className="summary-value">{summary.pendingEarnings} ETB</div>
-            <div className="summary-label">Pending Earnings</div>
+            <div className="summary-label">{t('referrals.pendingEarnings')}</div>
           </div>
         </div>
       </div>
@@ -244,7 +246,7 @@ const InvitedUsers = () => {
           <FontAwesomeIcon icon={faSearch} className="search-icon" />
           <input
             type="text"
-            placeholder="Search invited users..."
+            placeholder={t('referrals.searchInvitedUsers')}
             value={searchTerm}
             onChange={handleSearch}
             className="search-input"
@@ -255,14 +257,14 @@ const InvitedUsers = () => {
       {/* Invited Users List */}
       <div className="users-content">
         <div className="users-header-info">
-          <h3>Invited Users ({totalUsers})</h3>
+          <h3>{t('referrals.invitedUsersCount', { count: totalUsers })}</h3>
         </div>
         
         {invitedUsers.length === 0 ? (
           <div className="no-users">
             <div className="no-users-icon">👥</div>
-            <h3>No invited users found</h3>
-            <p>Start inviting friends to earn referral bonuses!</p>
+            <h3>{t('referrals.noInvitedUsersFound')}</h3>
+            <p>{t('referrals.startInvitingFriends')}</p>
           </div>
         ) : (
           <div className="users-list">
@@ -280,12 +282,12 @@ const InvitedUsers = () => {
                     <div className="user-info">
                       <span className="user-email">{user.email}</span>
                       <span className="user-separator">•</span>
-                      <span className="user-date">Joined {formatDate(user.created_at)}</span>
+                      <span className="user-date">{t('referrals.joined')} {formatDate(user.created_at)}</span>
                     </div>
                     <div className="user-stats">
-                      <span className="user-balance">Balance: {user.balance} ETB</span>
+                      <span className="user-balance">{t('referrals.balance')}: {user.balance} ETB</span>
                       <span className="user-separator">•</span>
-                      <span className="user-games">Games: {user.total_games}</span>
+                      <span className="user-games">{t('referrals.games')}: {user.total_games}</span>
                     </div>
                   </div>
                   
@@ -297,7 +299,7 @@ const InvitedUsers = () => {
                       {statusInfo.label}
                     </span>
                     <div className="user-earnings">
-                      Earned: {user.referral_earnings || 0} ETB
+                      {t('referrals.earned')}: {user.referral_earnings || 0} ETB
                     </div>
                   </div>
                 </div>
@@ -315,7 +317,7 @@ const InvitedUsers = () => {
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
           >
-            Previous
+            {t('referrals.previous')}
           </button>
           
           <div className="page-numbers">
@@ -338,7 +340,7 @@ const InvitedUsers = () => {
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
-            Next
+            {t('referrals.next')}
           </button>
         </div>
       )}
@@ -347,7 +349,7 @@ const InvitedUsers = () => {
       {copied && (
         <div className="copy-success">
           <FontAwesomeIcon icon={faCheck} />
-          Copied to clipboard!
+          {t('referrals.copiedToClipboard')}
         </div>
       )}
     </div>

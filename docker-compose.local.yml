@@ -1,0 +1,174 @@
+version: '3.8'
+
+services:
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: liyu-rabbitmq
+    ports:
+      - "5672:5672"    # AMQP port
+      - "15672:15672"  # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: liyu_user
+      RABBITMQ_DEFAULT_PASS: liyu_password
+      RABBITMQ_DEFAULT_VHOST: liyu_vhost
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - liyu-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:13
+    container_name: liyu-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: liyu_bingo
+      POSTGRES_USER: liyu_user
+      POSTGRES_PASSWORD: liyu_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - liyu-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U liyu_user -d liyu_bingo"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:6-alpine
+    container_name: liyu-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - liyu-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Django Backend
+  django:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.django
+    container_name: liyu-django
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings
+      DEBUG: "True"
+      DATABASE_URL: postgresql://liyu_user:liyu_password@postgres:5432/liyu_bingo
+      CELERY_BROKER_URL: amqp://liyu_user:liyu_password@rabbitmq:5672/liyu_vhost
+      CELERY_RESULT_BACKEND: rpc://
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./app:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - liyu-network
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  # Celery Worker
+  celery-worker:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.django
+    container_name: liyu-celery-worker
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings
+      DEBUG: "True"
+      DATABASE_URL: postgresql://liyu_user:liyu_password@postgres:5432/liyu_bingo
+      CELERY_BROKER_URL: amqp://liyu_user:liyu_password@rabbitmq:5672/liyu_vhost
+      CELERY_RESULT_BACKEND: rpc://
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./app:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - liyu-network
+    command: celery -A core worker -l info --concurrency=4
+
+  # Celery Beat
+  celery-beat:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.django
+    container_name: liyu-celery-beat
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings
+      DEBUG: "True"
+      DATABASE_URL: postgresql://liyu_user:liyu_password@postgres:5432/liyu_bingo
+      CELERY_BROKER_URL: amqp://liyu_user:liyu_password@rabbitmq:5672/liyu_vhost
+      CELERY_RESULT_BACKEND: rpc://
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./app:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - liyu-network
+    command: celery -A core beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
+  # Celery Flower
+  celery-flower:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.django
+    container_name: liyu-celery-flower
+    ports:
+      - "5555:5555"
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings
+      DEBUG: "True"
+      CELERY_BROKER_URL: amqp://liyu_user:liyu_password@rabbitmq:5672/liyu_vhost
+      CELERY_RESULT_BACKEND: rpc://
+      FLOWER_BASIC_AUTH: admin:password
+    volumes:
+      - ./app:/app
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - liyu-network
+    command: celery -A core flower --port=5555
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  redis_data:
+
+networks:
+  liyu-network:
+    driver: bridge
