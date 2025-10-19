@@ -167,12 +167,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         except ValueError:
             logger.warning(f"Invalid referrer ID format: {context.args[0]}")
     # Send welcome image instead of text
-    try:
-        with open('wellcomenote.jpeg', 'rb') as photo:
-            await update.message.reply_photo(photo=photo, caption='Select an option:', reply_markup=reply_markup)
-    except FileNotFoundError:
-        # Fallback to text if image not found
-        await update.message.reply_text('Welcome to Aker Bingo! Select an option:', reply_markup=reply_markup)
+    await update.message.reply_text('Welcome to Liyu  Bingo! Select an option:', reply_markup=reply_markup)
     context.job_queue.run_once(conversation_timeout, CONVERSATION_TIMEOUT, chat_id=update.effective_chat.id)
     return SOME_STATE
 
@@ -625,7 +620,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             
             # Create payment summary with user details and weekly progress
             payment_summary = (
-                    "🏦 Aker BINGO STATEMENT\n" +
+                    "🏦 Liyu Bingo BINGO STATEMENT\n" +
                     f"💰  {balance} Birr\n" +
                     f"👥  {first_name} \n" +
                     f"📄 Transaction ID: {telegram_id}\n\n" +
@@ -667,11 +662,11 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
 
             keyboard = [
-                [InlineKeyboardButton("Open Aker Bingo!", web_app=WebAppInfo(url=web_app_url))]
+                [InlineKeyboardButton("Open Liyu Bingo!", web_app=WebAppInfo(url=web_app_url))]
                 # [InlineKeyboardButton("Open Wow Bingo!", url=web_app_url)]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.message.reply_text("Start playing Aker bingo", reply_markup=reply_markup)
+            await query.message.reply_text("Start playing Liyu bingo", reply_markup=reply_markup)
 
         elif query.data == 'deposit':
             await query.edit_message_text(
@@ -708,7 +703,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             # Send welcome image first
             try:
                 with open('wellcomenote.jpeg', 'rb') as photo:
-                    await query.message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
+                    await query.message.reply_photo(photo=photo, caption="Welcome to Liyu Bingo!")
             except FileNotFoundError:
                 # Fallback if image not found
                 pass
@@ -781,7 +776,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
               
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text("Welcome to Aker Bingo! Please select an option:", reply_markup=reply_markup)
+            await query.edit_message_text("Welcome to Liyu Bingo! Please select an option:", reply_markup=reply_markup)
             
             
  
@@ -794,7 +789,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                  InlineKeyboardButton("Register", callback_data='register_menu')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await query.edit_message_text("Welcome to Aker Bingo! Please select an option:", reply_markup=reply_markup)
+            await query.edit_message_text("Welcome to Liyu Bingo! Please select an option:", reply_markup=reply_markup)
     except Exception as e:
         logger.error(f"Error handling query: {query.data} - {e}")
         await query.edit_message_text(text="An error occurred. Please try again.")
@@ -810,7 +805,7 @@ async def show_id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(f"DEBUG: user_id = {user_id}, username = {username}")
         
         # Create the unique ID in the format Aker_telegramid
-        unique_id = f"Aker_{user_id}"
+        unique_id = f"Liyu_{user_id}"
         
         message = (
             f"🆔 Your Unique ID\n\n"
@@ -837,16 +832,9 @@ async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "📞 **Contact Support**\n\n"
         "Need help? Our support team is here to assist you!\n\n"
-        "🔗 Contact us: https://t.me/AkerBingo\n"
-        "📧 Email: support@akerbingo.com\n\n"
-        "We'll respond to your inquiries as soon as possible.",
-        reply_markup=InlineKeyboardMarkup([[
-            InlineKeyboardButton("📞 Contact Support", url='https://t.me/AkerBingo')
-        ]]),
-        parse_mode=ParseMode.MARKDOWN
+        "🔗 Contact us: https://t.me/LiyuBingo\n"
+        "📧 Email: support@liyubingo.com\n\n"
     )
-    return ConversationHandler.END
-
 
 async def change_sponsor_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Command to change user's sponsor/referrer"""
@@ -888,7 +876,7 @@ async def change_sponsor_command(update: Update, context: ContextTypes.DEFAULT_T
             "Please enter the Telegram ID of your new sponsor.\n"
             "You can use either:\n"
             "• Direct Telegram ID (e.g., 1464395537)\n"
-            "• Aker ID format (e.g., Aker_1464395537)\n\n"
+            "• Liyu ID format (e.g., Liyu_1464395537)\n\n"
             "You can find someone's ID by asking them to use /show_id command.\n\n"
             "⚠️ **Note:** You can only change your sponsor once!\n\n"
             "Enter the sponsor ID:",
@@ -917,14 +905,14 @@ async def handle_new_sponsor_id(update: Update, context: ContextTypes.DEFAULT_TY
         # Extract Telegram ID from input - handle both formats
         new_sponsor_id_int = None
         
-        if new_sponsor_input.startswith("Aker_"):
-            # Handle Aker_telegramid format
+        if new_sponsor_input.startswith("Liyu_"):
+            # Handle Liyu_telegramid format
             try:
-                telegram_id_part = new_sponsor_input.replace("Aker_", "")
+                telegram_id_part = new_sponsor_input.replace("Liyu_", "")
                 new_sponsor_id_int = int(telegram_id_part)
-                print(f"DEBUG: Extracted Telegram ID from Aker format: {new_sponsor_id_int}")
+                print(f"DEBUG: Extracted Telegram ID from Liyu format: {new_sponsor_id_int}")
             except ValueError:
-                await update.message.reply_text("❌ Invalid Aker ID format. Please use Aker_telegramid or just the Telegram ID.")
+                await update.message.reply_text("❌ Invalid Liyu ID format. Please use Liyu_telegramid or just the Telegram ID.")
                 return CHANGE_SPONSOR_WAIT_ID
         else:
             # Handle direct Telegram ID format
@@ -932,7 +920,7 @@ async def handle_new_sponsor_id(update: Update, context: ContextTypes.DEFAULT_TY
                 new_sponsor_id_int = int(new_sponsor_input)
                 print(f"DEBUG: Using direct Telegram ID: {new_sponsor_id_int}")
             except ValueError:
-                await update.message.reply_text("❌ Please enter a valid Telegram ID (numbers only) or Aker ID (Aker_telegramid).")
+                await update.message.reply_text("❌ Please enter a valid Telegram ID (numbers only) or Liyu ID (Liyu_telegramid).")
                 return CHANGE_SPONSOR_WAIT_ID
         
         # Check if the new sponsor exists
@@ -1186,7 +1174,7 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Use ref_ prefix so start command can parse first-generation referrer
     invite_link = f"https://t.me/{bot_username}?start=ref_{telegram_id}"
     message = (
-        "Invite your friends to Aker Bingo and earn rewards!\n\n"
+        "Invite your friends to Liyu Bingo and earn rewards!\n\n"
         "Tap the button below to share your invite link with others."
     )
     # Create a share button with the invite link
@@ -1225,14 +1213,7 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return ConversationHandler.END
     
-    # Send welcome image first
-    try:
-        with open('wellcomenote.jpeg', 'rb') as photo:
-            await update.message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
-    except FileNotFoundError:
-        # Fallback if image not found
-        pass
-    
+ 
     contact_keyboard = ReplyKeyboardMarkup(
                 [[KeyboardButton(text="📞 Share Phone Number", request_contact=True)]],
                 resize_keyboard=True,
@@ -1377,14 +1358,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logger.error(f"Error getting referrer profile: {e}")
             await update.effective_message.reply_text(f"Welcome! You were referred by user {referrer_id}")
-        
-        # Send welcome image first
-        try:
-            with open('wellcomenote.jpeg', 'rb') as photo:
-                await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
-        except FileNotFoundError:
-            # Fallback if image not found
-            pass
+   
         
         await update.effective_message.reply_text(text="Please share your phone number to complete registration.")
         contact_keyboard = ReplyKeyboardMarkup(
@@ -1396,13 +1370,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("DEBUG: Returning REGISTER state for referred user")
         return REGISTER
     else:
-        # Send welcome image first
-        try:
-            with open('wellcomenote.jpeg', 'rb') as photo:
-                await update.effective_message.reply_photo(photo=photo, caption="Welcome to Aker Bingo!")
-        except FileNotFoundError:
-            # Fallback if image not found
-            pass
+        
         
         await update.effective_message.reply_text("Please share your phone number to complete registration.")
         contact_keyboard = ReplyKeyboardMarkup(
