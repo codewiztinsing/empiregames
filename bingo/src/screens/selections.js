@@ -58,6 +58,13 @@ const Selections = () => {
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const cardsPerPage = 100;
+  const [gameInProgress, setGameInProgress] = useState(false);
+  const [gameStats, setGameStats] = useState({
+    totalPlayers: 0,
+    totalWinAmount: 0,
+    calledNumbersCount: 0,
+    totalCalledNumbers: 0
+  });
 
   // Socket connection handlers
   useEffect(() => {
@@ -107,6 +114,20 @@ const Selections = () => {
       
       if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
         setPickedNumbers(state.pickedNumbers.numbers);
+        
+        // Update total called numbers count
+        setGameStats(prevStats => ({
+          ...prevStats,
+          totalCalledNumbers: state.pickedNumbers.numbers.length
+        }));
+      }
+      
+      // Also check for called_numbers in the state
+      if (state.called_numbers && Array.isArray(state.called_numbers)) {
+        setGameStats(prevStats => ({
+          ...prevStats,
+          totalCalledNumbers: state.called_numbers.length
+        }));
       }
       
       if (state.game_status === "in-progress") {
@@ -115,6 +136,14 @@ const Selections = () => {
           setIsToast(true);
         }
         setGameStatus("in-progress");
+        setGameInProgress(true);
+        
+        // Update game statistics
+        setGameStats(prevStats => ({
+          ...prevStats,
+          totalPlayers: state.total_players || prevStats.totalPlayers,
+          totalWinAmount: state.win_amount || prevStats.totalWinAmount
+        }));
       }
       
       if (state.game_status === "countdown") {
@@ -131,10 +160,20 @@ const Selections = () => {
           setIsToast(true);
         }
         setGameStatus("waiting");
+        setGameInProgress(false);
       }
      
       if (state.game_status !== "in-progress") {
         setPlayersLength(state.total_players);
+      }
+      
+      // Update game statistics for all game states
+      if (state.total_players !== undefined || state.win_amount !== undefined) {
+        setGameStats(prevStats => ({
+          ...prevStats,
+          totalPlayers: state.total_players || prevStats.totalPlayers,
+          totalWinAmount: state.win_amount || prevStats.totalWinAmount
+        }));
       }
       
       if (state.count_down !== undefined) {
@@ -164,6 +203,14 @@ const Selections = () => {
       console.log('handlePickedNumbers received:', data);
       if (data.numbers) {
         setPickedNumbers(data.numbers);
+        console.log('Updated pickedNumbers:', data.numbers);
+        console.log('PickedNumbers count:', data.numbers.length);
+        
+        // Update total called numbers count
+        setGameStats(prevStats => ({
+          ...prevStats,
+          totalCalledNumbers: data.numbers.length
+        }));
       }
     };
 
@@ -238,6 +285,17 @@ const Selections = () => {
 
   // Countdown redirect logic removed - navigation now happens immediately on card selection
 
+  // Update called numbers count when pickedNumbers changes
+  useEffect(() => {
+    console.log('pickedNumbers changed:', pickedNumbers);
+    console.log('pickedNumbers length:', pickedNumbers.length);
+    setGameStats(prevStats => ({
+      ...prevStats,
+      calledNumbersCount: pickedNumbers.length,
+      totalCalledNumbers: pickedNumbers.length
+    }));
+  }, [pickedNumbers]);
+
   // Sidebar functions
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -269,6 +327,13 @@ const Selections = () => {
 
     const isSelected = choosenNumbers.includes(number);
     const isPicked = pickedNumbers.includes(number);
+    
+    // Check if game is already in progress
+    if (gameInProgress) {
+      setToast("🎮 Game is already in progress! Please wait for the next round.");
+      setIsToast(true);
+      return;
+    }
     
     if (isPicked) {
       setToast(`Card ${number} is already selected by another player`);
@@ -359,7 +424,7 @@ const Selections = () => {
         navigate(`/play?${queryParams.toString()}`);
       }, 1000); // Small delay to show the toast message
     }
-  }, [isLoading, isSocketConnected, choosenNumbers, pickedNumbers, balance, roomId, playerId, gameId, socket, setChoosenNumbers, setSelectedNumber, setSelectBoard, setChooseBoards, setToast, setIsToast, playerName, navigate]);
+  }, [isLoading, isSocketConnected, choosenNumbers, pickedNumbers, gameInProgress, balance, roomId, playerId, gameId, socket, setChoosenNumbers, setSelectedNumber, setSelectBoard, setChooseBoards, setToast, setIsToast, playerName, navigate]);
 
   // Pagination logic
   const totalCards = 800;
@@ -512,6 +577,36 @@ const Selections = () => {
           {/* Main Content */}
           <div className="konjo-main-content">
            
+            {/* Game Status Indicator */}
+            {gameInProgress && (
+              <div className="game-status-indicator">
+                <div className="status-icon">🎮</div>
+                <div className="status-text">Game is already in progress!</div>
+                <div className="status-subtext">Please wait for the next round to select a card.</div>
+                
+                {/* Game Statistics */}
+                <div className="game-stats-grid">
+                  <div className="stat-card players">
+                    <div className="stat-icon">👥</div>
+                    <div className="stat-value">{gameStats.totalPlayers}</div>
+                    <div className="stat-label">Players</div>
+                  </div>
+                  
+                  <div className="stat-card win-amount">
+                    <div className="stat-icon">💰</div>
+                    <div className="stat-value">{gameStats.totalWinAmount.toFixed(0)} ETB</div>
+                    <div className="stat-label">Win Amount</div>
+                  </div>
+                  
+                  <div className="stat-card called-numbers">
+                    <div className="stat-icon">🎯</div>
+                    <div className="stat-value">{gameStats.totalCalledNumbers}/75</div>
+                    <div className="stat-label">Called Numbers</div>
+                  </div>
+                </div>
+              </div>
+            )}
+           
             {/* Number Grid 1-800 with Pagination */}
             <div className="pagination-info">
               <div className="page-info">
@@ -523,7 +618,7 @@ const Selections = () => {
               {getCurrentPageNumbers().map((number) => {
                 const isSelected = choosenNumbers.includes(number);
                 const isPicked = pickedNumbers.includes(number);
-                const isDisabled = isPicked || !isSocketConnected || (balance < roomId && !isSelected);
+                const isDisabled = isPicked || !isSocketConnected || (balance < roomId && !isSelected) || gameInProgress;
 
                 return (
                   <button
