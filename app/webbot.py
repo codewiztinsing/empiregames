@@ -63,7 +63,10 @@ LANGUAGE_TEXTS = {
         'contact_support': '📞 Contact Support',
         'instructions': '📚 Instructions',
         'english': '🇺🇸 English',
-        'amharic': '🇪🇹 Amharic'
+        'amharic': '🇪🇹 Amharic',
+        'oromo': '🇪🇹 Oromo',
+        'somali': '🇸🇴 Somali',
+        'tigrinya': '🇪🇹 Tigrinya'
     },
     'am': {
         'welcome': 'ወደ ሊዩ ቢንጎ እንኳን ደህና መጡ!',
@@ -75,7 +78,55 @@ LANGUAGE_TEXTS = {
         'contact_support': '📞 ድጋፍ ያግኙ',
         'instructions': '📚 መመሪያዎች',
         'english': '🇺🇸 English',
-        'amharic': '🇪🇹 አማርኛ'
+        'amharic': '🇪🇹 አማርኛ',
+        'oromo': '🇪🇹 Oromo',
+        'somali': '🇸🇴 Somali',
+        'tigrinya': '🇪🇹 Tigrinya'
+    },
+    'om': {
+        'welcome': 'Liyu Bingo irratti baga nagaan dhufte!',
+        'select_language': 'Maaloo afaan kee filadhu:',
+        'play': '🎮 Taphadhu',
+        'register': '📝 Galmaa\'i',
+        'check_balance': '💰 Balansi mirkaneessi',
+        'deposit': '💳 Qarshii galchi',
+        'contact_support': '📞 Deeggarsa argadhu',
+        'instructions': '📚 Qajeelchii',
+        'english': '🇺🇸 English',
+        'amharic': '🇪🇹 Amharic',
+        'oromo': '🇪🇹 Afaan Oromoo',
+        'somali': '🇸🇴 Somali',
+        'tigrinya': '🇪🇹 Tigrinya'
+    },
+    'so': {
+        'welcome': 'Ku soo dhawoow Liyu Bingo!',
+        'select_language': 'Fadlan dooro luqaddaada:',
+        'play': '🎮 Ciyaar',
+        'register': '📝 Isdiiwaangeli',
+        'check_balance': '💰 Hubi dheelka',
+        'deposit': '💳 Lacag geli',
+        'contact_support': '📞 Hel taageero',
+        'instructions': '📚 Tilmaamaha',
+        'english': '🇺🇸 English',
+        'amharic': '🇪🇹 Amharic',
+        'oromo': '🇪🇹 Oromo',
+        'somali': '🇸🇴 Soomaali',
+        'tigrinya': '🇪🇹 Tigrinya'
+    },
+    'ti': {
+        'welcome': 'ናይ ሊዩ ቢንጎ እንቋዕ ብደሓን መጻእኩም!',
+        'select_language': 'ቋንቋኹም ምረጹ:',
+        'play': '🎮 ተጻወቱ',
+        'register': '📝 ተመዝግቡ',
+        'check_balance': '💰 ሚዛን ምርመራ',
+        'deposit': '💳 ገንዘብ ኣብልዑ',
+        'contact_support': '📞 ሓገዝ ረኸቡ',
+        'instructions': '📚 መምርሒታት',
+        'english': '🇺🇸 English',
+        'amharic': '🇪🇹 Amharic',
+        'oromo': '🇪🇹 Oromo',
+        'somali': '🇸🇴 Somali',
+        'tigrinya': '🇪🇹 ትግርኛ'
     }
 }
 
@@ -99,7 +150,10 @@ def language_selection_keyboard():
     """Create language selection keyboard"""
     keyboard = [
         [InlineKeyboardButton("🇺🇸 English", callback_data='lang_en')],
-        [InlineKeyboardButton("🇪🇹 አማርኛ", callback_data='lang_am')]
+        [InlineKeyboardButton("🇪🇹 አማርኛ", callback_data='lang_am')],
+        [InlineKeyboardButton("🇪🇹 Afaan Oromoo", callback_data='lang_om')],
+        [InlineKeyboardButton("🇸🇴 Soomaali", callback_data='lang_so')],
+        [InlineKeyboardButton("🇪🇹 ትግርኛ", callback_data='lang_ti')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -231,7 +285,12 @@ async def show_language_selection(update: Update, context: ContextTypes.DEFAULT_
     """Show language selection menu"""
     reply_markup = language_selection_keyboard()
     await update.message.reply_text(
-        'Welcome to Liyu Bingo!\n\nPlease select your language:\nእባክዎ ቋንቋዎን ይምረጡ:',
+        'Welcome to Liyu Bingo!\n\n'
+        'Please select your language:\n'
+        'እባክዎ ቋንቋዎን ይምረጡ:\n'
+        'Maaloo afaan kee filadhu:\n'
+        'Fadlan dooro luqaddaada:\n'
+        'ቋንቋኹም ምረጹ:',
         reply_markup=reply_markup
     )
 
@@ -597,6 +656,39 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             user_data[user_id]['language'] = 'am'
             await query.edit_message_text(
                 text="ቋንቋ ወደ አማርኛ ተቀይሯል! 🇪🇹\n\nወደ ሊዩ ቢንጎ እንኳን ደህና መጡ! አማራጭ ይምረጡ:",
+                reply_markup=main_menu_keyboard(user_id)
+            )
+            return SOME_STATE
+            
+        elif query.data == 'lang_om':
+            user_id = query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]['language'] = 'om'
+            await query.edit_message_text(
+                text="Afaan Afaan Oromootti jijjirame! 🇪🇹\n\nLiyu Bingo irratti baga nagaan dhufte! Filannoo filadhu:",
+                reply_markup=main_menu_keyboard(user_id)
+            )
+            return SOME_STATE
+            
+        elif query.data == 'lang_so':
+            user_id = query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]['language'] = 'so'
+            await query.edit_message_text(
+                text="Luqadda Soomaaliga loo bedelay! 🇸🇴\n\nKu soo dhawoow Liyu Bingo! Dooro xulashada:",
+                reply_markup=main_menu_keyboard(user_id)
+            )
+            return SOME_STATE
+            
+        elif query.data == 'lang_ti':
+            user_id = query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]['language'] = 'ti'
+            await query.edit_message_text(
+                text="ቋንቋ ናብ ትግርኛ ተለዊጡ! 🇪🇹\n\nናይ ሊዩ ቢንጎ እንቋዕ ብደሓን መጻእኩም! ምርጫ ምረጹ:",
                 reply_markup=main_menu_keyboard(user_id)
             )
             return SOME_STATE
