@@ -49,7 +49,7 @@ class AuthApiService {
    */
   async authenticateWithTelegram(telegramData) {
     try {
-      const response = await this.api.post('/telegram-auth', {
+      const response = await this.api.post('telegram-auth', {
         init_data: telegramData.initData,
         user: telegramData.user,
         auth_date: telegramData.authDate,
@@ -68,7 +68,7 @@ class AuthApiService {
    */
   async registerWithTelegram(telegramData, additionalData = {}) {
     try {
-      const response = await this.api.post('/telegram-register', {
+      const response = await this.api.post('telegram-register', {
         init_data: telegramData.initData,
         user: telegramData.user,
         auth_date: telegramData.authDate,
@@ -88,7 +88,7 @@ class AuthApiService {
    */
   async getUserByTelegramId(telegramId) {
     try {
-      const response = await this.api.get(`/${telegramId}`);
+      const response = await this.api.get(`${telegramId}`);
       return response.data;
     } catch (error) {
       console.error('Failed to get user by Telegram ID:', error);
@@ -101,7 +101,7 @@ class AuthApiService {
    */
   async getUserDetails(userId) {
     try {
-      const response = await this.api.get(`/${userId}/details/`);
+      const response = await this.api.get(`${userId}/details/`);
       return response.data;
     } catch (error) {
       console.error('Failed to get user details:', error);
@@ -114,7 +114,7 @@ class AuthApiService {
    */
   async updateUserProfile(userId, userData) {
     try {
-      const response = await this.api.put(`/${userId}/`, userData);
+      const response = await this.api.put(`${userId}/`, userData);
       return response.data;
     } catch (error) {
       console.error('Failed to update user profile:', error);
@@ -127,7 +127,7 @@ class AuthApiService {
    */
   async checkDepositStatus(userId) {
     try {
-      const response = await this.api.get(`/${userId}/is-deposited`);
+      const response = await this.api.get(`${userId}/is-deposited`);
       return response.data;
     } catch (error) {
       console.error('Failed to check deposit status:', error);
@@ -140,7 +140,7 @@ class AuthApiService {
    */
   async getUserWallet(userId) {
     try {
-      const response = await this.api.get(`/${userId}/wallet/`);
+      const response = await this.api.get(`${userId}/wallet/`);
       return response.data;
     } catch (error) {
       console.error('Failed to get user wallet:', error);
@@ -158,7 +158,7 @@ class AuthApiService {
         params.transaction_type = transactionType;
       }
       
-      const response = await this.api.get(`/${userId}/transactions/`, { params });
+      const response = await this.api.get(`${userId}/transactions/`, { params });
       return response.data;
     } catch (error) {
       console.error('Failed to get user transactions:', error);
@@ -171,7 +171,7 @@ class AuthApiService {
    */
   async getUserGames(userId, limit = 20) {
     try {
-      const response = await this.api.get(`/${userId}/games/`, {
+      const response = await this.api.get(`${userId}/games/`, {
         params: { limit }
       });
       return response.data;
@@ -186,7 +186,7 @@ class AuthApiService {
    */
   async refreshToken() {
     try {
-      const response = await this.api.get('/refresh-token');
+      const response = await this.api.get('refresh-token');
       return response.data;
     } catch (error) {
       console.error('Failed to refresh token:', error);
