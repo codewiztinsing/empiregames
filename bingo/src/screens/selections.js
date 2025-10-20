@@ -12,6 +12,7 @@ import checkPlayerBalance from '../api';
 import axios from 'axios';
 import { generateFixedCard } from '../helpers/fixedBingoCards';
 import config from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const Selections = () => {
   const { t } = useTranslation();
@@ -69,6 +70,7 @@ const Selections = () => {
     calledNumbersCount: 0,
     totalCalledNumbers: 0
   });
+  const { user } = useAuth();
 
   // Socket connection handlers
   useEffect(() => {
@@ -98,32 +100,31 @@ const Selections = () => {
     };
   }, [socket]);
 
-  // Socket listeners
+  // Initialize from authenticated session (Telegram) instead of URL params
   useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const urlPlayerId = queryParams.get('playerId');
-    const urlRoomId = queryParams.get('betAmount');
-    const urlPlayerName = queryParams.get('playerName');
-      
-    setPlayerId(urlPlayerId);
-    setRoomId(urlRoomId);
-    setPlayerName(urlPlayerName);
-   
-    if (urlPlayerId && urlRoomId) {
-      socket.emit("playerJoined", { playerId: urlPlayerId, roomId: urlRoomId });
-      
+    const sessionPlayerId = user?.telegram_id ? String(user.telegram_id) : null;
+    const sessionPlayerName = user?.username || user?.first_name || 'Player';
+    const fixedBetAmount = 10; // Always 10 birr
+
+    setPlayerId(sessionPlayerId);
+    setRoomId(fixedBetAmount);
+    setPlayerName(sessionPlayerName);
+
+    if (sessionPlayerId) {
+      socket.emit("playerJoined", { playerId: sessionPlayerId, roomId: fixedBetAmount });
+
       // Request all player selections
       console.log("📥 Requesting all player selections...");
-      socket.emit("getAllPlayerSelections", { 
-        playerId: urlPlayerId, 
-        roomId: urlRoomId 
+      socket.emit("getAllPlayerSelections", {
+        playerId: sessionPlayerId,
+        roomId: fixedBetAmount
       });
-      
+
       // Try to rejoin if there's a previous game in progress
       console.log("🔄 Attempting to rejoin game...");
-      socket.emit("rejoinGame", { 
-        playerId: urlPlayerId, 
-        roomId: urlRoomId 
+      socket.emit("rejoinGame", {
+        playerId: sessionPlayerId,
+        roomId: fixedBetAmount
       });
     }
 
@@ -281,7 +282,7 @@ const Selections = () => {
       socket.off('rejoinError', handleRejoinError);
       socket.off('allPlayerSelections', handleAllPlayerSelections);
     };
-  }, [socket, playerId, roomId, playerName, setPlayerId, setPlayerName, setRoomId, gameStatus, countDown, setToast, setIsToast, setPlayersLength, setCountDown, navigate]);
+  }, [socket, user?.telegram_id, user?.username, user?.first_name, setPlayerId, setPlayerName, setRoomId, gameStatus, countDown, setToast, setIsToast, setPlayersLength, setCountDown, navigate]);
 
   // Fetch balance when playerId is available
   useEffect(() => {
