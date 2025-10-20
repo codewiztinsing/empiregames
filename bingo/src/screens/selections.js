@@ -284,9 +284,23 @@ const Selections = () => {
         try {
           console.log('[BalanceDebug] Fetching balance', { apiUrl, playerId: String(playerId) });
           const response = await axios.get(`${apiUrl}wallet/player/${parseInt(playerId)}`);
-          const totalBalance = response?.data?.total_balance;
-          console.log('[BalanceDebug] Balance response', { status: response.status, total_balance: totalBalance, raw: response.data });
-          setBalance(totalBalance);
+          const data = response?.data ?? {};
+          // Try multiple possible keys used by different backends
+          let totalBalance = (
+            data?.total_balance ??
+            data?.balance ??
+            data?.wallet_balance ??
+            data?.totalBalance ??
+            data?.wallet?.balance
+          );
+          const numericBalance = Number(totalBalance);
+          if (Number.isNaN(numericBalance)) {
+            console.log('[BalanceDebug] Could not parse balance from response, defaulting to 0', { data });
+            setBalance(0);
+          } else {
+            console.log('[BalanceDebug] Balance response', { status: response.status, parsed: numericBalance, raw: data });
+            setBalance(numericBalance);
+          }
           setLoading(false);
         } catch (error) {
           const status = error?.response?.status;
@@ -361,7 +375,19 @@ const Selections = () => {
     try {
       const apiUrl = config.API_BASE_URL;
       const response = await axios.get(`${apiUrl}wallet/player/${parseInt(playerId)}`);
-      const currentBalance = response.data.total_balance;
+      const data = response?.data ?? {};
+      let currentBalance = (
+        data?.total_balance ??
+        data?.balance ??
+        data?.wallet_balance ??
+        data?.totalBalance ??
+        data?.wallet?.balance
+      );
+      currentBalance = Number(currentBalance);
+      if (Number.isNaN(currentBalance)) {
+        console.log('[BalanceDebug] Could not parse balance during card select', { data });
+        currentBalance = 0;
+      }
       
       if (currentBalance < roomId && !isSelected) {
         setToast('Insufficient balance to select this card');
@@ -373,6 +399,7 @@ const Selections = () => {
       setBalance(currentBalance);
       
     } catch (error) {
+      console.log('[BalanceDebug] Error during balance check on selection', { message: error?.message, status: error?.response?.status, data: error?.response?.data });
       setToast('Error checking balance. Please try again.');
       setIsToast(true);
       return;
