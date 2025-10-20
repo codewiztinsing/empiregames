@@ -532,10 +532,47 @@ const Selections = () => {
   return (
     <>
       {isToast && <Toaster message={toast} />}
-      {loading && <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <div className="loading-text">Loading...</div>
-      </div>}
+      {loading && (
+        <div className="fancy-loading-container">
+          <div className="loading-background">
+            <div className="loading-particles">
+              {[...Array(20)].map((_, i) => (
+                <div key={i} className={`particle particle-${i + 1}`}></div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="loading-content">
+            <div className="loading-logo">
+              <div className="logo-text">LIYU</div>
+              <div className="logo-subtitle">BINGO</div>
+            </div>
+            
+            <div className="loading-spinner-container">
+              <div className="fancy-spinner">
+                <div className="spinner-ring"></div>
+                <div className="spinner-ring"></div>
+                <div className="spinner-ring"></div>
+              </div>
+            </div>
+            
+            <div className="loading-text-container">
+              <div className="loading-text">{t('common.loading')}</div>
+              <div className="loading-dots">
+                <span className="dot">.</span>
+                <span className="dot">.</span>
+                <span className="dot">.</span>
+              </div>
+            </div>
+            
+            <div className="loading-progress">
+              <div className="progress-bar">
+                <div className="progress-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
 {isBingo && (
   <div className="bingo-winner-overlay">
@@ -615,6 +652,14 @@ const Selections = () => {
             </div>
             
             <div className="konjo-header-right">
+              {/* Connection Status Indicator */}
+              <div className="connection-indicator">
+                <div className={`connection-dot ${isSocketConnected ? 'connected' : 'disconnected'}`}></div>
+                <span className="connection-text">
+                  {isSocketConnected ? t('game.live') : t('game.connecting')}
+                </span>
+              </div>
+              
               {/* Game Stats */}
               <div className="header-stats">
                 <div className="header-stat">

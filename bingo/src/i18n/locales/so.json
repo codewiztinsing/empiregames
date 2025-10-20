@@ -96,7 +96,9 @@
     "disconnected": "Laga go'ay serverka",
     "alreadyInProgress": "Ciyaarta horay u socoto!",
     "alreadyInProgressWait": "Ciyaarta horay u socoto! Fadlan sug roundka xiga.",
-    "waitForNextRound": "Fadlan sug roundka xiga si aad kaard u doorato."
+    "waitForNextRound": "Fadlan sug roundka xiga si aad kaard u doorato.",
+    "live": "Toska",
+    "connecting": "La xidhiidhiyaa"
   },
   "bingo": {
     "bingo": "BINGO",

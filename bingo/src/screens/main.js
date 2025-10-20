@@ -149,6 +149,37 @@ const PlayingBoard = () => {
 
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
+  
+  // Socket connection state
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
+
+  // Socket connection handlers
+  useEffect(() => {
+    const handleConnect = () => {
+      console.log('Socket connected');
+      setIsSocketConnected(true);
+    };
+
+    const handleDisconnect = () => {
+      console.log('Socket disconnected');
+      setIsSocketConnected(false);
+    };
+
+    const handleConnectError = (error) => {
+      console.error('Socket connection error:', error);
+      setIsSocketConnected(false);
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('connect_error', handleConnectError);
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('connect_error', handleConnectError);
+    };
+  }, [socket]);
 
   // Socket event handlers
   const handleGameState = useCallback((data) => {
@@ -732,6 +763,12 @@ const PlayingBoard = () => {
         <div className="stat-item blue">{t('game.players')} {displayedTotalPlayers}</div>
         <div className="stat-item green">{t('game.prize')} {displayedWinAmount.toFixed(0)}ης</div>
         <div className="stat-item light-green">{t('game.called')} {totalCalledNumbers}/75</div>
+        <div className="stat-item connection-indicator">
+          <div className={`connection-dot ${isSocketConnected ? 'connected' : 'disconnected'}`}></div>
+          <span className="connection-text">
+            {isSocketConnected ? t('game.live') : t('game.connecting')}
+          </span>
+        </div>
         <div className="stat-item dark-purple language-switcher-container">
           <LanguageSelector />
         </div>

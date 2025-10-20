@@ -96,7 +96,9 @@
     "disconnected": "ካብ ሰርቨር ተፈላሊዩ",
     "alreadyInProgress": "ጸወታ ኣቐዲሙ እዩ ዝጸውዕ!",
     "alreadyInProgressWait": "ጸወታ ኣቐዲሙ እዩ ዝጸውዕ! በጃኹም ንዝመጽእ ምዕራፍ ተጸበዩ።",
-    "waitForNextRound": "በጃኹም ካርድ ንምምራጽ ንዝመጽእ ምዕራፍ ተጸበዩ።"
+    "waitForNextRound": "በጃኹም ካርድ ንምምራጽ ንዝመጽእ ምዕራፍ ተጸበዩ።",
+    "live": "ቀጥታ",
+    "connecting": "ኣብ ምትሕልላፍ ላይ"
   },
   "bingo": {
     "bingo": "ቢንጎ",

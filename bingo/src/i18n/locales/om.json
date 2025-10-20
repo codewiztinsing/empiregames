@@ -96,7 +96,9 @@
     "disconnected": "Seerivarii irraa addaan cite",
     "alreadyInProgress": "Taphii amma jira!",
     "alreadyInProgressWait": "Taphii amma jira! Mee taphii itti aanuuf eegaa.",
-    "waitForNextRound": "Mee kaardii filachuuf taphii itti aanuuf eegaa."
+    "waitForNextRound": "Mee kaardii filachuuf taphii itti aanuuf eegaa.",
+    "live": "Dhugaa",
+    "connecting": "Walqabsiinsa irra jira"
   },
   "bingo": {
     "bingo": "BINGO",

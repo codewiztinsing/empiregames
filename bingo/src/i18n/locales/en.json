@@ -96,7 +96,9 @@
     "disconnected": "Disconnected from server",
     "alreadyInProgress": "Game is already in progress!",
     "alreadyInProgressWait": "Game is already in progress! Please wait for the next round.",
-    "waitForNextRound": "Please wait for the next round to select a card."
+    "waitForNextRound": "Please wait for the next round to select a card.",
+    "live": "Live",
+    "connecting": "Connecting"
   },
   "bingo": {
     "bingo": "BINGO",
