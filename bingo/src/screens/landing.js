@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SocketContext } from '../contexts/socket';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGamepad, faUsers, faTrophy, faPlay } from '@fortawesome/free-solid-svg-icons';
+import LanguageSelector from '../components/LanguageSelector';
+import { useTranslation } from 'react-i18next';
 import './landing.css';
 
 const Landing = () => {
+  const { t } = useTranslation();
+  
   // Initial rooms data
   const initialRooms = [
     { id: 10, betAmount: 10, status: 'waiting', players: 0, bonus: 1 },
@@ -15,6 +21,8 @@ const Landing = () => {
   const [rooms, setRooms] = useState(initialRooms);
   const [playerId, setPlayerId] = useState('');
   const [roomId, setRoomId] = useState('');
+  const [totalPlayers, setTotalPlayers] = useState(0);
+  const [totalPrize, setTotalPrize] = useState(0);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
 
@@ -22,8 +30,8 @@ const Landing = () => {
   const handleWaitingGames = useCallback((data) => {
     if (data?.length > 0) {
       console.log("waiting games = ", data);
-      setRooms(prevRooms => 
-        prevRooms.map(existingRoom => {
+      setRooms(prevRooms => {
+        const updatedRooms = prevRooms.map(existingRoom => {
           const matchingRoom = data.find(newRoom => 
             Number(newRoom.betAmount) === Number(existingRoom.betAmount)
           );
@@ -36,8 +44,17 @@ const Landing = () => {
             };
           }
           return existingRoom;
-        })
-      );
+        });
+        
+        // Calculate totals
+        const totalPlayersCount = updatedRooms.reduce((sum, room) => sum + room.players, 0);
+        const totalPrizeAmount = updatedRooms.reduce((sum, room) => sum + (room.betAmount * room.players * 0.8), 0);
+        
+        setTotalPlayers(totalPlayersCount);
+        setTotalPrize(totalPrizeAmount);
+        
+        return updatedRooms;
+      });
     }
   }, [roomId]);
 
@@ -79,47 +96,68 @@ const Landing = () => {
 
   return (
     <div className='landing-container'>
+      {/* Enhanced Header */}
       <div className='header'>
-        <p>Stake</p>
-        <p>Active</p>
-        <p>Players</p>
-        <p>Derash</p>
-        <p>Play</p>
+        <div className='header-left'>
+          <div className='logo'>L</div>
+          <div className='header-title'>{t('game.title')}</div>
+        </div>
+        
+        <div className='header-right'>
+          <div className='header-stats'>
+            <div className='stat-item'>
+              <FontAwesomeIcon icon={faUsers} />
+              <span>{totalPlayers}</span>
+            </div>
+            <div className='stat-item'>
+              <FontAwesomeIcon icon={faTrophy} />
+              <span>{totalPrize.toFixed(0)} ETB</span>
+            </div>
+          </div>
+          <LanguageSelector />
+        </div>
       </div>
 
+      {/* Enhanced Rooms Container */}
       <div className='rooms-container'>
         {rooms.map(room => {
           const isDisabled = room.status === 'in-progress' || room.status === 'Low balance';
           
           return (
             <div key={room.betAmount} className='room-card'>
-              <p className='room-card-bonus'>
-                <span className='bonus'>Bonus</span>
-                <span className='bet-amount'>{room.betAmount}</span>
-              </p>
-              <p className='room-card-status-container'>
+              <div className='room-card-bonus'>
+                <div className='bonus'>{t('game.bonus')}</div>
+                <div className='bet-amount'>{room.betAmount} ETB</div>
+              </div>
+              
+              <div className='room-card-status-container'>
                 {room.status === 'in-progress' && (
-                  <span className='room-card-active-game'>Active Game</span>
+                  <div className='room-card-active-game in-progress'>{t('game.inProgress')}</div>
                 )}
                 {room.status === 'waiting' && (
-                  <span className='room-card-active-game'>Waiting</span>
+                  <div className='room-card-active-game waiting'>{t('game.waiting')}</div>
                 )}
                 {room.status === 'Low balance' && (
-                  <span className='room-card-active-game'>Low balance</span>
+                  <div className='room-card-active-game low-balance'>{t('game.lowBalance')}</div>
                 )}
-              </p>
-              <p>{room.players}</p>
-              <p>{room.betAmount * room.players * 0.8} ETB</p>
+                <div className='players-count'>
+                  <FontAwesomeIcon icon={faUsers} />
+                  {room.players}
+                </div>
+              </div>
+              
+              <div className='prize-amount'>
+                <FontAwesomeIcon icon={faTrophy} />
+                {(room.betAmount * room.players * 0.8).toFixed(0)} ETB
+              </div>
+              
               <button
                 onClick={() => handleRoomSelect(room.betAmount)}
                 className='play-button'
                 disabled={isDisabled}
-                style={{
-                  backgroundColor: isDisabled ? 'gray' : 'blue',
-                  cursor: isDisabled ? 'not-allowed' : 'pointer'
-                }}
               >
-                Play
+                <FontAwesomeIcon icon={faPlay} />
+                {t('game.play')}
               </button>
             </div>
           );
