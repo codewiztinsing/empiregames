@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from django.contrib.auth import authenticate
 from django.conf import settings
 from wallet.models import Transaction,Wallet,WithdrawalRequest
-from game.models import Game, PlayerGame
+from game.models import Game
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from .referral_services import ReferralService
