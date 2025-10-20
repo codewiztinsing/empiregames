@@ -117,14 +117,14 @@ const Selections = () => {
       console.log("📥 Requesting all player selections...");
       socket.emit("getAllPlayerSelections", {
         playerId: sessionPlayerId,
-        roomId: fixedBetAmount
+        roomId: 10
       });
 
       // Try to rejoin if there's a previous game in progress
       console.log("🔄 Attempting to rejoin game...");
       socket.emit("rejoinGame", {
         playerId: sessionPlayerId,
-        roomId: fixedBetAmount
+        roomId: 10
       });
     }
 

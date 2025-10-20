@@ -17,7 +17,7 @@ export const BingoProvider = ({ children }) => {
   const [playersLength, setPlayersLength] = useState(0);
   const [gameId, setGameId] = useState("1");
   const [countDown, setCountDown] = useState(0);
-  const [roomId, setRoomId] = useState(null);
+  const [roomId, setRoomId] = useState(10);
   const [playerId, setPlayerId] = useState(null);
   const [playerName,setPlayerName] = useState("Some Body");
   const [toast,setToast] = useState(null);

@@ -124,16 +124,14 @@ const PlayingBoard = () => {
     const initializeFromURL = () => {
     const queryParams = new URLSearchParams(window.location.search);
     const urlPlayerId = queryParams.get('playerId');
-    const urlRoomId = queryParams.get('betAmount');
+    const urlRoomId = '10'; // Force 10 birr always
     const urlPlayerName = queryParams.get('playerName');
     const urlSelectedNumber = queryParams.get('selectedNumber');
     
     if (urlPlayerId) setPlayerId(urlPlayerId);
-    if (urlRoomId) {
-      const roomIdValue = parseInt(urlRoomId);
-      setRoomId(roomIdValue);
-      setGameId(roomIdValue); // Set gameId to roomId since server uses roomId as game key
-    }
+    const roomIdValue = 10;
+    setRoomId(roomIdValue);
+    setGameId(roomIdValue); // Server uses roomId as game key
     if (urlPlayerName && urlPlayerName !== 'null') setPlayerName(urlPlayerName);
     if (urlSelectedNumber) {
       const selectedNum = parseInt(urlSelectedNumber);

@@ -12,10 +12,7 @@ const Landing = () => {
   
   // Initial rooms data
   const initialRooms = [
-    { id: 10, betAmount: 10, status: 'waiting', players: 0, bonus: 1 },
-    { id: 20, betAmount: 20, status: 'waiting', players: 0, bonus: 1 },
-    { id: 50, betAmount: 50, status: 'waiting', players: 0, bonus: 1 },
-    { id: 100, betAmount: 100, status: 'waiting', players: 0, bonus: 1 }
+    { id: 10, betAmount: 10, status: 'waiting', players: 0, bonus: 1 }
   ];
 
   const [rooms, setRooms] = useState(initialRooms);
@@ -79,7 +76,9 @@ const Landing = () => {
   }, [socket, handleWaitingGames]);
 
   const handleRoomSelect = (betAmount) => {
-    const selectedRoom = rooms.find(room => room.betAmount === betAmount);
+    // Force betAmount to 10
+    betAmount = 10;
+    const selectedRoom = rooms.find(room => room.betAmount === 10);
     
     if (selectedRoom?.status === 'in-progress') {
       alert('Game is already in progress');
@@ -91,7 +90,7 @@ const Landing = () => {
       return;
     }
 
-    navigate(`/selection?betAmount=${betAmount}&playerId=${playerId}`);
+    navigate(`/selection?betAmount=10&playerId=${playerId}`);
   };
 
   return (
