@@ -72,18 +72,13 @@ function App() {
                 } />
                 
                 {/* Legacy routes (keep for backward compatibility) */}
-                <Route path="/selections" element={
+                <Route path="/" element={
                   <ProtectedRoute>
                     <SelectionScreen />
                   </ProtectedRoute>
                 } />
                 
-                {/* Default route */}
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Landing />
-                  </ProtectedRoute>
-                } />
+               
               </Routes>
             </AuthGuard>
           </Router>
