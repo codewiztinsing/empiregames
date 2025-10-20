@@ -114,14 +114,12 @@ const Selections = () => {
       socket.emit("playerJoined", { playerId: sessionPlayerId, roomId: fixedBetAmount });
 
       // Request all player selections
-      console.log("📥 Requesting all player selections...");
       socket.emit("getAllPlayerSelections", {
         playerId: sessionPlayerId,
         roomId: 10
       });
 
       // Try to rejoin if there's a previous game in progress
-      console.log("🔄 Attempting to rejoin game...");
       socket.emit("rejoinGame", {
         playerId: sessionPlayerId,
         roomId: 10
@@ -129,7 +127,6 @@ const Selections = () => {
     }
 
     const handleGameState = (state) => {
-      console.log('handleGameState received:', state);
       
       if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
         setPickedNumbers(state.pickedNumbers.numbers);
@@ -222,8 +219,7 @@ const Selections = () => {
       console.log('handlePickedNumbers received:', data);
       if (data.numbers) {
         setPickedNumbers(data.numbers);
-        console.log('Updated pickedNumbers:', data.numbers);
-        console.log('PickedNumbers count:', data.numbers.length);
+      
         
         // Update total called numbers count
         setGameStats(prevStats => ({
@@ -239,7 +235,6 @@ const Selections = () => {
     };
 
     const handleBingoWinner = (data) => {
-      console.log('Bingo winner:', data);
       setWinnerCardNumber(data.winnerCardNumber);
       setWinnerPlayerName(data.winnerPlayerName);
       setWinningCard(data.winningCard);
@@ -247,20 +242,17 @@ const Selections = () => {
     };
 
     const handleRejoinSuccess = (data) => {
-      console.log('Rejoin success:', data);
       setSelectedNumber(data.selectedNumber);
       setSelectBoard(data.selectBoard);
       setChoosenNumbers([data.selectedNumber]);
     };
 
     const handleRejoinError = (error) => {
-      console.error('Rejoin error:', error);
       setToast(error.message || 'Failed to rejoin game');
       setIsToast(true);
     };
 
     const handleAllPlayerSelections = (data) => {
-      console.log('All player selections:', data);
       const selectedNumber = data.players.find(p => p.playerId === playerId)?.selectedNumbers[0];
       // navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
     };
@@ -294,7 +286,6 @@ const Selections = () => {
           setBalance(response.data.total_balance);
           setLoading(false);
         } catch (error) {
-          console.error('Error fetching balance:', error);
           setLoading(false);
         }
       };
@@ -306,8 +297,7 @@ const Selections = () => {
 
   // Update called numbers count when pickedNumbers changes
   useEffect(() => {
-    console.log('pickedNumbers changed:', pickedNumbers);
-    console.log('pickedNumbers length:', pickedNumbers.length);
+    
     setGameStats(prevStats => ({
       ...prevStats,
       calledNumbersCount: pickedNumbers.length,
@@ -376,7 +366,6 @@ const Selections = () => {
       setBalance(currentBalance);
       
     } catch (error) {
-      console.error('Error checking balance:', error);
       setToast('Error checking balance. Please try again.');
       setIsToast(true);
       return;
