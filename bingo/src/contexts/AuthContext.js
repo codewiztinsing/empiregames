@@ -115,6 +115,7 @@ export const AuthProvider = ({ children }) => {
         setToken(mockToken);
         setUser(mockUser);
         setIsAuthenticated(true);
+
         // Ensure axios client can send auth header
         telegramAuthService.setToken(mockToken);
         localStorage.setItem('telegram_user_data', JSON.stringify(mockUser));
@@ -140,6 +141,7 @@ export const AuthProvider = ({ children }) => {
           // Persist token for apiClient
           telegramAuthService.setToken(authResponse.token);
           localStorage.setItem('telegram_user_data', JSON.stringify(authResponse.user));
+          console.log('[AuthDebug] Telegram auth success; token set to localStorage');
           
           return { success: true, isNewUser: false };
         }
@@ -174,6 +176,7 @@ export const AuthProvider = ({ children }) => {
         // Persist token for apiClient
         telegramAuthService.setToken(registerResponse.token);
         localStorage.setItem('telegram_user_data', JSON.stringify(registerResponse.user));
+        console.log('[AuthDebug] Telegram register success; token set to localStorage');
         
         return { success: true, user: registerResponse.user };
       } else {

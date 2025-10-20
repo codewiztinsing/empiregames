@@ -58,7 +58,18 @@ class AuthApiService {
         hash: telegramData.hash
       });
 
-      return response.data;
+      const data = response.data;
+      // Persist token and user immediately so other clients can use it
+      if (data?.success && data?.token) {
+        try {
+          localStorage.setItem('telegram_auth_token', data.token);
+          if (data.user) {
+            localStorage.setItem('telegram_user_data', JSON.stringify(data.user));
+          }
+        } catch (e) {}
+      }
+
+      return data;
     } catch (error) {
       console.error('Telegram authentication failed:', error);
       throw error;
@@ -78,7 +89,17 @@ class AuthApiService {
         ...additionalData
       });
 
-      return response.data;
+      const data = response.data;
+      if (data?.success && data?.token) {
+        try {
+          localStorage.setItem('telegram_auth_token', data.token);
+          if (data.user) {
+            localStorage.setItem('telegram_user_data', JSON.stringify(data.user));
+          }
+        } catch (e) {}
+      }
+
+      return data;
     } catch (error) {
       console.error('Telegram registration failed:', error);
       throw error;
