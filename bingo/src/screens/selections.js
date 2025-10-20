@@ -282,10 +282,17 @@ const Selections = () => {
       const fetchBalance = async () => {
         const apiUrl = config.API_BASE_URL;
         try {
+          console.log('[BalanceDebug] Fetching balance', { apiUrl, playerId: String(playerId) });
           const response = await axios.get(`${apiUrl}wallet/player/${parseInt(playerId)}`);
-          setBalance(response.data.total_balance);
+          const totalBalance = response?.data?.total_balance;
+          console.log('[BalanceDebug] Balance response', { status: response.status, total_balance: totalBalance, raw: response.data });
+          setBalance(totalBalance);
           setLoading(false);
         } catch (error) {
+          const status = error?.response?.status;
+          const data = error?.response?.data;
+          const url = `${apiUrl}wallet/player/${parseInt(playerId)}`;
+          console.log('[BalanceDebug] Error fetching balance', { url, status, data, message: error?.message });
           setLoading(false);
         }
       };
@@ -596,7 +603,14 @@ const Selections = () => {
               )}
               
               <div className="balance-button">
-                <span className="balance-amount">{parseInt(balance)} ETB</span>
+                <span className="balance-amount">{(() => {
+                  const parsed = parseInt(balance);
+                  const isNum = !Number.isNaN(parsed);
+                  if (!isNum) {
+                    console.log('[BalanceDebug] Rendering NA balance', { balance, parsed });
+                  }
+                  return isNum ? parsed : 'NA';
+                })()} ETB</span>
                 <div className="user-icon">👤</div>
               </div>
               
@@ -623,13 +637,16 @@ const Selections = () => {
                 className="start-button"
                 onClick={() => {
                   if (hasSelectedCard && selectedNumber) {
-                    if (balance >= parseInt(roomId)) {
+                    console.log('[StartDebug] Start clicked', { hasSelectedCard, selectedNumber, balance, roomId, playerId, playerName });
+                    if (Number(balance) >= parseInt(roomId)) {
                       navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
                     } else {
+                      console.log('[StartDebug] Blocked: insufficient balance', { balance, required: parseInt(roomId) });
                       setToast(t('game.insufficientBalance'));
                       setIsToast(true);
                     }
                   } else {
+                    console.log('[StartDebug] Blocked: no card selected', { hasSelectedCard, selectedNumber });
                     setToast(t('game.cardNotSelected'));
                     setIsToast(true);
                   }
