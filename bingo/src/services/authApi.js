@@ -1,11 +1,15 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 class AuthApiService {
   constructor() {
+    // Normalize base URL and avoid double slashes regardless of REACT_APP_API_URL format
+    const baseURL = API_BASE_URL.endsWith('/') ? API_BASE_URL : API_BASE_URL + '/';
+    const apiPath = baseURL.includes('/api/v1/') ? 'users' : 'api/v1/users';
+
     this.api = axios.create({
-      baseURL: `${API_BASE_URL}/api/v1/users`,
+      baseURL: `${baseURL}${apiPath}`,
       headers: {
         'Content-Type': 'application/json',
       },
