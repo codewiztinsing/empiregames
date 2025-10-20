@@ -10,6 +10,7 @@ import { BingoContext } from '../contexts/bingoContext';
 import { useTranslation } from 'react-i18next';
 import checkPlayerBalance from '../api';
 import axios from 'axios';
+import { walletApi } from '../services/apiClient';
 import { generateFixedCard } from '../helpers/fixedBingoCards';
 import config from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -284,8 +285,8 @@ const Selections = () => {
         try {
           console.log('[BalanceDebug] Fetching balance', { apiUrl, playerId: String(playerId) });
           const fullUrl = `${apiUrl}wallet/player/${parseInt(playerId)}`;
-          console.log('[BalanceDebug] Full URL', { fullUrl });
-          const response = await axios.get(fullUrl);
+          console.log('[BalanceDebug] Full URL', { fullUrl, withToken: !!localStorage.getItem('telegram_auth_token') });
+          const response = await walletApi.getPlayerWalletByTelegram(playerId);
           const data = response?.data ?? {};
           // Try multiple possible keys used by different backends
           let totalBalance = (
@@ -377,8 +378,8 @@ const Selections = () => {
     try {
       const apiUrl = config.API_BASE_URL;
       const fullUrl = `${apiUrl}wallet/player/${parseInt(playerId)}`;
-      console.log('[BalanceDebug] Selection balance check URL', { fullUrl });
-      const response = await axios.get(fullUrl);
+      console.log('[BalanceDebug] Selection balance check URL', { fullUrl, withToken: !!localStorage.getItem('telegram_auth_token') });
+      const response = await walletApi.getPlayerWalletByTelegram(playerId);
       const data = response?.data ?? {};
       let currentBalance = (
         data?.total_balance ??
