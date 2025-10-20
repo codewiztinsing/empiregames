@@ -93,7 +93,10 @@
     "connectionError": "የግንኙነት ስህተት። እባክዎ የኢንተርኔት ግንኙነትዎን ያረጋግጡ።",
     "reconnecting": "እንደገና በመገናኘት ላይ...",
     "reconnected": "በተሳካ ሁኔታ እንደገና ተገናኝተዋል!",
-    "disconnected": "ከሰርቨር ተለይተዋል"
+    "disconnected": "ከሰርቨር ተለይተዋል",
+    "alreadyInProgress": "ጨዋታ ቀድሞውኑ እየተጫወተ ነው!",
+    "alreadyInProgressWait": "ጨዋታ ቀድሞውኑ እየተጫወተ ነው! እባክዎ ለሚቀጥለው ዙር ይጠብቁ።",
+    "waitForNextRound": "እባክዎ ካርድ ለመምረጥ ለሚቀጥለው ዙር ይጠብቁ።"
   },
   "bingo": {
     "bingo": "ቢንጎ",

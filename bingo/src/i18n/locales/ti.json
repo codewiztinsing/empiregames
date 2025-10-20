@@ -93,7 +93,10 @@
     "connectionError": "ጌጋ ምትሕልላፍ። እባኻ ምትሕልላፍ ኢንተርነትኻ ኣረጋግጽ።",
     "reconnecting": "ደጊም እንተሓልይ...",
     "reconnected": "ብዓወት ደጊም ተሓሊዩ!",
-    "disconnected": "ካብ ሰርቨር ተፈላሊዩ"
+    "disconnected": "ካብ ሰርቨር ተፈላሊዩ",
+    "alreadyInProgress": "ጸወታ ኣቐዲሙ እዩ ዝጸውዕ!",
+    "alreadyInProgressWait": "ጸወታ ኣቐዲሙ እዩ ዝጸውዕ! በጃኹም ንዝመጽእ ምዕራፍ ተጸበዩ።",
+    "waitForNextRound": "በጃኹም ካርድ ንምምራጽ ንዝመጽእ ምዕራፍ ተጸበዩ።"
   },
   "bingo": {
     "bingo": "ቢንጎ",

@@ -93,7 +93,10 @@
     "connectionError": "Dogoggora walqabsiinsaa. Walqabsiinsa intarneetii kee mirkaneessi.",
     "reconnecting": "Walqabsiinsa irra deebi'ii...",
     "reconnected": "Milkaa'inaan walqabsiinsa irra deebi'ii!",
-    "disconnected": "Seerivarii irraa addaan cite"
+    "disconnected": "Seerivarii irraa addaan cite",
+    "alreadyInProgress": "Taphii amma jira!",
+    "alreadyInProgressWait": "Taphii amma jira! Mee taphii itti aanuuf eegaa.",
+    "waitForNextRound": "Mee kaardii filachuuf taphii itti aanuuf eegaa."
   },
   "bingo": {
     "bingo": "BINGO",

@@ -93,7 +93,10 @@
     "connectionError": "Qaladka xidhiidhka. Fadlan xaqiiji xidhiidhka internetkaaga.",
     "reconnecting": "Mar kale la xidhiidhiyaa...",
     "reconnected": "Si guul leh ayaa mar kale la xidhiidhay!",
-    "disconnected": "Laga go'ay serverka"
+    "disconnected": "Laga go'ay serverka",
+    "alreadyInProgress": "Ciyaarta horay u socoto!",
+    "alreadyInProgressWait": "Ciyaarta horay u socoto! Fadlan sug roundka xiga.",
+    "waitForNextRound": "Fadlan sug roundka xiga si aad kaard u doorato."
   },
   "bingo": {
     "bingo": "BINGO",

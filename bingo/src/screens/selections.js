@@ -363,7 +363,7 @@ const Selections = () => {
     
     // Check if game is already in progress
     if (gameInProgress) {
-      setToast("🎮 Game is already in progress! Please wait for the next round.");
+      setToast(`🎮 ${t('game.alreadyInProgressWait')}`);
       setIsToast(true);
       return;
     }
@@ -726,8 +726,8 @@ const Selections = () => {
             {gameInProgress && (
               <div className="game-status-indicator">
                 <div className="status-icon">🎮</div>
-                <div className="status-text">Game is already in progress!</div>
-                <div className="status-subtext">Please wait for the next round to select a card.</div>
+                <div className="status-text">{t('game.alreadyInProgress')}</div>
+                <div className="status-subtext">{t('game.waitForNextRound')}</div>
               </div>
             )}
            

@@ -93,7 +93,10 @@
     "connectionError": "Connection error. Please check your internet connection.",
     "reconnecting": "Reconnecting...",
     "reconnected": "Reconnected successfully!",
-    "disconnected": "Disconnected from server"
+    "disconnected": "Disconnected from server",
+    "alreadyInProgress": "Game is already in progress!",
+    "alreadyInProgressWait": "Game is already in progress! Please wait for the next round.",
+    "waitForNextRound": "Please wait for the next round to select a card."
   },
   "bingo": {
     "bingo": "BINGO",
