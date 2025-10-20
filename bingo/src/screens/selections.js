@@ -71,7 +71,7 @@ const Selections = () => {
     calledNumbersCount: 0,
     totalCalledNumbers: 0
   });
-  const { user } = useAuth();
+  const { user, token, isAuthenticated } = useAuth();
 
   // Socket connection handlers
   useEffect(() => {
@@ -279,11 +279,11 @@ const Selections = () => {
 
   // Fetch balance when playerId is available
   useEffect(() => {
-    if (playerId) {
+    if (playerId && token) {
       const fetchBalance = async () => {
         const apiUrl = config.API_BASE_URL;
         try {
-          console.log('[BalanceDebug] Fetching balance', { apiUrl, playerId: String(playerId) });
+          console.log('[BalanceDebug] Fetching balance', { apiUrl, playerId: String(playerId), hasToken: !!token, tokenPrefix: token ? String(token).slice(0, 12) : null });
           const fullUrl = `${apiUrl}wallet/player/${parseInt(playerId)}`;
           console.log('[BalanceDebug] Full URL', { fullUrl, withToken: !!localStorage.getItem('telegram_auth_token') });
           const response = await walletApi.getPlayerWalletByTelegram(playerId);
@@ -315,7 +315,7 @@ const Selections = () => {
       };
       fetchBalance();
     }
-  }, [playerId]);
+  }, [playerId, token]);
 
   // Countdown redirect logic removed - navigation now happens immediately on card selection
 
