@@ -2,7 +2,7 @@ import jwt
 from ninja import NinjaAPI,Router
 from ninja.security import django_auth
 from .auth import encode_jwt,decode_jwt
-from .schema import RegisterSchema, LoginSchema, UserSchema, UserResponseSchema, UpdateUserSchema, ChangeSponsorSchema
+from .schema import RegisterSchema, LoginSchema, UserSchema, UserResponseSchema, UpdateUserSchema, ChangeSponsorSchema, TelegramAuthSchema, TelegramRegisterSchema, TelegramAuthResponseSchema
 # from .models import User
 from django.db import IntegrityError
 from django.http import JsonResponse
@@ -13,13 +13,14 @@ from datetime import datetime, timedelta
 from django.contrib.auth import authenticate
 from django.conf import settings
 from wallet.models import Transaction,Wallet,WithdrawalRequest
-from game.models import Game
+from game.models import Game, PlayerGame
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from .referral_services import ReferralService
 
 from pydantic import BaseModel
 from typing import Optional, Union
+from .telegram_validator import validate_telegram_webapp_data
 
 users_router = Router()
 
@@ -584,4 +585,183 @@ def update_user(request, user_id: int, data: UpdateUserSchema):
     except Exception as e:
         print(f"Error updating user: {e}")
         return JsonResponse({"error": str(e)}, status=500)
+
+
+# Telegram WebApp Authentication Endpoints
+
+@users_router.post("/telegram-auth", response=TelegramAuthResponseSchema)
+def telegram_auth(request, data: TelegramAuthSchema):
+    """
+    Authenticate user with Telegram WebApp data
+    """
+    try:
+        # Validate Telegram WebApp data
+        validated_data = validate_telegram_webapp_data(data.init_data)
+        if not validated_data:
+            return JsonResponse({
+                "success": False,
+                "message": "Invalid Telegram WebApp data"
+            }, status=400)
+        
+        telegram_user = data.user
+        
+        # Check if user exists by telegram_id
+        try:
+            user = User.objects.get(telegram_id=str(telegram_user.id))
+            
+            # Generate JWT token
+            payload = {
+                'user_id': user.id,
+                'username': user.username,
+                'telegram_id': user.telegram_id,
+                'exp': datetime.utcnow() + timedelta(days=30),  # 30 days expiry for Telegram auth
+                'iat': datetime.utcnow()
+            }
+            
+            token = jwt.encode(
+                payload, 
+                settings.SECRET_KEY, 
+                algorithm='HS256'
+            )
+            
+            return JsonResponse({
+                "success": True,
+                "message": "Authentication successful",
+                "token": token,
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "phone": user.phone,
+                    "telegram_id": user.telegram_id,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "is_agent": user.is_agent,
+                    "referral_code": user.referral_code
+                },
+                "is_new_user": False
+            }, status=200)
+            
+        except User.DoesNotExist:
+            # User doesn't exist, return error with suggestion to register
+            return JsonResponse({
+                "success": False,
+                "message": "User not found. Please register first.",
+                "is_new_user": True
+            }, status=404)
+            
+    except Exception as e:
+        print(f"Telegram authentication error: {e}")
+        return JsonResponse({
+            "success": False,
+            "message": "Authentication failed"
+        }, status=500)
+
+
+@users_router.post("/telegram-register", response=TelegramAuthResponseSchema)
+def telegram_register(request, data: TelegramRegisterSchema):
+    """
+    Register new user with Telegram WebApp data
+    """
+    try:
+        # Validate Telegram WebApp data
+        validated_data = validate_telegram_webapp_data(data.init_data)
+        if not validated_data:
+            return JsonResponse({
+                "success": False,
+                "message": "Invalid Telegram WebApp data"
+            }, status=400)
+        
+        telegram_user = data.user
+        
+        # Check if user already exists
+        if User.objects.filter(telegram_id=str(telegram_user.id)).exists():
+            return JsonResponse({
+                "success": False,
+                "message": "User already registered"
+            }, status=400)
+        
+        # Generate username from Telegram data
+        username = telegram_user.username or f"user_{telegram_user.id}"
+        
+        # Handle referral
+        referred_by = None
+        has_real_referrer = False
+        
+        if data.referred_by:
+            try:
+                referred_by = User.objects.get(telegram_id=data.referred_by)
+                has_real_referrer = True
+            except User.DoesNotExist:
+                print(f"Referrer with telegram_id {data.referred_by} not found")
+                referred_by = None
+        
+        # If no referrer provided, assign default sponsor
+        if not referred_by:
+            referred_by = ReferralService.get_or_create_default_sponsor()
+        
+        # Create user
+        user = User.objects.create(
+            username=username,
+            first_name=telegram_user.first_name,
+            last_name=telegram_user.last_name or "",
+            phone=data.phone or "",  # Phone can be empty initially
+            telegram_id=str(telegram_user.id),
+            referred_by=referred_by,
+            password=make_password(f"telegram_{telegram_user.id}")  # Generate a password
+        )
+        
+        # Process signup bonus if user has real referrer
+        if has_real_referrer:
+            success, message = ReferralService.process_signup_bonus(user)
+            print(f"Signup bonus: {message}")
+        
+        # Generate JWT token
+        payload = {
+            'user_id': user.id,
+            'username': user.username,
+            'telegram_id': user.telegram_id,
+            'exp': datetime.utcnow() + timedelta(days=30),  # 30 days expiry
+            'iat': datetime.utcnow()
+        }
+        
+        token = jwt.encode(
+            payload, 
+            settings.SECRET_KEY, 
+            algorithm='HS256'
+        )
+        
+        return JsonResponse({
+            "success": True,
+            "message": "Registration successful",
+            "token": token,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "phone": user.phone,
+                "telegram_id": user.telegram_id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "is_agent": user.is_agent,
+                "referral_code": user.referral_code
+            },
+            "is_new_user": True
+        }, status=201)
+        
+    except Exception as e:
+        print(f"Telegram registration error: {e}")
+        return JsonResponse({
+            "success": False,
+            "message": "Registration failed"
+        }, status=500)
+
+
+@users_router.post("/telegram-logout")
+def telegram_logout(request):
+    """
+    Logout user (clear token on client side)
+    """
+    return JsonResponse({
+        "success": True,
+        "message": "Logged out successfully"
+    }, status=200)
 

@@ -47,3 +47,37 @@ class ChangeSponsorSchema(Schema):
     referred_by: Optional[int] = None
     sponsor_changed: Optional[bool] = None
 
+
+class TelegramUserSchema(Schema):
+    id: int
+    first_name: str
+    last_name: Optional[str] = None
+    username: Optional[str] = None
+    language_code: Optional[str] = None
+    is_premium: Optional[bool] = False
+    photo_url: Optional[str] = None
+
+
+class TelegramAuthSchema(Schema):
+    init_data: str
+    user: TelegramUserSchema
+    auth_date: int
+    hash: str
+
+
+class TelegramRegisterSchema(Schema):
+    init_data: str
+    user: TelegramUserSchema
+    auth_date: int
+    hash: str
+    phone: Optional[str] = None
+    referred_by: Optional[str] = None
+
+
+class TelegramAuthResponseSchema(Schema):
+    success: bool
+    message: str
+    token: Optional[str] = None
+    user: Optional[dict] = None
+    is_new_user: Optional[bool] = False
+

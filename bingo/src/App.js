@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { BingoProvider } from './contexts/bingoContext';
 import { LocalizationProvider } from './contexts/LocalizationContext';
+import { AuthProvider } from './contexts/AuthContext';
 import './i18n'; // Initialize i18n
 
 import PlayingBoard from './screens/main';
@@ -12,24 +13,82 @@ import InvitedUsers from './screens/InvitedUsers';
 import ReferralDashboard from './components/ReferralDashboard';
 import ReferralCodeInput from './components/ReferralCodeInput';
 import ReferralLanding from './components/ReferralLanding';
+
+// Import authentication components
+import AuthGuard from './components/AuthGuard';
+import LoginScreen from './components/LoginScreen';
+import UserProfile from './components/UserProfile';
+import ProtectedRoute from './components/ProtectedRoute';
+
 function App() {
   return (
     <LocalizationProvider>
-      <BingoProvider>
-        <Router>
-          <Routes>
-            <Route path="/play" element={<PlayingBoard />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/transactions" element={<Transactions />} />
-            <Route path="/invited-users" element={<InvitedUsers />} />
-            <Route path="/referral-dashboard" element={<ReferralDashboard />} />
-            <Route path="/referral-code" element={<ReferralCodeInput />} />
-            <Route path="/referral-landing" element={<ReferralLanding />} />
-            <Route path="/" element={<Landing />} />
-            <Route path="/selections" element={<SelectionScreen />} />
-          </Routes>
-        </Router>
-      </BingoProvider>
+      <AuthProvider>
+        <BingoProvider>
+          <Router>
+            <AuthGuard
+              onAuthComplete={() => console.log('Authentication completed')}
+              onAuthError={(error) => console.error('Authentication error:', error)}
+            >
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<LoginScreen />} />
+                
+                {/* Protected routes */}
+                <Route path="/play" element={
+                  <ProtectedRoute>
+                    <PlayingBoard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <UserProfile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/transactions" element={
+                  <ProtectedRoute>
+                    <Transactions />
+                  </ProtectedRoute>
+                } />
+                <Route path="/invited-users" element={
+                  <ProtectedRoute>
+                    <InvitedUsers />
+                  </ProtectedRoute>
+                } />
+                <Route path="/referral-dashboard" element={
+                  <ProtectedRoute>
+                    <ReferralDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/referral-code" element={
+                  <ProtectedRoute>
+                    <ReferralCodeInput />
+                  </ProtectedRoute>
+                } />
+                <Route path="/referral-landing" element={
+                  <ProtectedRoute>
+                    <ReferralLanding />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Legacy routes (keep for backward compatibility) */}
+                <Route path="/selections" element={
+                  <ProtectedRoute>
+                    <SelectionScreen />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Default route */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Landing />
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </AuthGuard>
+          </Router>
+        </BingoProvider>
+      </AuthProvider>
     </LocalizationProvider>
   );
 }
