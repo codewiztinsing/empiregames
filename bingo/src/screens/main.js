@@ -8,8 +8,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faVolumeMute, faVolumeUp, faSignOutAlt, faSync } from '@fortawesome/free-solid-svg-icons';
 import { generateFixedCard } from '../helpers/fixedBingoCards';
 import { hasBingo, checkBingoPatterns, markCardNumber } from '../helpers/fixedBingoCards';
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from '../components/LanguageSelector';
 
 const PlayingBoard = () => {
+  const { t } = useTranslation();
   const {
     selectedNumber,
     setSelectedNumber,
@@ -717,7 +720,7 @@ const PlayingBoard = () => {
         </div>
         <button className="close-winner-button" onClick={handleCloseWinner}>
           <span className="button-icon">✨</span>
-          <span className="button-text">Continue Playing</span>
+          <span className="button-text">{t('game.continuePlaying')}</span>
           <span className="button-icon">✨</span>
         </button>
       </div>
@@ -727,11 +730,13 @@ const PlayingBoard = () => {
 
       {/* Top Stats Bar */}
       <div className="top-stats-bar">
-        <div className="stat-item purple">Bet {roomId}ης</div>
-        <div className="stat-item blue">Players {displayedTotalPlayers}</div>
-        <div className="stat-item green">ደራሽ {displayedWinAmount.toFixed(0)}ης</div>
-        <div className="stat-item light-green">የተጠራ {totalCalledNumbers}/75</div>
-        <div className="stat-item dark-purple">አማርኛ</div>
+        <div className="stat-item purple">{t('game.bet')} {roomId}ης</div>
+        <div className="stat-item blue">{t('game.players')} {displayedTotalPlayers}</div>
+        <div className="stat-item green">{t('game.prize')} {displayedWinAmount.toFixed(0)}ης</div>
+        <div className="stat-item light-green">{t('game.called')} {totalCalledNumbers}/75</div>
+        <div className="stat-item dark-purple language-switcher-container">
+          <LanguageSelector />
+        </div>
       </div>
 
       {/* Main Game Area */}
@@ -846,17 +851,17 @@ const PlayingBoard = () => {
                 console.log('Button clicked!');
                 toggleAutoPlay();
               }}
-              title={autoPlay ? 'Autoplay is ON - System will mark cells automatically' : 'Autoplay is OFF - Click to enable automatic marking'}
+              title={autoPlay ? t('game.autoplayOnTooltip') : t('game.autoplayOffTooltip')}
             >
               <FontAwesomeIcon icon={faCog} />
-              {autoPlay ? 'Auto Play ON' : 'Auto Play OFF'}
+              {autoPlay ? t('game.autoPlayOn') : t('game.autoPlayOff')}
             </button>
             <button 
               className={`control-btn ${isMuted ? 'active' : ''}`}
               onClick={toggleMute}
             >
               <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} />
-              {isMuted ? 'un-mute' : 'mute'}
+              {isMuted ? t('game.unmute') : t('game.mute')}
             </button>
               </div>
 
@@ -864,10 +869,10 @@ const PlayingBoard = () => {
           <div className="bonus-countdown">
             <div className="bonus-indicator">
               <span className="star">⭐</span>
-              Bonus On
+              {t('game.bonusOn')}
             </div>
             <div className="countdown-display">
-              <span className="countdown-label">Count Down</span>
+              <span className="countdown-label">{t('game.countdown')}</span>
               <span className={`countdown-timer ${gameStatus === 'in-progress' ? 'active' : ''}`}>
                 {gameCountdown || countDown || 0} : 01
               </span>
@@ -940,13 +945,13 @@ const PlayingBoard = () => {
                 }}
                 disabled={firstBoardLost || isDisqualified || !selectedNumber}
                 title={
-                  firstBoardLost ? 'Board lost - cannot call bingo' :
-                  isDisqualified ? 'You are disqualified' :
-                  !selectedNumber ? 'No card selected' :
-                  'Call Bingo!'
+                  firstBoardLost ? t('game.boardLost') :
+                  isDisqualified ? t('game.disqualified') :
+                  !selectedNumber ? t('game.noCardSelected') :
+                  t('game.callBingo')
                 }
               >
-                Bingo
+                {t('game.bingo')}
               </button>
             </div>
           )}
@@ -957,11 +962,11 @@ const PlayingBoard = () => {
       <div className="bottom-actions">
         <button className="action-btn leave-btn" onClick={handleLeaveGame}>
           <FontAwesomeIcon icon={faSignOutAlt} />
-          Leave Game
+          {t('game.leaveGame')}
         </button>
         <button className="action-btn refresh-btn" onClick={handleRefresh}>
           <FontAwesomeIcon icon={faSync} />
-          Refresh
+          {t('game.refresh')}
         </button>
       </div>
     </div>

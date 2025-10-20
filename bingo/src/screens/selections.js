@@ -764,19 +764,19 @@ const Selections = () => {
                 }}
               >
                 <div className="modal-content">
-                  <div className="modal-header">
-                    <h2 className="modal-title">Bingo Card Preview</h2>
-                    <button 
-                      className="modal-close" 
-                      onClick={() => setSelectedNumber(null)}
-                      aria-label="Close modal"
-                    >
-                      ×
-                    </button>
-                  </div>
+                 
                   <div className="modal-body">
                     <div className="card-preview-number">Card #{selectedNumber}</div>
                     <div className="bingo-card">
+                      {/* Close Button */}
+                      <button 
+                        className="bingo-card-close" 
+                        onClick={() => setSelectedNumber(null)}
+                        aria-label="Close bingo card"
+                      >
+                        ×
+                      </button>
+                      
                       {/* BINGO Header */}
                       <div className="bingo-header">
                         <div className="bingo-letter">B</div>
@@ -805,6 +805,20 @@ const Selections = () => {
                           </div>
                         ))}
                       </div>
+                    </div>
+                    
+                    {/* Start Button */}
+                    <div className="bingo-card-actions">
+                      <button 
+                        className="bingo-start-button"
+                        onClick={() => {
+                          // Handle start game logic here
+                          console.log('Starting game with card:', selectedNumber);
+                          setSelectedNumber(null);
+                        }}
+                      >
+                        {t('game.startGame')}
+                      </button>
                     </div>
                   </div>
                 </div>
