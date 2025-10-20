@@ -283,7 +283,9 @@ const Selections = () => {
         const apiUrl = config.API_BASE_URL;
         try {
           console.log('[BalanceDebug] Fetching balance', { apiUrl, playerId: String(playerId) });
-          const response = await axios.get(`${apiUrl}wallet/player/${parseInt(playerId)}`);
+          const fullUrl = `${apiUrl}wallet/player/${parseInt(playerId)}`;
+          console.log('[BalanceDebug] Full URL', { fullUrl });
+          const response = await axios.get(fullUrl);
           const data = response?.data ?? {};
           // Try multiple possible keys used by different backends
           let totalBalance = (
@@ -374,7 +376,9 @@ const Selections = () => {
     // Check balance before proceeding
     try {
       const apiUrl = config.API_BASE_URL;
-      const response = await axios.get(`${apiUrl}wallet/player/${parseInt(playerId)}`);
+      const fullUrl = `${apiUrl}wallet/player/${parseInt(playerId)}`;
+      console.log('[BalanceDebug] Selection balance check URL', { fullUrl });
+      const response = await axios.get(fullUrl);
       const data = response?.data ?? {};
       let currentBalance = (
         data?.total_balance ??
