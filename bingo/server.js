@@ -1225,10 +1225,16 @@ socket.on("faulMadePlayer", (data) => {
    
     const user = users.get(socket.id);
     if (user) {
-      const game = activeGames.get(user.gameId);
+      const roomIdStr = String(user.gameId);
+      const game = activeGames.get(roomIdStr);
       const playerId = user.playerId
    
-      if(game.selectedNumbersToPlayer.has(playerId)){
+      if (!game) {
+        users.delete(socket.id);
+        return;
+      }
+
+      if (game.selectedNumbersToPlayer && game.selectedNumbersToPlayer.has(playerId)){
         const selectedNumber = game.selectedNumbersToPlayer.get(playerId)[0]
         const selectedNumber2 = game.selectedNumbersToPlayer.get(playerId)[1]
         game.selectedNumbers = game.selectedNumbers.filter(num => num !== selectedNumber);

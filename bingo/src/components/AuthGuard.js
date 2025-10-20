@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useTelegramAuth } from '../hooks/useTelegramAuth';
 import telegramAuthService from '../services/telegramAuth';
+import DevLogin from './DevLogin';
 
 const AuthGuard = ({ children, onAuthComplete, onAuthError }) => {
   const { isAuthenticated, isLoading, handleCompleteAuth, error } = useTelegramAuth();
   const [authAttempted, setAuthAttempted] = useState(false);
+  
+  // Development mode check
+  const bypassTelegramAuth = process.env.REACT_APP_BYPASS_TELEGRAM_AUTH === 'true';
 
   useEffect(() => {
     const performAuth = async () => {
@@ -13,8 +17,9 @@ const AuthGuard = ({ children, onAuthComplete, onAuthError }) => {
       try {
         setAuthAttempted(true);
 
-        // Check if we're in Telegram WebApp
-        if (!telegramAuthService.isTelegram()) {
+        // Check if we're in Telegram WebApp (skip in dev mode)
+        const bypassTelegramAuth = process.env.REACT_APP_BYPASS_TELEGRAM_AUTH === 'true';
+        if (!bypassTelegramAuth && !telegramAuthService.isTelegram()) {
           console.warn('Not running in Telegram WebApp');
           if (onAuthError) {
             onAuthError('This app must be opened from Telegram');
@@ -128,6 +133,19 @@ const AuthGuard = ({ children, onAuthComplete, onAuthError }) => {
   // Show children if authenticated
   if (isAuthenticated) {
     return children;
+  }
+
+  // Show DevLogin in development mode
+  if (bypassTelegramAuth) {
+    return (
+      <DevLogin 
+        onLogin={() => {
+          if (onAuthComplete) {
+            onAuthComplete();
+          }
+        }} 
+      />
+    );
   }
 
   // Show waiting state

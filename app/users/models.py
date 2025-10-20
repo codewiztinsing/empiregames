@@ -7,14 +7,16 @@ from django.core.validators import MinValueValidator
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, username, phone, telegram_id, password=None, **extra_fields):
+    def create_user(self, username, phone=None, telegram_id=None, password=None, **extra_fields):
         """Create a new user with phone and telegram_id"""
         if not username:
             raise ValueError('The username must be set')
+        
+        # Provide default values for development
         if not phone:
-            raise ValueError('The phone must be set')
+            phone = f"+251900000000"  # Default phone for development
         if not telegram_id:
-            raise ValueError('The telegram_id must be set')
+            telegram_id = f"admin_{username}"  # Default telegram_id for development
         
         user = self.model(
             username=username,
@@ -26,7 +28,7 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
     
-    def create_superuser(self, username, phone, telegram_id, password=None, **extra_fields):
+    def create_superuser(self, username, phone=None, telegram_id=None, password=None, **extra_fields):
         """Create a new superuser with phone and telegram_id"""
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)

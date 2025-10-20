@@ -3,9 +3,15 @@
 DJANGO_SECRET_KEY=your-secret-key-here
 DEBUG=True
 PROD_SECRET_KEY=sdakfnjnasdjfio149u2134u293u4923u49u
+
 # Database Settings
 POSTGRES_DB=bingo_db
 POSTGRES_USER=bingo_User
 POSTGRES_PASSWORD=123456
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
+
+# Bot Settings
+BOT_TOKEN=your-bot-token-here
+JWT_SECRET=your-jwt-secret-here
+BACK_URL=http://localhost:8000/api/v1/

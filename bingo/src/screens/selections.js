@@ -813,9 +813,17 @@ const Selections = () => {
                       <button 
                         className="bingo-start-button"
                         onClick={() => {
-                          // Handle start game logic here
-                          console.log('Starting game with card:', selectedNumber);
-                          setSelectedNumber(null);
+                          if (hasSelectedCard && selectedNumber) {
+                            if (balance >= parseInt(roomId)) {
+                              navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
+                            } else {
+                              setToast(t('game.insufficientBalance'));
+                              setIsToast(true);
+                            }
+                          } else {
+                            setToast(t('game.cardNotSelected'));
+                            setIsToast(true);
+                          }
                         }}
                       >
                         {t('game.startGame')}

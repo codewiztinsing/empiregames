@@ -19,50 +19,107 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Development mode bypass
+  const isDevMode = process.env.REACT_APP_DEV_MODE === 'true';
+  const bypassTelegramAuth = process.env.REACT_APP_BYPASS_TELEGRAM_AUTH === 'true';
+
   // Initialize Telegram WebApp
   useEffect(() => {
     const initializeTelegram = () => {
       try {
+        if (bypassTelegramAuth) {
+          console.log('Development mode: Bypassing Telegram WebApp initialization');
+          return;
+        }
         telegramAuthService.init();
         console.log('Telegram WebApp initialized');
       } catch (error) {
         console.error('Failed to initialize Telegram WebApp:', error);
-        setError('Failed to initialize Telegram WebApp');
+        if (!bypassTelegramAuth) {
+          setError('Failed to initialize Telegram WebApp');
+        }
       }
     };
 
     initializeTelegram();
-  }, []);
+  }, [bypassTelegramAuth]);
 
   // Check for existing authentication on mount
   useEffect(() => {
     const checkExistingAuth = async () => {
       try {
-        const storedToken = telegramAuthService.getToken();
-        const storedUser = localStorage.getItem('telegram_user_data');
-        
-        if (storedToken && storedUser) {
-          const userData = JSON.parse(storedUser);
-          setToken(storedToken);
-          setUser(userData);
+        if (bypassTelegramAuth) {
+          // Development mode: Use mock user data
+          const mockUser = {
+            id: 1,
+            username: 'dev_user',
+            phone: '+251900000000',
+            telegram_id: '123456789',
+            first_name: 'Dev',
+            last_name: 'User',
+            is_agent: false,
+            referral_code: 'DEV123456789'
+          };
+          const mockToken = 'dev_token_' + Date.now();
+          
+          setToken(mockToken);
+          setUser(mockUser);
           setIsAuthenticated(true);
+          localStorage.setItem('telegram_user_data', JSON.stringify(mockUser));
+          localStorage.setItem('dev_token', mockToken);
+          console.log('Development mode: Using mock authentication');
+        } else {
+          const storedToken = telegramAuthService.getToken();
+          const storedUser = localStorage.getItem('telegram_user_data');
+          
+          if (storedToken && storedUser) {
+            const userData = JSON.parse(storedUser);
+            setToken(storedToken);
+            setUser(userData);
+            setIsAuthenticated(true);
+          }
         }
       } catch (error) {
         console.error('Error checking existing auth:', error);
-        telegramAuthService.clearAuth();
+        if (!bypassTelegramAuth) {
+          telegramAuthService.clearAuth();
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     checkExistingAuth();
-  }, []);
+  }, [bypassTelegramAuth]);
 
   // Login function
   const login = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
+
+      if (bypassTelegramAuth) {
+        // Development mode: Return mock success
+        const mockUser = {
+          id: 1,
+          username: 'dev_user',
+          phone: '+251900000000',
+          telegram_id: '123456789',
+          first_name: 'Dev',
+          last_name: 'User',
+          is_agent: false,
+          referral_code: 'DEV123456789'
+        };
+        const mockToken = 'dev_token_' + Date.now();
+        
+        setToken(mockToken);
+        setUser(mockUser);
+        setIsAuthenticated(true);
+        localStorage.setItem('telegram_user_data', JSON.stringify(mockUser));
+        localStorage.setItem('dev_token', mockToken);
+        
+        return { success: true, isNewUser: false };
+      }
 
       // Get Telegram user data
       const telegramData = telegramAuthService.getTelegramUser();
@@ -97,7 +154,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [bypassTelegramAuth]);
 
   // Register function
   const register = useCallback(async (telegramData, additionalData = {}) => {
