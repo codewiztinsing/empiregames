@@ -6,7 +6,8 @@ from django.conf import settings
 
 
 
-jwt_secret = os.getenv("JWT_SECRET") or getattr(settings, "SECRET_KEY", None)
+# IMPORTANT: Use the same key used to sign tokens (users/api.py uses settings.SECRET_KEY)
+jwt_secret = getattr(settings, "SECRET_KEY", None)
 
 def decode_jwt(token):
     try:
@@ -14,7 +15,7 @@ def decode_jwt(token):
         # If nested under 'sub' (our encode_jwt), unwrap; else return payload as-is
         return payload.get("sub", payload)
     except Exception as e:
-        print("error = ",e)
+        print("[JWTDebug] decode_jwt error:", e)
         return None
   
 
@@ -45,10 +46,12 @@ class JWTAuth(HttpBearer):
         try:
             payload = decode_jwt(token)
             if not payload:
+                print("[JWTDebug] authenticate failed: payload is None")
                 return None
             # Attach to request for downstream usage if needed
             request.user_payload = payload
             return token
-        except Exception:
+        except Exception as e:
+            print("[JWTDebug] authenticate exception:", e)
             return None
 
