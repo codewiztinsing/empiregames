@@ -539,7 +539,7 @@ const Selections = () => {
 
 {isBingo && (
   <div className="bingo-winner-overlay">
-    <div className="bingo-winner-card">
+    <div className="bingo-winner-card" style={{ maxHeight: '80vh', overflowY: 'auto', width: '100%', maxWidth: 480 }}>
       <div className="winner-card-header">
         <p className='winner-card-header-text'>Bingo Winner!</p>
       </div>
@@ -792,7 +792,7 @@ const Selections = () => {
               </button>
             </div>
 
-            {/* Selected Card Preview Modal */}
+            {/* Selected Card Preview Modal (Enhanced) */}
             {selectedNumber && (
               <div 
                 className="konjo-card-preview show"
@@ -801,43 +801,111 @@ const Selections = () => {
                     setSelectedNumber(null);
                   }
                 }}
+                style={{
+                  backdropFilter: 'blur(2px)',
+                }}
               >
-                <div className="modal-content">
-                 
-                  <div className="modal-body">
-                    <div className="card-preview-number">Card #{selectedNumber}</div>
-                    <div className="bingo-card">
-                      {/* Close Button */}
-                      <button 
-                        className="bingo-card-close" 
-                        onClick={() => setSelectedNumber(null)}
-                        aria-label="Close bingo card"
-                      >
-                        ×
-                      </button>
-                      
-                      {/* BINGO Header */}
-                      <div className="bingo-header">
-                        <div className="bingo-letter">B</div>
-                        <div className="bingo-letter">I</div>
-                        <div className="bingo-letter">N</div>
-                        <div className="bingo-letter">G</div>
-                        <div className="bingo-letter">O</div>
+                <div className="modal-content" style={{
+                  background: 'linear-gradient(180deg, #0f1224 0%, #1b1f3b 100%)',
+                  borderRadius: 16,
+                  boxShadow: '0 12px 40px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.06)',
+                  overflow: 'hidden'
+                }}>
+                  {/* Header */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '14px 16px',
+                    borderBottom: '1px solid rgba(255,255,255,0.08)'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10
+                    }}>
+                      <div style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 8,
+                        background: 'radial-gradient(120% 120% at 10% 10%, #ff799a 0%, #7a5cff 55%, #2dd4bf 100%)',
+                        boxShadow: '0 0 20px rgba(122,92,255,0.45)'
+                      }} />
+                      <div style={{ color: '#E7E9F7', fontWeight: 700, fontSize: 16 }}>
+                        {t('game.preview')} • #{selectedNumber}
                       </div>
-                      
-                      {/* Card Grid */}
-                      <div className="bingo-grid">
-                        {selectBoard.map((row, rowIndex) => (
-                          <div key={rowIndex} className="bingo-row">
-                            {row.map((num, colIndex) => (
-                              <div key={colIndex} className={`bingo-cell ${num === '*' ? 'free-space' : ''}`}>
+                    </div>
+                    <button 
+                      onClick={() => setSelectedNumber(null)}
+                      aria-label="Close bingo card"
+                      style={{
+                        background: 'transparent',
+                        color: '#9aa0c3',
+                        border: 'none',
+                        fontSize: 22,
+                        lineHeight: '22px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  {/* Body */}
+                  <div className="modal-body" style={{ padding: 16 }}>
+                    {/* Fancy card frame */}
+                    <div style={{
+                      background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)',
+                      borderRadius: 14,
+                      padding: 12,
+                      boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06), 0 8px 28px rgba(0,0,0,0.25)'
+                    }}>
+                      {/* BINGO header chips */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: 8 }}>
+                        {['B','I','N','G','O'].map((l, i) => (
+                          <div key={i} style={{
+                            textAlign: 'center',
+                            color: '#111827',
+                            fontWeight: 800,
+                            letterSpacing: 1.5,
+                            borderRadius: 10,
+                            padding: '8px 0',
+                            background: 'linear-gradient(180deg, #fdfbfb 0%, #ebeef8 100%)',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                          }}>{l}</div>
+                        ))}
+                      </div>
+
+                      {/* Numbers grid */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+                        {selectBoard.map((col, colIndex) => (
+                          <div key={colIndex} style={{ display: 'grid', gap: 6 }}>
+                            {col.map((num, rowIndex) => (
+                              <div
+                                key={`${colIndex}-${rowIndex}`}
+                                style={{
+                                  height: 48,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  borderRadius: 10,
+                                  color: num === '*' ? '#0f172a' : '#e5e7eb',
+                                  fontWeight: 700,
+                                  background: num === '*'
+                                    ? 'linear-gradient(180deg, #a7f3d0 0%, #34d399 100%)'
+                                    : 'radial-gradient(120% 120% at 20% 10%, rgba(124,58,237,0.9) 0%, rgba(79,70,229,0.85) 55%, rgba(59,130,246,0.8) 100%)',
+                                  boxShadow: num === '*'
+                                    ? '0 4px 12px rgba(16,185,129,0.35)'
+                                    : '0 4px 12px rgba(99,102,241,0.35)'
+                                }}
+                              >
                                 {num === '*' ? (
-                                  <div className="free-space-content">
-                                    <div className="free-text">FREE</div>
-                                    <div className="space-text">SPACE</div>
+                                  <div style={{ textAlign: 'center', lineHeight: 1.1 }}>
+                                    <div style={{ fontSize: 10, fontWeight: 800 }}>FREE</div>
+                                    <div style={{ fontSize: 10, opacity: 0.9 }}>SPACE</div>
                                   </div>
                                 ) : (
-                                  num
+                                  <span style={{ fontSize: 16 }}>{num}</span>
                                 )}
                               </div>
                             ))}
@@ -845,14 +913,14 @@ const Selections = () => {
                         ))}
                       </div>
                     </div>
-                    
-                    {/* Start Button */}
-                    <div className="bingo-card-actions">
+
+                    {/* Footer actions */}
+                    <div style={{ display: 'flex', gap: 12, marginTop: 14 }}>
                       <button 
                         className="bingo-start-button"
                         onClick={() => {
                           if (hasSelectedCard && selectedNumber) {
-                            if (balance >= parseInt(roomId)) {
+                            if (Number(balance) >= parseInt(roomId)) {
                               navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
                             } else {
                               setToast(t('game.insufficientBalance'));
@@ -863,8 +931,33 @@ const Selections = () => {
                             setIsToast(true);
                           }
                         }}
+                        style={{
+                          flex: 1,
+                          background: 'linear-gradient(180deg, #22d3ee 0%, #3b82f6 100%)',
+                          border: 'none',
+                          color: 'white',
+                          borderRadius: 10,
+                          padding: '12px 14px',
+                          fontWeight: 800,
+                          boxShadow: '0 6px 16px rgba(56,189,248,0.35)',
+                          cursor: 'pointer'
+                        }}
                       >
-                        {t('game.startGame')}
+                        🚀 {t('game.startGame')}
+                      </button>
+                      <button
+                        onClick={() => setSelectedNumber(null)}
+                        style={{
+                          background: 'transparent',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          color: '#c7c9e2',
+                          borderRadius: 10,
+                          padding: '12px 14px',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ✖ {t('common.close') || 'Close'}
                       </button>
                     </div>
                   </div>
