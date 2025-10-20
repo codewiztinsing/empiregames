@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useTelegramAuth } from '../hooks/useTelegramAuth';
 import telegramAuthService from '../services/telegramAuth';
 
 const AuthGuard = ({ children, onAuthComplete, onAuthError }) => {
-  const { isAuthenticated, isLoading, handleCompleteAuth, error } = useAuth();
+  const { isAuthenticated, isLoading, handleCompleteAuth, error } = useTelegramAuth();
   const [authAttempted, setAuthAttempted] = useState(false);
 
   useEffect(() => {
