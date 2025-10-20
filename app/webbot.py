@@ -312,7 +312,7 @@ def play_options_keyboard(update: Update) -> InlineKeyboardMarkup:
     logger.info(f"game_types = {game_types}")
     keyboard = []
     for game_type in game_types:
-        keyboard.append([InlineKeyboardButton(f"🎮 Play {game_type['bet_amount']}", web_app=WebAppInfo(url=f"https://akerbingo.com/?playerId={update.effective_user.id}&betAmount={game_type['bet_amount']}&playerName={update.effective_user.username}"))])
+        keyboard.append([InlineKeyboardButton(f"🎮 Play {game_type['bet_amount']}", web_app=WebAppInfo(url=f"https://liyuchawata.com/bingo/?playerId={update.effective_user.id}&betAmount={game_type['bet_amount']}&playerName={update.effective_user.username}"))])
     keyboard.append([InlineKeyboardButton("🔙 Back to Menu", callback_data='back')])
     return InlineKeyboardMarkup(keyboard)
 
@@ -853,7 +853,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 return
             
             web_app_url = (
-                f"https://akerbingo.com/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={balance}"
+                f"https://liyuchawata.akerbingo.com/?playerId={player_id}&name={username}&betAmount={bet_amount}&wallet_amount={balance}"
             )
 
             keyboard = [
