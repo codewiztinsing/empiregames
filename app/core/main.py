@@ -9,7 +9,7 @@ from users.referral_api import router as referral_router
 api = NinjaAPI()
 
 # api for users
-api.add_router("/users/", users_router)
+api.add_router("/users", users_router)
 api.add_router("/wallet/", wallet_router)
 api.add_router("/game/", game_router)
 api.add_router("/webhooks/", webhooks_router)
