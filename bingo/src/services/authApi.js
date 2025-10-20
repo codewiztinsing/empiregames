@@ -12,6 +12,7 @@ class AuthApiService {
       baseURL: `${baseURL}${apiPath}`,
       headers: {
         'Content-Type': 'application/json',
+
       },
     });
 
@@ -19,6 +20,7 @@ class AuthApiService {
     this.api.interceptors.request.use(
       (config) => {
         const token = localStorage.getItem('telegram_auth_token');
+        console.log("telegram_auth_token",token)
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
