@@ -615,7 +615,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 return
 
             player_id = query.from_user.id
-            web_app_url = f"https://liyuchawata.com/bingo/?playerId={player_id}&betAmount={bet_amount}&playerName={query.from_user.username}"
+            web_app_url = f"https://t.me/liyuchewatabotbot/liyuchawata"
             
             await query.edit_message_text(
                 text=f"Starting game with {bet_amount} ETB bet...",
