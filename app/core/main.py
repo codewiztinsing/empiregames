@@ -9,6 +9,28 @@ from users.referral_api import router as referral_router
 # base api with global JWT protection
 api = NinjaAPI(auth=JWTAuth())
 
+# Debug middleware to log Authorization header for wallet balance route
+from django.utils.deprecation import MiddlewareMixin
+
+class DebugAuthHeaderMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        try:
+            path = request.path or ''
+            if '/api/v1/wallet/player/' in path:
+                auth = request.META.get('HTTP_AUTHORIZATION')
+                print('[AuthHeaderDebug] path=', path, 'auth_present=', bool(auth), 'auth_prefix=', (auth[:24] if auth else None))
+        except Exception:
+            pass
+
+try:
+    from django.conf import settings
+    if hasattr(settings, 'MIDDLEWARE'):
+        settings.MIDDLEWARE = list(settings.MIDDLEWARE) + [
+            'core.main.DebugAuthHeaderMiddleware'
+        ]
+except Exception:
+    pass
+
 # api for users
 api.add_router("/users", users_router)
 api.add_router("/wallet/", wallet_router)

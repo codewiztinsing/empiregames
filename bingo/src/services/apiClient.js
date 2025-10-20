@@ -18,6 +18,14 @@ apiClient.interceptors.request.use((cfg) => {
     if (token) {
       cfg.headers.Authorization = `Bearer ${token}`;
     }
+    // Debug request auth presence
+    try {
+      const auth = cfg.headers.Authorization;
+      const path = (cfg.url || '').toString();
+      if (path.includes('wallet/player')) {
+        console.log('[APIClientDebug] Request', { url: cfg.baseURL + path, hasAuth: !!auth, authPrefix: auth ? auth.slice(0, 24) : null });
+      }
+    } catch (_) {}
   } catch (e) {}
   return cfg;
 });
