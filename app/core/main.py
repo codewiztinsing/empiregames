@@ -1,12 +1,13 @@
 from ninja import NinjaAPI
+from users.auth import JWTAuth
 from ninja_simple_jwt.auth.views.api import mobile_auth_router, web_auth_router
 from wallet.api import router as wallet_router
 from users.api import users_router
 from game.api import game_router
 from webhooks.api import webhooks_router
 from users.referral_api import router as referral_router
-# base api
-api = NinjaAPI()
+# base api with global JWT protection
+api = NinjaAPI(auth=JWTAuth())
 
 # api for users
 api.add_router("/users", users_router)

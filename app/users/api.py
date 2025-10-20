@@ -1,7 +1,7 @@
 import jwt
 from ninja import NinjaAPI,Router
 from ninja.security import django_auth
-from .auth import encode_jwt,decode_jwt
+from .auth import encode_jwt,decode_jwt, JWTAuth
 from .schema import RegisterSchema, LoginSchema, UserSchema, UserResponseSchema, UpdateUserSchema, ChangeSponsorSchema, TelegramAuthSchema, TelegramRegisterSchema, TelegramAuthResponseSchema
 # from .models import User
 from django.db import IntegrityError
@@ -24,15 +24,19 @@ from .telegram_validator import validate_telegram_webapp_data
 
 users_router = Router()
 
+# Apply JWT auth globally to all routes under this router except explicit public ones
+auth = JWTAuth()
 
 
-@users_router.get("/refresh-token")
+
+@users_router.get("/refresh-token", auth=auth)
 def refresh_access_token(request):
     return {"token": request.auth}
 
 
 
-@users_router.post("/register")
+# PUBLIC: registration must remain accessible
+@users_router.post("/register", auth=None)
 def register(request, data: RegisterSchema):
     try:
         print("data = ",data)
@@ -116,7 +120,8 @@ def register(request, data: RegisterSchema):
 
 
 
-@users_router.post("/login")
+# PUBLIC: login must remain accessible
+@users_router.post("/login", auth=None)
 def login(request, data: LoginSchema):
     try:
         user = User.objects.get(username=data.username)
@@ -161,7 +166,8 @@ def login(request, data: LoginSchema):
 
 # Telegram WebApp Authentication Endpoints
 
-@users_router.post("/telegram-auth", response=TelegramAuthResponseSchema)
+# PUBLIC: telegram-auth must remain accessible
+@users_router.post("/telegram-auth", response=TelegramAuthResponseSchema, auth=None)
 def telegram_auth(request, data: TelegramAuthSchema):
     """
     Authenticate user with Telegram WebApp data
@@ -229,7 +235,8 @@ def telegram_auth(request, data: TelegramAuthSchema):
         }, status=500)
 
 
-@users_router.post("/telegram-register", response=TelegramAuthResponseSchema)
+# PUBLIC: telegram-register must remain accessible
+@users_router.post("/telegram-register", response=TelegramAuthResponseSchema, auth=None)
 def telegram_register(request, data: TelegramRegisterSchema):
     """
     Register new user with Telegram WebApp data
@@ -327,7 +334,7 @@ def telegram_register(request, data: TelegramRegisterSchema):
         }, status=500)
 
 
-@users_router.post("/telegram-logout")
+@users_router.post("/telegram-logout", auth=auth)
 def telegram_logout(request):
     """
     Logout user (clear token on client side)
@@ -339,7 +346,7 @@ def telegram_logout(request):
 
 
 # get user by telegram id
-@users_router.get("/{telegram_id}",response=UserResponseSchema)
+@users_router.get("/{telegram_id}",response=UserResponseSchema, auth=auth)
 def get_user_by_telegram_id(request,telegram_id:int):
     try:
         from datetime import datetime, timedelta
@@ -376,7 +383,7 @@ def get_user_by_telegram_id(request,telegram_id:int):
         return UserResponseSchema(success=False, message="User not found")
 
 
-@users_router.get("/{user_id}/daily-withdraw-limit")
+@users_router.get("/{user_id}/daily-withdraw-limit", auth=auth)
 def get_daily_withdraw_limit(request,user_id:int):
     try:
         user = User.objects.get(telegram_id=user_id)
@@ -389,7 +396,7 @@ def get_daily_withdraw_limit(request,user_id:int):
         return {"success": False, "message": "Failed to get daily withdraw limit"}
 
 
-@users_router.get("/{user_id}/number-of-game-played")
+@users_router.get("/{user_id}/number-of-game-played", auth=auth)
 def get_number_of_game_played(request,user_id:int):
     try:
         print("user_id = ",user_id)
@@ -404,7 +411,7 @@ def get_number_of_game_played(request,user_id:int):
         return {"success": False, "message": "Failed to get number of game played"}
     
 
-@users_router.get("/{user_id}/number-of-game-won")
+@users_router.get("/{user_id}/number-of-game-won", auth=auth)
 def get_number_of_game_won(request,user_id:int):
     try:
         user = User.objects.get(telegram_id=user_id)
@@ -413,7 +420,7 @@ def get_number_of_game_won(request,user_id:int):
     except Exception as e:
         return {"success": False, "message": "Failed to get number of game won"}    
 # is deposited usere
-@users_router.get("/{user_id}/is-deposited")
+@users_router.get("/{user_id}/is-deposited", auth=auth)
 def is_deposited(request, user_id: int):
     try:
         user = User.objects.get(telegram_id=user_id)
@@ -432,7 +439,7 @@ def is_deposited(request, user_id: int):
 
 
 # User Detail API Endpoints
-@users_router.get("/{user_id}/details/")
+@users_router.get("/{user_id}/details/", auth=auth)
 def get_user_details(request, user_id: int):
     """Get comprehensive user details including wallet and transaction info"""
     try:
@@ -561,7 +568,7 @@ def get_user_details(request, user_id: int):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@users_router.get("/{user_id}/transactions/")
+@users_router.get("/{user_id}/transactions/", auth=auth)
 def get_user_transactions(request, user_id: int, limit: int = 20, transaction_type: str = None):
     """Get user transactions with optional filtering"""
     try:
@@ -597,7 +604,7 @@ def get_user_transactions(request, user_id: int, limit: int = 20, transaction_ty
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@users_router.get("/{user_id}/games/")
+@users_router.get("/{user_id}/games/", auth=auth)
 def get_user_games(request, user_id: int, limit: int = 20):
     """Get user games history"""
     try:
@@ -636,7 +643,7 @@ def get_user_games(request, user_id: int, limit: int = 20):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@users_router.get("/{user_id}/wallet/")
+@users_router.get("/{user_id}/wallet/", auth=auth)
 def get_user_wallet(request, user_id: int):
     """Get user wallet information"""
     try:
@@ -680,7 +687,7 @@ def get_user_wallet(request, user_id: int):
 
 
 
-@users_router.put("/{user_id}/change-sponsor")
+@users_router.put("/{user_id}/change-sponsor", auth=auth)
 def change_sponsor(request, user_id: int, data: ChangeSponsorSchema):
     """Change user's sponsor/referrer"""
     try:
@@ -748,7 +755,7 @@ def change_sponsor(request, user_id: int, data: ChangeSponsorSchema):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@users_router.put("/{user_id}/")
+@users_router.put("/{user_id}/", auth=auth)
 def update_user(request, user_id: int, data: UpdateUserSchema):
     """Update user information"""
     try:
