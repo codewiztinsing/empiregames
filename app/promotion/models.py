@@ -1,13 +1,11 @@
 from django.db import models
 from django.utils import timezone
-from users.models import User
 
 
 class Banner(models.Model):
     image = models.ImageField(upload_to='promotions/banners/', blank=False, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"{self.image}"
@@ -47,7 +45,6 @@ class Promotion(models.Model):
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     
     class Meta:
         ordering = ['-created_at']
