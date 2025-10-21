@@ -15,7 +15,7 @@ import json
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import logout
-from game.models import GameType
+from game.models import GameRoom
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from .permissions import (
@@ -150,7 +150,7 @@ def game_types(request):
                 commission = data.get('commission')
                 
                 if bet_amount and commission:
-                    game_type = GameType.objects.create(
+                    game_type = GameRoom.objects.create(
                         bet_amount=int(bet_amount),
                         commission=int(commission)
                     )
@@ -165,7 +165,7 @@ def game_types(request):
             commission = request.POST.get('commission')
             
             if bet_amount and commission:
-                GameType.objects.create(
+                GameRoom.objects.create(
                     bet_amount=int(bet_amount),
                     commission=int(commission)
                 )
@@ -184,7 +184,7 @@ def game_types(request):
         commission = data.get('commission')
         
         try:
-            game_type = get_object_or_404(GameType, id=game_type_id)
+            game_type = get_object_or_404(GameRoom, id=game_type_id)
             if bet_amount:
                 game_type.bet_amount = int(bet_amount)
             if commission:
@@ -201,14 +201,14 @@ def game_types(request):
         game_type_id = data.get('id')
         
         try:
-            game_type = get_object_or_404(GameType, id=game_type_id)
+            game_type = get_object_or_404(GameRoom, id=game_type_id)
             game_type.delete()
             return JsonResponse({'success': True, 'message': 'Game type deleted successfully!'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
     
     # GET request - display all game types
-    game_types = GameType.objects.all().order_by('-id')
+    game_types = GameRoom.objects.all().order_by('-id')
     context = {
         'game_types': game_types,
         'page_title': 'Game Types'
@@ -223,7 +223,7 @@ def game_type_detail(request, game_type_id):
         import json
         try:
             data = json.loads(request.body)
-            game_type = get_object_or_404(GameType, id=game_type_id)
+            game_type = get_object_or_404(GameRoom, id=game_type_id)
             
             # Update fields if provided
             if 'bet_amount' in data:
@@ -239,7 +239,7 @@ def game_type_detail(request, game_type_id):
     elif request.method == 'DELETE':
         # Delete game type
         try:
-            game_type = get_object_or_404(GameType, id=game_type_id)
+            game_type = get_object_or_404(GameRoom, id=game_type_id)
             game_type.delete()
             return JsonResponse({'success': True, 'message': 'Game type deleted successfully!'})
         except Exception as e:
@@ -247,7 +247,7 @@ def game_type_detail(request, game_type_id):
     
     else:
         # GET request - return game type details
-        game_type = get_object_or_404(GameType, id=game_type_id)
+        game_type = get_object_or_404(GameRoom, id=game_type_id)
         return JsonResponse({
             'id': game_type.id,
             'bet_amount': game_type.bet_amount,

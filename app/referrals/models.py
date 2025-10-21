@@ -6,7 +6,7 @@ User = get_user_model()
 
 class ReferralBonus(models.Model):
     """Track referral bonuses earned from wins"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referral_bonuses')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referrals_received')
     from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bonuses_given')
     generation = models.IntegerField(choices=[(1, 'First Generation'), (2, 'Second Generation')])
     win_amount = models.DecimalField(max_digits=10, decimal_places=2)

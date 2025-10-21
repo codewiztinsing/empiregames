@@ -17,7 +17,7 @@ class GameRoom(models.Model):
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='game_rooms')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='game_rooms')
     
     # Room details
     name = models.CharField(max_length=200)
@@ -53,9 +53,9 @@ class GameRoom(models.Model):
         ordering = ['entry_fee', 'name']
         verbose_name = 'Game Room'
         verbose_name_plural = 'Game Rooms'
-        # unique_together = ['tenant', 'entry_fee', 'name']
+        unique_together = ['tenant', 'entry_fee', 'name']
         indexes = [
-            # models.Index(fields=['tenant', 'is_active']),
+            models.Index(fields=['tenant', 'is_active']),
             models.Index(fields=['entry_fee']),
             models.Index(fields=['room_type']),
         ]
@@ -89,11 +89,11 @@ class Game(models.Model):
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='games')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='games')
     room = models.ForeignKey(GameRoom, on_delete=models.PROTECT, related_name='games')
     
     # Game details
-    game_number = models.PositiveIntegerField(default=1)
+    game_number = models.PositiveIntegerField()  # Sequential number within tenant
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting')
     
     # Players and participation
@@ -133,9 +133,9 @@ class Game(models.Model):
         ordering = ['-created_at']
         verbose_name = 'Game'
         verbose_name_plural = 'Games'
-        # unique_together = ['tenant', 'game_number']
+        unique_together = ['tenant', 'game_number']
         indexes = [
-            # models.Index(fields=['tenant', 'status']),
+            models.Index(fields=['tenant', 'status']),
             models.Index(fields=['room', 'created_at']),
             models.Index(fields=['winner', 'created_at']),
             models.Index(fields=['status', 'created_at']),
@@ -180,15 +180,6 @@ class Game(models.Model):
         if self.started_at and self.ended_at:
             return int((self.ended_at - self.started_at).total_seconds())
         return None
-    
-    def get_winner_display(self):
-        """Return a human-readable winner display"""
-        if self.winner:
-            return f"{self.winner.username} ({self.winner.telegram_id})"
-        elif self.status == 'completed' and not self.winner:
-            return "Fake Player"
-        else:
-            return "No Winner"
 
 
 class PlayerGame(models.Model):
@@ -196,7 +187,7 @@ class PlayerGame(models.Model):
     Track individual player participation in games
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='player_games')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='player_games')
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='player_games')
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='player_games')
     
@@ -228,7 +219,7 @@ class PlayerGame(models.Model):
         verbose_name_plural = 'Player Games'
         unique_together = ['game', 'user']
         indexes = [
-            # models.Index(fields=['tenant', 'user', 'created_at']),
+            models.Index(fields=['tenant', 'user', 'created_at']),
             models.Index(fields=['game', 'is_winner']),
             models.Index(fields=['user', 'is_winner']),
         ]
@@ -247,7 +238,7 @@ class GameSettings(models.Model):
     """
     Tenant-specific game settings and configurations
     """
-    # tenant = models.OneToOneField('tenants.Tenant', on_delete=models.CASCADE, related_name='game_settings')
+    tenant = models.OneToOneField('tenants.Tenant', on_delete=models.CASCADE, related_name='game_settings')
     
     # Default game settings
     default_countdown_duration = models.PositiveIntegerField(default=30)
@@ -285,7 +276,7 @@ class FakePlayerSettings(models.Model):
     """
     Settings for fake player behavior (keeping existing functionality)
     """
-    # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='fake_player_settings')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='fake_player_settings')
     
     max_fake_players = models.PositiveIntegerField(default=50)
     calls_before_fake_winner = models.PositiveIntegerField(default=10)
@@ -299,10 +290,10 @@ class FakePlayerSettings(models.Model):
     class Meta:
         verbose_name = 'Fake Player Settings'
         verbose_name_plural = 'Fake Player Settings'
-        # unique_together = ['tenant']
+        unique_together = ['tenant']
     
     def __str__(self):
-        return f"Fake Player Settings"
+        return f"Fake Player Settings for {self.tenant.name}"
     
     @classmethod
     def get_solo(cls, tenant=None):
@@ -313,4 +304,3 @@ class FakePlayerSettings(models.Model):
             # For backward compatibility, get the first one
             obj, created = cls.objects.get_or_create(pk=1)
         return obj
-    

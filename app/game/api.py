@@ -11,9 +11,9 @@ from django.utils import timezone
 from utils.fake_players_factory import count_real_players_in_games
 from .tasks import activate_fake_players, deactivate_fake_players
 from datetime import timedelta
-from .models import Game, GameSettings,GameType
+from .models import Game, GameRoom, PlayerGame, GameSettings, FakePlayerSettings
 from .tasks import charge_player,push_transaction,update_player_balance
-from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema,GameTypeSchema
+from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema,GameRoomSchema,GameRoomListSchema
 from ninja.errors import HttpError  # Correct import
 
 
@@ -167,11 +167,11 @@ def game_settings(request):
     )
 
 
-@game_router.get("/game-types/",response=GameTypeSchema)
-def game_types(request):
-    logger.info(f"Game types: {request}")
-    game_types = GameType.objects.all().order_by('-id')
-    return GameTypeSchema(game_types=game_types)
+@game_router.get("/game-rooms/", response=GameRoomListSchema)
+def game_rooms(request):
+    logger.info(f"Game rooms: {request}")
+    game_rooms = GameRoom.objects.filter(is_active=True).order_by('entry_fee')
+    return GameRoomListSchema(game_rooms=game_rooms)
 
 
 @game_router.get("/fake-player-settings/")

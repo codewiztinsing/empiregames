@@ -49,6 +49,14 @@ INSTALLED_APPS = [
     'users',
     'wallet',
     'promotion',
+    'referrals',
+    'dashboard',
+    
+    # New SAAS apps
+    'tenants',
+    'finance',
+    'analytics',
+    'features',
 ]
 
 

@@ -9,7 +9,7 @@ class Banner(models.Model):
     """
     Enhanced banner system with multi-tenancy
     """
-    # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='banners')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='banners')
     
     # Banner details
     name = models.CharField(max_length=200)
@@ -49,12 +49,12 @@ class Banner(models.Model):
         verbose_name = 'Banner'
         verbose_name_plural = 'Banners'
         indexes = [
-            # models.Index(fields=['tenant', 'is_active']),
+            models.Index(fields=['tenant', 'is_active']),
             models.Index(fields=['start_date', 'end_date']),
         ]
     
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name} - {self.tenant.name}"
     
     def soft_delete(self):
         """Soft delete the banner"""
@@ -106,7 +106,7 @@ class Promotion(models.Model):
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='promotions')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='promotions')
     
     # Promotion details
     title = models.CharField(max_length=200)
@@ -166,7 +166,7 @@ class Promotion(models.Model):
         verbose_name = 'Promotion'
         verbose_name_plural = 'Promotions'
         indexes = [
-            # models.Index(fields=['tenant', 'status']),
+            models.Index(fields=['tenant', 'status']),
             models.Index(fields=['promotion_type']),
             models.Index(fields=['start_date', 'end_date']),
             models.Index(fields=['campaign_id']),
@@ -247,7 +247,7 @@ class Campaign(models.Model):
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='campaigns')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='campaigns')
     
     # Campaign details
     name = models.CharField(max_length=200)
@@ -280,12 +280,12 @@ class Campaign(models.Model):
         verbose_name = 'Campaign'
         verbose_name_plural = 'Campaigns'
         indexes = [
-            # models.Index(fields=['tenant', 'status']),
+            models.Index(fields=['tenant', 'status']),
             models.Index(fields=['start_date', 'end_date']),
         ]
     
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name} - {self.tenant.name}"
     
     @property
     def click_through_rate(self):

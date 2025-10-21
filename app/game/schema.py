@@ -1,11 +1,9 @@
 from ninja import Schema
-from .models import GameType
+from .models import GameRoom
 
 class PlayerSchema(Schema):
     playerId: int
     numberOfBoards: int
-
-
 
 
 class BetSchema(Schema):
@@ -15,9 +13,6 @@ class BetSchema(Schema):
     total_players: int = None
     fake_players: int = None
   
-
-    
-
 
 class GameSchema(Schema):
     game_id: int
@@ -36,8 +31,6 @@ class NextGameSchema(Schema):
     bet_amount: int
 
 
-
-
 class GameSettingsSchema(Schema):
     game_speed: int
     count_down_time: int
@@ -47,9 +40,14 @@ class GameSettingsSchema(Schema):
     fake_players_can_win: bool
     
 
-class GameType(Schema):
-    bet_amount: int
-    commission: int
+class GameRoomSchema(Schema):
+    id: str
+    name: str
+    room_type: str
+    entry_fee: float
+    currency: str
+    max_players: int
+    is_active: bool
 
-class GameTypeSchema(Schema):
-    game_types: list[GameType]
+class GameRoomListSchema(Schema):
+    game_rooms: list[GameRoomSchema]
