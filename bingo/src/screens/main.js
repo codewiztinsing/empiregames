@@ -700,60 +700,38 @@ const PlayingBoard = () => {
 
       {isBingo && (
         <div className="bingo-winner-overlay">
-    <div className="bingo-winner-card">
-      {/* Animated Countdown */}
-      
-      {/* Winner Header with Celebration */}
-      <div className="winner-card-header">
-        <div className="celebration-icons">
-          <span className="celebration-icon">🎉</span>
-          <span className="celebration-icon">🏆</span>
-          <span className="celebration-icon">🎊</span>
-        </div>
-        <p className='winner-card-header-text'>🎯 BINGO WINNER! 🎯</p>
-        <div className="winner-divider"></div>
-      </div>
-      
-      {/* Winner Information */}
-      <div className="winner-info">
-        <div className="winner-card-number">
-          <span className="info-label">🏷️ Winning Card Number:</span>
-          <span className="info-value">{winnerCardNumber}</span>
-        </div>
-        <div className="winner-player-name">
-          <span className="info-label">👤 Winner Name:</span>
-          <span className="info-value">{winnerPlayerName}</span>
-        </div>
-        <div className="winning-condition">
-          <span className="info-label">🎯 Winning Condition:</span>
-          <span className="info-value winning-condition-text">{getWinningCondition(winningCard)}</span>
-        </div>
-      </div>
-     
-      {/* Winning Card Display */}
-      <div className="winning-card-section">
-        <h3 className="winning-card-title">🎲 Winning Bingo Card 🎲</h3>
-        {renderWinningCard(winningCard)}
-      </div>
-      
-      {/* Action Buttons */}
-      <div className="winner-actions">
-        <div className="winner-summary">
-          <span className="summary-text">
-            {winnerPlayerName === playerName ? (
-              <>🎊 Congratulations! You won with Card #{winnerCardNumber} 🎊</>
-            ) : (
-              <>🏆 {winnerPlayerName} won with Card #{winnerCardNumber} 🏆</>
-            )}
-          </span>
-        </div>
-        <button className="close-winner-button" onClick={handleCloseWinner}>
-          <span className="button-icon">✨</span>
-          <span className="button-text">{t('game.continuePlaying')}</span>
-          <span className="button-icon">✨</span>
-        </button>
-      </div>
-    </div>
+          <div className="bingo-winner-card">
+          <div className="winner-summary">
+                <span className="summary-text">
+                  {winnerPlayerName === playerName ? (
+                    <>🎊 Congratulations! You won with Card #{winnerCardNumber} 🎊</>
+                  ) : (
+                    <>🏆 {winnerPlayerName} won with Card #{winnerCardNumber} 🏆</>
+                  )}
+                </span>
+              </div>
+            
+            {/* Content Area */}
+            <div className="winner-content">
+              {/* Winner Information */}
+             
+             
+              {/* Winning Card Display */}
+              <div className="winning-card-section">
+                {renderWinningCard(winningCard)}
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="winner-actions">
+          
+              <button className="close-winner-button" onClick={handleCloseWinner}>
+                <span className="button-icon">✨</span>
+                <span className="button-text">{t('game.continuePlaying')}</span>
+                <span className="button-icon">✨</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
