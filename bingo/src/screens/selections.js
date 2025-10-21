@@ -767,7 +767,15 @@ const Selections = () => {
               <div className="connection-indicator">
                 <div className={`connection-dot ${isSocketConnected ? 'connected' : 'disconnected'}`}></div>
                 <span className="connection-text">
-                  {isSocketConnected ? t('game.live') : t('game.connecting')}
+                  {isSocketConnected ? 'Connected' : 'Connecting'}
+                </span>
+              </div>
+              
+              {/* Game State Indicator */}
+              <div className="game-state-indicator">
+                <div className={`game-state-dot ${gameStatus === 'in-progress' ? 'live' : 'waiting'}`}></div>
+                <span className="game-state-text">
+                  {gameStatus === 'in-progress' ? 'Live' : 'Waiting'}
                 </span>
               </div>
               

@@ -168,6 +168,45 @@ body {
   flex-shrink: 0;
 }
 
+/* Game State Indicator */
+.game-state-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  font-size: clamp(8px, 2vw, 10px);
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 40px;
+}
+
+.game-state-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+.game-state-dot.live {
+  background-color: #ff6b35;
+  box-shadow: 0 0 4px rgba(255, 107, 53, 0.6);
+}
+
+.game-state-dot.waiting {
+  background-color: #ffa726;
+  box-shadow: 0 0 4px rgba(255, 167, 38, 0.6);
+}
+
+.game-state-text {
+  color: white;
+  font-size: inherit;
+  flex-shrink: 0;
+}
+
 @keyframes pulse {
   0% {
     transform: scale(1);
@@ -1423,6 +1462,11 @@ body {
     padding: 6px 10px;
   }
   
+  .game-state-indicator {
+    height: 32px;
+    padding: 6px 10px;
+  }
+  
   .header-stat {
     height: 32px;
     padding: 6px 10px;
@@ -1459,6 +1503,11 @@ body {
   }
   
   .connection-indicator {
+    height: 28px;
+    padding: 4px 8px;
+  }
+  
+  .game-state-indicator {
     height: 28px;
     padding: 4px 8px;
   }
@@ -2691,6 +2740,11 @@ body {
   }
   
   .connection-indicator {
+    height: 35px;
+    padding: 6px 10px;
+  }
+  
+  .game-state-indicator {
     height: 35px;
     padding: 6px 10px;
   }
