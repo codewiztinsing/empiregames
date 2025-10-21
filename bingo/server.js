@@ -475,10 +475,10 @@ async function startGame(game) {
 
  
 
-  const gameInterval = setInterval(async () => {
+  // Call first ball immediately when game starts
+  const callBall = async () => {
     // Check if game has ended (winner announced)
     if (game.gameOver || game.status !== 'in-progress') {
-      clearInterval(gameInterval);
       return;
     }
     
@@ -492,12 +492,12 @@ async function startGame(game) {
     game.selectedNumbers = [];
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
-  // Schedule a fake winner based on dynamic settings (with live refresh)
-  await refreshGameSettings(game);
-  const callsThreshold = game.callsBeforeFakeWinner || 10;
-  if (game.fakePlayersCanWin && !game.fakeWinnerScheduled && game.calledNumbers.length >= callsThreshold) {
-    await scheduleFakeWinner(game);
-  }
+    // Schedule a fake winner based on dynamic settings (with live refresh)
+    await refreshGameSettings(game);
+    const callsThreshold = game.callsBeforeFakeWinner || 10;
+    if (game.fakePlayersCanWin && !game.fakeWinnerScheduled && game.calledNumbers.length >= callsThreshold) {
+      await scheduleFakeWinner(game);
+    }
 
     io.emit("gameState", {
       gameId: game.id,
@@ -511,10 +511,7 @@ async function startGame(game) {
       called_numbers: game.calledNumbers,
       total_called_numbers: game.calledNumbers.length,
       playersWithSelectedNumbers:playersWithSelectedNumbers
-
     });
-
-  
 
     if (game.calledNumbers.length >= 75) {
       io.emit("gameStatus", {
@@ -523,9 +520,13 @@ async function startGame(game) {
       })
       endGame(game);
     }
-    
-   
-  }, game.gameSpeed);
+  };
+
+  // Call first ball immediately
+  await callBall();
+
+  // Then set up interval for subsequent balls
+  const gameInterval = setInterval(callBall, game.gameSpeed);
 
   gameIntervals.set(game.id, [gameInterval]);
 }
