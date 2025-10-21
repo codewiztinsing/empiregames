@@ -241,5 +241,16 @@
     "birr": "ብር",
     "etb": "ETB",
     "symbol": "Br"
+  },
+  "deposit": {
+    "boostYourGame": "ሎሚ ጸወታኻ ኣሻሽል!",
+    "limitedFeaturesMessage": "ብምኽንያት ተወሰነ ተገልጋይ ዝተወሰነ ባህርያት ትጸውት።",
+    "depositNowToUnlock": "ሕጂ ኣብ ተቀማጢ ንምክፋት:",
+    "autoplayFunctionality": "ራስ-ሰር ተጸዋቲ ስራሕ",
+    "bingoCallingAbility": "ቢንጎ ንምጽዋዕ ክእለት",
+    "fullGameExperience": "ምሉእ ናይ ጸወታ ተመክሮ",
+    "depositNow": "ሕጂ ኣብ ተቀማጢ",
+    "maybeLater": "ምናልባት ድሕሪ ሓደ",
+    "redirectingToDeposit": "ናብ ናይ ተቀማጢ ገጽ ይመርሕ..."
   }
 }

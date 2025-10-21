@@ -317,5 +317,16 @@
     "birr": "Birr",
     "etb": "ETB",
     "symbol": "Br"
+  },
+  "deposit": {
+    "boostYourGame": "Boost Your Game!",
+    "limitedFeaturesMessage": "You're playing with limited features due to low balance.",
+    "depositNowToUnlock": "Deposit now to unlock:",
+    "autoplayFunctionality": "Auto-play functionality",
+    "bingoCallingAbility": "Bingo calling ability",
+    "fullGameExperience": "Full game experience",
+    "depositNow": "Deposit Now",
+    "maybeLater": "Maybe Later",
+    "redirectingToDeposit": "Redirecting to deposit page..."
   }
 }

@@ -357,6 +357,9 @@ const Selections = () => {
           if (Number.isNaN(numericBalance)) {
             console.log('[BalanceDebug] Could not parse balance from response, defaulting to 0', { data });
             setBalance(0);
+            // Show toast when balance is not available
+            setToast("💰 Balance not available, please deposit");
+            setIsToast(true);
           } else {
             console.log('[BalanceDebug] Balance response', { status: response.status, parsed: numericBalance, raw: data });
             setBalance(numericBalance);
@@ -368,11 +371,28 @@ const Selections = () => {
           const url = `${apiUrl}wallet/player/${parseInt(playerId)}`;
           console.log('[BalanceDebug] Error fetching balance', { url, status, data, message: error?.message });
           setLoading(false);
+          // Show toast when balance fetch fails
+          setToast("💰 Balance not available, please deposit");
+          setIsToast(true);
         }
       };
       fetchBalance();
     }
   }, [playerId, token]);
+
+  // Monitor balance display and show toast when it shows "NA"
+  useEffect(() => {
+    if (!loading && balance !== null) {
+      const parsed = parseInt(balance);
+      const isNum = !Number.isNaN(parsed);
+      
+      if (!isNum && balance !== 0) {
+        // Show toast when balance is not a valid number (shows as "NA")
+        setToast("💰 Balance not available, please deposit");
+        setIsToast(true);
+      }
+    }
+  }, [balance, loading, setToast, setIsToast]);
 
   // Countdown redirect logic removed - navigation now happens immediately on card selection
 
@@ -418,10 +438,17 @@ const Selections = () => {
 
   // Handle number click
   const handleNumberClick = useCallback(async (number) => {
-    if (isLoading || !isSocketConnected) return;
+    console.log('[CardSelectionDebug] Card clicked', { number, isLoading, isSocketConnected, gameInProgress, balance, roomId });
+    
+    if (isLoading || !isSocketConnected) {
+      console.log('[CardSelectionDebug] Blocked by loading or socket', { isLoading, isSocketConnected });
+      return;
+    }
 
     const isSelected = choosenNumbers.includes(number);
     const isPicked = pickedNumbers.includes(number);
+    
+    console.log('[CardSelectionDebug] Card state', { isSelected, isPicked, choosenNumbers, pickedNumbers });
     
     // Check if game is already in progress
     if (gameInProgress) {
@@ -437,6 +464,8 @@ const Selections = () => {
     }
     
     // Check balance before proceeding
+    let currentBalance = balance; // Default to current balance state
+    
     try {
       const apiUrl = config.API_BASE_URL;
       const fullUrl = `${apiUrl}wallet/player/${parseInt(playerId)}`;
@@ -447,7 +476,7 @@ const Selections = () => {
         await devBalanceService.getPlayerWalletByTelegram(playerId) : 
         await walletApi.getPlayerWalletByTelegram(playerId);
       const data = response?.data ?? {};
-      let currentBalance = (
+      currentBalance = (
         data?.total_balance ??
         data?.balance ??
         data?.wallet_balance ??
@@ -460,10 +489,11 @@ const Selections = () => {
         currentBalance = 0;
       }
       
+      // Allow card selection even with zero balance, but show warning
       if (currentBalance < roomId && !isSelected) {
-        setToast('Insufficient balance to select this card');
+        setToast('💰 Low balance detected. You can select cards but need to deposit to join the game');
         setIsToast(true);
-        return;
+        // Don't return - allow the selection to proceed
       }
       
       // Update balance state
@@ -471,10 +501,14 @@ const Selections = () => {
       
     } catch (error) {
       console.log('[BalanceDebug] Error during balance check on selection', { message: error?.message, status: error?.response?.status, data: error?.response?.data });
-      setToast('Error checking balance. Please try again.');
+      setToast('💰 Balance check failed, but you can still select cards. Deposit to join the game.');
       setIsToast(true);
-      return;
+      // Don't return - allow card selection to proceed even if balance check fails
+      currentBalance = 0; // Set balance to 0 as fallback
+      setBalance(0);
     }
+    
+    console.log('[CardSelectionDebug] Proceeding to card selection logic', { isSelected, number });
     
     if (isSelected) {
       // Unselect - emit leave event
@@ -496,6 +530,8 @@ const Selections = () => {
       setToast(`Card ${number} unselected. Left the game.`);
       setIsToast(true);
     } else {
+      console.log('[CardSelectionDebug] Selecting new card', { number, balance, roomId });
+      
       // Select card and wait for countdown
       setChoosenNumbers([number]);
       setSelectedNumber(number);
@@ -510,7 +546,7 @@ const Selections = () => {
       setSelectBoard(card);
       setChooseBoards([card]);
       
-      // Emit join game event
+      // Always emit join game event regardless of balance
       const joinData = {
         playerId: playerId,
         gameId: gameId || 'default',
@@ -523,26 +559,37 @@ const Selections = () => {
       console.log('Emitting joinGame with data:', joinData);
       socket.emit('joinGame', joinData);
       
-      setToast(`Card ${number} selected! Waiting for countdown to reach zero...`);
-      setIsToast(true);
+      // Show appropriate message based on balance
+      if (currentBalance >= parseInt(roomId)) {
+        setToast(`Card ${number} selected! Waiting for countdown to reach zero...`);
+        setIsToast(true);
+      } else {
+        setToast(`Card ${number} selected! Low balance detected - deposit to continue playing.`);
+        setIsToast(true);
+      }
       
       // Navigation will happen automatically when countdown reaches 0
       // No immediate navigation - user stays on selection page
     }
+    
+    console.log('[CardSelectionDebug] ===== FUNCTION COMPLETED SUCCESSFULLY =====', { number, selectedNumber, hasSelectedCard });
   }, [isLoading, isSocketConnected, choosenNumbers, pickedNumbers, gameInProgress, balance, roomId, playerId, gameId, socket, setChoosenNumbers, setSelectedNumber, setSelectBoard, setChooseBoards, setHasSelectedCard, setToast, setIsToast, playerName, navigate]);
 
   // Handle navigation only when countdown reaches 0
   useEffect(() => {
     if (countDown === 0 && hasSelectedCard && selectedNumber && gameStatus === "in-progress") {
-      // Check balance before navigation
+      // Allow joining regardless of balance - show appropriate message
       if (balance >= parseInt(roomId)) {
-        console.log("✅ Countdown reached zero - navigating to play screen");
-        navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
+        console.log("✅ Countdown reached zero - navigating to play screen with sufficient balance");
+        setToast(`🎮 Game starting! Joining with Card ${selectedNumber}!`);
+        setIsToast(true);
       } else {
-        console.log("❌ Insufficient balance for navigation");
-        setToast("Insufficient balance to join the game. Please deposit more.");
+        console.log("⚠️ Countdown reached zero - navigating to play screen with low balance");
+        setToast(`🎮 Game starting! Joining with Card ${selectedNumber}! Low balance detected.`);
         setIsToast(true);
       }
+      const hasSufficientBalance = balance >= parseInt(roomId);
+      navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}&hasSufficientBalance=${hasSufficientBalance}`);
     }
   }, [countDown, hasSelectedCard, selectedNumber, gameStatus, balance, roomId, playerId, playerName, navigate, setToast, setIsToast]);
 
@@ -848,13 +895,16 @@ const Selections = () => {
                 onClick={() => {
                   if (hasSelectedCard && selectedNumber) {
                     console.log('[StartDebug] Start clicked', { hasSelectedCard, selectedNumber, balance, roomId, playerId, playerName });
+                    // Allow joining regardless of balance - show warning if insufficient
                     if (Number(balance) >= parseInt(roomId)) {
-                      navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
+                      setToast(`🎮 Joining game with Card ${selectedNumber}! Good luck!`);
+                      setIsToast(true);
                     } else {
-                      console.log('[StartDebug] Blocked: insufficient balance', { balance, required: parseInt(roomId) });
-                      setToast(t('game.insufficientBalance'));
+                      setToast(`🎮 Joining game with Card ${selectedNumber}! Low balance detected - deposit to continue playing.`);
                       setIsToast(true);
                     }
+                    const hasSufficientBalance = Number(balance) >= parseInt(roomId);
+                    navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}&hasSufficientBalance=${hasSufficientBalance}`);
                   } else {
                     console.log('[StartDebug] Blocked: no card selected', { hasSelectedCard, selectedNumber });
                     setToast(t('game.cardNotSelected'));
@@ -920,7 +970,7 @@ const Selections = () => {
               {getCurrentPageNumbers().map((number) => {
                 const isSelected = choosenNumbers.includes(number);
                 const isPicked = pickedNumbers.includes(number);
-                const isDisabled = isPicked || !isSocketConnected || (balance < roomId && !isSelected) || gameInProgress;
+                const isDisabled = isPicked || !isSocketConnected || gameInProgress;
 
                 return (
                   <button
@@ -1098,12 +1148,16 @@ const Selections = () => {
                         className="bingo-start-button"
                         onClick={() => {
                           if (hasSelectedCard && selectedNumber) {
+                            // Allow joining regardless of balance - show appropriate message
                             if (Number(balance) >= parseInt(roomId)) {
-                              navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
+                              setToast(`🎮 Joining game with Card ${selectedNumber}! Good luck!`);
+                              setIsToast(true);
                             } else {
-                              setToast(t('game.insufficientBalance'));
+                              setToast(`🎮 Joining game with Card ${selectedNumber}! Low balance detected - deposit to continue playing.`);
                               setIsToast(true);
                             }
+                            const hasSufficientBalance = Number(balance) >= parseInt(roomId);
+                            navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}&hasSufficientBalance=${hasSufficientBalance}`);
                           } else {
                             setToast(t('game.cardNotSelected'));
                             setIsToast(true);

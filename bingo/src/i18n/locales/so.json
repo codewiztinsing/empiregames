@@ -241,5 +241,16 @@
     "birr": "Birr",
     "etb": "ETB",
     "symbol": "Br"
+  },
+  "deposit": {
+    "boostYourGame": "Ciyaartaada Kor U Qaad!",
+    "limitedFeaturesMessage": "Waxaad ciyaartaa astaamo yar sababta ah maalinta yar.",
+    "depositNowToUnlock": "Hadda gali si aad u furto:",
+    "autoplayFunctionality": "Shaqada ciyaarta tooska ah",
+    "bingoCallingAbility": "Awoodda bingo ugu yeedasho",
+    "fullGameExperience": "Khibrad ciyaar oo buuxa",
+    "depositNow": "Hadda Gali",
+    "maybeLater": "Laga Yaabee Dabadeed",
+    "redirectingToDeposit": "Lagu waday bogga galka..."
   }
 }

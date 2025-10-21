@@ -241,5 +241,16 @@
     "birr": "Birr",
     "etb": "ETB",
     "symbol": "Br"
+  },
+  "deposit": {
+    "boostYourGame": "Taphii Keessan Fooyyessaa!",
+    "limitedFeaturesMessage": "Sababa hir'ina hir'inaan taphii keessanii fooyya'aa jirta.",
+    "depositNowToUnlock": "Amma galchiin banuuf:",
+    "autoplayFunctionality": "Hojii taphii ofii",
+    "bingoCallingAbility": "Dandeettii bingo waamuu",
+    "fullGameExperience": "Hubannoo taphii guutaa",
+    "depositNow": "Amma Galchiin",
+    "maybeLater": "Tarii Booda",
+    "redirectingToDeposit": "Galchiin galchuu irratti deebi'aa jira..."
   }
 }

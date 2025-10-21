@@ -48,6 +48,7 @@ const PlayingBoard = () => {
     winnerPlayerName: null,
     markedCells: [],
     firstBoardLost: false,
+    hasSufficientBalance: true, // Track if user has sufficient balance
     winAmount: 0,
     totalWinAmount: 0,
     totalPlayers: 0,
@@ -56,7 +57,9 @@ const PlayingBoard = () => {
     isMuted: false,
     autoPlay: false,
     gameCountdown: 0,
-    gameStatus: 'waiting'
+    gameStatus: 'waiting',
+    showDepositReminder: false, // Control deposit reminder popup
+    depositReminderDismissed: false, // Track if user dismissed reminder
   });
 
   // Destructure for easier access
@@ -81,7 +84,9 @@ const PlayingBoard = () => {
     isMuted,
     autoPlay,
     gameCountdown,
-    gameStatus
+    gameStatus,
+    showDepositReminder,
+    depositReminderDismissed
   } = gameState;
 
   // Debug log for autoPlay state
@@ -127,12 +132,16 @@ const PlayingBoard = () => {
     const urlRoomId = '10'; // Force 10 birr always
     const urlPlayerName = queryParams.get('playerName');
     const urlSelectedNumber = queryParams.get('selectedNumber');
+    const urlHasSufficientBalance = queryParams.get('hasSufficientBalance') === 'true';
     
     if (urlPlayerId) setPlayerId(urlPlayerId);
     const roomIdValue = 10;
     setRoomId(roomIdValue);
     setGameId(roomIdValue); // Server uses roomId as game key
     if (urlPlayerName && urlPlayerName !== 'null') setPlayerName(urlPlayerName);
+    
+    // Set balance status
+    setGameState(prev => ({ ...prev, hasSufficientBalance: urlHasSufficientBalance }));
     if (urlSelectedNumber) {
       const selectedNum = parseInt(urlSelectedNumber);
       setSelectedNumber(selectedNum);
@@ -548,13 +557,18 @@ const PlayingBoard = () => {
         return;
       }
       
-      if (!board || !cardNumber || isBingo || isDisqualified) {
+      if (!board || !cardNumber || isBingo || isDisqualified || !gameState.hasSufficientBalance) {
         console.log('Bingo call blocked:', { 
           hasBoard: !!board, 
           hasCardNumber: !!cardNumber, 
           isBingo, 
-          isDisqualified 
+          isDisqualified,
+          hasSufficientBalance: gameState.hasSufficientBalance
         });
+        if (!gameState.hasSufficientBalance) {
+          setToast('💰 Bingo disabled - Insufficient balance. Please deposit to enable bingo.');
+          setIsToast(true);
+        }
         return;
       }
       
@@ -572,7 +586,7 @@ const PlayingBoard = () => {
     } catch (error) {
       console.error('Error handling bingo:', error);
     }
-  }, [socket, playerId, gameId, roomId, isBingo, isDisqualified, playerName]);
+  }, [socket, playerId, gameId, roomId, isBingo, isDisqualified, playerName, gameState.hasSufficientBalance, setToast, setIsToast]);
 
   const handleCloseWinner = useCallback(() => {
     try {
@@ -589,6 +603,23 @@ const PlayingBoard = () => {
       console.error('Error closing winner:', error);
     }
   }, [updateGameState, navigate, playerId, roomId, playerName]);
+
+  // Deposit reminder handlers
+  const handleCloseDepositReminder = useCallback(() => {
+    setGameState(prev => ({ ...prev, showDepositReminder: false }));
+  }, []);
+
+  const handleDismissDepositReminder = useCallback(() => {
+    setGameState(prev => ({ ...prev, showDepositReminder: false, depositReminderDismissed: true }));
+  }, []);
+
+  const handleDepositNow = useCallback(() => {
+    setGameState(prev => ({ ...prev, showDepositReminder: false }));
+    setToast(`💰 ${t('deposit.redirectingToDeposit')}`);
+    setIsToast(true);
+    // Here you would typically navigate to a deposit page or open a deposit modal
+    // For now, we'll just show a message
+  }, [setToast, setIsToast, t]);
 
   const handleLeaveGame = useCallback(() => {
     try {
@@ -612,6 +643,14 @@ const PlayingBoard = () => {
 
   const toggleAutoPlay = useCallback(() => {
     console.log('toggleAutoPlay clicked, current autoPlay:', autoPlay);
+    
+    // Check if user has sufficient balance
+    if (!gameState.hasSufficientBalance) {
+      setToast('💰 Autoplay disabled - Insufficient balance. Please deposit to enable autoplay.');
+      setIsToast(true);
+      return;
+    }
+    
     const newAutoPlayState = !autoPlay;
     console.log('newAutoPlayState:', newAutoPlayState);
     
@@ -630,11 +669,11 @@ const PlayingBoard = () => {
       setToast('👤 Manual mode - Click cells to mark them');
     }
     setIsToast(true);
-  }, [autoPlay, setToast, setIsToast]);
+  }, [autoPlay, gameState.hasSufficientBalance, setToast, setIsToast]);
 
   // Effect to handle autoplay when called numbers change
   useEffect(() => {
-    if (!autoPlay || !selectBoard || isBingo || isDisqualified) return;
+    if (!autoPlay || !selectBoard || isBingo || isDisqualified || !gameState.hasSufficientBalance) return;
     
     // Auto-mark cells when called numbers are received
     const calledNumbersArray = calledNumbers.map(num => ({ number: num }));
@@ -673,7 +712,26 @@ const PlayingBoard = () => {
       setIsToast(true);
       handleBingo(selectBoard, selectedNumber);
     }
-  }, [calledNumbers, autoPlay, selectBoard, selectedCell, isBingo, isDisqualified, selectedNumber, handleBingo, updateGameState, setToast, setIsToast]);
+  }, [calledNumbers, autoPlay, selectBoard, selectedCell, isBingo, isDisqualified, selectedNumber, handleBingo, updateGameState, setToast, setIsToast, gameState.hasSufficientBalance]);
+
+  // Deposit reminder effect for users with insufficient balance
+  useEffect(() => {
+    if (gameState.hasSufficientBalance || depositReminderDismissed) return;
+    
+    // Show reminder after 30 seconds, then every 30 seconds
+    const initialTimer = setTimeout(() => {
+      setGameState(prev => ({ ...prev, showDepositReminder: true }));
+    }, 30000); // 30 seconds
+    
+    const intervalTimer = setInterval(() => {
+      setGameState(prev => ({ ...prev, showDepositReminder: true }));
+    }, 30000); // 30 seconds
+    
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(intervalTimer);
+    };
+  }, [gameState.hasSufficientBalance, depositReminderDismissed]);
 
   // Winner countdown effect
   useEffect(() => {
@@ -700,6 +758,26 @@ const PlayingBoard = () => {
 
       {isBingo && (
         <div className="bingo-winner-overlay">
+          {/* Liyu Logo Rain Animation */}
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          <div className="liyu-logo-rain">🎯</div>
+          
           <div className="bingo-winner-card">
           <div className="winner-summary">
                 <span className="summary-text">
@@ -729,6 +807,56 @@ const PlayingBoard = () => {
                 <span className="button-icon">✨</span>
                 <span className="button-text">{t('game.continuePlaying')}</span>
                 <span className="button-icon">✨</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Deposit Reminder Popup */}
+      {showDepositReminder && !gameState.hasSufficientBalance && (
+        <div className="deposit-reminder-overlay">
+          <div className="deposit-reminder-card">
+            {/* Close Button */}
+            <button className="deposit-close-button" onClick={handleCloseDepositReminder}>
+              <span className="close-icon">×</span>
+            </button>
+            
+            {/* Header */}
+            <div className="deposit-reminder-header">
+              <div className="deposit-icon">💰</div>
+              <h2 className="deposit-title">{t('deposit.boostYourGame')}</h2>
+            </div>
+            
+            {/* Content */}
+            <div className="deposit-reminder-content">
+              <p className="deposit-message">
+                🎮 {t('deposit.limitedFeaturesMessage')}
+              </p>
+              <p className="deposit-benefits">
+                ✨ <strong>{t('deposit.depositNowToUnlock')}</strong><br/>
+                🤖 {t('deposit.autoplayFunctionality')}<br/>
+                🎯 {t('deposit.bingoCallingAbility')}<br/>
+                🏆 {t('deposit.fullGameExperience')}
+              </p>
+              
+              <div className="deposit-amounts">
+                <div className="amount-option">💎 50 {t('currency.birr')}</div>
+                <div className="amount-option">💎 100 {t('currency.birr')}</div>
+                <div className="amount-option">💎 200 {t('currency.birr')}</div>
+                <div className="amount-option">💎 500 {t('currency.birr')}</div>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="deposit-reminder-actions">
+              <button className="deposit-now-button" onClick={handleDepositNow}>
+                <span className="button-icon">💳</span>
+                <span className="button-text">{t('deposit.depositNow')}</span>
+                <span className="button-icon">💳</span>
+              </button>
+              <button className="dismiss-button" onClick={handleDismissDepositReminder}>
+                <span className="button-text">{t('deposit.maybeLater')}</span>
               </button>
             </div>
           </div>
@@ -859,12 +987,16 @@ const PlayingBoard = () => {
           {/* Control Buttons */}
           <div className="control-buttons">
             <button 
-              className={`control-btn ${autoPlay ? 'active' : ''}`}
+              className={`control-btn ${autoPlay ? 'active' : ''} ${!gameState.hasSufficientBalance ? 'disabled' : ''}`}
               onClick={() => {
                 console.log('Button clicked!');
                 toggleAutoPlay();
               }}
-              title={autoPlay ? t('game.autoplayOnTooltip') : t('game.autoplayOffTooltip')}
+              disabled={!gameState.hasSufficientBalance}
+              title={
+                !gameState.hasSufficientBalance ? '💰 Autoplay disabled - Insufficient balance' :
+                autoPlay ? t('game.autoplayOnTooltip') : t('game.autoplayOffTooltip')
+              }
             >
               <FontAwesomeIcon icon={faCog} />
               {autoPlay ? t('game.autoPlayOn') : t('game.autoPlayOff')}
@@ -942,7 +1074,7 @@ const PlayingBoard = () => {
           
               {/* Bingo Button */}
               <button 
-                className={`bingo-button ${(firstBoardLost || isDisqualified || !selectedNumber) ? 'disabled' : ''}`}
+                className={`bingo-button ${(firstBoardLost || isDisqualified || !selectedNumber || !gameState.hasSufficientBalance) ? 'disabled' : ''}`}
                 onClick={() => {
                   console.log('Bingo button clicked!');
                   console.log('Current state:', { 
@@ -952,15 +1084,17 @@ const PlayingBoard = () => {
                     selectBoard,
                     isBingo,
                     playerId,
-                    gameId
+                    gameId,
+                    hasSufficientBalance: gameState.hasSufficientBalance
                   });
                   handleBingo(selectBoard, selectedNumber);
                 }}
-                disabled={firstBoardLost || isDisqualified || !selectedNumber}
+                disabled={firstBoardLost || isDisqualified || !selectedNumber || !gameState.hasSufficientBalance}
                 title={
                   firstBoardLost ? t('game.boardLost') :
                   isDisqualified ? t('game.disqualified') :
                   !selectedNumber ? t('game.noCardSelected') :
+                  !gameState.hasSufficientBalance ? '💰 Insufficient balance - Deposit to enable bingo' :
                   t('game.callBingo')
                 }
               >
