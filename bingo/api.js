@@ -23,9 +23,9 @@ const gameWinWallet = async (player, bet_amount, win_amount, total_players)=>{
   }
   
   try{
-    const backUrl = process.env.BACK_URL || 'http://localhost:8000/api/v1/'
-    console.log("backUrl",backUrl)
-    const winUrl = backUrl + 'game/win-game/'
+    const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+    console.log("baseUrl",baseUrl)
+    const winUrl = `${baseUrl}/api/v1/game/win-game/`;
     console.log("winUrl",winUrl)
     console.log("Sending POST request to win-game with data:", data);
     await axios.post(winUrl, data)
@@ -44,8 +44,8 @@ const gameWinWallet = async (player, bet_amount, win_amount, total_players)=>{
 
 const checkBalance = async (playerId) => {
   try {
-    const backUrl = process.env.BACK_URL || 'http://localhost:8000/api/v1/'
-    const balanceUrl = backUrl + 'balance/?user_id=' + playerId
+    const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+    const balanceUrl = `${baseUrl}/api/v1/balance/?user_id=${playerId}`;
     const response = await fetch(balanceUrl, {
       method: 'GET',
       headers: {
@@ -68,9 +68,9 @@ const checkBalance = async (playerId) => {
 
 
 const getCurrentGame = async (betAmount)=>{
-  const backUrl = process.env.BACK_URL || 'http://localhost:8000/api/v1/'
+  const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
   
-  const currentGameUrl = backUrl + 'game/next-game/'
+  const currentGameUrl = `${baseUrl}/api/v1/game/next-game/`;
   console.log("currentGameUrl",currentGameUrl)
   const params = {
     params: {
@@ -99,8 +99,8 @@ const gameLossWallet = async (players, betAmount, totalPlayers = null, fakePlaye
 
   try{
       if(!data.players) return null;
-      const backUrl = process.env.BACK_URL || 'http://localhost:8000/api/v1/'
-      const lossUrl = backUrl + 'game/join-game/'
+      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+      const lossUrl = `${baseUrl}/api/v1/game/join-game/`;
       console.log("lossUrl",lossUrl)
       console.log("data",data)
       await axios.post(lossUrl,data)
@@ -120,16 +120,16 @@ const gameLossWallet = async (players, betAmount, totalPlayers = null, fakePlaye
 
 
 const getGameSettings = async ()=>{
-  const backUrl = process.env.BACK_URL || 'http://localhost:8000/api/v1/'
-  const gameSettingsUrl = backUrl + 'game/game-settings/'
+  const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const gameSettingsUrl = `${baseUrl}/api/v1/game/game-settings/`;
   const response = await axios.get(gameSettingsUrl)
   const data = response.data;
   return data;
 }
 
 const getFakePlayerSettings = async ()=>{
-  const backUrl = process.env.BACK_URL || 'http://localhost:8000/api/v1/'
-  const fakePlayerSettingsUrl = backUrl + 'game/fake-player-settings/'
+  const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const fakePlayerSettingsUrl = `${baseUrl}/api/v1/game/fake-player-settings/`;
   const response = await axios.get(fakePlayerSettingsUrl)
   const data = response.data;
   return data;

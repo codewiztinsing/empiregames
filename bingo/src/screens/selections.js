@@ -86,7 +86,7 @@ const Selections = () => {
   // Fetch fake player settings
   const fetchFakePlayerSettings = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/v1/game/fake-player-settings/`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/game/fake-player-settings/`);
       if (response.ok) {
         const settings = await response.json();
         console.log('[FakePlayerSettings] Loaded:', settings);
@@ -410,6 +410,11 @@ const Selections = () => {
       totalCalledNumbers: pickedNumbers.length
     }));
   }, [pickedNumbers]);
+
+  // Keep totalCalledNumbers state in sync with gameStats
+  useEffect(() => {
+    setTotalCalledNumbers(gameStats.totalCalledNumbers || 0);
+  }, [gameStats.totalCalledNumbers]);
 
   // Sidebar functions
   const toggleSidebar = () => {
@@ -853,7 +858,7 @@ const Selections = () => {
                 </div>
                 <div className="header-stat called-stat">
                   <div className="stat-content">
-                    <span className="stat-value">{totalCalledNumbers}/75</span>
+                    <span className="stat-value">{gameStats.totalCalledNumbers || 0}/75</span>
                   </div>
                 </div>
               </div>
