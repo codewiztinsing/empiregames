@@ -851,6 +851,11 @@ const Selections = () => {
                     })()}</span>
                   </div>
                 </div>
+                <div className="header-stat called-stat">
+                  <div className="stat-content">
+                    <span className="stat-value">{totalCalledNumbers}/75</span>
+                  </div>
+                </div>
               </div>
               
               {/* Countdown */}

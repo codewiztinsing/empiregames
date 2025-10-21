@@ -190,6 +190,14 @@ const PlayingBoard = () => {
     };
   }, [socket]);
 
+  // Keep totalCalledNumbers in sync with calledNumbers length
+  useEffect(() => {
+    updateGameState(prevState => ({
+      ...prevState,
+      totalCalledNumbers: prevState.calledNumbers.length
+    }));
+  }, [calledNumbers.length, updateGameState]);
+
   // Socket event handlers
   const handleGameState = useCallback((data) => {
     try {
@@ -215,7 +223,10 @@ const PlayingBoard = () => {
       // Handle called numbers
       if (data.called_numbers && Array.isArray(data.called_numbers)) {
         const calledNumbersArray = data.called_numbers.map(ball => ball.number);
-        updateGameState({ calledNumbers: calledNumbersArray });
+        updateGameState({ 
+          calledNumbers: calledNumbersArray,
+          totalCalledNumbers: calledNumbersArray.length
+        });
         
         // Animate the last called number
         if (calledNumber) {
@@ -230,7 +241,8 @@ const PlayingBoard = () => {
       } else if (calledNumber) {
         // Fallback for single number updates
         updateGameState(prevState => ({
-          calledNumbers: [...prevState.calledNumbers, parseInt(calledNumber)]
+          calledNumbers: [...prevState.calledNumbers, parseInt(calledNumber)],
+          totalCalledNumbers: prevState.calledNumbers.length + 1
         }));
         
           setTimeout(() => {
@@ -319,7 +331,8 @@ const PlayingBoard = () => {
       // Update called numbers if provided
       if (data.pickedNumbers && data.pickedNumbers.numbers) {
         updateGameState({
-          calledNumbers: data.pickedNumbers.numbers
+          calledNumbers: data.pickedNumbers.numbers,
+          totalCalledNumbers: data.pickedNumbers.numbers.length
         });
       }
       
@@ -1010,19 +1023,70 @@ const PlayingBoard = () => {
             </button>
               </div>
 
-          {/* Bonus and Countdown */}
-          <div className="bonus-countdown">
-            <div className="bonus-indicator">
-              <span className="star">⭐</span>
-              {t('game.bonusOn')}
+          {/* Bonus and Countdown / Recent Balls */}
+          {gameStatus === 'in-progress' ? (
+            <div className="recent-balls-container">
+              <div className="recent-balls-label">{t('game.recentBalls')}</div>
+              <div className="recent-balls-display">
+                {(() => {
+                  const recentBalls = calledNumbers.slice(-3);
+                  const emptySlots = 3 - recentBalls.length;
+                  
+                  return [
+                    // Show recent balls
+                    ...recentBalls.map((number, index) => {
+                      // Convert number to BINGO format (B-1, I-16, etc.)
+                      let letter = '';
+                      let displayNumber = number;
+                      if (number >= 1 && number <= 15) {
+                        letter = 'B';
+                        displayNumber = number;
+                      } else if (number >= 16 && number <= 30) {
+                        letter = 'I';
+                        displayNumber = number;
+                      } else if (number >= 31 && number <= 45) {
+                        letter = 'N';
+                        displayNumber = number;
+                      } else if (number >= 46 && number <= 60) {
+                        letter = 'G';
+                        displayNumber = number;
+                      } else if (number >= 61 && number <= 75) {
+                        letter = 'O';
+                        displayNumber = number;
+                      }
+                      
+                      return (
+                        <div key={`ball-${index}`} className="recent-ball">
+                          <span className="recent-ball-letter">{letter}</span>
+                          <span className="recent-ball-number">{displayNumber}</span>
+                        </div>
+                      );
+                    }),
+                    // Show empty slots
+                    ...Array.from({ length: emptySlots }, (_, index) => (
+                      <div key={`empty-${index}`} className="recent-ball empty">
+                        <span className="recent-ball-letter">-</span>
+                        <span className="recent-ball-number">-</span>
+                      </div>
+                    ))
+                  ];
+                })()}
+              </div>
             </div>
-            <div className="countdown-display">
-              <span className="countdown-label">{t('game.countdown')}</span>
-              <span className={`countdown-timer ${gameStatus === 'in-progress' ? 'active' : ''}`}>
-                {gameCountdown || countDown || 0} : 01
-              </span>
+          ) : (
+            <div className="bonus-countdown">
+              <div className="bonus-indicator">
+                <span className="star">⭐</span>
+                {t('game.bonusOn')}
+              </div>
+              <div className="countdown-display">
+                <span className="countdown-label">{t('game.countdown')}</span>
+                <span className={`countdown-timer ${gameStatus === 'in-progress' ? 'active' : ''}`}>
+                  {gameCountdown || countDown || 0} : 01
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Ball Display */}
           <div className="ball-display-container">

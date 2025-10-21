@@ -1130,6 +1130,18 @@ body {
   transform: translateY(-1px);
 }
 
+.called-stat {
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.25), rgba(39, 174, 96, 0.15));
+  border-color: rgba(46, 204, 113, 0.4);
+  box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2);
+}
+
+.called-stat:hover {
+  border-color: rgba(46, 204, 113, 0.6);
+  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+  transform: translateY(-1px);
+}
+
 /* Icon animations */
 @keyframes iconFloat {
   0%, 100% {

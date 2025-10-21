@@ -278,10 +278,32 @@ body {
     margin-top: 10px;
   }
   
-  .action-btn {
-    width: 100%;
-    max-width: none;
-    min-width: auto;
+  .recent-balls-container {
+    padding: 10px;
+    border-radius: 6px;
+  }
+  
+  .recent-balls-label {
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+  
+  .recent-balls-display {
+    gap: 5px;
+    flex-wrap: nowrap;
+  }
+  
+  .recent-ball {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .recent-ball-letter {
+    font-size: 8px;
+  }
+  
+  .recent-ball-number {
+    font-size: 10px;
   }
 }
 
@@ -298,6 +320,34 @@ body {
   
   .language-switcher-container .flag {
     font-size: 10px;
+  }
+  
+  .recent-balls-container {
+    padding: 8px;
+    border-radius: 6px;
+  }
+  
+  .recent-balls-label {
+    font-size: 10px;
+    margin-bottom: 5px;
+  }
+  
+  .recent-balls-display {
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+  
+  .recent-ball {
+    width: 25px;
+    height: 25px;
+  }
+  
+  .recent-ball-letter {
+    font-size: 7px;
+  }
+  
+  .recent-ball-number {
+    font-size: 9px;
   }
 }
 
@@ -455,6 +505,132 @@ body {
 .control-btn.active:hover {
   background-color: #229954 !important;
   transform: translateY(-3px) !important;
+}
+
+/* Recent Balls Display */
+.recent-balls-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.recent-balls-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(180deg); }
+}
+
+.recent-balls-label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #ffffff;
+  margin-bottom: 8px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 2;
+}
+
+.recent-balls-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  position: relative;
+  z-index: 2;
+}
+
+.recent-ball {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border: 2px solid #ffffff;
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.recent-ball::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transform: rotate(45deg);
+  transition: all 0.3s ease;
+}
+
+.recent-ball:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 
+    0 6px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.recent-ball:hover::before {
+  animation: ballShine 0.6s ease-in-out;
+}
+
+@keyframes ballShine {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.recent-ball-letter {
+  font-size: 10px;
+  font-weight: bold;
+  color: #667eea;
+  margin-bottom: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 2;
+}
+
+.recent-ball-number {
+  font-size: 12px;
+  font-weight: bold;
+  color: #2c3e50;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 2;
+}
+
+/* Add pulsing animation for empty slots */
+.recent-ball.empty {
+  background: linear-gradient(145deg, #e9ecef, #dee2e6);
+  border: 3px dashed #adb5bd;
+  animation: pulseEmpty 2s ease-in-out infinite;
+}
+
+@keyframes pulseEmpty {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
 }
 
 .bonus-countdown {
