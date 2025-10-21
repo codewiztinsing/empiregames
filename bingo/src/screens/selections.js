@@ -86,7 +86,7 @@ const Selections = () => {
   // Fetch fake player settings
   const fetchFakePlayerSettings = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/game/fake-player-settings/`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/v1/game/fake-player-settings/`);
       if (response.ok) {
         const settings = await response.json();
         console.log('[FakePlayerSettings] Loaded:', settings);

@@ -1165,8 +1165,14 @@ const PlayingBoard = () => {
                 {t('game.bingo')}
               </button>
               
-              {/* Bottom Action Buttons */}
-              <div className="bottom-actions">
+           
+            </div>
+
+            
+          )}
+
+             {/* Bottom Action Buttons */}
+             <div className="bottom-actions">
                 <button className="action-btn leave-btn" onClick={handleLeaveGame}>
                   <FontAwesomeIcon icon={faSignOutAlt} />
                   {t('game.leaveGame')}
@@ -1176,9 +1182,10 @@ const PlayingBoard = () => {
                   {t('game.refresh')}
                 </button>
               </div>
-            </div>
-          )}
         </div>
+
+        
+        
       </div>
     </div>
   );
