@@ -100,6 +100,21 @@
     "live": "ቀጥታ",
     "connecting": "ኣብ ምትሕልላፍ ላይ"
   },
+  "promotion": {
+    "title": "ልዩ ማስተዋወቂያ!",
+    "description": "እዚ ዓቢ ተዋፅኦ ኣይተወድእ!",
+    "discount": "ምቕንን",
+    "bonus": "ጉርሻ",
+    "minimumDeposit": "ዝቐንን ተቐማጢ",
+    "claimNow": "ሕጂ ውሰድ",
+    "close": "ዕጸው",
+    "validUntil": "ዝሰርሕ ክሳዕ",
+    "termsAndConditions": "ስርዓታትን ኩነታትን",
+    "viewDetails": "ዝርዝር ርእይ",
+    "limitedTime": "ዝተገደበ ግዜ ተዋፅኦ",
+    "exclusive": "ልዩ ተዋፅኦ",
+    "newPromotion": "ሓድሽ ማስተዋወቂያ ይረክብ"
+  },
   "bingo": {
     "bingo": "ቢንጎ",
     "congratulations": "እንኳዕ ደስ ኢልኩም!",

@@ -46,6 +46,9 @@ body {
   z-index: 100;
   width: 100%;
   gap: 8px;
+  min-height: 60px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .konjo-header-left {
@@ -55,8 +58,8 @@ body {
   z-index: 2;
   position: relative;
   justify-content: flex-start;
-  width: 25%;
-  flex: 1;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 .hamburger-menu {
@@ -64,19 +67,22 @@ body {
   cursor: pointer;
   margin-left: 0;
   order: -1;
+  flex-shrink: 0;
 }
 
 .konjo-logo {
   background-color: #3498db;
   color: white;
-  width: 40px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: clamp(12px, 3vw, 16px);
+  white-space: nowrap;
+  flex-shrink: 0;
   height: 40px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  font-size: 12px;
 }
 
 .konjo-title {
@@ -94,18 +100,19 @@ body {
 .konjo-header-right {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: flex-end;
+  gap: 4px;
   z-index: 2;
   position: relative;
-  width: 75%;
-  flex: 3;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .balance-button {
   background-color: #f39c12;
   color: white;
-  padding: clamp(6px, 1.5vw, 12px);
+  padding: 8px 12px;
   border-radius: 20px;
   display: flex;
   align-items: center;
@@ -113,6 +120,9 @@ body {
   font-weight: bold;
   font-size: clamp(10px, 2.5vw, 14px);
   white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 0;
+  height: 40px;
 }
 
 .user-icon {
@@ -123,35 +133,39 @@ body {
 .connection-indicator {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
+  gap: 4px;
+  padding: 8px 12px;
   background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  font-size: clamp(10px, 2.5vw, 12px);
+  border-radius: 20px;
+  font-size: clamp(8px, 2vw, 10px);
   font-weight: 500;
   white-space: nowrap;
+  flex-shrink: 0;
+  height: 40px;
 }
 
 .connection-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   animation: pulse 2s infinite;
+  flex-shrink: 0;
 }
 
 .connection-dot.connected {
   background-color: #4caf50;
-  box-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
+  box-shadow: 0 0 4px rgba(76, 175, 80, 0.6);
 }
 
 .connection-dot.disconnected {
   background-color: #f44336;
-  box-shadow: 0 0 6px rgba(244, 67, 54, 0.6);
+  box-shadow: 0 0 4px rgba(244, 67, 54, 0.6);
 }
 
 .connection-text {
   color: white;
   font-size: inherit;
+  flex-shrink: 0;
 }
 
 @keyframes pulse {
@@ -958,37 +972,147 @@ body {
 /* Header Stats */
 .header-stats {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   margin-right: 4px;
-  width: 200px;
-  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .header-stat {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  font-size: 10px;
-  min-width: 40px;
-  min-height: 40px;
-  aspect-ratio: 1;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  flex-shrink: 1;
+  height: 40px;
 }
 
-.header-stat .stat-icon {
-  font-size: 10px;
+.header-stat::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
 }
 
-.header-stat .stat-value {
-  color: white;
-  font-weight: bold;
-  font-size: 9px;
-  white-space: nowrap;
+.header-stat:hover::before {
+  left: 100%;
+}
+
+.header-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.stat-icon {
+  font-size: 14px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  animation: iconFloat 3s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.stat-content {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-width: 0;
+  flex: 1;
+  height: 100%;
   text-align: center;
+}
+
+.stat-value {
+  color: white;
+  font-weight: 900;
+  font-size: 14px;
+  line-height: 1.1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  margin: 0;
+  font-family: inherit;
+}
+
+.stat-label {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  font-size: 8px;
   line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  margin: 0;
+  font-family: inherit;
+}
+
+/* Special styling for different stat types */
+.players-stat {
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.25), rgba(41, 128, 185, 0.15));
+  border-color: rgba(52, 152, 219, 0.4);
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);
+}
+
+.players-stat:hover {
+  border-color: rgba(52, 152, 219, 0.6);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+  transform: translateY(-1px);
+}
+
+.prize-stat {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.25), rgba(230, 126, 34, 0.15));
+  border-color: rgba(241, 196, 15, 0.4);
+  box-shadow: 0 4px 15px rgba(241, 196, 15, 0.2);
+}
+
+.prize-stat:hover {
+  border-color: rgba(241, 196, 15, 0.6);
+  box-shadow: 0 6px 20px rgba(241, 196, 15, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Icon animations */
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Pulse animation for active stats */
+.header-stat.active {
+  animation: statPulse 2s ease-in-out infinite;
+}
+
+@keyframes statPulse {
+  0%, 100% {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+  }
 }
 
 /* Interactive Live Indicator */
@@ -1147,6 +1271,220 @@ body {
   font-size: 16px;
   font-weight: bold;
   margin-top: 10px;
+}
+
+/* Header Countdown */
+.header-countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+  animation: pulse 1s infinite;
+  height: 40px;
+}
+
+.countdown-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff6b35, #f7931e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+  border: 3px solid #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.countdown-circle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+.countdown-number {
+  font-size: 20px;
+  font-weight: 900;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  z-index: 1;
+  position: relative;
+}
+
+/* Countdown animations */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Countdown urgency styles */
+.countdown-circle.urgent {
+  background: linear-gradient(135deg, #ff4757, #ff3838);
+  animation: urgentPulse 0.5s infinite;
+}
+
+.countdown-circle.urgent .countdown-number {
+  animation: urgentBlink 0.5s infinite;
+}
+
+@keyframes urgentPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.6);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(255, 71, 87, 0.8);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.6);
+  }
+}
+
+@keyframes urgentBlink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Responsive countdown styles */
+@media (max-width: 768px) {
+  .header-countdown {
+    margin-left: 4px;
+    height: 35px;
+  }
+  
+  .countdown-circle {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .countdown-number {
+    font-size: 14px;
+  }
+  
+  .countdown-status {
+    font-size: 7px;
+  }
+}
+
+@media (max-width: 480px) {
+  .konjo-logo {
+    height: 32px;
+    padding: 6px 10px;
+  }
+  
+  .balance-button {
+    height: 32px;
+    padding: 6px 10px;
+  }
+  
+  .connection-indicator {
+    height: 32px;
+    padding: 6px 10px;
+  }
+  
+  .header-stat {
+    height: 32px;
+    padding: 6px 10px;
+  }
+  
+  .header-countdown {
+    margin-left: 2px;
+    height: 32px;
+  }
+  
+  .countdown-circle {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .countdown-number {
+    font-size: 12px;
+  }
+  
+  .countdown-status {
+    font-size: 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .konjo-logo {
+    height: 28px;
+    padding: 4px 8px;
+  }
+  
+  .balance-button {
+    height: 28px;
+    padding: 4px 8px;
+  }
+  
+  .connection-indicator {
+    height: 28px;
+    padding: 4px 8px;
+  }
+  
+  .header-stat {
+    height: 28px;
+    padding: 4px 8px;
+  }
+  
+  .header-countdown {
+    margin-left: 1px;
+    height: 28px;
+  }
+  
+  .countdown-circle {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .countdown-number {
+    font-size: 10px;
+  }
+  
+  .countdown-status {
+    font-size: 5px;
+  }
 }
 
 /* Bottom Message */
@@ -2342,78 +2680,110 @@ body {
 
 /* Responsive Header Stats */
 @media (max-width: 768px) {
+  .konjo-logo {
+    height: 35px;
+    padding: 6px 10px;
+  }
+  
+  .balance-button {
+    height: 35px;
+    padding: 6px 10px;
+  }
+  
+  .connection-indicator {
+    height: 35px;
+    padding: 6px 10px;
+  }
+  
   .header-stats {
     gap: 4px;
     margin-right: 2px;
-    width: 150px;
   }
   
   .header-stat {
-    padding: 10px;
-    font-size: 8px;
-    min-width: 32px;
-    min-height: 32px;
+    padding: 6px 10px;
+    gap: 4px;
+    height: 35px;
   }
   
-  .header-stat .stat-icon {
-    font-size: 8px;
+  .stat-icon {
+    font-size: 12px;
   }
   
-  .header-stat .stat-value {
+  .stat-value {
+    font-size: 12px;
+  }
+  
+  .stat-label {
     font-size: 7px;
-  }
-  
-  .live-indicator {
-    padding: 4px 8px;
-    font-size: 8px;
-    margin-right: 2px;
-  }
-  
-  .live-dot {
-    width: 8px;
-    height: 8px;
-  }
-  
-  .live-text {
-    font-size: 9px;
   }
 }
 
 @media (max-width: 480px) {
+  .konjo-header {
+    padding: 6px 4px;
+    gap: 4px;
+  }
+  
+  .konjo-header-left {
+    gap: 8px;
+  }
+  
+  .konjo-header-right {
+    gap: 2px;
+  }
+  
   .header-stats {
     gap: 2px;
-    margin-right: 2px;
-    width: 120px;
-  }
-  
-  .header-stat {
-    padding: 8px;
-    font-size: 7px;
-    min-width: 28px;
-    min-height: 28px;
-  }
-  
-  .header-stat .stat-icon {
-    font-size: 7px;
-  }
-  
-  .header-stat .stat-value {
-    font-size: 6px;
-  }
-  
-  .live-indicator {
-    padding: 3px 6px;
-    font-size: 7px;
     margin-right: 1px;
   }
   
-  .live-dot {
-    width: 6px;
-    height: 6px;
+  .header-stat {
+    padding: 6px 10px;
+    gap: 2px;
+    height: 32px;
   }
   
-  .live-text {
+  .stat-icon {
+    font-size: 10px;
+  }
+  
+  .stat-value {
+    font-size: 10px;
+  }
+  
+  .stat-label {
+    font-size: 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .konjo-header {
+    padding: 4px 2px;
+    gap: 2px;
+  }
+  
+  .header-stats {
+    gap: 1px;
+    margin-right: 0;
+  }
+  
+  .header-stat {
+    padding: 4px 8px;
+    gap: 1px;
+    height: 28px;
+  }
+  
+  .stat-icon {
     font-size: 8px;
+  }
+  
+  .stat-value {
+    font-size: 8px;
+  }
+  
+  .stat-label {
+    font-size: 5px;
   }
 }
 

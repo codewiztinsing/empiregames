@@ -41,6 +41,19 @@ const io = socketIo(server, {
 // ---------------- Utility helpers (non-breaking) ----------------
 const { computeTotals, emitGameState } = require('./src/helpers/serverHelpers');
 
+// Promotion functions
+function sendPromotionToAllPlayers(promotionData) {
+  console.log('Sending promotion to all players:', promotionData);
+  io.emit('promotion_received', {
+    type: 'promotion',
+    data: promotionData,
+    timestamp: new Date().toISOString()
+  });
+}
+
+// Expose promotion function globally for admin use
+global.sendPromotionToAllPlayers = sendPromotionToAllPlayers;
+
 // Ethiopian fake user names (first and last) for realistic winner announcements
 const ETH_FIRST_NAMES = [
   'Abebe','Kebede','Haile','Bekele','Mulu','Tesfaye','Meron','Saba','Marta','Hanna','Mulugeta','Alemu','Lulit','Lidya','Yohannes','Dereje','Samrawit','Saron','Mahider','Hirut','Eden','Yared','Nati','Miki','Tigist','Aida','Rahel','Yetnayet','Mekdes','Eyerusalem','Nahom','Henok','Daniel','Fikirte','Blen','Rediet','Bethelhem','Selam','Selamawit','Abel','Samuel','Mersha','Fitsum','Gashaw','Girma','Solomon','Mebratu','Genet','Lensa','Fanaye','Mahi','Sosina','Tsion','Kidus','Kaleb','Abraham','Mikiyas','Biruk','Natnael','Yonatan','Yonas','Marta','Ruth','Mimi','Yemisrach','Yeshi','Seble','Hiwot','Mignot','Sosena','Mahlet','Mahi','Lensa','Lensa','Saron','Feven','Bethel','Hermela','Mikias','Nebiyu','Brook','Surafel','Senait','Abush','Fitsum','Asnakech','Azeb','Hanan','Hawi','Hewan','Bethelhem','Tsige','Mebrahtu','Kidist','Eleni','Lulit','Medhanit','Tinsae','Edom','Sosina','Eyerus','Netsanet','Selamnesh','Hayat','Zemzem','Feysel','Sami','Jafar','Hamdi'
@@ -167,6 +180,8 @@ async  function endGame(game) {
   game.isCountStart = false;
   game.fauldMadePlayers.clear();
   game.fakeWinnerScheduled = false;
+  game.fakeSelectionActive = false;
+  game.fakeTargetCount = 0;
 
   for (const [socketId, user] of users.entries()) {
     if (user.gameId === game.id) users.delete(socketId);
@@ -207,7 +222,7 @@ function startCountDown(game) {
   game.countDown = game.countDown || 30; // Use game's countdown time or default to 30
   game.isCountStart = true;
 
-  const countdownInterval = setInterval(() => {
+  const countdownInterval = setInterval(async () => {
     // Check if we still have at least 1 player during countdown
     if (game.players.size < 1) {
       clearInterval(countdownInterval);
@@ -235,13 +250,16 @@ function startCountDown(game) {
      if (game.status === 'waiting') {
       if (!game.fakeSelectionActive) {
         game.fakeSelectionActive = true;
-        // Use max fake players from API settings
-        game.fakeTargetCount = game.maxFakePlayers || 50;
-        console.log(`Starting fake selection with target: ${game.fakeTargetCount}`);
+        // Generate random number of fake players for this game (between 30-80% of max)
+        const maxFakePlayers = game.maxFakePlayers || 50;
+        const minFakePlayers = Math.floor(maxFakePlayers * 0.3); // 30% of max
+        const maxFakePlayersForGame = Math.floor(maxFakePlayers * 0.8); // 80% of max
+        game.fakeTargetCount = Math.floor(Math.random() * (maxFakePlayersForGame - minFakePlayers + 1)) + minFakePlayers;
+        console.log(`Starting fake selection with random target: ${game.fakeTargetCount} (range: ${minFakePlayers}-${maxFakePlayersForGame}, max: ${maxFakePlayers})`);
       }
-      const cap = game.maxFakePlayers || 50;
+      const cap = game.fakeTargetCount || game.maxFakePlayers || 50;
       const current = game.selectedNumbers.filter(n => n !== null).length;
-      console.log(`Fake player selection: current=${current}, cap=${cap}, maxFakePlayers=${game.maxFakePlayers}, gameStatus=${game.status}`);
+      console.log(`Fake player selection: current=${current}, cap=${cap}, target=${game.fakeTargetCount}, maxFakePlayers=${game.maxFakePlayers}, gameStatus=${game.status}`);
       
       if (current < cap) {
         const universe = Array.from({ length: 800 }, (_, i) => i + 1);
@@ -250,10 +268,40 @@ function startCountDown(game) {
         console.log(`Available candidates: ${candidates.length}, taken: ${taken.size}`);
         
         if (candidates.length > 0) {
-          // Increase selection rate: select up to 20 players per tick instead of 3
-          const maxPerTick = Math.min(20, cap - current);
-          const missing = Math.min(maxPerTick, candidates.length);
-          console.log(`Selecting ${missing} fake players (maxPerTick=${maxPerTick}, candidates=${candidates.length})`);
+          // Human-like selection patterns with varying behavior
+          let playersThisTick;
+          
+          // Simulate different player behaviors with occasional pauses
+          const behaviorPattern = Math.random();
+          const pauseChance = Math.random();
+          
+          // 10% chance of a pause (simulating players thinking or getting distracted)
+          if (pauseChance < 0.1) {
+            console.log(`Fake players taking a pause (simulating human behavior)`);
+            const pauseDelay = Math.floor(Math.random() * 2000) + 500; // 500-2500ms pause
+            await new Promise(resolve => setTimeout(resolve, pauseDelay));
+            return; // Skip this tick
+          }
+          
+          if (behaviorPattern < 0.25) {
+            // Slow, thoughtful players (1 player per tick)
+            playersThisTick = 1;
+          } else if (behaviorPattern < 0.65) {
+            // Normal players (1-2 players per tick)
+            playersThisTick = Math.floor(Math.random() * 2) + 1;
+          } else if (behaviorPattern < 0.9) {
+            // Quick players (2-3 players per tick)
+            playersThisTick = Math.floor(Math.random() * 2) + 2;
+          } else {
+            // Burst players (occasionally select 3-4 players quickly)
+            playersThisTick = Math.floor(Math.random() * 2) + 3;
+          }
+          
+          const maxPerTick = Math.min(4, cap - current);
+          playersThisTick = Math.min(playersThisTick, maxPerTick);
+          const missing = Math.min(playersThisTick, candidates.length);
+          
+          console.log(`Selecting ${missing} fake players (behavior: ${behaviorPattern.toFixed(2)}, pause: ${pauseChance.toFixed(2)})`);
           
           const chosenList = [];
           for (let i = 0; i < missing; i++) {
@@ -261,11 +309,37 @@ function startCountDown(game) {
             const chosen = candidates.splice(idx, 1)[0];
             game.selectedNumbers.push(chosen);
             chosenList.push(chosen);
+            
+            // Simulate human-like delay between selections (20-400ms)
+            if (i < missing - 1) {
+              const delay = Math.floor(Math.random() * 380) + 20;
+              await new Promise(resolve => setTimeout(resolve, delay));
+            }
           }
+          
           console.log(`Selected fake players: ${chosenList.join(', ')}`);
           console.log(`Total selectedNumbers length after selection: ${game.selectedNumbers.length}`);
           io.emit('pickedNumbers', { roomId: game.roomId, numbers: game.selectedNumbers });
-          // Totals and consolidated gameState will be emitted below once per tick
+          
+          // Immediately update and broadcast totals after fake player selection
+          const realPlayers = game.players ? game.players.size : 0;
+          const fakePlayersSelected = game.selectedNumbers.filter(n => n !== null).length;
+          const totalSelectedCards = realPlayers + fakePlayersSelected;
+          const broadcastWinAmount = totalSelectedCards * game.roomId * 0.78;
+          
+          io.emit("gameState", {
+            gameId: game.id,
+            roomId: game.roomId,
+            pickedNumbers: game.selectedNumbers.filter(num => num !== null),
+            total_players: totalSelectedCards,
+            win_amount: broadcastWinAmount,
+            game_status: game.status,
+            count_down: game.countDown
+          });
+          
+          // Add random pause between ticks (50-1200ms) to simulate human behavior
+          const pauseDelay = Math.floor(Math.random() * 1150) + 50;
+          await new Promise(resolve => setTimeout(resolve, pauseDelay));
         } else {
           console.log(`No more candidates available for fake selection`);
         }
@@ -279,10 +353,11 @@ function startCountDown(game) {
       game.fakeSelectionActive = false;
       game.fakeTargetCount = 0;
     }
-    // Compute totals using max fake players from API settings
+    // Compute totals dynamically based on actual selected cards (real + fake)
     const realPlayers = game.players ? game.players.size : 0;
-    const maxFakePlayers = game.maxFakePlayers || 50;
-    const broadcastTotalPlayers = realPlayers + maxFakePlayers;
+    const fakePlayersSelected = game.selectedNumbers.filter(n => n !== null).length;
+    const totalSelectedCards = realPlayers + fakePlayersSelected;
+    const broadcastTotalPlayers = totalSelectedCards;
     const broadcastWinAmount = broadcastTotalPlayers * game.roomId * 0.78;
     game.total_players = broadcastTotalPlayers;
     game.total_winAmount = broadcastWinAmount;
@@ -333,10 +408,10 @@ function startCountDown(game) {
       game.calledNumbers = [];
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== null);
 
-      // Freeze metrics at start (include fakes)
+      // Freeze metrics at start (include actual selected cards)
       const realPlayersAtStart = game.players ? game.players.size : 0;
-      const maxFakePlayers = game.maxFakePlayers || 50;
-      const totalPlayersAtStart = realPlayersAtStart + maxFakePlayers;
+      const fakePlayersSelectedAtStart = game.selectedNumbers.filter(n => n !== null).length;
+      const totalPlayersAtStart = realPlayersAtStart + fakePlayersSelectedAtStart;
       const winAmountAtStart = totalPlayersAtStart * game.roomId * 0.78;
 
       game.total_players = totalPlayersAtStart;
@@ -381,13 +456,13 @@ async function startGame(game) {
     numberOfBoards: 1
   }));
 
-  // Calculate total players (real + max fake from API)
+  // Calculate total players (real + actual fake players selected)
   const realPlayers = game.players.size;
-  const maxFakePlayers = game.maxFakePlayers || 50;
-  const totalPlayers = realPlayers + maxFakePlayers;
+  const fakePlayersSelected = game.selectedNumbers.filter(n => n !== null).length;
+  const totalPlayers = realPlayers + fakePlayersSelected;
   
   game.total_players = totalPlayers;
-  game.fake_players = maxFakePlayers;
+  game.fake_players = fakePlayersSelected;
   game.total_winAmount = totalPlayers * game.roomId * 0.78;
 
   try {
@@ -794,8 +869,8 @@ io.on('connection', (socket) => {
     }
 
     const realPlayers = game.players ? game.players.size : 0;
-    const maxFakePlayers = game.maxFakePlayers || 50;
-    const total_players = realPlayers + maxFakePlayers;
+    const fakePlayersSelected = game.selectedNumbers.filter(n => n !== null).length;
+    const total_players = realPlayers + fakePlayersSelected;
 
     const win_amount = total_players * game.roomId * 0.78
     game.total_winAmount = win_amount
@@ -1314,6 +1389,25 @@ socket.on("faulMadePlayer", (data) => {
     }
     }
   });
+
+  // Handle promotion events
+  socket.on('promotion_viewed', (data) => {
+    console.log('Promotion viewed:', data);
+    // Track promotion view in database
+    // This could be sent to Django backend via HTTP request
+  });
+
+  socket.on('promotion_clicked', (data) => {
+    console.log('Promotion clicked:', data);
+    // Track promotion click in database
+    // This could be sent to Django backend via HTTP request
+  });
+
+  socket.on('promotion_closed', (data) => {
+    console.log('Promotion closed:', data);
+    // Track promotion dismissal
+  });
+
 });
 
 app.use(express.static(path.join(__dirname, './build')));

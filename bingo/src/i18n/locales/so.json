@@ -100,6 +100,21 @@
     "live": "Toska",
     "connecting": "La xidhiidhiyaa"
   },
+  "promotion": {
+    "title": "Barnaamij Gaar Ah!",
+    "description": "Barnaamijkan aan ka baxin!",
+    "discount": "Hooseynta",
+    "bonus": "Boonus",
+    "minimumDeposit": "Gelinta Ugu Yar",
+    "claimNow": "Hadda Qaado",
+    "close": "Xidho",
+    "validUntil": "Ficil Hanga",
+    "termsAndConditions": "Shuruudaha iyo Xaaladaha",
+    "viewDetails": "Faahfaahinta Eeg",
+    "limitedTime": "Barnaamij Waqti Xadidan",
+    "exclusive": "Barnaamij Gaar Ah",
+    "newPromotion": "Barnaamij Cusub Waa La Heli Karaa"
+  },
   "bingo": {
     "bingo": "BINGO",
     "congratulations": "Hambalyo!",

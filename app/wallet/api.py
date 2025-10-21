@@ -57,6 +57,45 @@ def chapa_callback(request):
 
 
 
+# Development-only public endpoint for balance (bypasses authentication)
+@router.get("/dev/player/{telegram_id}", auth=None)
+def dev_player_wallet(request, telegram_id: int):
+    """Development-only endpoint that bypasses authentication for balance fetching"""
+    from django.conf import settings
+    
+    # Only allow in development mode
+    if not settings.DEBUG:
+        return JsonResponse({"error": "This endpoint is only available in development mode"}, status=403)
+    
+    try:
+        user = User.objects.filter(telegram_id=telegram_id).first()
+        print("[DevWallet] user = ", user)
+        wallet = Wallet.objects.filter(user=user).first()
+        
+        # Get total bonus amount generated from sponsor change for this user
+        sponsor_change_bonus_total = ReferralBonus.objects.filter(
+            referrer=user,
+            bonus_type='sponsor_change'
+        ).aggregate(total=models.Sum('bonus_amount'))['total'] or 0
+        
+        # Get referral bonus amount
+        referral_bonus = ReferralBonus.objects.filter(
+            referrer=user,
+        ).aggregate(total=models.Sum('bonus_amount'))['total'] or 0
+        
+        print("[DevWallet] referral_bonus = ", referral_bonus)
+        
+        total_balance = (wallet.balance if wallet else 0) + referral_bonus 
+        return JsonResponse({
+            "balance": wallet.balance if wallet else 0,
+            "referral_bonus": referral_bonus, 
+            "total_balance": total_balance,
+            "dev_mode": True
+        }, status=200)
+    except Exception as e:
+        print("[DevWallet] error = ", e)
+        return JsonResponse({"error": str(e)}, status=400)
+
 # get player wallet balance
 @router.get("/player/{telegram_id}")
 def player_wallet(request,telegram_id:int):

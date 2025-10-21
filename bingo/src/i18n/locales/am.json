@@ -100,6 +100,21 @@
     "live": "ቀጥታ",
     "connecting": "በመገናኘት ላይ"
   },
+  "promotion": {
+    "title": "ልዩ ማስተዋወቂያ!",
+    "description": "ይህንን አስደናቂ ተዋፅኦ አትተው!",
+    "discount": "ቅናሽ",
+    "bonus": "ጉርሻ",
+    "minimumDeposit": "ዝቅተኛ ተቀማጭ",
+    "claimNow": "አሁን ይውሰዱ",
+    "close": "ዝጋ",
+    "validUntil": "የሚሰራ እስከ",
+    "termsAndConditions": "ውሎች እና ሁኔታዎች",
+    "viewDetails": "ዝርዝሮችን ይመልከቱ",
+    "limitedTime": "የተገደበ ጊዜ ተዋፅኦ",
+    "exclusive": "ልዩ ተዋፅኦ",
+    "newPromotion": "አዲስ ማስተዋወቂያ ይገኛል"
+  },
   "bingo": {
     "bingo": "ቢንጎ",
     "congratulations": "እንኳን ደስ አለዎት!",

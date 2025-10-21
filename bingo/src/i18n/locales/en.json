@@ -100,6 +100,21 @@
     "live": "Live",
     "connecting": "Connecting"
   },
+  "promotion": {
+    "title": "Special Promotion!",
+    "description": "Don't miss out on this amazing offer!",
+    "discount": "Discount",
+    "bonus": "Bonus",
+    "minimumDeposit": "Minimum Deposit",
+    "claimNow": "Claim Now",
+    "close": "Close",
+    "validUntil": "Valid Until",
+    "termsAndConditions": "Terms & Conditions",
+    "viewDetails": "View Details",
+    "limitedTime": "Limited Time Offer",
+    "exclusive": "Exclusive Offer",
+    "newPromotion": "New Promotion Available"
+  },
   "bingo": {
     "bingo": "BINGO",
     "congratulations": "Congratulations!",

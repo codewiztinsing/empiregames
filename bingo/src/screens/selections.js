@@ -11,9 +11,11 @@ import { useTranslation } from 'react-i18next';
 import checkPlayerBalance from '../api';
 import axios from 'axios';
 import { walletApi } from '../services/apiClient';
+import { devBalanceService } from '../services/mockBalanceService';
 import { generateFixedCard } from '../helpers/fixedBingoCards';
 import config from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
+import PromotionModal from '../components/PromotionModal';
 
 const Selections = () => {
   const { t } = useTranslation();
@@ -71,7 +73,41 @@ const Selections = () => {
     calledNumbersCount: 0,
     totalCalledNumbers: 0
   });
+  const [fakePlayerSettings, setFakePlayerSettings] = useState({
+    max_fake_players: 50,
+    calls_before_fake_winner: 10,
+    real_players_threshold: 10,
+    fake_players_can_win: true
+  });
+  const [currentPromotion, setCurrentPromotion] = useState(null);
+  const [showPromotionModal, setShowPromotionModal] = useState(false);
   const { user, token, isAuthenticated } = useAuth();
+
+  // Fetch fake player settings
+  const fetchFakePlayerSettings = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/v1/game/fake-player-settings/`);
+      if (response.ok) {
+        const settings = await response.json();
+        console.log('[FakePlayerSettings] Loaded:', settings);
+        setFakePlayerSettings(settings);
+      } else {
+        console.warn('[FakePlayerSettings] Failed to load, using defaults');
+      }
+    } catch (error) {
+      console.error('[FakePlayerSettings] Error loading settings:', error);
+    }
+  };
+
+  // Load fake player settings on component mount and refresh periodically
+  useEffect(() => {
+    fetchFakePlayerSettings();
+    
+    // Refresh settings every 30 seconds to stay up-to-date
+    const interval = setInterval(fetchFakePlayerSettings, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Socket connection handlers
   useEffect(() => {
@@ -186,6 +222,11 @@ const Selections = () => {
       
       // Update game statistics for all game states
       if (state.total_players !== undefined || state.win_amount !== undefined) {
+        console.log('[GameStats] Updating stats:', { 
+          total_players: state.total_players, 
+          win_amount: state.win_amount,
+          currentStats: gameStats 
+        });
         setGameStats(prevStats => ({
           ...prevStats,
           totalPlayers: state.total_players || prevStats.totalPlayers,
@@ -266,6 +307,17 @@ const Selections = () => {
     socket.on('rejoinError', handleRejoinError);
     socket.on('allPlayerSelections', handleAllPlayerSelections);
 
+    // Promotion WebSocket listener
+    const handlePromotionReceived = (data) => {
+      console.log('Promotion received:', data);
+      if (data.type === 'promotion' && data.data) {
+        setCurrentPromotion(data.data);
+        setShowPromotionModal(true);
+      }
+    };
+
+    socket.on('promotion_received', handlePromotionReceived);
+
     return () => {
       socket.off('gameState', handleGameState);
       socket.off('pickedNumbers', handlePickedNumbers);
@@ -274,6 +326,7 @@ const Selections = () => {
       socket.off('rejoinSuccess', handleRejoinSuccess);
       socket.off('rejoinError', handleRejoinError);
       socket.off('allPlayerSelections', handleAllPlayerSelections);
+      socket.off('promotion_received', handlePromotionReceived);
     };
   }, [socket, user?.telegram_id, user?.username, user?.first_name, setPlayerId, setPlayerName, setRoomId, gameStatus, countDown, setToast, setIsToast, setPlayersLength, setCountDown, navigate]);
 
@@ -286,7 +339,11 @@ const Selections = () => {
           console.log('[BalanceDebug] Fetching balance', { apiUrl, playerId: String(playerId), hasToken: !!token, tokenPrefix: token ? String(token).slice(0, 12) : null });
           const fullUrl = `${apiUrl}wallet/player/${parseInt(playerId)}`;
           console.log('[BalanceDebug] Full URL', { fullUrl, withToken: !!localStorage.getItem('telegram_auth_token') });
-          const response = await walletApi.getPlayerWalletByTelegram(playerId);
+          // Use development service if in dev mode, otherwise use regular API
+          const isDevMode = process.env.REACT_APP_DEV_MODE === 'true';
+          const response = isDevMode ? 
+            await devBalanceService.getPlayerWalletByTelegram(playerId) : 
+            await walletApi.getPlayerWalletByTelegram(playerId);
           const data = response?.data ?? {};
           // Try multiple possible keys used by different backends
           let totalBalance = (
@@ -318,6 +375,11 @@ const Selections = () => {
   }, [playerId, token]);
 
   // Countdown redirect logic removed - navigation now happens immediately on card selection
+
+  // Debug gameStats changes
+  useEffect(() => {
+    console.log('[GameStats] Current gameStats:', gameStats);
+  }, [gameStats]);
 
   // Update called numbers count when pickedNumbers changes
   useEffect(() => {
@@ -379,7 +441,11 @@ const Selections = () => {
       const apiUrl = config.API_BASE_URL;
       const fullUrl = `${apiUrl}wallet/player/${parseInt(playerId)}`;
       console.log('[BalanceDebug] Selection balance check URL', { fullUrl, withToken: !!localStorage.getItem('telegram_auth_token') });
-      const response = await walletApi.getPlayerWalletByTelegram(playerId);
+      // Use development service if in dev mode, otherwise use regular API
+      const isDevMode = process.env.REACT_APP_DEV_MODE === 'true';
+      const response = isDevMode ? 
+        await devBalanceService.getPlayerWalletByTelegram(playerId) : 
+        await walletApi.getPlayerWalletByTelegram(playerId);
       const data = response?.data ?? {};
       let currentBalance = (
         data?.total_balance ??
@@ -529,6 +595,40 @@ const Selections = () => {
     return pages;
   };
 
+  // Promotion handlers
+  const handlePromotionClose = () => {
+    setShowPromotionModal(false);
+    setCurrentPromotion(null);
+  };
+
+  const handlePromotionClaim = (promotion) => {
+    console.log('Promotion claimed:', promotion);
+    // Here you can implement the claim logic
+    // For example, redirect to deposit page or show success message
+    setToast(`🎉 ${t('promotion.claimNow')} - ${promotion.title}`);
+    setIsToast(true);
+  };
+
+  const handlePromotionTrackView = async (promotionId) => {
+    try {
+      const apiUrl = config.API_BASE_URL;
+      await axios.post(`${apiUrl}promotions/track-view/${promotionId}`);
+      console.log('Promotion view tracked:', promotionId);
+    } catch (error) {
+      console.error('Error tracking promotion view:', error);
+    }
+  };
+
+  const handlePromotionTrackClick = async (promotionId) => {
+    try {
+      const apiUrl = config.API_BASE_URL;
+      await axios.post(`${apiUrl}promotions/track-click/${promotionId}`);
+      console.log('Promotion click tracked:', promotionId);
+    } catch (error) {
+      console.error('Error tracking promotion click:', error);
+    }
+  };
+
   return (
     <>
       {isToast && <Toaster message={toast} />}
@@ -639,6 +739,17 @@ const Selections = () => {
   </div>
 )}
 
+      {/* Promotion Modal */}
+      {showPromotionModal && currentPromotion && (
+        <PromotionModal
+          promotion={currentPromotion}
+          onClose={handlePromotionClose}
+          onClaim={handlePromotionClaim}
+          onTrackView={handlePromotionTrackView}
+          onTrackClick={handlePromotionTrackClick}
+        />
+      )}
+
       {!loading && (
         <div className="konjo-selections-container">
           {/* Header */}
@@ -662,20 +773,42 @@ const Selections = () => {
               
               {/* Game Stats */}
               <div className="header-stats">
-                <div className="header-stat">
-                  <span className="stat-value">{gameStats.totalPlayers}</span>
+                <div className="header-stat players-stat">
+                  <div className="stat-content">
+                    <span className="stat-value">{(() => {
+                      console.log('[RenderDebug] Players stat:', { 
+                        totalPlayers: gameStats.totalPlayers, 
+                        gameStats: gameStats
+                      });
+                      // Use the total players from backend (includes real + random fake players)
+                      return gameStats.totalPlayers || 0;
+                    })()}</span>
+                  </div>
                 </div>
-                <div className="header-stat">
-                  <span className="stat-value">{gameStats.totalWinAmount.toFixed(0)} ETB</span>
+                <div className="header-stat prize-stat">
+                  <div className="stat-content">
+                    <span className="stat-value">{(() => {
+                      console.log('[RenderDebug] Prize stat:', { 
+                        totalWinAmount: gameStats.totalWinAmount, 
+                        gameStats: gameStats 
+                      });
+                      return gameStats.totalWinAmount ? gameStats.totalWinAmount.toFixed(0) : '0';
+                    })()}</span>
+                  </div>
                 </div>
               </div>
               
               {/* Countdown */}
-              {countDown > 0 && (
+              {countDown > 0 && gameStatus === "countdown" && (
                 <div className="header-countdown">
-                  <div className="countdown-circle">
+                  <div className={`countdown-circle ${countDown <= 3 ? 'urgent' : ''}`}>
                     <span className="countdown-number">{countDown}</span>
                   </div>
+                  {countDown <= 5 && (
+                    <div className="countdown-status">
+                      {countDown <= 3 ? '🚨 Starting Soon!' : '⏰ Get Ready!'}
+                    </div>
+                  )}
                 </div>
               )}
               
@@ -691,15 +824,7 @@ const Selections = () => {
                 <div className="user-icon">👤</div>
               </div>
               
-              {/* Interactive Live Indicator */}
-              <div className="live-indicator interactive" onClick={() => {
-                setToast("🎮 Live game in progress! Join now!");
-                setIsToast(true);
-              }}>
-                <div className="live-dot"></div>
-                <span className="live-text">LIVE</span>
-                <div className="live-pulse-ring"></div>
-              </div>
+            
             </div>
           </div>
 

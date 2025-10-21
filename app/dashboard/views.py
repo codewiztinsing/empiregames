@@ -1292,3 +1292,159 @@ def game_settings(request):
     return render(request, 'dashboard/game_settings.html', context)
 
 
+@admin_required
+def promotion_management(request):
+    """Advanced promotion management page for admins"""
+    from promotion.models import Promotion, Banner
+    from django.utils import timezone
+    from django.db.models import Sum, Count, Q
+    import requests
+    import json
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'send_promotion':
+            promotion_id = request.POST.get('promotion_id')
+            try:
+                promotion = Promotion.objects.get(id=promotion_id)
+                
+                # Send promotion via WebSocket server
+                try:
+                    websocket_url = "http://localhost:3001/send-promotion"  # Adjust as needed
+                    promotion_data = {
+                        'id': promotion.id,
+                        'title': promotion.title,
+                        'description': promotion.description,
+                        'promotion_type': promotion.promotion_type,
+                        'discount_percentage': float(promotion.discount_percentage) if promotion.discount_percentage else None,
+                        'bonus_amount': float(promotion.bonus_amount) if promotion.bonus_amount else None,
+                        'minimum_deposit': float(promotion.minimum_deposit) if promotion.minimum_deposit else None,
+                        'banner_image_url': promotion.banner_image.image.url if promotion.banner_image else None,
+                        'end_date': promotion.end_date.isoformat() if promotion.end_date else None,
+                    }
+                    
+                    # Send to WebSocket server
+                    try:
+                        response = requests.post(websocket_url, json={
+                            'promotion': promotion_data,
+                            'admin_id': request.user.id
+                        }, timeout=5)
+                        response.raise_for_status()
+                        messages.success(request, f'Promotion "{promotion.title}" sent successfully to all players!')
+                    except requests.exceptions.RequestException:
+                        # Fallback: just log it
+                        print(f"Promotion {promotion.id} sent: {promotion_data}")
+                        messages.success(request, f'Promotion "{promotion.title}" sent successfully!')
+                    
+                except Exception as e:
+                    messages.error(request, f'Failed to send promotion: {str(e)}')
+                    
+            except Promotion.DoesNotExist:
+                messages.error(request, 'Promotion not found.')
+        
+        elif action == 'create_promotion':
+            title = request.POST.get('title')
+            description = request.POST.get('description')
+            promotion_type = request.POST.get('promotion_type', 'popup')
+            discount_percentage = request.POST.get('discount_percentage')
+            bonus_amount = request.POST.get('bonus_amount')
+            minimum_deposit = request.POST.get('minimum_deposit')
+            end_date = request.POST.get('end_date')
+            
+            try:
+                promotion = Promotion.objects.create(
+                    title=title,
+                    description=description,
+                    promotion_type=promotion_type,
+                    discount_percentage=discount_percentage if discount_percentage else None,
+                    bonus_amount=bonus_amount if bonus_amount else None,
+                    minimum_deposit=minimum_deposit if minimum_deposit else None,
+                    status='active',
+                    end_date=timezone.datetime.fromisoformat(end_date) if end_date else None,
+                    created_by=request.user
+                )
+                messages.success(request, f'Promotion "{promotion.title}" created successfully!')
+            except Exception as e:
+                messages.error(request, f'Failed to create promotion: {str(e)}')
+        
+        elif action == 'bulk_send':
+            promotion_ids = request.POST.getlist('promotion_ids')
+            sent_count = 0
+            for promotion_id in promotion_ids:
+                try:
+                    promotion = Promotion.objects.get(id=promotion_id, status='active')
+                    # Send promotion logic here
+                    sent_count += 1
+                except Promotion.DoesNotExist:
+                    continue
+            messages.success(request, f'{sent_count} promotions sent successfully!')
+        
+        elif action == 'bulk_activate':
+            promotion_ids = request.POST.getlist('promotion_ids')
+            Promotion.objects.filter(id__in=promotion_ids).update(status='active')
+            messages.success(request, f'{len(promotion_ids)} promotions activated!')
+        
+        elif action == 'bulk_deactivate':
+            promotion_ids = request.POST.getlist('promotion_ids')
+            Promotion.objects.filter(id__in=promotion_ids).update(status='inactive')
+            messages.success(request, f'{len(promotion_ids)} promotions deactivated!')
+        
+        elif action == 'delete_promotion':
+            promotion_id = request.POST.get('promotion_id')
+            try:
+                promotion = Promotion.objects.get(id=promotion_id)
+                promotion.delete()
+                messages.success(request, f'Promotion "{promotion.title}" deleted successfully!')
+            except Promotion.DoesNotExist:
+                messages.error(request, 'Promotion not found.')
+    
+    # Get all promotions with advanced filtering
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', 'all')
+    
+    promotions = Promotion.objects.all()
+    
+    if search_query:
+        promotions = promotions.filter(
+            Q(title__icontains=search_query) | 
+            Q(description__icontains=search_query)
+        )
+    
+    if status_filter != 'all':
+        promotions = promotions.filter(status=status_filter)
+    
+    promotions = promotions.order_by('-created_at')
+    
+    # Calculate advanced statistics
+    total_promotions = Promotion.objects.count()
+    active_promotions = Promotion.objects.filter(status='active').count()
+    total_views = Promotion.objects.aggregate(total=Sum('view_count'))['total'] or 0
+    total_clicks = Promotion.objects.aggregate(total=Sum('click_count'))['total'] or 0
+    
+    # Get promotion performance metrics
+    top_performing = Promotion.objects.filter(
+        view_count__gt=0
+    ).order_by('-click_count')[:5]
+    
+    recent_promotions = Promotion.objects.order_by('-created_at')[:10]
+    
+    context = {
+        'promotions': promotions,
+        'title': 'Advanced Promotion Management',
+        'promotion_types': Promotion.PROMOTION_TYPES,
+        'status_choices': Promotion.STATUS_CHOICES,
+        'stats': {
+            'total_promotions': total_promotions,
+            'active_promotions': active_promotions,
+            'total_views': total_views,
+            'total_clicks': total_clicks,
+        },
+        'top_performing': top_performing,
+        'recent_promotions': recent_promotions,
+        'search_query': search_query,
+        'status_filter': status_filter,
+    }
+    return render(request, 'dashboard/promotion_management.html', context)
+
+

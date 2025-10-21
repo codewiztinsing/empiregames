@@ -100,6 +100,21 @@
     "live": "Dhugaa",
     "connecting": "Walqabsiinsa irra jira"
   },
+  "promotion": {
+    "title": "Fooyya'ii Gaarii!",
+    "description": "Fooyya'ii kun hin darbin!",
+    "discount": "Dhiisuu",
+    "bonus": "Boonasii",
+    "minimumDeposit": "Dhiisuu Dhiibbaa",
+    "claimNow": "Amma Fudhadhaa",
+    "close": "Cufi",
+    "validUntil": "Dhugaa Hanga",
+    "termsAndConditions": "Haalaafi Haala",
+    "viewDetails": "Fooyya'aa Dubbisi",
+    "limitedTime": "Yeroo Xixiqoo Fooyya'ii",
+    "exclusive": "Fooyya'ii Addaa",
+    "newPromotion": "Fooyya'ii Haaraa Argama"
+  },
   "bingo": {
     "bingo": "BINGO",
     "congratulations": "Baga nagaan!",

@@ -1,0 +1,897 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Advanced Promotion Management{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Advanced Promotion Management Styles */
+.promotion-dashboard {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.promotion-header {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.promotion-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    border-radius: 15px;
+    padding: 20px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card.active {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    box-shadow: 0 8px 25px rgba(67, 233, 123, 0.3);
+}
+
+.stat-card.views {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    box-shadow: 0 8px 25px rgba(250, 112, 154, 0.3);
+}
+
+.stat-card.clicks {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    box-shadow: 0 8px 25px rgba(168, 237, 234, 0.3);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.promotion-controls {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.control-row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-box, .filter-box {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-box input, .filter-box select {
+    width: 100%;
+    padding: 12px 15px 12px 45px;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.search-box input:focus, .filter-box select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-box::before, .filter-box::before {
+    content: '\f002';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    z-index: 1;
+}
+
+.filter-box::before {
+    content: '\f0b0';
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-advanced {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-primary-advanced {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary-advanced:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-success-advanced {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(67, 233, 123, 0.3);
+}
+
+.btn-success-advanced:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(67, 233, 123, 0.4);
+}
+
+.btn-warning-advanced {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(250, 112, 154, 0.3);
+}
+
+.btn-warning-advanced:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(250, 112, 154, 0.4);
+}
+
+.promotions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.promotion-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.promotion-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.promotion-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.promotion-card.active::before {
+    background: linear-gradient(90deg, #43e97b, #38f9d7);
+}
+
+.promotion-card.inactive::before {
+    background: linear-gradient(90deg, #fa709a, #fee140);
+}
+
+.promotion-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.promotion-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+    flex: 1;
+}
+
+.promotion-status {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-active {
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+    color: white;
+}
+
+.status-inactive {
+    background: linear-gradient(135deg, #fa709a, #fee140);
+    color: white;
+}
+
+.status-scheduled {
+    background: linear-gradient(135deg, #ffecd2, #fcb69f);
+    color: #8b4513;
+}
+
+.promotion-type {
+    display: inline-block;
+    padding: 4px 8px;
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.promotion-description {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.promotion-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.detail-item {
+    text-align: center;
+    padding: 8px;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 8px;
+    font-size: 0.8rem;
+}
+
+.detail-value {
+    font-weight: 700;
+    color: #667eea;
+    display: block;
+    margin-top: 2px;
+}
+
+.promotion-metrics {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 8px;
+}
+
+.metric {
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.metric-value {
+    font-weight: 700;
+    color: #667eea;
+    display: block;
+    margin-top: 2px;
+}
+
+.promotion-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-send {
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+    color: white;
+}
+
+.btn-send:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(67, 233, 123, 0.3);
+}
+
+.btn-edit {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.btn-edit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-delete {
+    background: linear-gradient(135deg, #fa709a, #fee140);
+    color: white;
+}
+
+.btn-delete:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(250, 112, 154, 0.3);
+}
+
+.btn-schedule {
+    background: linear-gradient(135deg, #ffecd2, #fcb69f);
+    color: #8b4513;
+}
+
+.btn-schedule:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 236, 210, 0.3);
+}
+
+.bulk-actions {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.bulk-actions h4 {
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
+
+.bulk-checkboxes {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.bulk-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bulk-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #667eea;
+}
+
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.quick-stat {
+    text-align: center;
+    padding: 15px;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 10px;
+}
+
+.quick-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #667eea;
+    display: block;
+}
+
+.quick-stat-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+    .promotion-dashboard {
+        padding: 10px;
+    }
+    
+    .promotion-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .promotions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .control-row {
+        flex-direction: column;
+    }
+    
+    .search-box, .filter-box {
+        min-width: 100%;
+    }
+    
+    .action-buttons {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="promotion-dashboard">
+    <!-- Header -->
+    <div class="promotion-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">
+                    <i class="fas fa-bullhorn text-primary"></i>
+                    Advanced Promotion Management
+                </h1>
+                <p class="text-muted mb-0">Manage and track your promotional campaigns with advanced analytics</p>
+            </div>
+            <div class="action-buttons">
+                <button type="button" class="btn-advanced btn-primary-advanced" data-toggle="modal" data-target="#createPromotionModal">
+                    <i class="fas fa-plus"></i> Create Promotion
+                </button>
+                <button type="button" class="btn-advanced btn-success-advanced" onclick="sendAllActivePromotions()">
+                    <i class="fas fa-paper-plane"></i> Send All Active
+                </button>
+                <button type="button" class="btn-advanced btn-warning-advanced" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Refresh Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="promotion-stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ promotions|length }}</div>
+            <div class="stat-label">Total Promotions</div>
+        </div>
+        <div class="stat-card active">
+            <div class="stat-number">{{ promotions|length|add:"-1" }}</div>
+            <div class="stat-label">Active Promotions</div>
+        </div>
+        <div class="stat-card views">
+            <div class="stat-number">
+                {% for promotion in promotions %}
+                    {{ promotion.view_count|add:promotion.click_count }}
+                {% endfor %}
+            </div>
+            <div class="stat-label">Total Views</div>
+        </div>
+        <div class="stat-card clicks">
+            <div class="stat-number">
+                {% for promotion in promotions %}
+                    {{ promotion.click_count }}
+                {% endfor %}
+            </div>
+            <div class="stat-label">Total Clicks</div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="promotion-controls">
+        <div class="control-row">
+            <div class="search-box">
+                <input type="text" id="searchPromotions" placeholder="Search promotions..." onkeyup="filterPromotions()">
+            </div>
+            <div class="filter-box">
+                <select id="statusFilter" onchange="filterPromotions()">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="scheduled">Scheduled</option>
+                </select>
+            </div>
+            <div class="action-buttons">
+                <button type="button" class="btn-advanced btn-primary-advanced" onclick="exportPromotions()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button type="button" class="btn-advanced btn-warning-advanced" onclick="schedulePromotions()">
+                    <i class="fas fa-clock"></i> Schedule
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="bulk-actions">
+        <h4><i class="fas fa-tasks"></i> Bulk Actions</h4>
+        <div class="bulk-checkboxes">
+            <div class="bulk-checkbox">
+                <input type="checkbox" id="selectAll" onchange="toggleAllPromotions()">
+                <label for="selectAll">Select All</label>
+            </div>
+            <div class="bulk-checkbox">
+                <input type="checkbox" id="selectActive" onchange="selectActivePromotions()">
+                <label for="selectActive">Select Active Only</label>
+            </div>
+        </div>
+        <div class="action-buttons">
+            <button type="button" class="btn-advanced btn-success-advanced" onclick="bulkSendPromotions()">
+                <i class="fas fa-paper-plane"></i> Send Selected
+            </button>
+            <button type="button" class="btn-advanced btn-warning-advanced" onclick="bulkActivatePromotions()">
+                <i class="fas fa-play"></i> Activate Selected
+            </button>
+            <button type="button" class="btn-advanced btn-primary-advanced" onclick="bulkDeactivatePromotions()">
+                <i class="fas fa-pause"></i> Deactivate Selected
+            </button>
+        </div>
+    </div>
+
+    <!-- Promotions Grid -->
+    <div class="promotions-grid" id="promotionsGrid">
+        {% for promotion in promotions %}
+        <div class="promotion-card {{ promotion.status }}" data-status="{{ promotion.status }}" data-title="{{ promotion.title|lower }}" data-description="{{ promotion.description|lower }}">
+            <div class="promotion-card-header">
+                <div>
+                    <div class="promotion-type">{{ promotion.get_promotion_type_display }}</div>
+                    <h5 class="promotion-title">{{ promotion.title }}</h5>
+                </div>
+                <div class="promotion-status status-{{ promotion.status }}">
+                    {{ promotion.get_status_display }}
+                </div>
+            </div>
+            
+            <p class="promotion-description">{{ promotion.description|truncatechars:100 }}</p>
+            
+            <div class="promotion-details">
+                {% if promotion.discount_percentage %}
+                <div class="detail-item">
+                    <div class="detail-value">{{ promotion.discount_percentage }}%</div>
+                    <div>Discount</div>
+                </div>
+                {% endif %}
+                {% if promotion.bonus_amount %}
+                <div class="detail-item">
+                    <div class="detail-value">{{ promotion.bonus_amount }} ETB</div>
+                    <div>Bonus</div>
+                </div>
+                {% endif %}
+                {% if promotion.minimum_deposit %}
+                <div class="detail-item">
+                    <div class="detail-value">{{ promotion.minimum_deposit }} ETB</div>
+                    <div>Min Deposit</div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="promotion-metrics">
+                <div class="metric">
+                    <div class="metric-value">{{ promotion.view_count }}</div>
+                    <div>Views</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">{{ promotion.click_count }}</div>
+                    <div>Clicks</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">
+                        {% if promotion.click_count and promotion.view_count %}
+                            {{ promotion.click_count|floatformat:1 }}/{{ promotion.view_count|floatformat:1 }}
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </div>
+                    <div>CTR</div>
+                </div>
+            </div>
+            
+            <div class="promotion-actions">
+                {% if promotion.status == 'active' %}
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="send_promotion">
+                    <input type="hidden" name="promotion_id" value="{{ promotion.id }}">
+                    <button type="submit" class="action-btn btn-send" onclick="return confirm('Send this promotion to all players?')">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </form>
+                {% endif %}
+                <button type="button" class="action-btn btn-edit" onclick="editPromotion({{ promotion.id }})">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button type="button" class="action-btn btn-schedule" onclick="schedulePromotion({{ promotion.id }})">
+                    <i class="fas fa-clock"></i> Schedule
+                </button>
+                <button type="button" class="action-btn btn-delete" onclick="deletePromotion({{ promotion.id }})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+            
+            <div class="quick-stats">
+                <div class="quick-stat">
+                    <div class="quick-stat-value">{{ promotion.created_at|date:"M d" }}</div>
+                    <div class="quick-stat-label">Created</div>
+                </div>
+                {% if promotion.end_date %}
+                <div class="quick-stat">
+                    <div class="quick-stat-value">{{ promotion.end_date|date:"M d" }}</div>
+                    <div class="quick-stat-label">Expires</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="empty-state">
+                <i class="fas fa-gift fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No promotions found</h4>
+                <p class="text-muted">Create your first promotion to get started!</p>
+                <button type="button" class="btn-advanced btn-primary-advanced" data-toggle="modal" data-target="#createPromotionModal">
+                    <i class="fas fa-plus"></i> Create Promotion
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Create Promotion Modal -->
+<div class="modal fade" id="createPromotionModal" tabindex="-1" role="dialog" aria-labelledby="createPromotionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createPromotionModalLabel">
+                    <i class="fas fa-plus-circle"></i> Create New Promotion
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_promotion">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="title"><i class="fas fa-heading"></i> Title</label>
+                                <input type="text" class="form-control" id="title" name="title" required placeholder="Enter promotion title">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="promotion_type"><i class="fas fa-tag"></i> Type</label>
+                                <select class="form-control" id="promotion_type" name="promotion_type">
+                                    {% for value, label in promotion_types %}
+                                        <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description"><i class="fas fa-align-left"></i> Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter promotion description"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="discount_percentage"><i class="fas fa-percentage"></i> Discount Percentage</label>
+                                <input type="number" class="form-control" id="discount_percentage" name="discount_percentage" step="0.01" min="0" max="100" placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="bonus_amount"><i class="fas fa-gift"></i> Bonus Amount (ETB)</label>
+                                <input type="number" class="form-control" id="bonus_amount" name="bonus_amount" step="0.01" min="0" placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="minimum_deposit"><i class="fas fa-coins"></i> Minimum Deposit (ETB)</label>
+                                <input type="number" class="form-control" id="minimum_deposit" name="minimum_deposit" step="0.01" min="0" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="end_date"><i class="fas fa-calendar-alt"></i> End Date</label>
+                        <input type="datetime-local" class="form-control" id="end_date" name="end_date">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Create Promotion
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Advanced Features -->
+<script>
+// Filter promotions based on search and status
+function filterPromotions() {
+    const searchTerm = document.getElementById('searchPromotions').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const promotionCards = document.querySelectorAll('.promotion-card');
+    
+    promotionCards.forEach(card => {
+        const title = card.dataset.title;
+        const description = card.dataset.description;
+        const status = card.dataset.status;
+        
+        const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
+        const matchesStatus = statusFilter === 'all' || status === statusFilter;
+        
+        if (matchesSearch && matchesStatus) {
+            card.style.display = 'block';
+            card.style.animation = 'fadeIn 0.3s ease';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// Send all active promotions
+function sendAllActivePromotions() {
+    if (confirm('Send all active promotions to players?')) {
+        const activePromotions = document.querySelectorAll('.promotion-card.active');
+        activePromotions.forEach(card => {
+            const sendBtn = card.querySelector('.btn-send');
+            if (sendBtn) {
+                sendBtn.click();
+            }
+        });
+    }
+}
+
+// Refresh data
+function refreshData() {
+    location.reload();
+}
+
+// Export promotions
+function exportPromotions() {
+    alert('Export functionality would be implemented here');
+}
+
+// Schedule promotions
+function schedulePromotions() {
+    alert('Scheduling functionality would be implemented here');
+}
+
+// Bulk operations
+function toggleAllPromotions() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.promotion-card input[type="checkbox"]');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+function selectActivePromotions() {
+    const selectActive = document.getElementById('selectActive');
+    const activeCards = document.querySelectorAll('.promotion-card.active input[type="checkbox"]');
+    
+    activeCards.forEach(checkbox => {
+        checkbox.checked = selectActive.checked;
+    });
+}
+
+function bulkSendPromotions() {
+    const selectedPromotions = document.querySelectorAll('.promotion-card input[type="checkbox"]:checked');
+    if (selectedPromotions.length === 0) {
+        alert('Please select promotions to send');
+        return;
+    }
+    
+    if (confirm(`Send ${selectedPromotions.length} selected promotions?`)) {
+        selectedPromotions.forEach(checkbox => {
+            const card = checkbox.closest('.promotion-card');
+            const sendBtn = card.querySelector('.btn-send');
+            if (sendBtn) {
+                sendBtn.click();
+            }
+        });
+    }
+}
+
+function bulkActivatePromotions() {
+    alert('Bulk activate functionality would be implemented here');
+}
+
+function bulkDeactivatePromotions() {
+    alert('Bulk deactivate functionality would be implemented here');
+}
+
+// Individual promotion actions
+function editPromotion(promotionId) {
+    alert(`Edit promotion ${promotionId} - functionality would be implemented here`);
+}
+
+function schedulePromotion(promotionId) {
+    alert(`Schedule promotion ${promotionId} - functionality would be implemented here`);
+}
+
+function deletePromotion(promotionId) {
+    if (confirm('Are you sure you want to delete this promotion?')) {
+        alert(`Delete promotion ${promotionId} - functionality would be implemented here`);
+    }
+}
+
+// Add fadeIn animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .promotion-card {
+        animation: fadeIn 0.3s ease;
+    }
+`;
+document.head.appendChild(style);
+
+// Auto-refresh stats every 30 seconds
+setInterval(() => {
+    console.log('Refreshing promotion statistics...');
+}, 30000);
+
+// Initialize tooltips and other Bootstrap components
+$(document).ready(function() {
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    // Add smooth scrolling
+    $('html, body').animate({
+        scrollTop: 0
+    }, 500);
+});
+</script>
+{% endblock %}
