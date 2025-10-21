@@ -1100,21 +1100,21 @@ const PlayingBoard = () => {
               >
                 {t('game.bingo')}
               </button>
+              
+              {/* Bottom Action Buttons */}
+              <div className="bottom-actions">
+                <button className="action-btn leave-btn" onClick={handleLeaveGame}>
+                  <FontAwesomeIcon icon={faSignOutAlt} />
+                  {t('game.leaveGame')}
+                </button>
+                <button className="action-btn refresh-btn" onClick={handleRefresh}>
+                  <FontAwesomeIcon icon={faSync} />
+                  {t('game.refresh')}
+                </button>
+              </div>
             </div>
           )}
         </div>
-      </div>
-
-      {/* Bottom Action Buttons */}
-      <div className="bottom-actions">
-        <button className="action-btn leave-btn" onClick={handleLeaveGame}>
-          <FontAwesomeIcon icon={faSignOutAlt} />
-          {t('game.leaveGame')}
-        </button>
-        <button className="action-btn refresh-btn" onClick={handleRefresh}>
-          <FontAwesomeIcon icon={faSync} />
-          {t('game.refresh')}
-        </button>
       </div>
     </div>
   );
