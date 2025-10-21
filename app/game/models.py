@@ -16,7 +16,7 @@ class GameRoom(models.Model):
         ('tournament', 'Tournament'),
     ]
     
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.BigAutoField(primary_key=True)
     # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='game_rooms')
     
     # Room details
@@ -88,7 +88,7 @@ class Game(models.Model):
         ('paused', 'Paused'),
     ]
     
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.BigAutoField(primary_key=True)
     # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='games')
     room = models.ForeignKey(GameRoom, on_delete=models.PROTECT, related_name='games')
     
@@ -195,7 +195,7 @@ class PlayerGame(models.Model):
     """
     Track individual player participation in games
     """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.BigAutoField(primary_key=True)
     # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='player_games')
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='player_games')
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='player_games')

@@ -1,5 +1,5 @@
 // API Configuration (normalized)
-const rawBase = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1/';
+const rawBase = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 const ensureTrailingSlash = (url) => (url?.endsWith('/') ? url : `${url}/`);
 
@@ -11,6 +11,9 @@ const addApiPrefixIfMissing = (url) => {
 };
 
 const API_BASE_URL = addApiPrefixIfMissing(rawBase);
+
+console.log('[APIConfig] rawBase:', rawBase);
+console.log('[APIConfig] API_BASE_URL:', API_BASE_URL);
 
 const config = {
   API_BASE_URL,

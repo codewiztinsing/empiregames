@@ -59,17 +59,13 @@ class User(AbstractUser):
     is_agent = models.BooleanField(default=False)
     is_tenant_admin = models.BooleanField(default=False)
     
-    # Sponsor system
-    sponsor_changed = models.BooleanField(default=False)
+
     
     # Financial fields
     total_referral_earnings = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     unwithdrawable_bonus = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     
-    # Bonus tracking
-    signup_bonus_claimed = models.BooleanField(default=False)
-    sponsor_change_bonus_claimed = models.BooleanField(default=False)
-    
+ 
     # Game statistics
     total_games_played = models.PositiveIntegerField(default=0)
     games_played_today = models.PositiveIntegerField(default=0)
@@ -273,34 +269,7 @@ class SupportUser(models.Model):
         return self.user.username
 
 
-class ReferralBonus(models.Model):
-    BONUS_TYPE_CHOICES = [
-        ('first_generation', 'First Generation (4%)'),
-        ('second_generation', 'Second Generation (1%)'),
-        ('signup', 'Signup Bonus (10 birr)'),
-        ('sponsor_change', 'Sponsor Change Bonus (10 birr)'),
-    ]
-    
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
-    ]
-    
-    referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referral_bonuses')
-    winner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='win_bonuses')
-    game_id = models.CharField(max_length=100)
-    win_amount = models.FloatField()
-    bonus_type = models.CharField(max_length=20, choices=BONUS_TYPE_CHOICES)
-    bonus_amount = models.FloatField()
-    generation_level = models.PositiveIntegerField()  # 1 for first generation, 2 for second
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.referrer.username} - {self.bonus_type} - {self.bonus_amount}"
-
+# ReferralBonus model removed
 
 class WithdrawalRequest(models.Model):
     STATUS_CHOICES = [
@@ -335,3 +304,134 @@ class ReferralAnnouncement(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class TelegramUser(models.Model):
+    """
+    Standalone Telegram user model for better separation of concerns
+    """
+    # Primary key
+    id = models.BigAutoField(primary_key=True)
+    
+    # Telegram-specific fields
+    telegram_id = models.BigIntegerField(unique=True)
+    username = models.CharField(max_length=255, blank=True, null=True)
+    first_name = models.CharField(max_length=255, blank=True, null=True)
+    last_name = models.CharField(max_length=255, blank=True, null=True)
+    language_code = models.CharField(max_length=10, blank=True, null=True)
+    
+    # Telegram user status
+    is_bot = models.BooleanField(default=False)
+    is_premium = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+    
+    # Profile information
+    photo_url = models.URLField(blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    
+    # Relationship to main User model
+    linked_user = models.OneToOneField(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='telegram_profile'
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_seen = models.DateTimeField(null=True, blank=True)
+    
+    # Soft delete
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = 'Telegram User'
+        verbose_name_plural = 'Telegram Users'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['telegram_id']),
+            models.Index(fields=['username']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['is_active']),
+        ]
+    
+    def __str__(self):
+        display_name = self.username or f"{self.first_name} {self.last_name}".strip() or f"User {self.telegram_id}"
+        return f"{display_name} ({self.telegram_id})"
+    
+    @property
+    def full_name(self):
+        """Get the full name of the Telegram user"""
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        elif self.first_name:
+            return self.first_name
+        elif self.last_name:
+            return self.last_name
+        elif self.username:
+            return self.username
+        else:
+            return f"User {self.telegram_id}"
+    
+    @property
+    def display_name(self):
+        """Get the best available display name"""
+        if self.username:
+            return f"@{self.username}"
+        return self.full_name
+    
+    def soft_delete(self):
+        """Soft delete the Telegram user"""
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.is_active = False
+        self.save()
+    
+    def link_to_user(self, user):
+        """Link this Telegram user to a main User account"""
+        if self.linked_user and self.linked_user != user:
+            raise ValueError("This Telegram user is already linked to another account")
+        self.linked_user = user
+        self.save()
+    
+    def unlink_from_user(self):
+        """Unlink this Telegram user from the main User account"""
+        self.linked_user = None
+        self.save()
+    
+    @classmethod
+    def get_or_create_from_telegram_data(cls, telegram_data):
+        """
+        Create or update TelegramUser from Telegram API data
+        """
+        telegram_id = telegram_data.get('id')
+        if not telegram_id:
+            raise ValueError("Telegram ID is required")
+        
+        defaults = {
+            'username': telegram_data.get('username'),
+            'first_name': telegram_data.get('first_name'),
+            'last_name': telegram_data.get('last_name'),
+            'language_code': telegram_data.get('language_code'),
+            'is_bot': telegram_data.get('is_bot', False),
+            'is_premium': telegram_data.get('is_premium', False),
+            'is_verified': telegram_data.get('is_verified', False),
+        }
+        
+        telegram_user, created = cls.objects.get_or_create(
+            telegram_id=telegram_id,
+            defaults=defaults
+        )
+        
+        # Update fields if not created
+        if not created:
+            for key, value in defaults.items():
+                if value is not None:
+                    setattr(telegram_user, key, value)
+            telegram_user.save()
+        
+        return telegram_user, created

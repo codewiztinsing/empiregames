@@ -19,15 +19,15 @@ app.autodiscover_tasks()
 # Celery Beat configuration
 app.conf.beat_schedule = {
     'cleanup-old-games': {
-        'task': 'app.tasks.cleanup_old_games',
+        'task': 'tasks.cleanup_old_games',
         'schedule': 3600.0,  # Every hour
     },
     'send-daily-stats': {
-        'task': 'app.tasks.send_daily_stats',
+        'task': 'tasks.send_daily_stats',
         'schedule': 86400.0,  # Daily
     },
     'backup-database': {
-        'task': 'app.tasks.backup_database',
+        'task': 'tasks.backup_database',
         'schedule': 604800.0,  # Weekly
     },
 }

@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
+from decimal import Decimal
 from utils.fake_players_factory import count_real_players_in_games
 from .tasks import activate_fake_players, deactivate_fake_players
 from datetime import timedelta
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 game_router = Router()
 
-@game_router.post("/join-game/",response=GameSchema)
+@game_router.post("/join-game/",response=GameSchema, auth=None)
 def join_game(request, data: BetSchema):
     logger.info(f"Join game: {data}")
     logger.info(f"Join game - total_players: {data.total_players}, fake_players: {data.fake_players}")
@@ -45,7 +46,7 @@ def join_game(request, data: BetSchema):
         
         # Calculate win amount
         try:
-            entry_fee = float(game.entry_fee)
+            entry_fee = float(game.room.entry_fee)
         except Exception:
             entry_fee = 0.0
         total_win_amount = float(total_players) * entry_fee * 0.78
@@ -53,9 +54,11 @@ def join_game(request, data: BetSchema):
         game.real_players = real_players
         game.fake_players = fake_players
         game.total_players = total_players
-        game.total_win_amount = total_win_amount
+        game.total_entry_fees = total_players * game.room.entry_fee
+        game.prize_pool = game.total_entry_fees * Decimal('0.78')  # 78% to prize pool
+        game.house_edge_amount = game.total_entry_fees * Decimal('0.22')  # 22% house edge
         game.save(update_fields=[
-            "real_players","fake_players","total_players","total_win_amount","updated_at"
+            "real_players","fake_players","total_players","total_entry_fees","prize_pool","house_edge_amount","updated_at"
         ])
         # Activate/deactivate fake players based on real players since last REAL winner
         real_players_count = count_real_players_in_games()
@@ -82,13 +85,26 @@ def join_game(request, data: BetSchema):
     except Exception as e:
         logger.error(f"Failed updating game metrics: {e}")
     
-    charge_player.delay(players_dict,game.entry_fee,game.id)
-    return GameSchema(bet_amount=game.entry_fee,game_id=game.id)    
+    # Log the Celery task call
+    logger.info(f"=== CALLING CHARGE_PLAYER CELERY TASK ===")
+    logger.info(f"Players dict: {players_dict}")
+    logger.info(f"Entry fee: {game.room.entry_fee}")
+    logger.info(f"Game ID: {game.id}")
+    
+    try:
+        task_result = charge_player.delay(players_dict, game.room.entry_fee, game.id)
+        logger.info(f"Celery task submitted successfully. Task ID: {task_result.id}")
+        logger.info(f"Task state: {task_result.state}")
+    except Exception as e:
+        logger.error(f"Failed to submit charge_player Celery task: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+    return GameSchema(bet_amount=game.room.entry_fee, game_id=game.id)    
     
    
     
 
-@game_router.post("/win-game/",response=GameSchema)
+@game_router.post("/win-game/",response=GameSchema, auth=None)
 def win_game(request, data: WinGameSchema):
     logger.info(f"Win game: {data}")
     logger.info(f"Win game - Player: {data.player}, Game ID: {data.game_id}, Win Amount: {data.win_amount}")
@@ -118,8 +134,8 @@ def win_game(request, data: WinGameSchema):
         
         # Mark game as completed
         game.status = 'completed'
-        game.ended = True
-        game.save(update_fields=['winner', 'status', 'ended', 'updated_at'])
+        game.ended_at = timezone.now()
+        game.save(update_fields=['winner', 'status', 'ended_at', 'updated_at'])
         logger.info(f"Game {game.id} marked as completed with winner: {game.winner}")
         
     except Exception as e:
@@ -129,25 +145,34 @@ def win_game(request, data: WinGameSchema):
     if player != "BOT_FAKE":
         update_player_balance.delay(player,win_amount,game.id)
     
-    return GameSchema(bet_amount=game.entry_fee,game_id=game.id)    
+    return GameSchema(bet_amount=game.room.entry_fee, game_id=game.id)    
 
-@game_router.get("/next-game/",response=GameSchema)
+@game_router.get("/next-game/",response=GameSchema, auth=None)
 def next_game(request):
     logger.info(f"Next game: {request}")
     bet_amount = request.GET.get("bet_amount")
-    game = Game.objects.filter(entry_fee=bet_amount,ended=False).first()
+    # Find game by room's entry_fee
+    game = Game.objects.filter(room__entry_fee=bet_amount, ended_at__isnull=True).first()
     logger.info(f"Game: {game}")
     if not game:
-        game = Game.objects.create(entry_fee=bet_amount)
+        # Create a new game room if it doesn't exist
+        room, created = GameRoom.objects.get_or_create(
+            entry_fee=bet_amount,
+            defaults={
+                'name': f'Room {bet_amount}',
+                'room_type': 'standard'
+            }
+        )
+        game = Game.objects.create(room=room)
     logger.info(f"Game: {game}")
   
-    return GameSchema(bet_amount=game.entry_fee,game_id=game.id)
+    return GameSchema(bet_amount=game.room.entry_fee, game_id=game.id)
 
 
 
 
 
-@game_router.get("/game-settings/",response=GameSettingsSchema)
+@game_router.get("/game-settings/",response=GameSettingsSchema, auth=None)
 def game_settings(request):
     logger.info(f"Game settings: {request}")
     game_settings = GameSettings.objects.first()
@@ -174,7 +199,7 @@ def game_rooms(request):
     return GameRoomListSchema(game_rooms=game_rooms)
 
 
-@game_router.get("/fake-player-settings/")
+@game_router.get("/fake-player-settings/", auth=None)
 def get_fake_player_settings(request):
     """Get fake player settings for dynamic control"""
     try:
@@ -202,13 +227,13 @@ def get_games_stats(request):
         
         # Game statistics
         total_games = Game.objects.count()
-        active_games = Game.objects.filter(ended=False).count()
-        completed_today = Game.objects.filter(ended=True, created_at__gte=timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)).count()
-        completed_last_30_days = Game.objects.filter(ended=True, created_at__gte=thirty_days_ago).count()
+        active_games = Game.objects.filter(ended_at__isnull=True).count()
+        completed_today = Game.objects.filter(ended_at__isnull=False, created_at__gte=timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)).count()
+        completed_last_30_days = Game.objects.filter(ended_at__isnull=False, created_at__gte=thirty_days_ago).count()
         
         # Revenue calculations
-        total_revenue = Game.objects.filter(ended=True).aggregate(Sum('entry_fee'))['entry_fee__sum'] or 0
-        revenue_last_30_days = Game.objects.filter(ended=True, created_at__gte=thirty_days_ago).aggregate(Sum('entry_fee'))['entry_fee__sum'] or 0
+        total_revenue = Game.objects.filter(ended_at__isnull=False).aggregate(Sum('total_entry_fees'))['total_entry_fees__sum'] or 0
+        revenue_last_30_days = Game.objects.filter(ended_at__isnull=False, created_at__gte=thirty_days_ago).aggregate(Sum('total_entry_fees'))['total_entry_fees__sum'] or 0
         
         # Player statistics (PlayerGame removed); using aggregated totals from Game
         total_players = Game.objects.aggregate(total=Sum('total_players'))['total'] or 0
@@ -217,7 +242,7 @@ def get_games_stats(request):
         ).aggregate(total=Sum('total_players'))['total'] or 0
         
         # Win statistics
-        games_with_winners = Game.objects.filter(ended=True, winner__isnull=False).count()
+        games_with_winners = Game.objects.filter(ended_at__isnull=False, winner__isnull=False).count()
         win_rate = (games_with_winners / completed_last_30_days * 100) if completed_last_30_days > 0 else 0
         
         return JsonResponse({
@@ -275,7 +300,7 @@ def get_recent_games(request, limit: int = 20):
                 "entry_fee": float(game.entry_fee),
                 "status": game.status,
                 "started": bool(game.started_at),
-                "ended": game.ended,
+                "ended": game.ended_at is not None,
                 "player_count": player_count,
                 "winner": winner_info,
                 "created_at": game.created_at.isoformat(),
@@ -327,7 +352,7 @@ def get_games_by_status(request, status: str = None):
                 "entry_fee": float(game.entry_fee),
                 "status": game.status,
                 "started": bool(game.started_at),
-                "ended": game.ended,
+                "ended": game.ended_at is not None,
                 "player_count": player_count,
                 "winner": winner_info,
                 "created_at": game.created_at.isoformat(),
@@ -382,7 +407,7 @@ def get_games_by_user(request, user_id: int = None, telegram_id: str = None):
                 "entry_fee": float(game.entry_fee),
                 "status": game.status,
                 "started": bool(game.started_at),
-                "ended": game.ended,
+                "ended": game.ended_at is not None,
                 "has_bingo": False,
                 "winner": winner_info,
                 "created_at": game.created_at.isoformat(),
@@ -437,7 +462,7 @@ def get_detailed_games(request, limit: int = 20):
                 "entry_fee": float(game.entry_fee),
                 "status": game.status,
                 "started": bool(game.started_at),
-                "ended": game.ended,
+                "ended": game.ended_at is not None,
                 "player_count": len(players),
                 "players": players,
                 "winner": winner_info,

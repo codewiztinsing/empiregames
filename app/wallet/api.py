@@ -10,7 +10,7 @@ from .schema import (
     WalletSchema,
 )
 from .models import Wallet,Transaction
-from users.models import ReferralBonus
+# ReferralBonus import removed
 from django.http import JsonResponse
 from utils import generate_reference
 from users.models import User
@@ -72,23 +72,10 @@ def dev_player_wallet(request, telegram_id: int):
         print("[DevWallet] user = ", user)
         wallet = Wallet.objects.filter(user=user).first()
         
-        # Get total bonus amount generated from sponsor change for this user
-        sponsor_change_bonus_total = ReferralBonus.objects.filter(
-            referrer=user,
-            bonus_type='sponsor_change'
-        ).aggregate(total=models.Sum('bonus_amount'))['total'] or 0
-        
-        # Get referral bonus amount
-        referral_bonus = ReferralBonus.objects.filter(
-            referrer=user,
-        ).aggregate(total=models.Sum('bonus_amount'))['total'] or 0
-        
-        print("[DevWallet] referral_bonus = ", referral_bonus)
-        
-        total_balance = (wallet.balance if wallet else 0) + referral_bonus 
+        # Referral bonuses removed - only wallet balance
+        total_balance = wallet.balance if wallet else 0 
         return JsonResponse({
             "balance": wallet.balance if wallet else 0,
-            "referral_bonus": referral_bonus, 
             "total_balance": total_balance,
             "dev_mode": True
         }, status=200)
@@ -104,23 +91,10 @@ def player_wallet(request,telegram_id:int):
         print("user = ",user)
         wallet = Wallet.objects.filter(user=user).first()
         
-        # Get total bonus amount generated from sponsor change for this user
-        sponsor_change_bonus_total = ReferralBonus.objects.filter(
-            referrer=user,
-            bonus_type='sponsor_change'
-        ).aggregate(total=models.Sum('bonus_amount'))['total'] or 0
-        
-        # Get referral bonus amount
-        referral_bonus = ReferralBonus.objects.filter(
-            referrer=user,
-        ).aggregate(total=models.Sum('bonus_amount'))['total'] or 0
-        
-        print("referral_bonus = ",referral_bonus)
-        
-        total_balance = (wallet.balance if wallet else 0) + referral_bonus 
+        # Referral bonuses removed - only wallet balance
+        total_balance = wallet.balance if wallet else 0
         return JsonResponse({
             "balance": wallet.balance if wallet else 0,
-            "referral_bonus": referral_bonus, 
             "total_balance": total_balance
         }, status=200)
     except Exception as e:

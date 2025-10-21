@@ -2,7 +2,6 @@ from platform import python_implementation
 from django.db import models
 from django.utils import timezone
 from users.models import User
-
 class Wallet(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     balance = models.FloatField(default=0.00)  # Changed from 19.00 to 0.00

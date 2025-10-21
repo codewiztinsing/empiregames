@@ -18,7 +18,7 @@ class Account(models.Model):
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='accounts')
+    # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='accounts')
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, null=True, blank=True, related_name='accounts')
     
     # Account details
@@ -47,9 +47,9 @@ class Account(models.Model):
         ordering = ['-created_at']
         verbose_name = 'Account'
         verbose_name_plural = 'Accounts'
-        unique_together = ['tenant', 'user', 'account_type']
+        # unique_together = ['tenant', 'user', 'account_type']
         indexes = [
-            models.Index(fields=['tenant', 'account_type']),
+            # models.Index(fields=['tenant', 'account_type']),
             models.Index(fields=['user', 'account_type']),
             models.Index(fields=['is_active', 'is_deleted']),
         ]
@@ -57,7 +57,7 @@ class Account(models.Model):
     def __str__(self):
         if self.user:
             return f"{self.user.username} - {self.get_account_type_display()}"
-        return f"{self.tenant.name} - {self.get_account_type_display()}"
+        return f"{self.name} - {self.get_account_type_display()}"
     
     def soft_delete(self):
         """Soft delete the account"""
@@ -110,7 +110,7 @@ class Transaction(models.Model):
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='transactions')
+    # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='transactions')
     
     # Transaction details
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
@@ -148,7 +148,7 @@ class Transaction(models.Model):
         verbose_name = 'Transaction'
         verbose_name_plural = 'Transactions'
         indexes = [
-            models.Index(fields=['tenant', 'transaction_type']),
+            # models.Index(fields=['tenant', 'transaction_type']),
             models.Index(fields=['user', 'created_at']),
             models.Index(fields=['status', 'created_at']),
             models.Index(fields=['reference']),
@@ -246,7 +246,7 @@ class WithdrawalRequest(models.Model):
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='withdrawal_requests')
+    # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='withdrawal_requests')
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='finance_withdrawal_requests')
     
     # Withdrawal details
@@ -282,7 +282,7 @@ class WithdrawalRequest(models.Model):
         verbose_name = 'Withdrawal Request'
         verbose_name_plural = 'Withdrawal Requests'
         indexes = [
-            models.Index(fields=['tenant', 'status']),
+            # models.Index(fields=['tenant', 'status']),
             models.Index(fields=['user', 'created_at']),
             models.Index(fields=['status', 'created_at']),
         ]

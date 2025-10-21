@@ -23,7 +23,7 @@ const gameWinWallet = async (player, bet_amount, win_amount, total_players)=>{
   }
   
   try{
-    const backUrl = process.env.BACK_URL
+    const backUrl = process.env.BACK_URL || 'http://localhost:8000/api/v1/'
     console.log("backUrl",backUrl)
     const winUrl = backUrl + 'game/win-game/'
     console.log("winUrl",winUrl)
@@ -44,7 +44,7 @@ const gameWinWallet = async (player, bet_amount, win_amount, total_players)=>{
 
 const checkBalance = async (playerId) => {
   try {
-    const backUrl = process.env.BACK_URL
+    const backUrl = process.env.BACK_URL || 'http://localhost:8000/api/v1/'
     const balanceUrl = backUrl + 'balance/?user_id=' + playerId
     const response = await fetch(balanceUrl, {
       method: 'GET',
@@ -68,9 +68,9 @@ const checkBalance = async (playerId) => {
 
 
 const getCurrentGame = async (betAmount)=>{
-  const backUrl = process.env.BACK_URL
+  const backUrl = process.env.BACK_URL || 'http://localhost:8000/api/v1/'
   
-  const currentGameUrl = backUrl + 'game/next-game'
+  const currentGameUrl = backUrl + 'game/next-game/'
   console.log("currentGameUrl",currentGameUrl)
   const params = {
     params: {
@@ -99,7 +99,7 @@ const gameLossWallet = async (players, betAmount, totalPlayers = null, fakePlaye
 
   try{
       if(!data.players) return null;
-      const backUrl = process.env.BACK_URL
+      const backUrl = process.env.BACK_URL || 'http://localhost:8000/api/v1/'
       const lossUrl = backUrl + 'game/join-game/'
       console.log("lossUrl",lossUrl)
       console.log("data",data)
@@ -120,7 +120,7 @@ const gameLossWallet = async (players, betAmount, totalPlayers = null, fakePlaye
 
 
 const getGameSettings = async ()=>{
-  const backUrl = process.env.BACK_URL
+  const backUrl = process.env.BACK_URL || 'http://localhost:8000/api/v1/'
   const gameSettingsUrl = backUrl + 'game/game-settings/'
   const response = await axios.get(gameSettingsUrl)
   const data = response.data;
@@ -128,7 +128,7 @@ const getGameSettings = async ()=>{
 }
 
 const getFakePlayerSettings = async ()=>{
-  const backUrl = process.env.BACK_URL
+  const backUrl = process.env.BACK_URL || 'http://localhost:8000/api/v1/'
   const fakePlayerSettingsUrl = backUrl + 'game/fake-player-settings/'
   const response = await axios.get(fakePlayerSettingsUrl)
   const data = response.data;

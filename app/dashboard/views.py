@@ -2,10 +2,10 @@ from datetime import timedelta
 from django.db.models import Sum
 from django.core.paginator import Paginator
 from django.utils import timezone
-from users.models import User, SupportUser, ReferralBonus
+from users.models import User, SupportUser
 from game.models import Game
 from wallet.models import Transaction, WithdrawalRequest, Wallet, PaymentSettings, ManualSession
-from users.referral_services import ReferralService
+# Referral services removed
 from .permissions import admin_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
@@ -408,7 +408,7 @@ def roles(request):
 
     # Build CRUD permissions matrix for project models
     project_app_labels = {
-        'users', 'wallet', 'game', 'dashboard', 'promotion', 'promotions', 'referrals', 'webhooks'
+        'users', 'wallet', 'game', 'dashboard', 'referrals', 'webhooks'
     }
     permissions_matrix = []
     for model in django_apps.get_models():
@@ -645,23 +645,9 @@ def users(request):
     total_users = users.count()
     suspended_users = users.filter(is_active=False).count()
     
-    # Calculate referral bonuses and total balance for each user
+    # Calculate wallet balance for each user (referral bonuses removed)
     users_with_bonuses = []
     for user in page_obj:
-        # Get first generation bonuses
-        first_gen_bonuses = ReferralBonus.objects.filter(
-            referrer=user,
-            bonus_type='first_generation',
-            status='approved'
-        ).aggregate(total=Sum('bonus_amount'))['total'] or 0.0
-        
-        # Get second generation bonuses
-        second_gen_bonuses = ReferralBonus.objects.filter(
-            referrer=user,
-            bonus_type='second_generation',
-            status='approved'
-        ).aggregate(total=Sum('bonus_amount'))['total'] or 0.0
-        
         # Get wallet balance
         wallet_balance = 0.0
         try:
@@ -747,7 +733,6 @@ def user_edit(request, user_id):
         username = request.POST.get('username', '').strip()
         phone = request.POST.get('phone', '').strip()
         is_agent = request.POST.get('is_agent') == 'on'
-        sponsor_changed = request.POST.get('sponsor_changed') == 'on'
         referred_by_telegram = request.POST.get('referred_by_telegram', '').strip()
         balance = request.POST.get('balance', '').strip()
 
@@ -756,62 +741,18 @@ def user_edit(request, user_id):
         if phone:
             user.phone = phone
         user.is_agent = is_agent
-        user.sponsor_changed = sponsor_changed
 
         # Update referred_by using referrer's telegram_id if provided
         if referred_by_telegram:
-            # Check if user has already changed sponsor - limit to once only
-            # Superusers can bypass this restriction
-            if user.sponsor_changed and not request.user.is_superuser:
-                context['error'] = 'User has already changed sponsor once. This can only be done once. (Superusers can override this restriction)'
-                return render(request, 'dashboard/user_edit.html', context)
-            
-            # Check if user was invited by another user - don't allow sponsor change
-            # Superusers can bypass this restriction
-            if user.referred_by is not None and not sponsor_changed and not request.user.is_superuser:
-                # Check if user was invited by a real user (not default sponsor)
-                from users.referral_services import ReferralService
-                default_sponsor = ReferralService.get_or_create_default_sponsor()
-                if user.referred_by.id != default_sponsor.id:
-                    context['error'] = 'User was invited by another user and cannot change sponsor. (Superusers can override this restriction)'
-                    return render(request, 'dashboard/user_edit.html', context)
-                else:
-                    context['error'] = 'User already has a sponsor and cannot change it. (Superusers can override this restriction)'
-                    return render(request, 'dashboard/user_edit.html', context)
-            
             try:
                 referrer = User.objects.get(telegram_id=str(referred_by_telegram))
                 
-                # Prevent self-sponsorship
+                # Prevent self-referral
                 if referrer.id == user.id:
-                    context['error'] = 'Cannot set user as their own sponsor.'
+                    context['error'] = 'Cannot set user as their own referrer.'
                     return render(request, 'dashboard/user_edit.html', context)
                 
-                # Check for bidirectional sponsorship (circular reference)
-                def check_circular_reference(current_user, target_sponsor, visited=None):
-                    """Recursively check if setting target_sponsor would create a circular reference"""
-                    if visited is None:
-                        visited = set()
-                    
-                    if current_user.id in visited:
-                        return True  # Circular reference detected
-                    
-                    visited.add(current_user.id)
-                    
-                    # If target_sponsor is already referred by current_user, it's bidirectional
-                    if target_sponsor.referred_by and target_sponsor.referred_by.id == current_user.id:
-                        return True
-                    
-                    # Check if target_sponsor is in current_user's referral chain
-                    if target_sponsor.referred_by:
-                        return check_circular_reference(current_user, target_sponsor.referred_by, visited)
-                    
-                    return False
-                
-              
-                
                 user.referred_by = referrer
-                user.sponsor_changed = True  # Mark that user has changed sponsor
             except User.DoesNotExist:
                 context['error'] = 'Referrer with that Telegram ID not found.'
                 return render(request, 'dashboard/user_edit.html', context)
@@ -819,16 +760,6 @@ def user_edit(request, user_id):
             user.referred_by = None
 
         user.save()
-        
-        # Process sponsor change bonus if this is a sponsor change
-        if sponsor_changed:
-            from users.referral_services import ReferralService
-            bonus_success, bonus_message = ReferralService.process_sponsor_change_bonus(user)
-            if not bonus_success:
-                # Log the error but don't fail the sponsor change
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.warning(f"Failed to process sponsor change bonus for user {user.id}: {bonus_message}")
         
         # Update wallet balance if provided
         if balance != '':
@@ -855,7 +786,7 @@ def user_details(request, user_id):
     user = get_object_or_404(User, id=user_id)
     wallet = Wallet.objects.filter(user=user).first()
     transactions = Transaction.objects.filter(user=user).order_by('-created_at')[:50]
-    referral_bonuses = ReferralBonus.objects.filter(referrer=user).order_by('-created_at')[:50]
+    # Referral bonuses removed
     referral_withdrawals = WithdrawalRequest.objects.filter(user=user).order_by('-created_at')[:50]
     # PlayerGame removed; show recent games instead
     player_games = []
@@ -912,61 +843,7 @@ def bingo_cards(request):
     from django.http import HttpResponseNotFound
     return HttpResponseNotFound()
 
-def referrals(request):
-    # Get filter parameters
-    bonus_status = request.GET.get('bonus_status', '')
-    withdrawal_status = request.GET.get('withdrawal_status', '')
-    limit = int(request.GET.get('limit', 20))
-    
-    # Try to fetch data from API
-    api_data = None
-    try:
-        base_url = "http://localhost:8080"
-        
-        # Get referral statistics
-        stats_url = f"{base_url}/api/v1/referrals/referrals/stats/"
-        stats_response = requests.get(stats_url, timeout=10)
-        if stats_response.status_code == 200:
-            api_data = stats_response.json()
-    except Exception as e:
-        print(f"Error fetching referral data from API: {e}")
-    
-    # Get bonuses data
-    bonuses_data = None
-    try:
-        bonuses_url = f"{base_url}/api/v1/referrals/referrals/bonuses/"
-        params = {'limit': limit}
-        if bonus_status:
-            params['status'] = bonus_status
-        bonuses_response = requests.get(bonuses_url, params=params, timeout=10)
-        if bonuses_response.status_code == 200:
-            bonuses_data = bonuses_response.json()
-    except Exception as e:
-        print(f"Error fetching referral bonuses from API: {e}")
-    
-    # Get withdrawals data
-    withdrawals_data = None
-    try:
-        withdrawals_url = f"{base_url}/api/v1/referrals/referrals/withdrawals/"
-        params = {'limit': limit}
-        if withdrawal_status:
-            params['status'] = withdrawal_status
-        withdrawals_response = requests.get(withdrawals_url, params=params, timeout=10)
-        if withdrawals_response.status_code == 200:
-            withdrawals_data = withdrawals_response.json()
-    except Exception as e:
-        print(f"Error fetching referral withdrawals from API: {e}")
-    
-    context = {
-        'api_data': api_data,
-        'bonuses_data': bonuses_data,
-        'withdrawals_data': withdrawals_data,
-        'current_bonus_status': bonus_status,
-        'current_withdrawal_status': withdrawal_status,
-        'data_source': "API" if api_data else "Database",
-        'page_title': 'Referral Management'
-    }
-    return render(request, 'dashboard/referrals.html', context)
+# Referrals view removed
 
 def messages_view(request):
     if request.method == 'POST':
@@ -1153,115 +1030,16 @@ def approve_referral_bonus(request, bonus_id):
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
 
 
-@admin_required
-def reject_referral_bonus(request, bonus_id):
-    """Reject a specific referral bonus"""
-    if request.method == 'POST':
-        try:
-            bonus = get_object_or_404(ReferralBonus, id=bonus_id)
-            if bonus.status != 'pending':
-                return JsonResponse({'success': False, 'message': 'This bonus has already been processed.'})
-            
-            bonus.status = 'rejected'
-            bonus.save()
-            
-            return JsonResponse({'success': True, 'message': 'Referral bonus rejected successfully.'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)})
-    
-    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+# Referral bonus functions removed
 
 
-@admin_required
-def bulk_approve_bonuses(request):
-    """Bulk approve multiple referral bonuses"""
-    if request.method == 'POST':
-        try:
-            bonus_ids = request.POST.getlist('bonus_ids')
-            if not bonus_ids:
-                return JsonResponse({'success': False, 'message': 'No bonuses selected.'})
-            
-            approved_count = 0
-            for bonus_id in bonus_ids:
-                success, message = ReferralService.approve_bonus(bonus_id, request.user)
-                if success:
-                    approved_count += 1
-            
-            return JsonResponse({
-                'success': True, 
-                'message': f'Successfully approved {approved_count} out of {len(bonus_ids)} bonuses.'
-            })
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)})
-    
-    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+# Bulk approve bonuses function removed
 
 
-@admin_required
-def process_tuesday_bonuses(request):
-    """Manually trigger Tuesday bonus processing"""
-    if request.method == 'POST':
-        try:
-            success, message = ReferralService.process_tuesday_bonus_payments()
-            return JsonResponse({'success': success, 'message': message})
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)})
-    
-    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+# Process Tuesday bonuses function removed
 
 
-@admin_required
-def referral_bonuses(request):
-    """View to manage referral bonuses"""
-    # Get filter parameters
-    status_filter = request.GET.get('status', '')
-    bonus_type_filter = request.GET.get('bonus_type', '')
-    search_query = request.GET.get('search', '')
-    
-    # Get bonuses
-    bonuses = ReferralBonus.objects.all().order_by('-created_at')
-    
-    if status_filter:
-        bonuses = bonuses.filter(status=status_filter)
-    
-    if bonus_type_filter:
-        bonuses = bonuses.filter(bonus_type=bonus_type_filter)
-    
-    if search_query:
-        bonuses = bonuses.filter(
-            referrer__username__icontains=search_query
-        ) | bonuses.filter(
-            winner__username__icontains=search_query
-        )
-    
-    paginator = Paginator(bonuses, 20)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    # Calculate statistics
-    total_pending = ReferralBonus.objects.filter(status='pending').count()
-    total_approved = ReferralBonus.objects.filter(status='approved').count()
-    total_rejected = ReferralBonus.objects.filter(status='rejected').count()
-    
-    pending_amount = sum(float(bonus.bonus_amount) for bonus in ReferralBonus.objects.filter(status='pending'))
-    approved_amount = sum(float(bonus.bonus_amount) for bonus in ReferralBonus.objects.filter(status='approved'))
-    
-    context = {
-        'bonuses': page_obj,
-        'page_title': 'Referral Bonuses',
-        'page_obj': page_obj,
-        'status_filter': status_filter,
-        'bonus_type_filter': bonus_type_filter,
-        'search_query': search_query,
-        'total_pending': total_pending,
-        'total_approved': total_approved,
-        'total_rejected': total_rejected,
-        'pending_amount': pending_amount,
-        'approved_amount': approved_amount,
-        'status_choices': ['', 'pending', 'approved', 'rejected'],
-        'bonus_type_choices': ['', 'first_generation', 'second_generation', 'signup', 'sponsor_change'],
-    }
-    return render(request, 'dashboard/referral_bonuses.html', context)
+# Referral bonus views removed
 
 
 @admin_required
@@ -1292,159 +1070,5 @@ def game_settings(request):
     return render(request, 'dashboard/game_settings.html', context)
 
 
-@admin_required
-def promotion_management(request):
-    """Advanced promotion management page for admins"""
-    from promotion.models import Promotion, Banner
-    from django.utils import timezone
-    from django.db.models import Sum, Count, Q
-    import requests
-    import json
-    
-    if request.method == 'POST':
-        action = request.POST.get('action')
-        
-        if action == 'send_promotion':
-            promotion_id = request.POST.get('promotion_id')
-            try:
-                promotion = Promotion.objects.get(id=promotion_id)
-                
-                # Send promotion via WebSocket server
-                try:
-                    websocket_url = "http://localhost:3001/send-promotion"  # Adjust as needed
-                    promotion_data = {
-                        'id': promotion.id,
-                        'title': promotion.title,
-                        'description': promotion.description,
-                        'promotion_type': promotion.promotion_type,
-                        'discount_percentage': float(promotion.discount_percentage) if promotion.discount_percentage else None,
-                        'bonus_amount': float(promotion.bonus_amount) if promotion.bonus_amount else None,
-                        'minimum_deposit': float(promotion.minimum_deposit) if promotion.minimum_deposit else None,
-                        'banner_image_url': promotion.banner_image.image.url if promotion.banner_image else None,
-                        'end_date': promotion.end_date.isoformat() if promotion.end_date else None,
-                    }
-                    
-                    # Send to WebSocket server
-                    try:
-                        response = requests.post(websocket_url, json={
-                            'promotion': promotion_data,
-                            'admin_id': request.user.id
-                        }, timeout=5)
-                        response.raise_for_status()
-                        messages.success(request, f'Promotion "{promotion.title}" sent successfully to all players!')
-                    except requests.exceptions.RequestException:
-                        # Fallback: just log it
-                        print(f"Promotion {promotion.id} sent: {promotion_data}")
-                        messages.success(request, f'Promotion "{promotion.title}" sent successfully!')
-                    
-                except Exception as e:
-                    messages.error(request, f'Failed to send promotion: {str(e)}')
-                    
-            except Promotion.DoesNotExist:
-                messages.error(request, 'Promotion not found.')
-        
-        elif action == 'create_promotion':
-            title = request.POST.get('title')
-            description = request.POST.get('description')
-            promotion_type = request.POST.get('promotion_type', 'popup')
-            discount_percentage = request.POST.get('discount_percentage')
-            bonus_amount = request.POST.get('bonus_amount')
-            minimum_deposit = request.POST.get('minimum_deposit')
-            end_date = request.POST.get('end_date')
-            
-            try:
-                promotion = Promotion.objects.create(
-                    title=title,
-                    description=description,
-                    promotion_type=promotion_type,
-                    discount_percentage=discount_percentage if discount_percentage else None,
-                    bonus_amount=bonus_amount if bonus_amount else None,
-                    minimum_deposit=minimum_deposit if minimum_deposit else None,
-                    status='active',
-                    end_date=timezone.datetime.fromisoformat(end_date) if end_date else None,
-                    created_by=request.user
-                )
-                messages.success(request, f'Promotion "{promotion.title}" created successfully!')
-            except Exception as e:
-                messages.error(request, f'Failed to create promotion: {str(e)}')
-        
-        elif action == 'bulk_send':
-            promotion_ids = request.POST.getlist('promotion_ids')
-            sent_count = 0
-            for promotion_id in promotion_ids:
-                try:
-                    promotion = Promotion.objects.get(id=promotion_id, status='active')
-                    # Send promotion logic here
-                    sent_count += 1
-                except Promotion.DoesNotExist:
-                    continue
-            messages.success(request, f'{sent_count} promotions sent successfully!')
-        
-        elif action == 'bulk_activate':
-            promotion_ids = request.POST.getlist('promotion_ids')
-            Promotion.objects.filter(id__in=promotion_ids).update(status='active')
-            messages.success(request, f'{len(promotion_ids)} promotions activated!')
-        
-        elif action == 'bulk_deactivate':
-            promotion_ids = request.POST.getlist('promotion_ids')
-            Promotion.objects.filter(id__in=promotion_ids).update(status='inactive')
-            messages.success(request, f'{len(promotion_ids)} promotions deactivated!')
-        
-        elif action == 'delete_promotion':
-            promotion_id = request.POST.get('promotion_id')
-            try:
-                promotion = Promotion.objects.get(id=promotion_id)
-                promotion.delete()
-                messages.success(request, f'Promotion "{promotion.title}" deleted successfully!')
-            except Promotion.DoesNotExist:
-                messages.error(request, 'Promotion not found.')
-    
-    # Get all promotions with advanced filtering
-    search_query = request.GET.get('search', '')
-    status_filter = request.GET.get('status', 'all')
-    
-    promotions = Promotion.objects.all()
-    
-    if search_query:
-        promotions = promotions.filter(
-            Q(title__icontains=search_query) | 
-            Q(description__icontains=search_query)
-        )
-    
-    if status_filter != 'all':
-        promotions = promotions.filter(status=status_filter)
-    
-    promotions = promotions.order_by('-created_at')
-    
-    # Calculate advanced statistics
-    total_promotions = Promotion.objects.count()
-    active_promotions = Promotion.objects.filter(status='active').count()
-    total_views = Promotion.objects.aggregate(total=Sum('view_count'))['total'] or 0
-    total_clicks = Promotion.objects.aggregate(total=Sum('click_count'))['total'] or 0
-    
-    # Get promotion performance metrics
-    top_performing = Promotion.objects.filter(
-        view_count__gt=0
-    ).order_by('-click_count')[:5]
-    
-    recent_promotions = Promotion.objects.order_by('-created_at')[:10]
-    
-    context = {
-        'promotions': promotions,
-        'title': 'Advanced Promotion Management',
-        'promotion_types': Promotion.PROMOTION_TYPES,
-        'status_choices': Promotion.STATUS_CHOICES,
-        'stats': {
-            'total_promotions': total_promotions,
-            'active_promotions': active_promotions,
-            'total_views': total_views,
-            'total_clicks': total_clicks,
-        },
-        'top_performing': top_performing,
-        'recent_promotions': recent_promotions,
-        'search_query': search_query,
-        'status_filter': status_filter,
-    }
-    return render(request, 'dashboard/promotion_management.html', context)
 
 

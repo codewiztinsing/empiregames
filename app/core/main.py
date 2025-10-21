@@ -5,8 +5,7 @@ from wallet.api import router as wallet_router
 from users.api import users_router
 from game.api import game_router
 from webhooks.api import webhooks_router
-from users.referral_api import router as referral_router
-from promotion.api import promotion_router
+# Referral API removed
 # base api with global JWT protection
 api = NinjaAPI(auth=JWTAuth())
 
@@ -37,5 +36,4 @@ api.add_router("/users", users_router)
 api.add_router("/wallet/", wallet_router)
 api.add_router("/game/", game_router)
 api.add_router("/webhooks/", webhooks_router)
-api.add_router("/referrals/", referral_router)
-api.add_router("/promotions/", promotion_router)
+# Referral router removed

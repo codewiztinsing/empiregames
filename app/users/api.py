@@ -16,12 +16,11 @@ from wallet.models import Transaction,Wallet,WithdrawalRequest
 from game.models import Game
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
-from .referral_services import ReferralService
+# ReferralService import removed
 
 from pydantic import BaseModel
 from typing import Optional, Union
 from .telegram_validator import validate_telegram_webapp_data
-
 users_router = Router()
 
 # Apply JWT auth globally to all routes under this router except explicit public ones
@@ -70,11 +69,10 @@ def register(request, data: RegisterSchema):
         
         # If no referrer provided, assign default sponsor (Akerbingo)
         if not referred_by:
-            from .referral_services import ReferralService
-            referred_by = ReferralService.get_or_create_default_sponsor()
+            # ReferralService import removed
+            # Default sponsor removed
             # Default sponsor is assigned but user doesn't get signup bonus
-
-    
+            pass
         # Create user with hashed password
         created_user, created = User.objects.get_or_create(
             username=data.username,
@@ -88,8 +86,8 @@ def register(request, data: RegisterSchema):
         # 1. User is newly created
         # 2. User has a real referrer (NOT the default Akerbingo sponsor)
         if created and has_real_referrer:
-            from .referral_services import ReferralService
-            success, message = ReferralService.process_signup_bonus(created_user)
+            # ReferralService import removed
+            # Signup bonus removed
             print(f"Signup bonus (referred by {referred_by.username}): {message}")
         elif created and not has_real_referrer:
             print(f"User {created_user.username} has default sponsor (Akerbingo), NO signup bonus given")
@@ -276,22 +274,21 @@ def telegram_register(request, data: TelegramRegisterSchema):
         
         # If no referrer provided, assign default sponsor
         if not referred_by:
-            referred_by = ReferralService.get_or_create_default_sponsor()
-        
+            # Default sponsor removed
+            pass
         # Create user
         user = User.objects.create(
             username=username,
             first_name=telegram_user.first_name,
             last_name=telegram_user.last_name or "",
-            phone=data.phone or "",  # Phone can be empty initially
+            phone=data.phone or "",
             telegram_id=str(telegram_user.id),
-            referred_by=referred_by,
             password=make_password(f"telegram_{telegram_user.id}")  # Generate a password
         )
         
         # Process signup bonus if user has real referrer
         if has_real_referrer:
-            success, message = ReferralService.process_signup_bonus(user)
+            # Signup bonus removed
             print(f"Signup bonus: {message}")
         
         # Generate JWT token
@@ -363,7 +360,7 @@ def get_user_by_telegram_id(request,telegram_id:int):
             created_at__date__lte=end_of_week
         ).count()
 
-        total_referral_earnings=ReferralService.get_referral_stats(user)['total_earnings']
+        total_referral_earnings=0  # Referral earnings removed
         print("total_referral_earnings = ",total_referral_earnings)
         print("games_played_this_week remaining = ", games_played_this_week)
         print("27-games_played_this_week = ",27-games_played_this_week)
@@ -698,14 +695,9 @@ def change_sponsor(request, user_id: int, data: ChangeSponsorSchema):
         if user.sponsor_changed:
             return JsonResponse({"error": "You have already changed your sponsor once. This can only be done once."}, status=400)
         
-        # Check if user was invited by another user - don't allow sponsor change
+        # Sponsor change functionality removed
         if user.referred_by is not None:
-            # Check if user was invited by a real user (not default sponsor)
-            from .referral_services import ReferralService
-            default_sponsor = ReferralService.get_or_create_default_sponsor()
-            if user.referred_by.id != default_sponsor.id:
-                return JsonResponse({"error": "You were invited by another user and cannot change your sponsor"}, status=400)
-            # If user has default sponsor, allow sponsor change (don't block)
+            return JsonResponse({"error": "Sponsor change functionality has been removed"}, status=400)
         
         # Update referred_by if provided
         if data.referred_by is not None:
@@ -732,15 +724,7 @@ def change_sponsor(request, user_id: int, data: ChangeSponsorSchema):
         
         user.save()
         
-        # Process sponsor change bonus if this is a sponsor change
-        if data.sponsor_changed:
-            from users.referral_services import ReferralService
-            bonus_success, bonus_message = ReferralService.process_sponsor_change_bonus(user)
-            if not bonus_success:
-                # Log the error but don't fail the sponsor change
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.warning(f"Failed to process sponsor change bonus for user {user.id}: {bonus_message}")
+        # Sponsor change bonus processing removed
         
         return JsonResponse({
             "success": True,
