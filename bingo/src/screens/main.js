@@ -48,7 +48,7 @@ const PlayingBoard = () => {
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
   // Display-only: picked numbers including fake during countdown
   const [pickedNumbers, setPickedNumbers] = useState([]);
-  const [winnerCountdown, setWinnerCountdown] = useState(5);
+  const [winnerCountdown, setWinnerCountdown] = useState(5000);
 
   // Generate static Bingo board function based on card number (deterministic LCG)
   const generateCombination = (cardNumber = selectedNumber) => {
@@ -248,14 +248,37 @@ const PlayingBoard = () => {
   };
 
   const handleBingoWinner = (data) => {
-    console.log('Bingo winner received:', data);
+    console.log('🎯 CLIENT: Bingo winner received:', data);
+    console.log('🎯 CLIENT: Data structure check:');
+    console.log('  - isBingo:', data.isBingo);
+    console.log('  - winningCard type:', typeof data.winningCard);
+    console.log('  - winningCard is array:', Array.isArray(data.winningCard));
+    console.log('  - winningCard length:', data.winningCard?.length);
+    console.log('  - markedCells type:', typeof data.markedCells);
+    console.log('  - markedCells is array:', Array.isArray(data.markedCells));
+    console.log('  - markedCells length:', data.markedCells?.length);
+    
+    if (data.winningCard && Array.isArray(data.winningCard)) {
+      console.log('🎯 CLIENT: Winning card structure:');
+      data.winningCard.forEach((col, colIndex) => {
+        console.log(`  Column ${colIndex}:`, col);
+        if (Array.isArray(col)) {
+          col.forEach((cell, rowIndex) => {
+            console.log(`    Row ${rowIndex}:`, cell);
+          });
+        }
+      });
+    }
+    
     if (data.isBingo) {
+      console.log('🎯 CLIENT: Setting bingo state...');
       setIsBingo(true);
       setWinningCard(data.winningCard);
       setWinner(data.winner);
       setWinnerCardNumber(data.winnerCardNumber);
       setWinnerPlayerName(data.winnerPlayerName);
       setMarkedCells(data.markedCells);
+      console.log('🎯 CLIENT: Bingo state set successfully');
     }
   };
 
@@ -611,7 +634,29 @@ const PlayingBoard = () => {
     ))}
   </div>
 
-  {winningCard[0] && winningCard[0].map((_, rowIndex) => (
+  {(() => {
+    console.log('🎯 CLIENT: Rendering winning card...');
+    console.log('🎯 CLIENT: winningCard state:', winningCard);
+    console.log('🎯 CLIENT: winningCard type:', typeof winningCard);
+    console.log('🎯 CLIENT: winningCard is array:', Array.isArray(winningCard));
+    console.log('🎯 CLIENT: winningCard length:', winningCard?.length);
+    
+    if (winningCard && Array.isArray(winningCard)) {
+      console.log('🎯 CLIENT: Current winningCard structure:');
+      winningCard.forEach((col, colIndex) => {
+        console.log(`  Column ${colIndex}:`, col);
+        if (Array.isArray(col)) {
+          col.forEach((cell, rowIndex) => {
+            console.log(`    Row ${rowIndex}:`, cell);
+          });
+        }
+      });
+    }
+    
+    return null;
+  })()}
+
+  {winningCard && winningCard[0] && winningCard[0].map((_, rowIndex) => (
     <div key={rowIndex} className="winning-card-row">
       {winningCard.map((row, colIndex) => {
         const cell = row[rowIndex];
@@ -659,13 +704,26 @@ const PlayingBoard = () => {
           bgColor = "red";     // marked but not winning
         }
 
+        // Debug cell rendering
+        if (rowIndex === 0 && colIndex === 0) {
+          console.log('🎯 CLIENT: Rendering first cell:', {
+            rowIndex,
+            colIndex,
+            cell,
+            cellNumber: cell?.number,
+            cellMarked: cell?.marked,
+            bgColor,
+            inWinningLine
+          });
+        }
+
         return (
           <div
             key={colIndex}
             className="winning-card-cell"
             style={{ backgroundColor: bgColor }}
           >
-            <span>{cell.number}</span>
+            <span>{cell?.number || '?'}</span>
           </div>
         );
       })}

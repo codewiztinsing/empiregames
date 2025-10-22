@@ -239,7 +239,7 @@ body {
   align-items: center;
   justify-content: center;
   width: 50px;
-  height: 40px;
+  height: fit-content;
   border-radius: 8px;
   padding: 4px;
   margin: 2px;
@@ -472,6 +472,7 @@ body {
   justify-content: flex-start;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   min-width: 180px;
+  z-index: 1000;
 }
 
 

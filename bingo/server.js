@@ -507,18 +507,43 @@ async function startGame(game) {
               break;
           }
           
+          // Debug: Log the complete board structure
+          console.log('🎯 Complete fake winning board:');
+          board.forEach((row, rowIndex) => {
+            const rowStr = row.map(cell => `${cell.number}${cell.marked ? '✓' : ' '}`).join(' | ');
+            console.log(`Row ${rowIndex}: ${rowStr}`);
+          });
+          
+          // Count total numbers and marked cells
+          let totalNumbers = 0;
+          let markedCells = 0;
+          board.forEach(row => {
+            row.forEach(cell => {
+              if (cell.number !== '*') totalNumbers++;
+              if (cell.marked) markedCells++;
+            });
+          });
+          console.log(`🎯 Board summary: ${totalNumbers} numbers generated, ${markedCells} cells marked for winning pattern`);
+          
           return board;
         };
 
         const winningCard = generateFakeWinningBoard();
+
+        // Transpose the board from [row][col] to [col][row] format for client compatibility
+        const transposedCard = Array.from({ length: 5 }, (_, colIndex) => 
+          Array.from({ length: 5 }, (_, rowIndex) => winningCard[rowIndex][colIndex])
+        );
+
+        console.log('🎯 Transposed card for client:', JSON.stringify(transposedCard, null, 2));
 
         game.winner = fakeId;
 
         io.emit("winBingo", {
           isBingo: true,
           playerId: fakeId,
-          markedCells: winningCard,
-          winningCard: winningCard,
+          markedCells: transposedCard,
+          winningCard: transposedCard,
           winner: fakeId,
           calledNumbers: game.calledNumbers,
           playerCard: 1,
@@ -534,8 +559,8 @@ async function startGame(game) {
         io.emit("bingoWinner", {
           isBingo: true,
           playerId: fakeId,
-          markedCells: winningCard,
-          winningCard: winningCard,
+          markedCells: transposedCard,
+          winningCard: transposedCard,
           winner: fakeId,
           winnerCardNumber: 1,
           winnerPlayerName: fakeName,
