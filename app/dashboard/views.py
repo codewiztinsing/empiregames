@@ -142,9 +142,9 @@ def dashboard(request):
 @admin_required
 def game_types(request):  
     if request.method == 'POST':
-        # Additional authorization check for creating game types
+        # Additional authorization check for creating game rooms
         if not request.user.is_staff:
-            return JsonResponse({'success': False, 'message': 'Insufficient permissions to create game types.'}, status=403)
+            return JsonResponse({'success': False, 'message': 'Insufficient permissions to create game rooms.'}, status=403)
         
         # Check if it's a JSON request (from AJAX) or form request
         if request.content_type == 'application/json':
@@ -173,7 +173,7 @@ def game_types(request):
                             house_edge_percentage=commission_decimal,
                             created_by=request.user
                         )
-                        return JsonResponse({'success': True, 'message': 'Game type created successfully!'})
+                        return JsonResponse({'success': True, 'message': 'Game room created successfully!'})
                     except (ValueError, TypeError) as e:
                         return JsonResponse({'success': False, 'message': 'Invalid numeric values provided.'}, status=400)
                 else:
@@ -201,7 +201,7 @@ def game_types(request):
                             house_edge_percentage=commission_decimal,
                             created_by=request.user
                         )
-                        messages.success(request, 'Game type created successfully!')
+                        messages.success(request, 'Game room created successfully!')
                 except (ValueError, TypeError):
                     messages.error(request, 'Invalid numeric values provided.')
             else:
@@ -210,11 +210,11 @@ def game_types(request):
             return redirect('dashboard:game_types')
     
     elif request.method == 'PUT':
-        # Additional authorization check for updating game types
+        # Additional authorization check for updating game rooms
         if not request.user.is_staff:
-            return JsonResponse({'success': False, 'message': 'Insufficient permissions to update game types.'}, status=403)
+            return JsonResponse({'success': False, 'message': 'Insufficient permissions to update game rooms.'}, status=403)
         
-        # Update game type
+        # Update game room
         import json
         data = json.loads(request.body)
         game_type_id = data.get('id')
@@ -244,16 +244,16 @@ def game_types(request):
                     return JsonResponse({'success': False, 'message': 'Invalid commission value.'}, status=400)
             
             game_type.save()
-            return JsonResponse({'success': True, 'message': 'Game type updated successfully!'})
+            return JsonResponse({'success': True, 'message': 'Game room updated successfully!'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
     
     elif request.method == 'DELETE':
-        # Additional authorization check for deleting game types
+        # Additional authorization check for deleting game rooms
         if not request.user.is_staff:
-            return JsonResponse({'success': False, 'message': 'Insufficient permissions to delete game types.'}, status=403)
+            return JsonResponse({'success': False, 'message': 'Insufficient permissions to delete game rooms.'}, status=403)
         
-        # Delete game type
+        # Delete game room
         import json
         data = json.loads(request.body)
         game_type_id = data.get('id')
@@ -261,34 +261,34 @@ def game_types(request):
         try:
             game_type = get_object_or_404(GameRoom, id=game_type_id)
             
-            # Check if game type is being used in active games
+            # Check if game room is being used in active games
             active_games = Game.objects.filter(room=game_type, ended_at__isnull=True)
             if active_games.exists():
-                return JsonResponse({'success': False, 'message': 'Cannot delete game type with active games.'}, status=400)
+                return JsonResponse({'success': False, 'message': 'Cannot delete game room with active games.'}, status=400)
             
             game_type.delete()
-            return JsonResponse({'success': True, 'message': 'Game type deleted successfully!'})
+            return JsonResponse({'success': True, 'message': 'Game room deleted successfully!'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
     
-    # GET request - display all game types
+    # GET request - display all game rooms
     game_types = GameRoom.objects.all().order_by('-id')
     context = {
         'game_types': game_types,
-        'page_title': 'Game Types'
+        'page_title': 'Game Rooms'
     }
     return render(request, 'dashboard/game_types.html',context)
 
 
 @admin_required
 def game_type_detail(request, game_type_id):
-    """Handle individual game type operations (GET, PUT, DELETE)"""
+    """Handle individual game room operations (GET, PUT, DELETE)"""
     if request.method == 'PUT':
-        # Additional authorization check for updating game types
+        # Additional authorization check for updating game rooms
         if not request.user.is_staff:
-            return JsonResponse({'success': False, 'message': 'Insufficient permissions to update game types.'}, status=403)
+            return JsonResponse({'success': False, 'message': 'Insufficient permissions to update game rooms.'}, status=403)
         
-        # Update game type
+        # Update game room
         import json
         try:
             data = json.loads(request.body)
@@ -314,31 +314,31 @@ def game_type_detail(request, game_type_id):
                     return JsonResponse({'success': False, 'message': 'Invalid commission value.'}, status=400)
             
             game_type.save()
-            return JsonResponse({'success': True, 'message': 'Game type updated successfully!'})
+            return JsonResponse({'success': True, 'message': 'Game room updated successfully!'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
     
     elif request.method == 'DELETE':
-        # Additional authorization check for deleting game types
+        # Additional authorization check for deleting game rooms
         if not request.user.is_staff:
-            return JsonResponse({'success': False, 'message': 'Insufficient permissions to delete game types.'}, status=403)
+            return JsonResponse({'success': False, 'message': 'Insufficient permissions to delete game rooms.'}, status=403)
         
-        # Delete game type
+        # Delete game room
         try:
             game_type = get_object_or_404(GameRoom, id=game_type_id)
             
-            # Check if game type is being used in active games
+            # Check if game room is being used in active games
             active_games = Game.objects.filter(room=game_type, ended_at__isnull=True)
             if active_games.exists():
-                return JsonResponse({'success': False, 'message': 'Cannot delete game type with active games.'}, status=400)
+                return JsonResponse({'success': False, 'message': 'Cannot delete game room with active games.'}, status=400)
             
             game_type.delete()
-            return JsonResponse({'success': True, 'message': 'Game type deleted successfully!'})
+            return JsonResponse({'success': True, 'message': 'Game room deleted successfully!'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
     
     else:
-        # GET request - return game type details
+        # GET request - return game room details
         game_type = get_object_or_404(GameRoom, id=game_type_id)
         return JsonResponse({
             'id': game_type.id,
