@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { SocketContext } from '../contexts/socket';
@@ -55,6 +55,14 @@ const Selections = () => {
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [referralBonus, setReferralBonus] = useState(0);
   const [referralLoading, setReferralLoading] = useState(true);
+
+  // Prevent multiple navigations/race conditions
+  const hasNavigatedRef = useRef(false);
+  const navigateOnce = (url) => {
+    if (hasNavigatedRef.current) return;
+    hasNavigatedRef.current = true;
+    navigate(url);
+  };
 
   // Generate numbers 1-100 (memoized since it's static)
   const numbers = Array.from({ length: 400 }, (_, i) => i + 1);
@@ -129,17 +137,12 @@ const Selections = () => {
         playerId: urlPlayerId, 
         roomId: urlRoomId 
       });
-      
-      // Try to rejoin if there's a previous game in progress
-      attemptRejoin(urlPlayerId, urlRoomId, urlPlayerName);
     }
     
     socket.on('gameState', handleGameState);
     socket.on('pickedNumbers', handlePickedNumbers);
     socket.on("gameStatus", handleGameStatus);
     socket.on("bingoWinner", handleBingoWinner);
-    socket.on('rejoinSuccess', handleRejoinSuccess);
-    socket.on('rejoinError', handleRejoinError);
     socket.on('allPlayerSelections', handleAllPlayerSelections);
     socket.on('globals', handleGlobals);
     socket.on('joinError', (error) => {
@@ -160,8 +163,6 @@ const Selections = () => {
       socket.off('pickedNumbers', handlePickedNumbers);
       socket.off("gameStatus", handleGameStatus);
       socket.off("bingoWinner", handleBingoWinner);
-      socket.off('rejoinSuccess', handleRejoinSuccess);
-      socket.off('rejoinError', handleRejoinError);
       socket.off('allPlayerSelections', handleAllPlayerSelections);
       socket.off('globals', handleGlobals);
       socket.off('joinError');
@@ -170,43 +171,7 @@ const Selections = () => {
 
 
 
-  // Attempt to rejoin a previous game
-  const attemptRejoin = (playerId, roomId, playerName) => {
-    console.log("attemptRejoin",playerId, roomId, playerName)
-    socket.emit('rejoinGame', {
-      playerId: playerId,
-      roomId: roomId,
-      playerName: playerName
-    });
-  };
-
-  // Handle successful rejoin
-  const handleRejoinSuccess = (data) => {
-    console.log("=== REJOIN SUCCESS DEBUG ===");
-    console.log("Rejoin success data:", data);
-    console.log("Setting game state...");
-    
-    setToast('Rejoined your previous game! Redirecting to play...');
-    setIsToast(true);
-    
-
-    
-    // Set the game state from rejoin data
-    setGameId(data.gameId);
-    setSelectedNumber(data.selectedNumber);
-    setSelectBoard(data.boards[0]);
-    setChoosenNumbers([data.selectedNumber]);
-    setChooseBoards(data.boards);
-        // Navigate directly to play screen with current game state
-    navigate(`/preview?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`);
-  };
-
-  // Handle rejoin error
-  const handleRejoinError = (data) => {
-    console.log("=== REJOIN ERROR DEBUG ===");
-    console.log("Rejoin failed:", data.message);
-    console.log("This is normal for new users or expired games");
-  };
+  // Rejoin logic removed
 
   // Handle all player selections
   const handleAllPlayerSelections = (data) => { 
@@ -237,8 +202,8 @@ const Selections = () => {
           console.log("playerName:", playerName);
           console.log("selectedNumber:", selectedNumber);
           
-          // Navigate to play screen with the selected number - USER SPECIFIC
-          navigate(`/preview?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`);
+          // Navigate to preview (guard against double navigation)
+          navigateOnce(`/preview?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`);
         } else {
           console.log("❌ Current user found but no selected number or game not in progress");
           console.log("selectedNumber:", selectedNumber);
@@ -312,7 +277,7 @@ const Selections = () => {
     console.log("🔄 Countdown redirect check - countDown:", countDown, "gameStatus:", gameStatus, "selectedNumber:", selectedNumber);
     
     // Navigate when countdown reaches 0 and user has selected a number
-    if (countDown === 0 && gameStatus === "in-progress" && selectedNumber) {
+    if (!hasNavigatedRef.current && countDown === 0 && gameStatus === "in-progress" && selectedNumber) {
       console.log("🚀 Redirecting to main screen with params:", {
         playerId,
         betAmount: roomId,
@@ -329,56 +294,31 @@ const Selections = () => {
       console.log("🔗 Redirect URL:", redirectUrl);
       
       // Immediate redirect without delay for better reliability
-      navigate(redirectUrl);
+      navigateOnce(redirectUrl);
+    } else if (!hasNavigatedRef.current && countDown === 0 && gameStatus === "in-progress" && !selectedNumber && playerId && roomId) {
+      // If game started but user has no selectedNumber, send to preview instead of freezing
+      const previewUrl = `/preview?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
+      console.log("🔗 Redirect to preview (no selectedNumber):", previewUrl);
+      navigateOnce(previewUrl);
     }
     // If countdown is not 0, stay on selection page (no navigation)
   }, [countDown, selectedNumber, gameStatus, playerId, roomId, playerName, navigate]);
 
-  // Aggressive fallback redirect mechanism - multiple attempts
+  // Simplified fallback redirect mechanism - avoid hard reloads and ensure single navigation
   useEffect(() => {
-    if (countDown === 0 && selectedNumber && gameStatus === "in-progress") {
-      console.log("⚠️ Fallback redirect triggered - countdown is 0 but user still on selection screen");
-      
-      // Double-check that we have all required parameters
-      if (playerId && roomId && playerName && selectedNumber) {
-        console.log("🔄 Fallback: Redirecting to main screen");
-        const redirectUrl = `/play?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}&selectedNumber=${encodeURIComponent(selectedNumber)}`;
-        
-        // Try multiple redirect methods for maximum reliability
-        setTimeout(() => {
-          console.log("🔄 Fallback attempt 1: navigate()");
-          navigate(redirectUrl);
-        }, 100);
-        
-        setTimeout(() => {
-          console.log("🔄 Fallback attempt 2: window.location.href");
-          window.location.href = redirectUrl;
-        }, 1000);
-        
-      } else {
-        console.error("❌ Fallback redirect failed - missing required parameters:", {
-          playerId: !!playerId,
-          roomId: !!roomId,
-          playerName: !!playerName,
-          selectedNumber: !!selectedNumber
-        });
+    if (!hasNavigatedRef.current && countDown === 0 && gameStatus === "in-progress") {
+      if (playerId && roomId) {
+        if (selectedNumber) {
+          const redirectUrl = `/play?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}&selectedNumber=${encodeURIComponent(selectedNumber)}`;
+          navigateOnce(redirectUrl);
+        } else {
+          const previewUrl = `/preview?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
+          navigateOnce(previewUrl);
+        }
       }
     }
   }, [countDown, selectedNumber, gameStatus, playerId, roomId, playerName, navigate]);
-
-  // Additional safety net - redirect if countdown is 0 regardless of gameStatus
-  useEffect(() => {
-    if (countDown === 0 && selectedNumber && playerId && roomId && playerName) {
-      console.log("🛡️ Safety net redirect - countdown is 0, forcing redirect");
-      const redirectUrl = `/play?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}&selectedNumber=${encodeURIComponent(selectedNumber)}`;
-      
-      // Force redirect after a short delay to ensure all other effects have run
-      setTimeout(() => {
-        console.log("🛡️ Safety net: Forcing redirect");
-        window.location.href = redirectUrl;
-      }, 2000);
-    }
-  }, [countDown, selectedNumber, playerId, roomId, playerName]);
+  // Removed hard reload safety nets to prevent freeze loops
 
   // Handle redirect for users when game is in progress
   useEffect(() => {
@@ -439,7 +379,7 @@ const handleGlobals = (state) => {
     }
   };
 
-  // Static board generation based on card number
+  // Static board generation based on card number (deterministic, fast, no duplicates)
   const generateCombination = useCallback((cardNumber = selectedNumber) => {
     const card = [];
     const ranges = [
@@ -451,12 +391,17 @@ const handleGlobals = (state) => {
     ];
 
     // Use card number as seed for deterministic generation
-    const seed = cardNumber || 1;
-    
-    // Simple pseudo-random number generator using seed
-    const seededRandom = (seed) => {
-      let x = Math.sin(seed) * 10000;
-      return x - Math.floor(x);
+    let baseSeed = Number(cardNumber);
+    if (!Number.isFinite(baseSeed) || baseSeed <= 0) baseSeed = 1;
+
+    // Lightweight LCG for stable, fast deterministic pseudo-random numbers in [0,1)
+    const lcg = (s) => {
+      // constants from Numerical Recipes
+      const a = 1664525;
+      const c = 1013904223;
+      const m = 2 ** 32;
+      s = (a * (s >>> 0) + c) % m;
+      return [s, s / m];
     };
 
     for (let col = 0; col < 5; col++) {
@@ -470,8 +415,11 @@ const handleGlobals = (state) => {
         if (col === 2 && row === 2) {
           card[row][col] = '*';
         } else {
-          // Use deterministic selection based on seed
-          const randomIndex = Math.floor(seededRandom(seed + col * 5 + row) * nums.length);
+          // Deterministic selection based on evolving seed per cell
+          const combinedSeed = (baseSeed + col * 131 + row * 17) >>> 0;
+          const [nextSeed, rnd] = lcg(combinedSeed);
+          baseSeed = nextSeed; // advance baseSeed to keep sequence evolving
+          const randomIndex = Math.floor(rnd * nums.length);
           card[row][col] = nums.splice(randomIndex, 1)[0];
         }
       }

@@ -48,30 +48,41 @@ const PlayingBoard = () => {
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
   const [winnerCountdown, setWinnerCountdown] = useState(5);
 
-  // Generate static Bingo board function based on card number
+  // Generate static Bingo board function based on card number (deterministic LCG)
   const generateCombination = (cardNumber = selectedNumber) => {
     const numbers = [];
-    const seed = cardNumber || 1;
-    
-    // Simple pseudo-random number generator using seed
-    const seededRandom = (seed) => {
-      let x = Math.sin(seed) * 10000;
-      return x - Math.floor(x);
+    let baseSeed = Number(cardNumber);
+    if (!Number.isFinite(baseSeed) || baseSeed <= 0) baseSeed = 1;
+
+    // Lightweight LCG for stable, fast deterministic pseudo-random numbers in [0,1)
+    const lcg = (s) => {
+      const a = 1664525;
+      const c = 1013904223;
+      const m = 2 ** 32;
+      s = (a * (s >>> 0) + c) % m;
+      return [s, s / m];
     };
 
     for (let i = 0; i < 5; i++) {
       const column = [];
+      const used = new Set();
       for (let j = 0; j < 5; j++) {
         if (i === 2 && j === 2) {
           column.push('*');
         } else {
-          let num;
-          do {
-            // Use deterministic generation based on seed
-            const randomValue = seededRandom(seed + i * 5 + j);
-            num = Math.floor(randomValue * 15) + (i * 15) + 1;
-          } while (column.includes(num));
-          column.push(num);
+          const combinedSeed = (baseSeed + i * 131 + j * 17) >>> 0;
+          const [nextSeed, rnd] = lcg(combinedSeed);
+          baseSeed = nextSeed;
+          // map to 1..15 within the column's range, ensure uniqueness
+          let candidate = Math.floor(rnd * 15) + (i * 15) + 1;
+          // resolve rare collisions deterministically
+          let k = 1;
+          while (used.has(candidate)) {
+            candidate = ((candidate - (i * 15) - 1 + k) % 15) + 1 + (i * 15);
+            k++;
+          }
+          used.add(candidate);
+          column.push(candidate);
         }
       }
       numbers.push(column);
@@ -288,48 +299,7 @@ const PlayingBoard = () => {
       }
     };
 
-    const handleRejoinSuccess = (data) => {
-      console.log('Rejoin successful in main:', data);
-      // Update game state with rejoin data
-      setCalledNumbers(data.calledNumbers || []);
-      setLastBall(data.lastBall);
-      setTotalCalledNumbers(data.totalCalledNumbers || 0);
-      setWinAmount(data.win_amount || 0);
-      setTotalPlayers(data.total_players || 0);
-      if (data.faulMade === true) {
-        setIsDisqualified(true);
-      }
-      
-      // Mark all called numbers visually
-      if (data.calledNumbers && Array.isArray(data.calledNumbers)) {
-        setTimeout(() => {
-          data.calledNumbers.forEach(number => {
-            const elementId = getElementIdForNumber(number);
-            const element = document.getElementById(elementId);
-            if (element) {
-              element.classList.add('called');
-            }
-          });
-        }, 100);
-      }
-      
-      // Show success message
-      setToast('Rejoined your previous game!');
-      setIsToast(true);
-    };
-
-    const handleRejoinError = (data) => {
-      console.log('Rejoin failed in main:', data.message);
-      // Don't show error as this is normal for new users
-      navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
-      window.location.reload();
-    };
-
-    const handlePlayerRejoined = (data) => {
-      console.log('Player rejoined:', data);
-      setToast(`${data.playerName} rejoined the game!`);
-      setIsToast(true);
-    };
+    // Rejoin logic removed
 
     socket.on('numberSelected', (number) => setLastBall(number));
     socket.on('gameState', handleGameState);
@@ -358,9 +328,7 @@ const PlayingBoard = () => {
     });
     socket.on('joinError', handleJoinError);
     socket.on('playerLeft', handlePlayerLeft);
-    socket.on('rejoinSuccess', handleRejoinSuccess);
-    socket.on('rejoinError', handleRejoinError);
-    socket.on('playerRejoined', handlePlayerRejoined);
+    // Rejoin listeners removed
     socket.on('navigateToSelection', (data) => {
       if (data.roomId === roomId) {
         setToast(data.message || "All 75 numbers have been called! Please select new cards for the next game.");
@@ -381,9 +349,7 @@ const PlayingBoard = () => {
       socket.off('falseBingo', handleFalseBingo);
       socket.off('joinError', handleJoinError);
       socket.off('playerLeft', handlePlayerLeft);
-      socket.off('rejoinSuccess', handleRejoinSuccess);
-      socket.off('rejoinError', handleRejoinError);
-      socket.off('playerRejoined', handlePlayerRejoined);
+      // Rejoin listeners removed
       socket.off('navigateToSelection');
       socket.off('disqualified');
       socket.off('faulMadePlayers');
