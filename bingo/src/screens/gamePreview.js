@@ -340,14 +340,8 @@ const GamePreview = () => {
                 <div className="blur-content">
                   <div className="blur-message">
                     <h2>🎮 Game in Progress</h2>
-                    <p>Join now to start playing!</p>
-                    <button 
-                      className={`join-game-button ${isJoining ? 'joining' : ''}`}
-                      onClick={handleJoinGame}
-                      disabled={isJoining}
-                    >
-                      {isJoining ? 'Joining...' : '🎮 Join This Game'}
-                    </button>
+                    
+                 
                   </div>
                 </div>
               </div>
