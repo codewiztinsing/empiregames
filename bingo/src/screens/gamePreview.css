@@ -115,7 +115,6 @@
 }
 
 .number {
-  background: white;
   color: #333;
   padding: 4px 2px;
   text-align: center;
@@ -129,7 +128,6 @@
 }
 
 .number.called {
-  background: linear-gradient(135deg, #4CAF50, #45a049);
   color: white;
   transform: scale(1.05);
   box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);

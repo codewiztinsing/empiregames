@@ -416,7 +416,15 @@ const PlayingBoard = () => {
     const recentBall = `${lastBall.letter}${lastBall.number}`;
     setRecentCalledNumbers((prev) => {
       const updated = [...prev, recentBall];
-      return updated.length > 3 ? updated.slice(1) : updated;
+      const newArray = updated.length > 3 ? updated.slice(1) : updated;
+      
+      // Trigger animation for the new recent number
+      setTimeout(() => {
+        const newIndex = updated.length > 3 ? 2 : updated.length - 1; // Index of the newest number
+        animateRecentNumber(recentBall, newIndex);
+      }, 100);
+      
+      return newArray;
     });
   }, [lastBall]);
 
@@ -546,7 +554,7 @@ const PlayingBoard = () => {
   const animateNumber = (element, duration = 4000) => {
     if (!element) return;
     
-    console.log('🎬 Starting CSS animation for element:', element);
+    console.log('🎬 Starting enhanced animation for element:', element);
     
     // Remove any existing inline styles that might conflict
     element.style.backgroundColor = '';
@@ -555,15 +563,82 @@ const PlayingBoard = () => {
     element.style.boxShadow = '';
     element.style.transition = '';
     
-  
-    // Add the CSS class to trigger the animation
-    element.classList.add('red-color');
+    // Phase 1: Green background with scale effect (first 1 second)
+    element.style.backgroundColor = '#4CAF50';
+    element.style.color = 'white';
+    element.style.transform = 'scale(1.2)';
+    element.style.boxShadow = '0 0 20px rgba(76, 175, 80, 0.8)';
+    element.style.transition = 'all 0.3s ease-in-out';
     
-    // Remove the class after animation completes to allow re-triggering
+    // Phase 2: Golden rod settlement effect (after 1 second)
     setTimeout(() => {
-      element.classList.remove('red-color');
-      console.log('🎬 CSS animation completed and class removed');
+      element.style.backgroundColor = '#DAA520'; // Golden rod color
+      element.style.boxShadow = '0 0 15px rgba(218, 165, 32, 0.6)';
+      element.style.transform = 'scale(1.1)';
+      element.style.transition = 'all 0.5s ease-in-out';
+    }, 1000);
+    
+    // Phase 3: Final settlement (after 2 seconds)
+    setTimeout(() => {
+      element.style.backgroundColor = '#DAA520';
+      element.style.transform = 'scale(1)';
+      element.style.boxShadow = '0 2px 8px rgba(218, 165, 32, 0.4)';
+      element.style.transition = 'all 0.3s ease-in-out';
+    }, 2000);
+    
+    // Phase 4: Return to normal (after duration)
+    setTimeout(() => {
+      element.style.backgroundColor = '';
+      element.style.color = '';
+      element.style.transform = '';
+      element.style.boxShadow = '';
+      element.style.transition = '';
+      console.log('🎬 Enhanced animation completed');
     }, duration);
+  };
+
+  // New function to animate recent called numbers
+  const animateRecentNumber = (number, index) => {
+    if (number === '*') return;
+    
+    setTimeout(() => {
+      const recentElements = document.querySelectorAll('.recent-call-number');
+      const element = recentElements[index];
+      
+      if (element) {
+        console.log('🎬 Animating recent number:', number);
+        
+        // Green flash effect
+        element.style.backgroundColor = '#4CAF50';
+        element.style.color = 'white';
+        element.style.transform = 'scale(1.3)';
+        element.style.boxShadow = '0 0 25px rgba(76, 175, 80, 0.9)';
+        element.style.transition = 'all 0.4s ease-in-out';
+        
+        // Golden rod settlement
+        setTimeout(() => {
+          element.style.backgroundColor = '#DAA520';
+          element.style.boxShadow = '0 0 20px rgba(218, 165, 32, 0.7)';
+          element.style.transform = 'scale(1.1)';
+        }, 400);
+        
+        // Final settlement
+        setTimeout(() => {
+          element.style.backgroundColor = '#DAA520';
+          element.style.transform = 'scale(1)';
+          element.style.boxShadow = '0 2px 10px rgba(218, 165, 32, 0.5)';
+        }, 800);
+        
+        // Return to normal
+        setTimeout(() => {
+          element.style.backgroundColor = '';
+          element.style.color = '';
+          element.style.transform = '';
+          element.style.boxShadow = '';
+          element.style.transition = '';
+        }, 3000);
+      }
+    }, index * 200); // Stagger animations
   };
   
 
