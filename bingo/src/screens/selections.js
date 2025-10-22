@@ -274,10 +274,21 @@ const Selections = () => {
 
   // Countdown redirect logic - only navigate when countdown reaches exactly 00
   useEffect(() => {
-    console.log("🔄 Countdown redirect check - countDown:", countDown, "gameStatus:", gameStatus, "selectedNumber:", selectedNumber);
+
+    console.log("++++++++countDown++++++++++++")
+    console.log("countDown",countDown)
+    console.log("gameStatus",gameStatus)
+    console.log("selectedNumber",selectedNumber)
+    console.log("playerId",playerId)
+    console.log("roomId",roomId)
+    console.log("playerName",playerName)
+    console.log("hasNavigatedRef",hasNavigatedRef.current)
+    console.log("++++++++countDown++++++++++++")
+
+
     
     // Navigate when countdown reaches 0 and user has selected a number
-    if (!hasNavigatedRef.current && countDown === 0 && gameStatus === "in-progress" && selectedNumber) {
+    if (!hasNavigatedRef.current && countDown === 0 && gameStatus === "in-progress" && selectedNumber && playerId) {
       console.log("🚀 Redirecting to main screen with params:", {
         playerId,
         betAmount: roomId,
@@ -320,20 +331,20 @@ const Selections = () => {
   }, [countDown, selectedNumber, gameStatus, playerId, roomId, playerName, navigate]);
   // Removed hard reload safety nets to prevent freeze loops
 
-  // Handle redirect for users when game is in progress
+  // Handle redirect when game becomes in-progress (independent of countdown)
   useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const urlSelectedNumber = queryParams.get('selectedNumber');
-    
-    // Redirect to preview page if:
-    // 1. We have playerId and roomId
-    // 2. No selectedNumber in URL (new user or user without selected card)
-    // 3. Game status is "in-progress"
-    if (playerId && roomId && !urlSelectedNumber && gameStatus === "in-progress") {
-      console.log("🎮 Game in progress detected - redirecting to preview page");
-      navigate(`/preview?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`);
+    if (!hasNavigatedRef?.current && gameStatus === "in-progress" && playerId && roomId) {
+      if (selectedNumber) {
+        const redirectUrl = `/play?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}&selectedNumber=${encodeURIComponent(selectedNumber)}`;
+        console.log("🎮 In-progress detected with selection - navigating to play:", redirectUrl);
+        navigateOnce(redirectUrl);
+      } else {
+        const previewUrl = `/preview?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`;
+        console.log("🎮 In-progress detected without selection - navigating to preview:", previewUrl);
+        navigateOnce(previewUrl);
+      }
     }
-  }, [gameStatus, playerId, roomId, playerName, navigate]);
+  }, [gameStatus, playerId, roomId, playerName, selectedNumber]);
 
 const handleGlobals = (state) => {
   // Show global countdown and game state for all rooms
@@ -839,7 +850,6 @@ const handleGlobals = (state) => {
 
               // Debug logging for selected numbers
               if (isChoosen) {
-                console.log("Card",number,"is choosen")
               }
 
               return (
