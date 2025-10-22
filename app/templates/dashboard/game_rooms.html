@@ -28,11 +28,11 @@
                     <div class="grid grid-cols-2 md:grid-cols-2 gap-4 text-sm">
                         <div>
                             <span class="text-gray-400">Stake:</span>
-                            <span class="text-white ml-1" data-field="bet_amount">{{ game_room.bet_amount }}</span>
+                            <span class="text-white ml-1" data-field="bet_amount">{{ game_room.entry_fee }}</span>
                         </div>
                         <div>
                             <span class="text-gray-400">Commission:</span>
-                            <span class="text-white ml-1" data-field="commission">{{ game_room.commission }}</span>
+                            <span class="text-white ml-1" data-field="commission">{{ game_room.house_edge_percentage }}</span>
                         </div>
                     </div>
                     <div class="mt-2">
@@ -44,7 +44,7 @@
                     <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm" onclick="editGameRoom({{ game_room.id }})">
                         Edit
                     </button>
-                    <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm" onclick="deleteGameType({{ game_room.id }})">
+                    <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm" onclick="deleteGameRoom({{ game_room.id }})">
                         Delete
                     </button>
                 </div>
