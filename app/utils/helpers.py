@@ -80,12 +80,25 @@ def verify_receipt(message,paymentMethod,session_id):
 
 
 def get_game_type():
-    response = requests.get(f"{BACK_URL}/api/v1/game/game-types/")
-    if response.status_code == 200:
-        return response.json()
-    else:
+    try:
+        response = requests.get(f"{BACK_URL}/api/v1/game/game-rooms/")
+        if response.status_code == 200:
+            data = response.json()
+            # Convert game_rooms to game_types format for backward compatibility
+            game_rooms = data.get('game_rooms', [])
+            game_types = []
+            for room in game_rooms:
+                game_types.append({
+                    'bet_amount': str(room['entry_fee']),
+                    'commission': str(room.get('house_edge_percentage', 0)),
+                    'id': room['id'],
+                    'name': room.get('name', f"Game Room {room['entry_fee']} ETB")
+                })
+            return {'game_types': game_types}
+        else:
+            logger.error(f"Failed to fetch game rooms: {response.status_code}")
+            return None
+    except Exception as e:
+        logger.error(f"Error fetching game rooms: {e}")
         return None
-
-   
-
 
