@@ -119,6 +119,15 @@ async function createGame(roomId) {
     roomId
   };
   activeGames.set(roomId, game);
+  
+  // If fake players are configured, start countdown immediately
+  if (game.fakeSettings.fakePlayersCount > 0) {
+    console.log("🤖 Fake players configured - starting countdown immediately for game:", game.id);
+    setTimeout(() => {
+      startCountDown(game);
+    }, 1000); // Small delay to ensure game is properly initialized
+  }
+  
   return game;
 }
 
@@ -196,8 +205,13 @@ function startCountDown(game) {
     console.log("🎯 Static total players calculated - real:", realPlayers, "fake:", fakePlayers, "static total:", game.staticTotalPlayers, "static win:", game.staticWinAmount);
   }
   
-  if (game.isCountStart || !game.players || game.players.size < 2) {
-    console.log("❌ Cannot start countdown - isCountStart:", game.isCountStart, "players:", game.players?.size);
+  // Allow countdown to start if we have fake players configured, even with 0 real players
+  const hasFakePlayers = game.fakeSettings?.fakePlayersCount > 0;
+  const hasEnoughPlayers = game.players && game.players.size >= 2;
+  const canStartWithFakeOnly = hasFakePlayers && game.players && game.players.size >= 0;
+  
+  if (game.isCountStart || !game.players || (!hasEnoughPlayers && !canStartWithFakeOnly)) {
+    console.log("❌ Cannot start countdown - isCountStart:", game.isCountStart, "players:", game.players?.size, "hasFakePlayers:", hasFakePlayers);
     return;
   }
   clearGameIntervals(game.id);
@@ -214,9 +228,13 @@ function startCountDown(game) {
     console.log("⏱️ Countdown tick - game:", game.id, "countdown:", game.countDown, "players:", game.players.size);
     game._fakePickTick = (game._fakePickTick + 1) % 1000000; // prevent overflow
     
-    // Check if we still have at least 2 players during countdown
-    if (game.players.size < 2) {
-      console.log("🔄 Less than 2 players during countdown - resetting countdown");
+    // Check if we still have enough players during countdown (allow fake players to continue)
+    const hasFakePlayersDuringCountdown = game.fakeSettings?.fakePlayersCount > 0;
+    const hasEnoughPlayersDuringCountdown = game.players.size >= 2;
+    const canContinueWithFakeOnly = hasFakePlayersDuringCountdown && game.players.size >= 0;
+    
+    if (!hasEnoughPlayersDuringCountdown && !canContinueWithFakeOnly) {
+      console.log("🔄 Not enough players during countdown - resetting countdown");
       clearInterval(countdownInterval);
       game.isCountStart = false;
       game.countDown = 30;
@@ -341,8 +359,12 @@ function startCountDown(game) {
   
 
     if (game.countDown === 0) {
-      // Final check before starting game - ensure we have at least 2 players
-      if (game.players.size < 2) {
+      // Final check before starting game - allow fake players to start game
+      const hasFakePlayersAtStart = game.fakeSettings?.fakePlayersCount > 0;
+      const hasEnoughPlayersAtStart = game.players.size >= 2;
+      const canStartWithFakeOnlyAtStart = hasFakePlayersAtStart && game.players.size >= 0;
+      
+      if (!hasEnoughPlayersAtStart && !canStartWithFakeOnlyAtStart) {
         console.log("❌ Not enough players to start game - resetting countdown");
         clearInterval(countdownInterval);
         game.isCountStart = false;
@@ -681,9 +703,48 @@ async function startGame(game) {
           roomId: game.roomId
         });
 
-        // End the game after fake player wins
-        console.log('🎯 Ending game after fake player win');
-        endGame(game);
+        // End the game immediately after fake player wins
+        console.log('🎯 Ending game immediately after fake player win');
+        // Clear all intervals to stop the game immediately
+        clearGameIntervals(game.id);
+        game.status = "finished";
+        game.winner = fakeId;
+        
+        // Emit game over immediately
+        io.emit("gameOver", {
+          gameId: game.id,
+          roomId: game.roomId,
+          winner: fakeId,
+          winnerName: fakeName,
+          total_winAmount: game.total_winAmount,
+          total_players: game.total_players + (game.fakePickedNumbers ? game.fakePickedNumbers.size : 0)
+        });
+        
+        // Reset game state for next game
+        setTimeout(() => {
+          // Reset game state similar to endGame but keep players
+          clearGameIntervals(game.id);
+          game.calledNumbers = [];
+          game.currentCall = null;
+          game.status = "waiting";
+          game.gameOver = false;
+          game.winner = null;
+          game.countDown = 30;
+          game.isCountStart = false;
+          game.fauldMadePlayers.clear();
+          game.staticTotalPlayers = null;
+          game.staticWinAmount = null;
+          game.fakePickedNumbers = new Set();
+          
+          // Start new countdown immediately
+          startCountDown(game);
+          
+          io.emit("gameStatus", {
+            status: "waiting",
+            roomId: game.roomId,
+            gameId: game.id
+          });
+        }, 1000);
         return; // stop further emission for this tick
       }
     } catch (e) {}
