@@ -426,7 +426,7 @@ async function startGame(game) {
 
  
 
-  const emitNextBall = () => {
+  const emitNextBall = async () => {
     console.log("🎲 Generating ball for game:", game.id, "called numbers:", game.calledNumbers.length);
     const calledSet = new Set(game.calledNumbers.map(b => b.number));
     let ball = generateBalls();
@@ -660,7 +660,9 @@ async function startGame(game) {
   emitNextBall();
 
   // Subsequent balls follow the configured game speed
-  const gameInterval = setInterval(emitNextBall, game.gameSpeed);
+  const gameInterval = setInterval(async () => {
+    await emitNextBall();
+  }, game.gameSpeed);
 
   gameIntervals.set(game.id, [gameInterval]);
 }
