@@ -413,26 +413,104 @@ async function startGame(game) {
       if (game.fakeSettings?.fakeCanWin && !game.winner && game.calledNumbers.length === (game.fakeSettings.fakeWinAfterCalls || 10)) {
         const ETH_MEN = [
           'Abebe','Kebede','Haile','Tesfaye','Getachew',
-          'Bekele','Alemu','Yohannes','Tadesse','Mekonnen'
+          'Bekele','Alemu','Yohannes','Tadesse','Mekonnen',
+          'Solomon','Fikadu','Demeke','Mulugeta','Abate',
+          'Zewdu','Tewodros','Eshetu','Desta','Ayalew'
         ];
         const fakeId = `FAKE_${game.id}_${Math.floor(Math.random() * 10000)}`;
         const fakeName = ETH_MEN[Math.floor(Math.random() * ETH_MEN.length)];
 
-        // Build a realistic 5x5 board (columns: B,I,N,G,O) and mark a valid row using already called numbers
-        const calledNums = game.calledNumbers.map(b => b.number);
-        const getCalledInRange = (start, end) => calledNums.find(n => n >= start && n <= end);
+        // Generate a proper 5x5 bingo board with randomized winning pattern
+        const generateFakeWinningBoard = () => {
+          const board = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => ({ number: 0, marked: false })));
+          
+          // Fill board with valid bingo numbers (B:1-15, I:16-30, N:31-45, G:46-60, O:61-75)
+          const columnRanges = [
+            { start: 1, end: 15 },   // B
+            { start: 16, end: 30 },   // I
+            { start: 31, end: 45 },   // N
+            { start: 46, end: 60 },   // G
+            { start: 61, end: 75 }    // O
+          ];
+          
+          // Fill each column with unique numbers
+          for (let col = 0; col < 5; col++) {
+            const range = columnRanges[col];
+            const usedNumbers = new Set();
+            
+            for (let row = 0; row < 5; row++) {
+              if (col === 2 && row === 2) {
+                // Free space in center
+                board[row][col] = { number: '*', marked: true };
+              } else {
+                // Generate unique number for this column
+                let num;
+                do {
+                  num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                } while (usedNumbers.has(num));
+                usedNumbers.add(num);
+                board[row][col] = { number: num, marked: false };
+              }
+            }
+          }
+          
+          // Choose random winning pattern
+          const winningPatterns = [
+            'diagonal1',    // Top-left to bottom-right
+            'diagonal2',    // Top-right to bottom-left
+            'fourCorners',  // All four corners
+            'row',          // Random row
+            'column'        // Random column
+          ];
+          
+          const pattern = winningPatterns[Math.floor(Math.random() * winningPatterns.length)];
+          console.log(`🎯 Fake winner using pattern: ${pattern}`);
+          
+          // Apply winning pattern
+          switch (pattern) {
+            case 'diagonal1':
+              // Top-left to bottom-right diagonal
+              for (let i = 0; i < 5; i++) {
+                board[i][i].marked = true;
+              }
+              break;
+              
+            case 'diagonal2':
+              // Top-right to bottom-left diagonal
+              for (let i = 0; i < 5; i++) {
+                board[i][4-i].marked = true;
+              }
+              break;
+              
+            case 'fourCorners':
+              // All four corners
+              board[0][0].marked = true;  // Top-left
+              board[0][4].marked = true;  // Top-right
+              board[4][0].marked = true;  // Bottom-left
+              board[4][4].marked = true;  // Bottom-right
+              break;
+              
+            case 'row':
+              // Random row
+              const randomRow = Math.floor(Math.random() * 5);
+              for (let col = 0; col < 5; col++) {
+                board[randomRow][col].marked = true;
+              }
+              break;
+              
+            case 'column':
+              // Random column
+              const randomCol = Math.floor(Math.random() * 5);
+              for (let row = 0; row < 5; row++) {
+                board[row][randomCol].marked = true;
+              }
+              break;
+          }
+          
+          return board;
+        };
 
-        const winningCard = Array.from({ length: 5 }, (_, col) => {
-          const colStart = col * 15 + 1;
-          const colEnd = colStart + 14;
-          const firstRowNumber = getCalledInRange(colStart, colEnd) || colStart + 3;
-          return Array.from({ length: 5 }, (_, row) => {
-            const isCenter = col === 2 && row === 2;
-            const num = isCenter ? '*' : (row === 0 ? firstRowNumber : Math.min(colEnd, colStart + row * 3 + 1));
-            const marked = row === 0 || isCenter; // top row + free center
-            return { number: num, marked };
-          });
-        });
+        const winningCard = generateFakeWinningBoard();
 
         game.winner = fakeId;
 
