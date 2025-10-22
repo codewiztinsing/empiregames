@@ -205,8 +205,14 @@ function startCountDown(game) {
   game.isCountStart = true;
   console.log("⏰ Countdown started for game:", game.id, "countdown:", game.countDown);
 
+  // Initialize a lightweight tick counter to pace fake picks
+  if (typeof game._fakePickTick !== 'number') {
+    game._fakePickTick = 0;
+  }
+
   const countdownInterval = setInterval(() => {
     console.log("⏱️ Countdown tick - game:", game.id, "countdown:", game.countDown, "players:", game.players.size);
+    game._fakePickTick = (game._fakePickTick + 1) % 1000000; // prevent overflow
     
     // Check if we still have at least 2 players during countdown
     if (game.players.size < 2) {
@@ -241,24 +247,71 @@ function startCountDown(game) {
     // Emit only real player selections plus fake picks for visual effect
     const realPicks = game.selectedNumbers.filter(num => num !== null);
     let fakePicksSnapshot = [];
-    // Each tick, generate a few fake picks (1-3) unique in 1..400 for display only
+    // Fill fake picks toward configured fakePlayersCount and cap there
     try {
-      const maxFakePerTick = 3;
-      const howMany = Math.min(maxFakePerTick, 3);
+      const targetFakePlayers = (game.fakeSettings && typeof game.fakeSettings.fakePlayersCount === 'number')
+        ? Math.max(0, game.fakeSettings.fakePlayersCount)
+        : 0;
+
       if (!game.fakePickedNumbers) game.fakePickedNumbers = new Set();
-      // decay fake picks over time to avoid indefinite growth
-      if (game.fakePickedNumbers.size > 100) game.fakePickedNumbers.clear();
-      const used = new Set([...realPicks, ...game.fakePickedNumbers]);
-      for (let k = 0; k < howMany; k++) {
-        let pick = Math.floor(Math.random() * 400) + 1;
-        let attempts = 0;
-        while (used.has(pick) && attempts < 500) {
-          pick = Math.floor(Math.random() * 400) + 1;
-          attempts++;
+
+      // If target is zero, keep fake picks empty during countdown
+      if (targetFakePlayers === 0) {
+        game.fakePickedNumbers.clear();
+      } else {
+        // Ensure we do not exceed the configured target
+        if (game.fakePickedNumbers.size > targetFakePlayers) {
+          // Trim excess picks deterministically by deleting extras
+          const toRemove = game.fakePickedNumbers.size - targetFakePlayers;
+          let removed = 0;
+          for (const val of game.fakePickedNumbers) {
+            game.fakePickedNumbers.delete(val);
+            removed++;
+            if (removed >= toRemove) break;
+          }
         }
-        used.add(pick);
-        game.fakePickedNumbers.add(pick);
+
+        // Gradually fill up to the target, paced to feel human
+        const remaining = targetFakePlayers - game.fakePickedNumbers.size;
+        let toAdd = 0;
+
+        // Pace: add only every 2 seconds to slow down
+        const shouldAttemptThisTick = (game._fakePickTick % 2 === 0);
+
+        if (shouldAttemptThisTick && remaining > 0) {
+          // Base rate: approach target smoothly over remaining seconds
+          const secondsLeft = Math.max(1, game.countDown);
+          const baseRate = Math.ceil(remaining / secondsLeft); // how many to add per second to reach target
+
+          // Cap per cycle to small bursts (feel like sporadic picks)
+          toAdd = Math.min(2, Math.max(0, baseRate));
+
+          // Random jitter: sometimes skip or add one less to feel organic
+          if (Math.random() < 0.3 && toAdd > 0) {
+            toAdd -= 1;
+          }
+
+          // In final seconds, gently push to reach target
+          if (game.countDown <= 3) {
+            toAdd = Math.min(5, remaining, Math.max(toAdd, 1));
+          }
+        }
+
+        if (toAdd > 0) {
+          const used = new Set([...realPicks, ...game.fakePickedNumbers]);
+          for (let k = 0; k < toAdd; k++) {
+            let pick = Math.floor(Math.random() * 400) + 1;
+            let attempts = 0;
+            while (used.has(pick) && attempts < 800) {
+              pick = Math.floor(Math.random() * 400) + 1;
+              attempts++;
+            }
+            used.add(pick);
+            game.fakePickedNumbers.add(pick);
+          }
+        }
       }
+
       fakePicksSnapshot = Array.from(game.fakePickedNumbers);
     } catch (e) {}
 
