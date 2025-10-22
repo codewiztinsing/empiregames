@@ -882,12 +882,7 @@ const PlayingBoard = () => {
         <div className="stat-item blue">{t('game.players')} {displayedTotalPlayers}</div>
         <div className="stat-item green">{t('game.prize')} {displayedWinAmount.toFixed(0)}ης</div>
         <div className="stat-item light-green">{t('game.called')} {totalCalledNumbers}/75</div>
-        <div className="stat-item connection-indicator">
-          <div className={`connection-dot ${isSocketConnected ? 'connected' : 'disconnected'}`}></div>
-          <span className="connection-text">
-            {isSocketConnected ? t('game.live') : t('game.connecting')}
-          </span>
-        </div>
+        
         <div className="stat-item dark-purple language-switcher-container">
           <LanguageSelector />
         </div>

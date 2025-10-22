@@ -22,16 +22,16 @@ def dashboard(request):
         'wallet': wallet,   
         'page_title': 'Dashboard Overview',
         'games_played': game.count(),
-        'games_won': game.filter(ended=True).count(),
-        'win_rate': (game.filter(ended=True).count() / game.count()) * 100,
+        'games_won': game.filter(ended_at__isnull=False).count(),
+        'win_rate': (game.filter(ended_at__isnull=False).count() / game.count()) * 100 if game.count() > 0 else 0,
         'current_streak': 0,
         'best_streak': 0,
         'recent_activities': [],
         'statistics': {
             'total_games': game.count(),
-            'wins': game.filter(ended=True).count(),
-            'losses': game.filter(ended=False).count(),
-            'draws': game.filter(ended=None).count(),
+            'wins': game.filter(ended_at__isnull=False).count(),
+            'losses': game.filter(ended_at__isnull=True).count(),
+            'draws': 0,  # No draws in bingo games
         }
     }
     return render(request, 'dashboard/index.html',context)

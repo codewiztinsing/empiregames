@@ -65,7 +65,7 @@ def dashboard(request):
     # Game statistics (still from database for now)
     games_played = Game.objects.filter(created_at__gte=thirty_days_ago).count()
     total_games = Game.objects.count()
-    games_ended = Game.objects.filter(ended=True, created_at__gte=thirty_days_ago)
+    games_ended = Game.objects.filter(ended_at__isnull=False, created_at__gte=thirty_days_ago)
     total_winnings = sum(game.entry_fee for game in games_ended)
     last_30_days_commission = float(total_winnings) * 0.2
     
@@ -336,12 +336,12 @@ def games(request):
     else:
         # Fallback to database calculation
         total_games = Game.objects.count()
-        active_games = Game.objects.filter(ended=False).count()
+        active_games = Game.objects.filter(ended_at__isnull=True).count()
         completed_today = Game.objects.filter(
-            ended=True, 
+            ended_at__isnull=False, 
             created_at__gte=timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
         ).count()
-        total_revenue = Game.objects.filter(ended=True).aggregate(Sum('entry_fee'))['entry_fee__sum'] or 0
+        total_revenue = Game.objects.filter(ended_at__isnull=False).aggregate(Sum('entry_fee'))['entry_fee__sum'] or 0
     
     context = {
         'games': page_obj,

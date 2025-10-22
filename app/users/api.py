@@ -505,7 +505,7 @@ def get_user_details(request, user_id: int):
                 "status": game.status,
                 "has_bingo": player_game.has_bingo,
                 "created_at": game.created_at.isoformat(),
-                "ended": game.ended
+                "ended": game.ended_at is not None
             })
         
         # Get referral information
@@ -617,7 +617,7 @@ def get_user_games(request, user_id: int, limit: int = 20):
                 "entry_fee": float(game.entry_fee),
                 "status": game.status,
                 "started": game.started,
-                "ended": game.ended,
+                "ended": game.ended_at is not None,
                 "has_bingo": player_game.has_bingo,
                 "created_at": game.created_at.isoformat(),
                 "winner": {
