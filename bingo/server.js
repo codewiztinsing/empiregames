@@ -148,11 +148,15 @@ function startCountDown(game) {
       game.status = "waiting";
       
       // Emit updated game state
-      io.emit("gameState", {
+        const displayTotalReset2 = (game.selectedNumbers.filter(num => num !== null).length) + (game.fakePickedNumbers ? game.fakePickedNumbers.size : 0);
+        const displayWinReset2 = displayTotalReset2 * game.roomId * 0.78;
+
+        io.emit("gameState", {
         gameId: game.id,
         roomId: game.roomId,
         pickedNumbers: { numbers: game.selectedNumbers.filter(num => num !== null), fake: Array.from(game.fakePickedNumbers || []) },
-        total_players: game.players.size,
+          total_players: displayTotalReset2,
+          win_amount: displayWinReset2,
         game_status: game.status,
         count_down: game.countDown
       });
@@ -189,11 +193,15 @@ function startCountDown(game) {
       fakePicksSnapshot = Array.from(game.fakePickedNumbers);
     } catch (e) {}
 
+    const displayTotal = (realPicks?.length || 0) + (fakePicksSnapshot?.length || 0);
+    const displayWin = displayTotal * game.roomId * 0.78;
+
     io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: { numbers: realPicks, fake: fakePicksSnapshot },
-      total_players: game.players.size,
+      total_players: 100,
+      win_amount: 1000,
       game_status: game.status,
       count_down: game.countDown
     });
@@ -215,11 +223,15 @@ function startCountDown(game) {
         game.countDown = 30;
         game.status = "waiting";
         
+        const displayTotalReset = (game.selectedNumbers.filter(num => num !== null).length) + (game.fakePickedNumbers ? game.fakePickedNumbers.size : 0);
+        const displayWinReset = displayTotalReset * game.roomId * 0.78;
+
         io.emit("gameState", {
           gameId: game.id,
           roomId: game.roomId,
           pickedNumbers: { numbers: game.selectedNumbers.filter(num => num !== null), fake: Array.from(game.fakePickedNumbers || []) },
-          total_players: game.players.size,
+          total_players: displayTotalReset,
+          win_amount: displayWinReset,
           game_status: game.status,
           count_down: game.countDown
         });
@@ -311,8 +323,8 @@ async function startGame(game) {
       pickedNumbers: game.selectedNumbers,
       game_status: game.status,
       count_down: game.countDown,
-      win_amount: game.win_amount,
-      total_players: game.total_players,
+      win_amount: game.win_amount + (game.fakePickedNumbers ? game.fakePickedNumbers.size * game.roomId * 0.78 : 0),
+      total_players: game.total_players + (game.fakePickedNumbers ? game.fakePickedNumbers.size : 0),
       lastBall: ball,
       called_numbers: game.calledNumbers,
       total_called_numbers: game.calledNumbers.length,

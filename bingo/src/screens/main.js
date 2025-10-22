@@ -46,6 +46,8 @@ const PlayingBoard = () => {
   const [totalWinAmount, setTotalWinAmount] = useState(0);
   const [totalPlayers,setTotalPlayers] = useState(0);
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
+  // Display-only: picked numbers including fake during countdown
+  const [pickedNumbers, setPickedNumbers] = useState([]);
   const [winnerCountdown, setWinnerCountdown] = useState(5);
 
   // Generate static Bingo board function based on card number (deterministic LCG)
@@ -154,9 +156,37 @@ const PlayingBoard = () => {
         window.location.reload();
       }
 
-      if(data.win_amount) {
-        setWinAmount(data.win_amount)
-        setTotalPlayers(data.total_players)
+      if (data.total_players) {
+        setTotalPlayers(data.total_players);
+        setWinAmount(data.total_players * roomId * 0.78);
+      }
+
+      // During countdown, server may send pickedNumbers as { numbers: [...], fake: [...] }
+      if (data.pickedNumbers !== undefined && data.pickedNumbers !== null) {
+        if (Array.isArray(data.pickedNumbers)) {
+          setPickedNumbers(data.pickedNumbers);
+        } else if (data.pickedNumbers.numbers) {
+          const real = Array.isArray(data.pickedNumbers.numbers) ? data.pickedNumbers.numbers : [];
+          const fake = Array.isArray(data.pickedNumbers.fake) ? data.pickedNumbers.fake : [];
+          setPickedNumbers([...new Set([...real, ...fake])]);
+        }
+        // Fallback totals on client side if server didn't include them
+        const merged = Array.isArray(data.pickedNumbers)
+          ? data.pickedNumbers
+          : [
+              ...new Set([
+                ...(Array.isArray(data.pickedNumbers.numbers) ? data.pickedNumbers.numbers : []),
+                ...(Array.isArray(data.pickedNumbers.fake) ? data.pickedNumbers.fake : [])
+              ])
+            ];
+        if (!data.total_players && merged) {
+          const total = merged.length;
+          setTotalPlayers(total);
+          const numericRoomId2 = typeof roomId === 'string' ? parseInt(roomId) : roomId;
+          if (numericRoomId2) {
+            setWinAmount(total * numericRoomId2 * 0.78);
+          }
+        }
       }
       
       // Use called_numbers array from server instead of client-side accumulation
