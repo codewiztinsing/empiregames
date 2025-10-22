@@ -22,7 +22,7 @@ HANDLER404 = 'core.views.custom_404'
 
 
 ALLOWED_HOSTS = ["*", "liyuchawata.akerbingo.com", "server.akerbingo.com","127.0.0.1"]
-CSRF_TRUSTED_ORIGINS = ["https://akerbingo.com","http://127.0.0.1:8000"]
+CSRF_TRUSTED_ORIGINS = ["https://liyuchawata.akerbingo.com","http://127.0.0.1:8000"]
 
 # login redirect
 LOGIN_REDIRECT_URL = '/dashboard/'
