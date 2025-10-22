@@ -266,7 +266,7 @@ async function startGame(game) {
 
  
 
-  const gameInterval = setInterval(() => {
+  const emitNextBall = () => {
     console.log("🎲 Generating ball for game:", game.id, "called numbers:", game.calledNumbers.length);
     const calledSet = new Set(game.calledNumbers.map(b => b.number));
     let ball = generateBalls();
@@ -278,7 +278,7 @@ async function startGame(game) {
     game.selectedNumbers = [];
     console.log("🎯 Called ball:", ball.combined, "total called:", game.calledNumbers.length);
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
-  
+
     io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
@@ -293,7 +293,6 @@ async function startGame(game) {
       playersWithSelectedNumbers:playersWithSelectedNumbers
 
     });
-   
 
     if (game.calledNumbers.length >= 75) {
       io.emit("gameStatus", {
@@ -302,9 +301,13 @@ async function startGame(game) {
       })
       endGame(game);
     }
-    
-   
-  }, game.gameSpeed);
+  };
+
+  // Emit the first ball immediately when the game starts (do not wait for gameSpeed)
+  emitNextBall();
+
+  // Subsequent balls follow the configured game speed
+  const gameInterval = setInterval(emitNextBall, game.gameSpeed);
 
   gameIntervals.set(game.id, [gameInterval]);
 }
