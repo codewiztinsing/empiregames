@@ -656,25 +656,11 @@ def users(request):
         except Wallet.DoesNotExist:
             pass
         
-        # Calculate referral bonuses
-        first_gen_bonus = 0.0
-        second_gen_bonus = 0.0
-        
-        # First generation referrals (direct referrals)
-        first_gen_users = User.objects.filter(referred_by=user)
-        first_gen_bonus = sum(float(user.total_referral_earnings or 0) for user in first_gen_users)
-        
-        # Second generation referrals (referrals of referrals)
-        second_gen_users = User.objects.filter(referred_by__referred_by=user)
-        second_gen_bonus = sum(float(user.total_referral_earnings or 0) for user in second_gen_users)
-        
         # Calculate total balance (wallet + referral earnings)
         total_balance = wallet_balance + float(user.total_referral_earnings or 0)
         
         users_with_bonuses.append({
             'user': user,
-            'first_gen_bonus': first_gen_bonus,
-            'second_gen_bonus': second_gen_bonus,
             'wallet_balance': wallet_balance,
             'total_balance': total_balance,
         })
