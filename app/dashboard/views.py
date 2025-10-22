@@ -277,7 +277,7 @@ def game_rooms(request):
         'game_rooms': game_rooms,
         'page_title': 'Game Rooms'
     }
-    return render(request, 'dashboard/game_rooms.html', context)
+    return render(request, 'dashboard/game_types.html', context)
 
 
 @admin_required
