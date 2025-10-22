@@ -6,8 +6,11 @@ from . import views
 app_name = 'dashboard'
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
-    path('game_types/', views.game_types, name='game_types'),
-    path('game_types/<int:game_type_id>/', views.game_type_detail, name='game_type_detail'),
+    path('game_rooms/', views.game_rooms, name='game_rooms'),
+    path('game_rooms/<int:game_room_id>/', views.game_room_detail, name='game_room_detail'),
+    # Backward compatibility
+    path('game_types/', views.game_rooms, name='game_types'),
+    path('game_types/<int:game_type_id>/', views.game_room_detail, name='game_type_detail'),
     path('games/', views.games, name='games'),
     path('game-settings/', views.game_settings, name='game_settings'),
     path('payments/', views.payments, name='payments'),

@@ -140,7 +140,7 @@ def dashboard(request):
     return render(request, 'dashboard/index.html', context)
 
 @admin_required
-def game_types(request):  
+def game_rooms(request):  
     if request.method == 'POST':
         # Additional authorization check for creating game rooms
         if not request.user.is_staff:
@@ -207,7 +207,7 @@ def game_types(request):
             else:
                 messages.error(request, 'Please provide both bet amount and commission.')
             
-            return redirect('dashboard:game_types')
+            return redirect('dashboard:game_rooms')
     
     elif request.method == 'PUT':
         # Additional authorization check for updating game rooms
@@ -222,7 +222,7 @@ def game_types(request):
         commission = data.get('commission')
         
         try:
-            game_type = get_object_or_404(GameRoom, id=game_type_id)
+            game_room = get_object_or_404(GameRoom, id=game_room_id)
             
             # Validate input values if provided
             if bet_amount:
@@ -230,7 +230,7 @@ def game_types(request):
                     bet_amount_decimal = Decimal(bet_amount)
                     if bet_amount_decimal <= 0:
                         return JsonResponse({'success': False, 'message': 'Bet amount must be greater than 0.'}, status=400)
-                    game_type.entry_fee = bet_amount_decimal
+                    game_room.entry_fee = bet_amount_decimal
                 except (ValueError, TypeError):
                     return JsonResponse({'success': False, 'message': 'Invalid bet amount value.'}, status=400)
             
@@ -239,11 +239,11 @@ def game_types(request):
                     commission_decimal = Decimal(commission)
                     if commission_decimal < 0 or commission_decimal > 100:
                         return JsonResponse({'success': False, 'message': 'Commission must be between 0 and 100.'}, status=400)
-                    game_type.house_edge_percentage = commission_decimal
+                    game_room.house_edge_percentage = commission_decimal
                 except (ValueError, TypeError):
                     return JsonResponse({'success': False, 'message': 'Invalid commission value.'}, status=400)
             
-            game_type.save()
+            game_room.save()
             return JsonResponse({'success': True, 'message': 'Game room updated successfully!'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
@@ -259,29 +259,29 @@ def game_types(request):
         game_type_id = data.get('id')
         
         try:
-            game_type = get_object_or_404(GameRoom, id=game_type_id)
+            game_room = get_object_or_404(GameRoom, id=game_room_id)
             
             # Check if game room is being used in active games
-            active_games = Game.objects.filter(room=game_type, ended_at__isnull=True)
+            active_games = Game.objects.filter(room=game_room, ended_at__isnull=True)
             if active_games.exists():
                 return JsonResponse({'success': False, 'message': 'Cannot delete game room with active games.'}, status=400)
             
-            game_type.delete()
+            game_room.delete()
             return JsonResponse({'success': True, 'message': 'Game room deleted successfully!'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
     
     # GET request - display all game rooms
-    game_types = GameRoom.objects.all().order_by('-id')
+    game_rooms = GameRoom.objects.all().order_by('-id')
     context = {
-        'game_types': game_types,
+        'game_rooms': game_rooms,
         'page_title': 'Game Rooms'
     }
-    return render(request, 'dashboard/game_types.html',context)
+    return render(request, 'dashboard/game_rooms.html', context)
 
 
 @admin_required
-def game_type_detail(request, game_type_id):
+def game_room_detail(request, game_room_id):
     """Handle individual game room operations (GET, PUT, DELETE)"""
     if request.method == 'PUT':
         # Additional authorization check for updating game rooms
@@ -292,7 +292,7 @@ def game_type_detail(request, game_type_id):
         import json
         try:
             data = json.loads(request.body)
-            game_type = get_object_or_404(GameRoom, id=game_type_id)
+            game_room = get_object_or_404(GameRoom, id=game_room_id)
             
             # Update fields if provided with validation
             if 'bet_amount' in data:
@@ -300,7 +300,7 @@ def game_type_detail(request, game_type_id):
                     bet_amount_decimal = Decimal(data['bet_amount'])
                     if bet_amount_decimal <= 0:
                         return JsonResponse({'success': False, 'message': 'Bet amount must be greater than 0.'}, status=400)
-                    game_type.entry_fee = bet_amount_decimal
+                    game_room.entry_fee = bet_amount_decimal
                 except (ValueError, TypeError):
                     return JsonResponse({'success': False, 'message': 'Invalid bet amount value.'}, status=400)
             
@@ -309,11 +309,11 @@ def game_type_detail(request, game_type_id):
                     commission_decimal = Decimal(data['commission'])
                     if commission_decimal < 0 or commission_decimal > 100:
                         return JsonResponse({'success': False, 'message': 'Commission must be between 0 and 100.'}, status=400)
-                    game_type.house_edge_percentage = commission_decimal
+                    game_room.house_edge_percentage = commission_decimal
                 except (ValueError, TypeError):
                     return JsonResponse({'success': False, 'message': 'Invalid commission value.'}, status=400)
             
-            game_type.save()
+            game_room.save()
             return JsonResponse({'success': True, 'message': 'Game room updated successfully!'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
@@ -325,25 +325,25 @@ def game_type_detail(request, game_type_id):
         
         # Delete game room
         try:
-            game_type = get_object_or_404(GameRoom, id=game_type_id)
+            game_room = get_object_or_404(GameRoom, id=game_room_id)
             
             # Check if game room is being used in active games
-            active_games = Game.objects.filter(room=game_type, ended_at__isnull=True)
+            active_games = Game.objects.filter(room=game_room, ended_at__isnull=True)
             if active_games.exists():
                 return JsonResponse({'success': False, 'message': 'Cannot delete game room with active games.'}, status=400)
             
-            game_type.delete()
+            game_room.delete()
             return JsonResponse({'success': True, 'message': 'Game room deleted successfully!'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
     
     else:
         # GET request - return game room details
-        game_type = get_object_or_404(GameRoom, id=game_type_id)
+        game_room = get_object_or_404(GameRoom, id=game_room_id)
         return JsonResponse({
-            'id': game_type.id,
-            'bet_amount': str(game_type.entry_fee),
-            'commission': str(game_type.house_edge_percentage)
+            'id': game_room.id,
+            'bet_amount': str(game_room.entry_fee),
+            'commission': str(game_room.house_edge_percentage)
         })
 
 
