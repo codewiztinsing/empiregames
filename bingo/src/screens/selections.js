@@ -198,7 +198,7 @@ const Selections = () => {
     setChoosenNumbers([data.selectedNumber]);
     setChooseBoards(data.boards);
         // Navigate directly to play screen with current game state
-    navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${data.selectedNumber2}`);
+    navigate(`/preview?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`);
   };
 
   // Handle rejoin error
@@ -238,7 +238,7 @@ const Selections = () => {
           console.log("selectedNumber:", selectedNumber);
           
           // Navigate to play screen with the selected number - USER SPECIFIC
-          navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
+          navigate(`/preview?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`);
         } else {
           console.log("❌ Current user found but no selected number or game not in progress");
           console.log("selectedNumber:", selectedNumber);
@@ -309,30 +309,89 @@ const Selections = () => {
 
   // Countdown redirect logic - only navigate when countdown reaches exactly 00
   useEffect(() => {
-    console.log("gameStatus",gameStatus)
+    console.log("🔄 Countdown redirect check - countDown:", countDown, "gameStatus:", gameStatus, "selectedNumber:", selectedNumber);
     
     // Navigate when countdown reaches 0 and user has selected a number
-    if (countDown === 0 && gameStatus != "waiting" && selectedNumber) {
+    if (countDown === 0 && gameStatus === "in-progress" && selectedNumber) {
+      console.log("🚀 Redirecting to main screen with params:", {
+        playerId,
+        betAmount: roomId,
+        playerName,
+        selectedNumber
+      });
+      
       // Navigate to play section when countdown reaches 00
       setToast("Game starting! Redirecting to play section...");
       setIsToast(true);
-      navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}`);
+      
+      // Ensure all parameters are properly encoded
+      const redirectUrl = `/play?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}&selectedNumber=${encodeURIComponent(selectedNumber)}`;
+      console.log("🔗 Redirect URL:", redirectUrl);
+      
+      // Immediate redirect without delay for better reliability
+      navigate(redirectUrl);
     }
     // If countdown is not 0, stay on selection page (no navigation)
   }, [countDown, selectedNumber, gameStatus, playerId, roomId, playerName, navigate]);
 
-  // Handle redirect for new users only when game is waiting
+  // Aggressive fallback redirect mechanism - multiple attempts
+  useEffect(() => {
+    if (countDown === 0 && selectedNumber && gameStatus === "in-progress") {
+      console.log("⚠️ Fallback redirect triggered - countdown is 0 but user still on selection screen");
+      
+      // Double-check that we have all required parameters
+      if (playerId && roomId && playerName && selectedNumber) {
+        console.log("🔄 Fallback: Redirecting to main screen");
+        const redirectUrl = `/play?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}&selectedNumber=${encodeURIComponent(selectedNumber)}`;
+        
+        // Try multiple redirect methods for maximum reliability
+        setTimeout(() => {
+          console.log("🔄 Fallback attempt 1: navigate()");
+          navigate(redirectUrl);
+        }, 100);
+        
+        setTimeout(() => {
+          console.log("🔄 Fallback attempt 2: window.location.href");
+          window.location.href = redirectUrl;
+        }, 1000);
+        
+      } else {
+        console.error("❌ Fallback redirect failed - missing required parameters:", {
+          playerId: !!playerId,
+          roomId: !!roomId,
+          playerName: !!playerName,
+          selectedNumber: !!selectedNumber
+        });
+      }
+    }
+  }, [countDown, selectedNumber, gameStatus, playerId, roomId, playerName, navigate]);
+
+  // Additional safety net - redirect if countdown is 0 regardless of gameStatus
+  useEffect(() => {
+    if (countDown === 0 && selectedNumber && playerId && roomId && playerName) {
+      console.log("🛡️ Safety net redirect - countdown is 0, forcing redirect");
+      const redirectUrl = `/play?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}&selectedNumber=${encodeURIComponent(selectedNumber)}`;
+      
+      // Force redirect after a short delay to ensure all other effects have run
+      setTimeout(() => {
+        console.log("🛡️ Safety net: Forcing redirect");
+        window.location.href = redirectUrl;
+      }, 2000);
+    }
+  }, [countDown, selectedNumber, playerId, roomId, playerName]);
+
+  // Handle redirect for users when game is in progress
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const urlSelectedNumber = queryParams.get('selectedNumber');
     
-    // Only redirect if:
-    // 1. We have playerId and roomId (from previous useEffect)
-    // 2. No selectedNumber in URL (new user)
-    // 3. Game status is "waiting" (not in progress)
+    // Redirect to preview page if:
+    // 1. We have playerId and roomId
+    // 2. No selectedNumber in URL (new user or user without selected card)
+    // 3. Game status is "in-progress"
     if (playerId && roomId && !urlSelectedNumber && gameStatus === "in-progress") {
-      console.log("🔄 New user detected in waiting game - redirecting to main screen");
-      navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+      console.log("🎮 Game in progress detected - redirecting to preview page");
+      navigate(`/preview?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`);
     }
   }, [gameStatus, playerId, roomId, playerName, navigate]);
 
@@ -380,16 +439,25 @@ const handleGlobals = (state) => {
     }
   };
 
-  // Memoized board generation
-  const generateCombination = useCallback(() => {
+  // Static board generation based on card number
+  const generateCombination = useCallback((cardNumber = selectedNumber) => {
     const card = [];
     const ranges = [
-      [1, 15],    // BfAlexo
+      [1, 15],    // B
       [16, 30],   // I
       [31, 45],   // N
       [46, 60],   // G
       [61, 75],   // O
     ];
+
+    // Use card number as seed for deterministic generation
+    const seed = cardNumber || 1;
+    
+    // Simple pseudo-random number generator using seed
+    const seededRandom = (seed) => {
+      let x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
 
     for (let col = 0; col < 5; col++) {
       const nums = [];
@@ -402,20 +470,19 @@ const handleGlobals = (state) => {
         if (col === 2 && row === 2) {
           card[row][col] = '*';
         } else {
-          const idx = Math.floor(Math.random() * nums.length);
-          card[row][col] = nums.splice(idx, 1)[0];
+          // Use deterministic selection based on seed
+          const randomIndex = Math.floor(seededRandom(seed + col * 5 + row) * nums.length);
+          card[row][col] = nums.splice(randomIndex, 1)[0];
         }
       }
     }
-    // return card;
+    
     // Transpose the card array
     const transposedCard = card[0].map((_, colIndex) =>
       card.map(row => row[colIndex])
     );
     return transposedCard;
-
-
-  }, []);
+  }, [selectedNumber]);
 
 
   const handlePickedNumbers = (state) => {
@@ -502,7 +569,7 @@ const handleGlobals = (state) => {
       // Leave current game first (but don't reset selection)
       handleLeaveGame(true);
       // Generate new board for the new number
-      const newBoard = generateCombination();
+      const newBoard = generateCombination(number);
       
       // Replace the existing selection
       setChoosenNumbers([number]);
@@ -521,7 +588,7 @@ const handleGlobals = (state) => {
   
     // Add new number and generate new board (for first selection)
     const newNumbers = [...choosenNumbers, number];
-    const newBoard = generateCombination();
+    const newBoard = generateCombination(number);
     const newBoards = [...choosenBoards, newBoard];
   
     setChoosenNumbers(newNumbers);
@@ -791,7 +858,6 @@ const handleGlobals = (state) => {
               <div className="countdown-text">
                 {countDown !== undefined ? `Game starts in: ${countDown}` : ``}
               </div>
-             
             </div>
             )}
 

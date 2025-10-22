@@ -123,13 +123,20 @@ function getWaitingGames(activeGames,status="in-progress") {
 }
 
 function startCountDown(game) {
- 
-  if (game.isCountStart || !game.players || game.players.size < 2) return;
+  console.log("🚀 Starting countdown for game:", game.id, "with", game.players.size, "players");
+  
+  if (game.isCountStart || !game.players || game.players.size < 2) {
+    console.log("❌ Cannot start countdown - isCountStart:", game.isCountStart, "players:", game.players?.size);
+    return;
+  }
   clearGameIntervals(game.id);
   game.countDown = 30; // Always reset to 30 when starting countdown
   game.isCountStart = true;
+  console.log("⏰ Countdown started for game:", game.id, "countdown:", game.countDown);
 
   const countdownInterval = setInterval(() => {
+    console.log("⏱️ Countdown tick - game:", game.id, "countdown:", game.countDown, "players:", game.players.size);
+    
     // Check if we still have at least 2 players during countdown
     if (game.players.size < 2) {
       console.log("🔄 Less than 2 players during countdown - resetting countdown");
@@ -143,7 +150,7 @@ function startCountDown(game) {
         gameId: game.id,
         roomId: game.roomId,
         pickedNumbers: game.selectedNumbers.filter(num => num !== null),
-        total_players: game.selectedNumbers.filter(num => num !== null).length,
+        total_players: game.players.size,
         game_status: game.status,
         count_down: game.countDown
       });
@@ -160,7 +167,7 @@ function startCountDown(game) {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers.filter(num => num !== null),
-      total_players: game.selectedNumbers.filter(num => num !== null).length,
+      total_players: game.players.size,
       game_status: game.status,
       count_down: game.countDown
     });
@@ -186,7 +193,7 @@ function startCountDown(game) {
           gameId: game.id,
           roomId: game.roomId,
           pickedNumbers: game.selectedNumbers.filter(num => num !== null),
-          total_players: game.selectedNumbers.filter(num => num !== null).length,
+          total_players: game.players.size,
           game_status: game.status,
           count_down: game.countDown
         });
@@ -199,9 +206,10 @@ function startCountDown(game) {
         return;
       }
       
+      console.log("🎮 Countdown reached 0 - starting game with", game.players.size, "players");
       clearInterval(countdownInterval);
       game.isCountStart = false;
-      game.status = "waiting";
+      game.status = "in-progress"; // ✅ FIX: Set status to in-progress, not waiting
       game.countDown = 30; // Reset countdown for next game
       game.currentCall = null;
       game.calledNumbers = [];
@@ -217,8 +225,8 @@ function startCountDown(game) {
 }
 
 async function startGame(game) {
+  console.log("🎮 Starting game for room:", game.roomId, "with", game.players.size, "players");
   game.status = "in-progress";
-  io.emit("waitingGames",   getWaitingGames(activeGames,"in-progress"));
   clearGameIntervals(game.id);
 
 
@@ -236,8 +244,8 @@ async function startGame(game) {
   });
 
   io.emit("gameStatus",{
-    roomId: game.roomId,
-    game_status: "in-progress"
+    status: "in-progress",
+    roomId: game.roomId
   })
 
   const players = Array.from(game.players.keys()).map(playerId => ({
@@ -259,6 +267,7 @@ async function startGame(game) {
  
 
   const gameInterval = setInterval(() => {
+    console.log("🎲 Generating ball for game:", game.id, "called numbers:", game.calledNumbers.length);
     const calledSet = new Set(game.calledNumbers.map(b => b.number));
     let ball = generateBalls();
     while (calledSet.has(ball.number)) {
@@ -267,6 +276,7 @@ async function startGame(game) {
     game.currentCall = ball;
     game.calledNumbers.push(ball);
     game.selectedNumbers = [];
+    console.log("🎯 Called ball:", ball.combined, "total called:", game.calledNumbers.length);
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
   
     io.emit("gameState", {
@@ -287,8 +297,8 @@ async function startGame(game) {
 
     if (game.calledNumbers.length >= 75) {
       io.emit("gameStatus", {
-        roomId: game.roomId,
-        game_status: "waiting"
+        status: "waiting",
+        roomId: game.roomId
       })
       endGame(game);
     }

@@ -48,9 +48,17 @@ const PlayingBoard = () => {
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
   const [winnerCountdown, setWinnerCountdown] = useState(5);
 
-  // Generate Bingo board function
-  const generateCombination = () => {
+  // Generate static Bingo board function based on card number
+  const generateCombination = (cardNumber = selectedNumber) => {
     const numbers = [];
+    const seed = cardNumber || 1;
+    
+    // Simple pseudo-random number generator using seed
+    const seededRandom = (seed) => {
+      let x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+
     for (let i = 0; i < 5; i++) {
       const column = [];
       for (let j = 0; j < 5; j++) {
@@ -59,7 +67,9 @@ const PlayingBoard = () => {
         } else {
           let num;
           do {
-            num = Math.floor(Math.random() * 15) + (i * 15) + 1;
+            // Use deterministic generation based on seed
+            const randomValue = seededRandom(seed + i * 5 + j);
+            num = Math.floor(randomValue * 15) + (i * 15) + 1;
           } while (column.includes(num));
           column.push(num);
         }
@@ -77,17 +87,41 @@ const PlayingBoard = () => {
     const urlPlayerName = queryParams.get('playerName');
     const urlSelectedNumber = queryParams.get('selectedNumber');
     
-    if (urlPlayerId) setPlayerId(urlPlayerId);
-    if (urlRoomId) setRoomId(parseInt(urlRoomId));
-    if (urlPlayerName && urlPlayerName !== 'null') setPlayerName(urlPlayerName);
+    console.log('🎮 Main screen - Received URL params:', { 
+      urlPlayerId, 
+      urlRoomId, 
+      urlPlayerName, 
+      urlSelectedNumber 
+    });
+    
+    if (urlPlayerId) {
+      setPlayerId(urlPlayerId);
+      console.log('✅ Set playerId:', urlPlayerId);
+    }
+    if (urlRoomId) {
+      const roomIdNum = parseInt(urlRoomId);
+      setRoomId(roomIdNum);
+      console.log('✅ Set roomId:', roomIdNum);
+    }
+    if (urlPlayerName && urlPlayerName !== 'null') {
+      setPlayerName(urlPlayerName);
+      console.log('✅ Set playerName:', urlPlayerName);
+    }
     if (urlSelectedNumber) {
       const selectedNum = parseInt(urlSelectedNumber);
       setSelectedNumber(selectedNum);
       // Generate selectBoard for the selected number
-      setSelectBoard(generateCombination());
+      const generatedBoard = generateCombination(selectedNum);
+      setSelectBoard(generatedBoard);
+      console.log('✅ Set selectedNumber:', selectedNum, 'Generated board:', generatedBoard);
     }
     
-    console.log('PlayingBoard - URL params:', { urlPlayerId, urlRoomId, urlPlayerName, urlSelectedNumber });
+    console.log('🎮 Main screen - Final state:', { 
+      playerId: urlPlayerId, 
+      roomId: urlRoomId ? parseInt(urlRoomId) : null, 
+      playerName: urlPlayerName, 
+      selectedNumber: urlSelectedNumber ? parseInt(urlSelectedNumber) : null 
+    });
   }, []);
 
   const socket = useContext(SocketContext);
