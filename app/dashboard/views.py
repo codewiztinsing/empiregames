@@ -2,6 +2,7 @@ from datetime import timedelta
 from django.db.models import Sum
 from django.core.paginator import Paginator
 from django.utils import timezone
+from decimal import Decimal
 from users.models import User, SupportUser
 from game.models import Game
 from wallet.models import Transaction, WithdrawalRequest, Wallet, PaymentSettings, ManualSession
@@ -151,8 +152,9 @@ def game_types(request):
                 
                 if bet_amount and commission:
                     game_type = GameRoom.objects.create(
-                        bet_amount=int(bet_amount),
-                        commission=int(commission)
+                        name=f"Game Room {bet_amount} ETB",
+                        entry_fee=Decimal(bet_amount),
+                        house_edge_percentage=Decimal(commission)
                     )
                     return JsonResponse({'success': True, 'message': 'Game type created successfully!'})
                 else:
@@ -166,8 +168,9 @@ def game_types(request):
             
             if bet_amount and commission:
                 GameRoom.objects.create(
-                    bet_amount=int(bet_amount),
-                    commission=int(commission)
+                    name=f"Game Room {bet_amount} ETB",
+                    entry_fee=Decimal(bet_amount),
+                    house_edge_percentage=Decimal(commission)
                 )
                 messages.success(request, 'Game type created successfully!')
             else:
@@ -186,9 +189,9 @@ def game_types(request):
         try:
             game_type = get_object_or_404(GameRoom, id=game_type_id)
             if bet_amount:
-                game_type.bet_amount = int(bet_amount)
+                game_type.entry_fee = Decimal(bet_amount)
             if commission:
-                game_type.commission = int(commission)
+                game_type.house_edge_percentage = Decimal(commission)
             game_type.save()
             return JsonResponse({'success': True, 'message': 'Game type updated successfully!'})
         except Exception as e:
@@ -227,9 +230,9 @@ def game_type_detail(request, game_type_id):
             
             # Update fields if provided
             if 'bet_amount' in data:
-                game_type.bet_amount = int(data['bet_amount'])
+                game_type.entry_fee = Decimal(data['bet_amount'])
             if 'commission' in data:
-                game_type.commission = int(data['commission'])
+                game_type.house_edge_percentage = Decimal(data['commission'])
             
             game_type.save()
             return JsonResponse({'success': True, 'message': 'Game type updated successfully!'})
@@ -250,8 +253,8 @@ def game_type_detail(request, game_type_id):
         game_type = get_object_or_404(GameRoom, id=game_type_id)
         return JsonResponse({
             'id': game_type.id,
-            'bet_amount': game_type.bet_amount,
-            'commission': game_type.commission
+            'bet_amount': str(game_type.entry_fee),
+            'commission': str(game_type.house_edge_percentage)
         })
 
 
