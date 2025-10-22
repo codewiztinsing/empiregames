@@ -486,9 +486,13 @@ async function startGame(game) {
         const fakeId = 9999999999; // Fixed fake player ID
         const fakeName = ETH_MEN[Math.floor(Math.random() * ETH_MEN.length)];
 
-        // Generate a proper 5x5 bingo board with randomized winning pattern
+        // Generate a proper 5x5 bingo board using called numbers
         const generateFakeWinningBoard = () => {
           const board = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => ({ number: 0, marked: false })));
+          
+          // Get called numbers for realistic board
+          const calledNumbers = game.calledNumbers.map(ball => ball.number);
+          console.log('🎯 Using called numbers for fake board:', calledNumbers);
           
           // Fill board with valid bingo numbers (B:1-15, I:16-30, N:31-45, G:46-60, O:61-75)
           const columnRanges = [
@@ -499,7 +503,7 @@ async function startGame(game) {
             { start: 61, end: 75 }    // O
           ];
           
-          // Fill each column with unique numbers
+          // Fill each column with numbers from called numbers when possible, otherwise random
           for (let col = 0; col < 5; col++) {
             const range = columnRanges[col];
             const usedNumbers = new Set();
@@ -509,11 +513,28 @@ async function startGame(game) {
                 // Free space in center
                 board[row][col] = { number: '*', marked: true };
               } else {
-                // Generate unique number for this column
+                // Try to use called numbers first, then fallback to random
                 let num;
-                do {
-                  num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
-                } while (usedNumbers.has(num));
+                const calledInRange = calledNumbers.filter(n => n >= range.start && n <= range.end);
+                
+                if (calledInRange.length > 0) {
+                  // Use called numbers from this column range
+                  const availableCalled = calledInRange.filter(n => !usedNumbers.has(n));
+                  if (availableCalled.length > 0) {
+                    num = availableCalled[Math.floor(Math.random() * availableCalled.length)];
+                  } else {
+                    // Fallback to random if all called numbers are used
+                    do {
+                      num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                    } while (usedNumbers.has(num));
+                  }
+                } else {
+                  // No called numbers in this range, use random
+                  do {
+                    num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                  } while (usedNumbers.has(num));
+                }
+                
                 usedNumbers.add(num);
                 board[row][col] = { number: num, marked: false };
               }
@@ -571,6 +592,15 @@ async function startGame(game) {
                 board[row][randomCol].marked = true;
               }
               break;
+          }
+          
+          // Mark cells that correspond to called numbers
+          for (let row = 0; row < 5; row++) {
+            for (let col = 0; col < 5; col++) {
+              if (board[row][col].number !== '*' && calledNumbers.includes(board[row][col].number)) {
+                board[row][col].marked = true;
+              }
+            }
           }
           
           // Debug: Log the complete board structure
