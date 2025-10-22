@@ -370,6 +370,8 @@ body {
   gap: 0;
   height: fit-content;
   overflow: visible;
+  width: 50%;
+  max-width: 50%;
 }
 
 .called {
@@ -1094,7 +1096,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 2000;
 }
 
 .bingo-winner-card {
@@ -1745,7 +1747,7 @@ body {
   }
 
   .playing-section {
-    width: 60% !important;
+    width: 50% !important;
     border-radius: 0 !important;
     padding: 0 !important;
     margin: 0 !important;

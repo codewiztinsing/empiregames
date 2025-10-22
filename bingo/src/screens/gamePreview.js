@@ -24,6 +24,15 @@ const GamePreview = () => {
   const [winAmount, setWinAmount] = useState(0);
   const [isJoining, setIsJoining] = useState(false);
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
+  
+  // Winner modal states
+  const [isBingo, setIsBingo] = useState(false);
+  const [winningCard, setWinningCard] = useState(null);
+  const [winner, setWinner] = useState(null);
+  const [winnerCardNumber, setWinnerCardNumber] = useState(null);
+  const [winnerPlayerName, setWinnerPlayerName] = useState(null);
+  const [markedCells, setMarkedCells] = useState([]);
+  const [winnerCountdown, setWinnerCountdown] = useState(5);
 
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -75,9 +84,32 @@ const GamePreview = () => {
       navigate(`/play?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`);
     };
 
+    const handleBingoWinner = (data) => {
+      console.log('🎯 Game Preview - Bingo winner received:', data);
+      if (data.isBingo) {
+        setIsBingo(true);
+        setWinningCard(data.winningCard);
+        setWinner(data.winner);
+        setWinnerCardNumber(data.winnerCardNumber);
+        setWinnerPlayerName(data.winnerPlayerName);
+        setMarkedCells(data.markedCells);
+      }
+    };
+
+    const handleGameOver = (data) => {
+      console.log('🎯 Game Preview - Game over received:', data);
+      if (data.roomId === roomId) {
+        // Navigate to selection page for new game
+        navigate(`/?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`);
+        window.location.reload();
+      }
+    };
+
     socket.on('gameState', handleGameState);
     socket.on('joinError', handleJoinError);
     socket.on('joinSuccess', handleJoinSuccess);
+    socket.on('bingoWinner', handleBingoWinner);
+    socket.on('gameOver', handleGameOver);
 
     // Request current game state
     if (roomId) {
@@ -88,6 +120,8 @@ const GamePreview = () => {
       socket.off('gameState', handleGameState);
       socket.off('joinError', handleJoinError);
       socket.off('joinSuccess', handleJoinSuccess);
+      socket.off('bingoWinner', handleBingoWinner);
+      socket.off('gameOver', handleGameOver);
     };
   }, [socket, roomId, playerId, playerName, navigate, setToast, setIsToast]);
 
@@ -100,6 +134,20 @@ const GamePreview = () => {
       return updated.length > 3 ? updated.slice(1) : updated;
     });
   }, [lastBall]);
+
+  // Winner countdown effect
+  useEffect(() => {
+    if (isBingo && winnerCountdown > 0) {
+      const timer = setTimeout(() => {
+        setWinnerCountdown(prev => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (isBingo && winnerCountdown === 0) {
+      // Navigate to selection screen when countdown reaches 0
+      navigate(`/?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`);
+      window.location.reload();
+    }
+  }, [isBingo, winnerCountdown, navigate, playerId, roomId, playerName]);
 
   const handleJoinGame = () => {
     if (!playerId || !roomId || !playerName) {
@@ -329,6 +377,108 @@ const GamePreview = () => {
           </div>
         </div>
       </div>
+
+      {/* Winner Modal */}
+      {isBingo && (
+        <div className="bingo-winner-overlay">
+          <div className="bingo-winner-card">
+            <div className="winner-card-header">
+              <p className='winner-card-header-text'>Bingo Winner!</p>
+            </div>
+
+            <p className='winner-card-header-winner-number' style={{
+              color: "green",
+              fontSize: "1.6rem",
+              fontWeight: "bold"
+            }}>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
+            <p className='winner-card-header-text' style={{
+                color: "green",
+              fontSize: "1.6rem",
+              fontWeight: "bold"
+            }}>ስም : {winnerPlayerName},is Winner</p>
+
+           
+          <div className="winning-card">
+            {/* Header row */}
+            <div className="winning-card-row">
+              {["B", "I", "N", "G", "O"].map((letter, index) => (
+                <div key={index} className="winning-card-cell">
+                  <span>{letter}</span>
+                </div>
+              ))}
+            </div>
+
+            {winningCard && winningCard[0] && winningCard[0].map((_, rowIndex) => (
+              <div key={rowIndex} className="winning-card-row">
+                {winningCard.map((row, colIndex) => {
+                  const cell = row[rowIndex];
+                  // Check win conditions
+                  const rowComplete = winningCard.every(r => r[rowIndex].marked);
+                  const colComplete = winningCard[colIndex].every(c => c.marked);
+                  const diagonalComplete =
+                    rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
+                  const reverseDiagonalComplete =
+                    rowIndex + colIndex === 4 && winningCard.every((r, i) => r[4 - i].marked);
+
+                  const fourCornersComplete =
+                    winningCard[0][0].marked &&
+                    winningCard[0][4].marked &&
+                    winningCard[4][0].marked &&
+                    winningCard[4][4].marked;
+
+                  const fourEdgesComplete =
+                    winningCard[0][2].marked &&
+                    winningCard[2][0].marked &&
+                    winningCard[2][4].marked &&
+                    winningCard[4][2].marked;
+
+                  // Does this cell belong to a winning line?
+                  const inWinningLine =
+                    (rowComplete && cell.marked) ||
+                    (colComplete && cell.marked) ||
+                    (diagonalComplete && cell.marked) ||
+                    (reverseDiagonalComplete && cell.marked) ||
+                    (fourCornersComplete &&
+                      cell.marked &&
+                      ((colIndex === 0 && (rowIndex === 0 || rowIndex === 4)) ||
+                       (colIndex === 4 && (rowIndex === 0 || rowIndex === 4)))) ||
+                    (fourEdgesComplete &&
+                      cell.marked &&
+                      ((colIndex === 0 && rowIndex === 2) ||
+                       (colIndex === 2 && (rowIndex === 0 || rowIndex === 4)) ||
+                       (colIndex === 4 && rowIndex === 2)));
+
+                  // Final background color
+                  let bgColor = "white";
+                  if (inWinningLine) {
+                    bgColor = "green";   // part of winning line
+                  } else if (cell.marked) {
+                    bgColor = "red";     // marked but not winning
+                  }
+
+                  return (
+                    <div
+                      key={colIndex}
+                      className="winning-card-cell"
+                      style={{ backgroundColor: bgColor }}
+                    >
+                      <span>{cell?.number || '?'}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+
+            <div className="choosen-numbers">
+              <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
+              <div className="winner-countdown">
+                <p>Redirecting to selection in: {winnerCountdown}s</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
