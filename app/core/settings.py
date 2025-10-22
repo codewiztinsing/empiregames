@@ -21,8 +21,8 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 HANDLER404 = 'core.views.custom_404'
 
 
-ALLOWED_HOSTS = ["*", "akerbingo.com", "server.akerbingo.com","127.0.0.1"]
-CSRF_TRUSTED_ORIGINS = ["https://akerbingo.com","http://127.0.0.1:8000"]
+ALLOWED_HOSTS = ["*", "akerbingo.com", "server.akerbingo.com", "127.0.0.1", "localhost"]
+CSRF_TRUSTED_ORIGINS = ["https://akerbingo.com", "http://127.0.0.1:8000", "http://localhost:8000"]
 
 # login redirect
 LOGIN_REDIRECT_URL = '/dashboard/'
@@ -49,12 +49,7 @@ INSTALLED_APPS = [
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3001",
-    "https://wowliyubingo.com",
-    "https://server.wowliyubingo.com"
+  "*"
 ]
 
 # Allow all origins for development (use with caution in production)
