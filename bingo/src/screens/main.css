@@ -1825,75 +1825,121 @@ body {
     flex: 0 0 55%;
     width: 55%;
     max-width: 55%;
-    padding: 6px;
+    padding: 4px;
     margin-left: 0;
     height: auto;
-    min-height: 450px;
+    min-height: 300px;
   }
   
   .game-controls-section {
     flex: 0 0 40%;
     width: 40%;
     max-width: 40%;
+    min-height: 300px;
   }
   
   .main-bingo-board .top-actions,
   .main-bingo-board .bottom-actions {
-    gap: 6px;
-    padding: 8px 0;
+    gap: 4px;
+    padding: 4px 0;
   }
   
   .main-bingo-board .top-action-btn,
   .main-bingo-board .bottom-action-btn {
-    padding: 6px 12px;
-    font-size: 11px;
-  }
-  
-  .game-controls-section {
-    flex: 1.1;
-    height: auto;
-    min-height: 400px;
+    padding: 4px 8px;
+    font-size: 9px;
   }
   
   .top-stats-bar {
     flex-wrap: wrap;
-    gap: 3px;
+    gap: 2px;
+    padding: 0 3px;
   }
   
   .stat-item {
-    font-size: 12px;
-    padding: 8px 4px;
+    font-size: 9px;
+    padding: 4px 2px;
+    min-height: 30px;
   }
   
   .bingo-letter {
-    width: 28px;
-    height: 28px;
-    font-size: 13px;
+    width: 18px;
+    height: 18px;
+    font-size: 9px;
   }
   
   .number-cell {
-    font-size: 12px;
+    font-size: 8px;
     padding: 1px;
+    min-height: 15px;
   }
   
   .card-letter {
-    width: 25px;
-    height: 25px;
-    font-size: 12px;
+    width: 16px;
+    height: 16px;
+    font-size: 8px;
   }
   
   .card-cell {
-    font-size: 10px;
-    min-height: 24px;
+    font-size: 7px;
+    min-height: 16px;
+    padding: 1px;
   }
   
   .ball-display {
-    width: 100px;
-    height: 100px;
+    width: 60px;
+    height: 60px;
   }
   
   .ball-number {
-    font-size: 18px;
+    font-size: 12px;
+  }
+  
+  .control-btn {
+    padding: 4px 6px;
+    font-size: 8px;
+  }
+  
+  .bingo-button {
+    padding: 6px;
+    font-size: 10px;
+  }
+  
+  .action-btn {
+    padding: 4px 6px;
+    font-size: 8px;
+  }
+  
+  .recent-balls-container {
+    padding: 4px;
+    border-radius: 4px;
+  }
+  
+  .recent-balls-label {
+    font-size: 8px;
+    margin-bottom: 3px;
+  }
+  
+  .recent-ball {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .recent-ball-letter {
+    font-size: 5px;
+  }
+  
+  .recent-ball-number {
+    font-size: 6px;
+  }
+  
+  .player-card-section {
+    padding: 4px;
+  }
+  
+  .card-title {
+    font-size: 10px;
+    margin-bottom: 4px;
   }
   
   /* Bottom actions responsive */
@@ -1951,34 +1997,29 @@ body {
     flex: 0 0 55%;
     width: 55%;
     max-width: 55%;
-    padding: 4px;
+    padding: 3px;
     margin-left: 0;
     height: auto;
-    min-height: 400px;
+    min-height: 250px;
   }
   
   .game-controls-section {
     flex: 0 0 40%;
     width: 40%;
     max-width: 40%;
+    min-height: 250px;
   }
   
   .main-bingo-board .top-actions,
   .main-bingo-board .bottom-actions {
-    gap: 4px;
-    padding: 6px 0;
+    gap: 3px;
+    padding: 3px 0;
   }
   
   .main-bingo-board .top-action-btn,
   .main-bingo-board .bottom-action-btn {
-    padding: 5px 10px;
-    font-size: 10px;
-  }
-  
-  .game-controls-section {
-    flex: 1;
-    height: auto;
-    min-height: 350px;
+    padding: 3px 6px;
+    font-size: 8px;
   }
   
   .top-stats-bar {
@@ -1986,8 +2027,9 @@ body {
   }
   
   .stat-item {
-    font-size: 10px;
-    padding: 6px 2px;
+    font-size: 8px;
+    padding: 3px 1px;
+    min-height: 25px;
   }
   
   .player-card-section {
@@ -1997,50 +2039,51 @@ body {
   }
   
   .number-cell {
-    font-size: 10px;
+    font-size: 7px;
     padding: 1px;
+    min-height: 12px;
   }
   
   .card-cell {
-    font-size: 9px;
-    min-height: 20px;
-    padding: 4px 2px;
+    font-size: 6px;
+    min-height: 14px;
+    padding: 1px;
   }
   
   .bingo-letter {
-    width: 22px;
-    height: 22px;
-    font-size: 11px;
+    width: 16px;
+    height: 16px;
+    font-size: 8px;
   }
   
   .card-letter {
-    width: 20px;
-    height: 20px;
-    font-size: 10px;
+    width: 14px;
+    height: 14px;
+    font-size: 7px;
   }
   
   .ball-display {
-    width: 80px;
-    height: 80px;
+    width: 50px;
+    height: 50px;
   }
   
   .ball-number {
-    font-size: 16px;
+    font-size: 10px;
   }
   
   .control-btn {
-    padding: 8px 12px;
-    font-size: 12px;
+    padding: 3px 4px;
+    font-size: 7px;
   }
   
   .bingo-button {
-    padding: 10px;
-    font-size: 14px;
+    padding: 4px;
+    font-size: 8px;
   }
   
   .action-btn {
-    padding: 8px 12px;
-    font-size: 12px;
+    padding: 3px 4px;
+    font-size: 7px;
   }
   
   /* Bottom actions responsive */
