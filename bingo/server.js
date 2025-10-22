@@ -503,36 +503,34 @@ async function startGame(game) {
             { start: 61, end: 75 }    // O
           ];
           
-          // Fill each column with numbers from called numbers when possible, otherwise random
+          // Fill each column prioritizing called numbers, then random for rest
           for (let col = 0; col < 5; col++) {
             const range = columnRanges[col];
             const usedNumbers = new Set();
+            
+            // Get called numbers in this column range
+            const calledInRange = calledNumbers.filter(n => n >= range.start && n <= range.end);
+            console.log(`🎯 Column ${col} (${range.start}-${range.end}): Called numbers:`, calledInRange);
             
             for (let row = 0; row < 5; row++) {
               if (col === 2 && row === 2) {
                 // Free space in center
                 board[row][col] = { number: '*', marked: true };
               } else {
-                // Try to use called numbers first, then fallback to random
                 let num;
-                const calledInRange = calledNumbers.filter(n => n >= range.start && n <= range.end);
                 
-                if (calledInRange.length > 0) {
-                  // Use called numbers from this column range
-                  const availableCalled = calledInRange.filter(n => !usedNumbers.has(n));
-                  if (availableCalled.length > 0) {
-                    num = availableCalled[Math.floor(Math.random() * availableCalled.length)];
-                  } else {
-                    // Fallback to random if all called numbers are used
-                    do {
-                      num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
-                    } while (usedNumbers.has(num));
-                  }
+                // First priority: Use called numbers from this column
+                const availableCalled = calledInRange.filter(n => !usedNumbers.has(n));
+                if (availableCalled.length > 0) {
+                  // Use a called number
+                  num = availableCalled[Math.floor(Math.random() * availableCalled.length)];
+                  console.log(`🎯 Using called number ${num} for [${row}][${col}]`);
                 } else {
-                  // No called numbers in this range, use random
+                  // Second priority: Use random numbers to fill remaining cells
                   do {
                     num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
                   } while (usedNumbers.has(num));
+                  console.log(`🎯 Using random number ${num} for [${row}][${col}]`);
                 }
                 
                 usedNumbers.add(num);
