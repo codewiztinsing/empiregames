@@ -271,29 +271,33 @@ function startCountDown(game) {
           }
         }
 
-        // Gradually fill up to the target, paced to feel human
+        // Gradually fill up to the target, paced to feel very human-like
         const remaining = targetFakePlayers - game.fakePickedNumbers.size;
         let toAdd = 0;
 
-        // Pace: add only every 2 seconds to slow down
-        const shouldAttemptThisTick = (game._fakePickTick % 2 === 0);
+        // Much slower pace: add only every 3-4 seconds to mimic real players
+        const shouldAttemptThisTick = (game._fakePickTick % 3 === 0);
 
         if (shouldAttemptThisTick && remaining > 0) {
-          // Base rate: approach target smoothly over remaining seconds
+          // Very slow base rate: approach target very gradually
           const secondsLeft = Math.max(1, game.countDown);
-          const baseRate = Math.ceil(remaining / secondsLeft); // how many to add per second to reach target
+          const baseRate = Math.ceil(remaining / (secondsLeft * 2)); // Much slower approach
 
-          // Cap per cycle to small bursts (feel like sporadic picks)
-          toAdd = Math.min(2, Math.max(0, baseRate));
+          // Very small bursts (1-2 max) to feel like individual players joining
+          toAdd = Math.min(1, Math.max(0, baseRate));
 
-          // Random jitter: sometimes skip or add one less to feel organic
-          if (Math.random() < 0.3 && toAdd > 0) {
-            toAdd -= 1;
+          // More random jitter: often skip cycles to feel organic
+          if (Math.random() < 0.5 && toAdd > 0) {
+            toAdd = 0; // Skip this cycle entirely
           }
 
-          // In final seconds, gently push to reach target
-          if (game.countDown <= 3) {
-            toAdd = Math.min(5, remaining, Math.max(toAdd, 1));
+          // In final 5 seconds, slightly increase but still gradual
+          if (game.countDown <= 5) {
+            toAdd = Math.min(2, remaining, Math.max(toAdd, 0));
+            // Still random chance to skip even in final seconds
+            if (Math.random() < 0.3) {
+              toAdd = 0;
+            }
           }
         }
 
@@ -375,7 +379,10 @@ function startCountDown(game) {
       game.calledNumbers = [];
       game.selectedNumbers = game.selectedNumbers.filter(num => num !== null);
       game.win_amount = game.roomId * game.players.size * 0.78
-      game.total_players = game.players.size
+      // Calculate total players based on actual picked numbers (real + fake)
+      const realPlayersCount = game.selectedNumbers.filter(num => num !== null).length;
+      const fakePlayersCount = game.fakePickedNumbers ? game.fakePickedNumbers.size : 0;
+      game.total_players = realPlayersCount + fakePlayersCount;
       startGame(game);
     }
     game.countDown--;
@@ -446,15 +453,20 @@ async function startGame(game) {
     console.log("game.roomId:", game.roomId)
     console.log("game.win_amount (base):", game.win_amount)
 
+    // Calculate total players based on actual picked numbers (real + fake)
+    const realPlayersCount = game.selectedNumbers.filter(num => num !== null).length;
+    const fakePlayersCount = game.fakePickedNumbers ? game.fakePickedNumbers.size : 0;
+    const actualTotalPlayers = realPlayersCount + fakePlayersCount;
+
     io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers,
       game_status: game.status,
       count_down: game.countDown,
-      // Use static values calculated once at countdown start
-      total_players: game.staticTotalPlayers || 10,
-      win_amount: game.staticWinAmount || (game.staticTotalPlayers || 10) * game.roomId * 0.78,
+      // Use actual picked numbers count to match pickedNumbers
+      total_players: actualTotalPlayers,
+      win_amount: actualTotalPlayers * game.roomId * 0.78,
       lastBall: ball,
       called_numbers: game.calledNumbers,
       total_called_numbers: game.calledNumbers.length,
@@ -673,15 +685,21 @@ function handleRefresh(data){
   console.log("handleRefresh", data)
   const game = activeGames.get(data.gameId);
   if (!game) return;
+  
+  // Calculate total players based on actual picked numbers (real + fake)
+  const realPlayersCount = game.selectedNumbers.filter(num => num !== null).length;
+  const fakePlayersCount = game.fakePickedNumbers ? game.fakePickedNumbers.size : 0;
+  const actualTotalPlayers = realPlayersCount + fakePlayersCount;
+  
   io.emit("gameState", {
     gameId: game.id,
     roomId: game.roomId,
-    // Use static values calculated once at countdown start
-    total_players: game.staticTotalPlayers || 10,
+    // Use actual picked numbers count to match pickedNumbers
+    total_players: actualTotalPlayers,
     pickedNumbers: game.selectedNumbers,
     game_status: game.status,
     count_down: game.countDown,
-    win_amount: game.staticWinAmount || (game.staticTotalPlayers || 10) * game.roomId * 0.78,
+    win_amount: actualTotalPlayers * game.roomId * 0.78,
     lastBall: game.currentCall,
     called_numbers: game.calledNumbers,
     total_called_numbers: game.calledNumbers.length,
