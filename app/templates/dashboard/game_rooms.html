@@ -20,31 +20,31 @@
     <!-- Game Types List -->
     <div class="p-6 space-y-4">
         <!-- Room ID room_10 -->
-        {% for game_type in game_types %}
-        <div class="bg-gray-800 rounded-lg p-4 border border-gray-700" data-game-id="{{ game_type.id }}">
+        {% for game_type in game_rooms %}
+        <div class="bg-gray-800 rounded-lg p-4 border border-gray-700" data-game-id="{{ game_room.id }}">
             <div class="flex justify-between items-center">
                 <div class="flex-1">
-                    <h3 class="text-white font-semibold text-lg mb-2">Room ID {{ game_type.id }}</h3>
+                    <h3 class="text-white font-semibold text-lg mb-2">Room ID {{ game_room.id }}</h3>
                     <div class="grid grid-cols-2 md:grid-cols-2 gap-4 text-sm">
                         <div>
                             <span class="text-gray-400">Stake:</span>
-                            <span class="text-white ml-1" data-field="bet_amount">{{ game_type.bet_amount }}</span>
+                            <span class="text-white ml-1" data-field="bet_amount">{{ game_room.bet_amount }}</span>
                         </div>
                         <div>
                             <span class="text-gray-400">Commission:</span>
-                            <span class="text-white ml-1" data-field="commission">{{ game_type.commission }}</span>
+                            <span class="text-white ml-1" data-field="commission">{{ game_room.commission }}</span>
                         </div>
                     </div>
                     <div class="mt-2">
                         <span class="text-gray-400 text-sm">Date Saved:</span>
-                        <span class="text-white text-sm ml-1">{{ game_type.created_at }}</span>
+                        <span class="text-white text-sm ml-1">{{ game_room.created_at }}</span>
                     </div>
                 </div>
                 <div class="flex space-x-2 ml-4">
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm" onclick="editGameType({{ game_type.id }})">
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm" onclick="editGameRoom({{ game_room.id }})">
                         Edit
                     </button>
-                    <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm" onclick="deleteGameType({{ game_type.id }})">
+                    <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm" onclick="deleteGameType({{ game_room.id }})">
                         Delete
                     </button>
                 </div>
