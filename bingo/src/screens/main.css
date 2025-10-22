@@ -300,12 +300,13 @@ body {
 
 .ball-display {
   width: 100%;
+  max-width: 200px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
   perspective: 1000px;
-  padding: 100px;
-
-  
+  padding: 20px;
+  margin: 0 auto;
 }
 
 .current-call-text {
@@ -320,6 +321,10 @@ body {
 .ball {
   width: 60px;
   height: 60px;
+  min-width: 60px;
+  min-height: 60px;
+  max-width: 60px;
+  max-height: 60px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -327,9 +332,11 @@ body {
   font-size: 24px;
   font-weight: bold;
   background-color: #8f162c;
-  color:white;
+  color: white;
   animation: float 3s ease-in-out infinite, blink 1s ease-in-out infinite;
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  border: 2px solid #fff;
+  flex-shrink: 0;
 }
 
 @keyframes blink {
@@ -1241,10 +1248,49 @@ body {
     padding: 12px 20px;
     margin: -2rem -2rem 15px -2rem;
   }
+
+  /* Ensure ball display is perfectly circular on mobile */
+  .ball {
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 22px !important;
+    font-weight: bold !important;
+    background-color: #8f162c !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+    margin: 0 auto !important;
+    border: 3px solid #fff !important;
+  }
+
+  .ball-display {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 20px !important;
+    width: 100% !important;
+  }
 }
 
 /* Tablet breakpoint (768px+) */
 @media screen and (min-width: 768px) {
+  .ball-display {
+    max-width: 250px;
+    padding: 30px;
+  }
+  
+  .ball {
+    width: 70px;
+    height: 70px;
+    min-width: 70px;
+    min-height: 70px;
+    max-width: 70px;
+    max-height: 70px;
+    font-size: 28px;
+  }
  
   
  
@@ -1383,6 +1429,21 @@ body {
     padding: 12px;
   }
   
+  .ball-display {
+    max-width: 300px;
+    padding: 40px;
+  }
+  
+  .ball {
+    width: 80px;
+    height: 80px;
+    min-width: 80px;
+    min-height: 80px;
+    max-width: 80px;
+    max-height: 80px;
+    font-size: 32px;
+  }
+  
 
   
   .called-numbers {
@@ -1485,6 +1546,20 @@ body {
 
 /* Large Desktop breakpoint (1200px+) */
 @media screen and (min-width: 1200px) {
+  .ball-display {
+    max-width: 350px;
+    padding: 50px;
+  }
+  
+  .ball {
+    width: 90px;
+    height: 90px;
+    min-width: 90px;
+    min-height: 90px;
+    max-width: 90px;
+    max-height: 90px;
+    font-size: 36px;
+  }
  
   
  
@@ -1744,6 +1819,31 @@ body {
     min-height: 0 !important;
     width: 100vw !important;
     overflow-x: hidden !important;
+  }
+
+  /* Ensure ball display is perfectly circular on mobile */
+  .ball {
+    width: 55px !important;
+    height: 55px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 20px !important;
+    font-weight: bold !important;
+    background-color: #8f162c !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+    margin: 0 auto !important;
+    border: 3px solid #fff !important;
+  }
+
+  .ball-display {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 15px !important;
+    width: 100% !important;
   }
 
   .playing-section {
