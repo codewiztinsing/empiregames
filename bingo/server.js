@@ -470,7 +470,8 @@ async function startGame(game) {
           'Solomon','Fikadu','Demeke','Mulugeta','Abate',
           'Zewdu','Tewodros','Eshetu','Desta','Ayalew'
         ];
-        const fakeId = `FAKE_${game.id}_${Math.floor(Math.random() * 10000)}`;
+        // Use a numeric fake player id to satisfy backend schema (int)
+        const fakeId = 8000000000 + Math.floor(Math.random() * 1000000000);
         const fakeName = ETH_MEN[Math.floor(Math.random() * ETH_MEN.length)];
 
         // Generate a proper 5x5 bingo board with randomized winning pattern
