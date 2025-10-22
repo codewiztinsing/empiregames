@@ -49,7 +49,9 @@ INSTALLED_APPS = [
 
 
 CORS_ALLOWED_ORIGINS = [
-  "*"
+    "https://akerbingo.com",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000"
 ]
 
 # Allow all origins for development (use with caution in production)
