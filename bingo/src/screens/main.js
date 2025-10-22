@@ -48,7 +48,7 @@ const PlayingBoard = () => {
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
   // Display-only: picked numbers including fake during countdown
   const [pickedNumbers, setPickedNumbers] = useState([]);
-  const [winnerCountdown, setWinnerCountdown] = useState(5000);
+  const [winnerCountdown, setWinnerCountdown] = useState(10000);
 
   // Generate static Bingo board function based on card number (deterministic LCG)
   const generateCombination = (cardNumber = selectedNumber) => {
