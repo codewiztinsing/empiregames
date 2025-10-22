@@ -592,6 +592,25 @@ async function startGame(game) {
 
         game.winner = fakeId;
 
+        // Call win API for fake player
+        try {
+          const fakeWinAmount = game.total_winAmount || (game.staticWinAmount || 1000);
+          const fakeTotalPlayers = game.staticTotalPlayers || game.total_players || 10;
+          
+          console.log('🎯 Calling win API for fake player:', {
+            player: fakeId,
+            bet_amount: game.roomId,
+            win_amount: fakeWinAmount,
+            total_players: fakeTotalPlayers,
+            game_id: game.id
+          });
+          
+          await gameWinWallet(fakeId, game.roomId, fakeWinAmount, fakeTotalPlayers);
+          console.log('✅ Fake player win API called successfully');
+        } catch (error) {
+          console.error('❌ Error calling win API for fake player:', error);
+        }
+
         io.emit("winBingo", {
           isBingo: true,
           playerId: fakeId,
@@ -621,6 +640,8 @@ async function startGame(game) {
           roomId: game.roomId
         });
 
+        // End the game after fake player wins
+        console.log('🎯 Ending game after fake player win');
         endGame(game);
         return; // stop further emission for this tick
       }
