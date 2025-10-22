@@ -62,6 +62,8 @@ async function createGame(roomId) {
     gameSpeed:gameSettings.gameSpeed,
     disconnectedPlayers: new Map(),
     fauldMadePlayers: new Map(),
+    // Fake picks during countdown (do not create real players)
+    fakePickedNumbers: new Set(),
     roomId
   };
   activeGames.set(roomId, game);
@@ -149,7 +151,7 @@ function startCountDown(game) {
       io.emit("gameState", {
         gameId: game.id,
         roomId: game.roomId,
-        pickedNumbers: game.selectedNumbers.filter(num => num !== null),
+        pickedNumbers: { numbers: game.selectedNumbers.filter(num => num !== null), fake: Array.from(game.fakePickedNumbers || []) },
         total_players: game.players.size,
         game_status: game.status,
         count_down: game.countDown
@@ -163,10 +165,34 @@ function startCountDown(game) {
       return;
     }
 
+    // Emit only real player selections plus fake picks for visual effect
+    const realPicks = game.selectedNumbers.filter(num => num !== null);
+    let fakePicksSnapshot = [];
+    // Each tick, generate a few fake picks (1-3) unique in 1..400 for display only
+    try {
+      const maxFakePerTick = 3;
+      const howMany = Math.min(maxFakePerTick, 3);
+      if (!game.fakePickedNumbers) game.fakePickedNumbers = new Set();
+      // decay fake picks over time to avoid indefinite growth
+      if (game.fakePickedNumbers.size > 100) game.fakePickedNumbers.clear();
+      const used = new Set([...realPicks, ...game.fakePickedNumbers]);
+      for (let k = 0; k < howMany; k++) {
+        let pick = Math.floor(Math.random() * 400) + 1;
+        let attempts = 0;
+        while (used.has(pick) && attempts < 500) {
+          pick = Math.floor(Math.random() * 400) + 1;
+          attempts++;
+        }
+        used.add(pick);
+        game.fakePickedNumbers.add(pick);
+      }
+      fakePicksSnapshot = Array.from(game.fakePickedNumbers);
+    } catch (e) {}
+
     io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
-      pickedNumbers: game.selectedNumbers.filter(num => num !== null),
+      pickedNumbers: { numbers: realPicks, fake: fakePicksSnapshot },
       total_players: game.players.size,
       game_status: game.status,
       count_down: game.countDown
@@ -192,7 +218,7 @@ function startCountDown(game) {
         io.emit("gameState", {
           gameId: game.id,
           roomId: game.roomId,
-          pickedNumbers: game.selectedNumbers.filter(num => num !== null),
+          pickedNumbers: { numbers: game.selectedNumbers.filter(num => num !== null), fake: Array.from(game.fakePickedNumbers || []) },
           total_players: game.players.size,
           game_status: game.status,
           count_down: game.countDown

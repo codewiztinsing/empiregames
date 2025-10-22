@@ -361,8 +361,16 @@ const handleGlobals = (state) => {
 
   const handleGameState = (state) => {
     // Show game state for all rooms, prioritizing current room if available
-    if (state.pickedNumbers !== null && state.pickedNumbers && state.pickedNumbers.numbers) {
-      setPickedNumbers(state.pickedNumbers.numbers);
+    // Support both legacy array and new object shape with fake picks
+    if (state.pickedNumbers !== null && state.pickedNumbers !== undefined) {
+      if (Array.isArray(state.pickedNumbers)) {
+        setPickedNumbers(state.pickedNumbers);
+      } else if (state.pickedNumbers.numbers) {
+        const real = Array.isArray(state.pickedNumbers.numbers) ? state.pickedNumbers.numbers : [];
+        const fake = Array.isArray(state.pickedNumbers.fake) ? state.pickedNumbers.fake : [];
+        // Merge real + fake for display to mimic real traffic during countdown
+        setPickedNumbers([...new Set([...real, ...fake])]);
+      }
     }
     if (state.game_status == "in-progress") {
       setGameStatus("in-progress");
