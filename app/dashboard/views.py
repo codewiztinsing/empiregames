@@ -15,7 +15,7 @@ import json
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import logout
-from game.models import GameType
+from game.models import GameType, FakePlayerSetting
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from .permissions import (
@@ -927,6 +927,37 @@ def referrals(request):
         'page_title': 'Referral Management'
     }
     return render(request, 'dashboard/referrals.html', context)
+
+@admin_required
+def fake_players_settings_view(request):
+    setting = FakePlayerSetting.objects.filter(is_active=True).order_by('-updated_at').first()
+    if request.method == 'POST':
+        try:
+            count = int(request.POST.get('fake_players_count') or 0)
+            can_win = str(request.POST.get('fake_can_win') or 'false').lower() in ('1','true','yes')
+            after_calls = int(request.POST.get('fake_win_after_calls') or 10)
+            if setting is None:
+                setting = FakePlayerSetting.objects.create(
+                    fake_players_count=count,
+                    fake_can_win=can_win,
+                    fake_win_after_calls=after_calls,
+                    is_active=True
+                )
+            else:
+                setting.fake_players_count = count
+                setting.fake_can_win = can_win
+                setting.fake_win_after_calls = after_calls
+                setting.is_active = True
+                setting.save()
+            messages.success(request, 'Fake player settings saved.')
+        except Exception as e:
+            messages.error(request, f'Error saving settings: {e}')
+        return redirect('dashboard:fake_players_settings')
+
+    return render(request, 'dashboard/fake_players_settings.html', {
+        'setting': setting,
+        'page_title': 'Fake Players Settings'
+    })
 
 def messages_view(request):
     if request.method == 'POST':

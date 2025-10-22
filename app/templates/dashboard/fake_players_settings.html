@@ -1,0 +1,55 @@
+{% extends 'dashboard/base.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <div class="bg-dark-card border border-dark-border rounded-xl shadow-lg p-6">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-semibold text-white">Fake Players Settings</h1>
+        <p class="text-sm text-gray-400 mt-1">Configure simulation behavior used during countdown and gameplay.</p>
+      </div>
+    </div>
+
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <!-- Fake Players Count -->
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-2">Fake Players Count</label>
+          <input type="number" name="fake_players_count" min="0"
+                 value="{{ setting.fake_players_count|default:0 }}"
+                 class="w-full bg-gray-800 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent" />
+          <p class="text-xs text-gray-500 mt-1">How many fake picks to simulate (visual only) during countdown.</p>
+        </div>
+
+        <!-- Fake Win After Calls -->
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-2">Fake Win After Calls</label>
+          <input type="number" name="fake_win_after_calls" min="1" max="75"
+                 value="{{ setting.fake_win_after_calls|default:10 }}"
+                 class="w-full bg-gray-800 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent" />
+          <p class="text-xs text-gray-500 mt-1">If enabled, fake winner is announced after this many calls.</p>
+        </div>
+      </div>
+
+      <!-- Allow Fake Players to Win -->
+      <div class="flex items-center justify-between bg-gray-800/60 border border-dark-border rounded-lg p-4">
+        <div>
+          <p class="text-sm font-medium text-gray-200">Allow Fake Players to Win</p>
+          <p class="text-xs text-gray-500">When enabled, a fake winner can be emitted after the configured calls.</p>
+        </div>
+        <select name="fake_can_win" class="bg-gray-900 border border-dark-border rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-primary">
+          <option value="false" {% if not setting.fake_can_win %}selected{% endif %}>Disabled</option>
+          <option value="true" {% if setting.fake_can_win %}selected{% endif %}>Enabled</option>
+        </select>
+      </div>
+
+      <div class="flex items-center justify-end gap-3">
+        <a href="{% url 'dashboard:dashboard' %}" class="px-4 py-2 rounded-lg border border-dark-border text-gray-300 hover:bg-gray-700 transition">Cancel</a>
+        <button type="submit" class="px-5 py-2 rounded-lg bg-purple-primary hover:bg-purple-hover text-white font-medium transition">Save Settings</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

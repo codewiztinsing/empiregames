@@ -10,18 +10,60 @@ const { checkSingleCardBingo } = require('./src/helpers/singleBingo');
 const { gameWinWallet,gameLossWallet,updateLastGame,getGameSettings } = require('./api');
 const ip = require('ip');
 const dotenv = require('dotenv');
+const fetch = require('node-fetch');
 dotenv.config();
+
+// Global variable to store current settings
+let currentGameSettings = null;
 const app = express();
 app.use(cors());
 const server = http.createServer(app);
 
 
-const getConstant = async () => {
-  return {
-    gameSpeed: 4000,
-    countDown: 10
+const fetchGameSettings = async () => {
+  try {
+    const BASE_URL = process.env.DASHBOARD_BASE_URL || 'http://127.0.0.1:8000';
+    const res = await fetch(`${BASE_URL}/game/api/fake-player-settings/public/`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+    });
+    let fake = { fake_players_count: 0, fake_can_win: false, fake_win_after_calls: 10 };
+    if (res.ok) {
+      const j = await res.json();
+      if (j && j.data) fake = j.data;
+    }
+    // also get main game settings via existing helper if available
+    const gameSpeed = Number(process.env.GAME_SPEED || 4000);
+    const countDown = Number(process.env.COUNT_DOWN || 30);
+    const newSettings = {
+      gameSpeed,
+      countDown,
+      fakePlayersCount: Number(fake.fake_players_count || 0),
+      fakeCanWin: !!fake.fake_can_win,
+      fakeWinAfterCalls: Number(fake.fake_win_after_calls || 10),
+    };
+    console.log("🔄 Fetched latest game settings:", newSettings);
+    return newSettings;
+  } catch (e) {
+    console.error("Error fetching game settings:", e);
+    return {
+      gameSpeed: Number(process.env.GAME_SPEED || 4000),
+      countDown: Number(process.env.COUNT_DOWN || 30),
+      fakePlayersCount: Number(process.env.FAKE_PLAYERS_COUNT || 0),
+      fakeCanWin: String(process.env.FAKE_CAN_WIN || 'false') === 'true',
+      fakeWinAfterCalls: Number(process.env.FAKE_WIN_AFTER_CALLS || 10),
+    };
   }
-}
+};
+
+const getConstant = async () => {
+  // Return cached settings if available, otherwise fetch fresh
+  if (currentGameSettings) {
+    return currentGameSettings;
+  }
+  currentGameSettings = await fetchGameSettings();
+  return currentGameSettings;
+};
 
 const io = socketIo(server, {
   cors: {
@@ -42,6 +84,7 @@ const winners = [];
 
 async function createGame(roomId) {
   const gameSettings = await getConstant();
+  console.log("gameSettings",gameSettings)
  
 
   const game = {
@@ -59,7 +102,16 @@ async function createGame(roomId) {
     gameOver: false,
     countDown: gameSettings.countDown,
     isCountStart: false,
-    gameSpeed:gameSettings.gameSpeed,
+    gameSpeed: gameSettings.gameSpeed,
+    // Dynamic fake configuration loaded from dashboard API
+    fakeSettings: {
+      fakePlayersCount: Number(gameSettings.fakePlayersCount || 0),
+      fakeCanWin: !!gameSettings.fakeCanWin,
+      fakeWinAfterCalls: Number(gameSettings.fakeWinAfterCalls || 10)
+    },
+    // Static total players calculated once at game creation
+    staticTotalPlayers: null,
+    staticWinAmount: null,
     disconnectedPlayers: new Map(),
     fauldMadePlayers: new Map(),
     // Fake picks during countdown (do not create real players)
@@ -126,6 +178,23 @@ function getWaitingGames(activeGames,status="in-progress") {
 
 function startCountDown(game) {
   console.log("🚀 Starting countdown for game:", game.id, "with", game.players.size, "players");
+  
+  // Calculate static total players once at countdown start
+  if (!game.staticTotalPlayers) {
+    const realPlayers = game.players.size;
+    const fakePlayers = game.fakeSettings?.fakePlayersCount > 0 ? game.fakeSettings.fakePlayersCount : 0;
+    let total = realPlayers + fakePlayers;
+    
+    if (total < 10) {
+      game.staticTotalPlayers = 10; // minimum 10 players
+    } else {
+      // Pick a random number between 10 and total (inclusive) - but only once
+      game.staticTotalPlayers = Math.floor(Math.random() * (total - 10 + 1)) + 10;
+    }
+    
+    game.staticWinAmount = game.staticTotalPlayers * game.roomId * 0.78;
+    console.log("🎯 Static total players calculated - real:", realPlayers, "fake:", fakePlayers, "static total:", game.staticTotalPlayers, "static win:", game.staticWinAmount);
+  }
   
   if (game.isCountStart || !game.players || game.players.size < 2) {
     console.log("❌ Cannot start countdown - isCountStart:", game.isCountStart, "players:", game.players?.size);
@@ -200,8 +269,8 @@ function startCountDown(game) {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: { numbers: realPicks, fake: fakePicksSnapshot },
-      total_players: 100,
-      win_amount: 1000,
+      total_players: displayTotal,
+      win_amount: displayWin,
       game_status: game.status,
       count_down: game.countDown
     });
@@ -317,20 +386,89 @@ async function startGame(game) {
     console.log("🎯 Called ball:", ball.combined, "total called:", game.calledNumbers.length);
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
 
+    console.log("game.fakeSettings?.fakePlayersCount",game.fakeSettings?.fakePlayersCount)
+    console.log("game.total_players (real players):", game.total_players)
+    console.log("game.staticTotalPlayers:", game.staticTotalPlayers)
+    console.log("game.staticWinAmount:", game.staticWinAmount)
+    console.log("game.roomId:", game.roomId)
+    console.log("game.win_amount (base):", game.win_amount)
+
     io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers,
       game_status: game.status,
       count_down: game.countDown,
-      win_amount: game.win_amount + (game.fakePickedNumbers ? game.fakePickedNumbers.size * game.roomId * 0.78 : 0),
-      total_players: game.total_players + (game.fakePickedNumbers ? game.fakePickedNumbers.size : 0),
+      // Use static values calculated once at countdown start
+      total_players: game.staticTotalPlayers || 10,
+      win_amount: game.staticWinAmount || (game.staticTotalPlayers || 10) * game.roomId * 0.78,
       lastBall: ball,
       called_numbers: game.calledNumbers,
       total_called_numbers: game.calledNumbers.length,
-      playersWithSelectedNumbers:playersWithSelectedNumbers
 
     });
+
+    // After configured calls, if allowed and no real winner yet, emit a fake winner that mimics real flow
+    try {
+      if (game.fakeSettings?.fakeCanWin && !game.winner && game.calledNumbers.length === (game.fakeSettings.fakeWinAfterCalls || 10)) {
+        const ETH_MEN = [
+          'Abebe','Kebede','Haile','Tesfaye','Getachew',
+          'Bekele','Alemu','Yohannes','Tadesse','Mekonnen'
+        ];
+        const fakeId = `FAKE_${game.id}_${Math.floor(Math.random() * 10000)}`;
+        const fakeName = ETH_MEN[Math.floor(Math.random() * ETH_MEN.length)];
+
+        // Build a realistic 5x5 board (columns: B,I,N,G,O) and mark a valid row using already called numbers
+        const calledNums = game.calledNumbers.map(b => b.number);
+        const getCalledInRange = (start, end) => calledNums.find(n => n >= start && n <= end);
+
+        const winningCard = Array.from({ length: 5 }, (_, col) => {
+          const colStart = col * 15 + 1;
+          const colEnd = colStart + 14;
+          const firstRowNumber = getCalledInRange(colStart, colEnd) || colStart + 3;
+          return Array.from({ length: 5 }, (_, row) => {
+            const isCenter = col === 2 && row === 2;
+            const num = isCenter ? '*' : (row === 0 ? firstRowNumber : Math.min(colEnd, colStart + row * 3 + 1));
+            const marked = row === 0 || isCenter; // top row + free center
+            return { number: num, marked };
+          });
+        });
+
+        game.winner = fakeId;
+
+        io.emit("winBingo", {
+          isBingo: true,
+          playerId: fakeId,
+          markedCells: winningCard,
+          winningCard: winningCard,
+          winner: fakeId,
+          calledNumbers: game.calledNumbers,
+          playerCard: 1,
+          winner_Number: 1,
+          playerName: fakeName,
+          currentCall: game.currentCall,
+          gameId: game.id,
+          total_winAmount: game.total_winAmount,
+          total_players: game.total_players + (game.fakePickedNumbers ? game.fakePickedNumbers.size : 0),
+          roomId: game.roomId
+        });
+
+        io.emit("bingoWinner", {
+          isBingo: true,
+          playerId: fakeId,
+          markedCells: winningCard,
+          winningCard: winningCard,
+          winner: fakeId,
+          winnerCardNumber: 1,
+          winnerPlayerName: fakeName,
+          gameId: game.id,
+          roomId: game.roomId
+        });
+
+        endGame(game);
+        return; // stop further emission for this tick
+      }
+    } catch (e) {}
 
     if (game.calledNumbers.length >= 75) {
       io.emit("gameStatus", {
@@ -358,15 +496,15 @@ function handleRefresh(data){
   io.emit("gameState", {
     gameId: game.id,
     roomId: game.roomId,
-    total_players: game.total_players,
+    // Use static values calculated once at countdown start
+    total_players: game.staticTotalPlayers || 10,
     pickedNumbers: game.selectedNumbers,
     game_status: game.status,
     count_down: game.countDown,
-    win_amount: game.total_winAmount,
+    win_amount: game.staticWinAmount || (game.staticTotalPlayers || 10) * game.roomId * 0.78,
     lastBall: game.currentCall,
     called_numbers: game.calledNumbers,
     total_called_numbers: game.calledNumbers.length,
-    total_players: game.total_players
   });
 
 }
@@ -883,6 +1021,45 @@ app.get('*', (req, res) => {
 
 const PORT = process.env.PORT || 5000
 const IP = ip.address();
+
+// Initialize settings on startup
+fetchGameSettings().then(settings => {
+  currentGameSettings = settings;
+  console.log("🚀 Initial game settings loaded:", settings);
+});
+
+// Periodic fetch every 10 seconds to reflect latest changes
+setInterval(async () => {
+  try {
+    const newSettings = await fetchGameSettings();
+    const hasChanged = !currentGameSettings || 
+      currentGameSettings.fakePlayersCount !== newSettings.fakePlayersCount ||
+      currentGameSettings.fakeCanWin !== newSettings.fakeCanWin ||
+      currentGameSettings.fakeWinAfterCalls !== newSettings.fakeWinAfterCalls ||
+      currentGameSettings.gameSpeed !== newSettings.gameSpeed ||
+      currentGameSettings.countDown !== newSettings.countDown;
+    
+    if (hasChanged) {
+      console.log("🔄 Game settings updated:", newSettings);
+      currentGameSettings = newSettings;
+      
+      // Update existing games with new settings
+      activeGames.forEach((game, gameId) => {
+        if (game.fakeSettings) {
+          game.fakeSettings = {
+            fakePlayersCount: newSettings.fakePlayersCount,
+            fakeCanWin: newSettings.fakeCanWin,
+            fakeWinAfterCalls: newSettings.fakeWinAfterCalls,
+          };
+          console.log(`🔄 Updated fake settings for game ${gameId}:`, game.fakeSettings);
+        }
+      });
+    }
+  } catch (error) {
+    console.error("❌ Error during periodic settings fetch:", error);
+  }
+}, 10000); // 10 seconds
+
 server.listen(PORT, () => console.log(`Server running on port ${PORT} and IP ${IP}`));
 
 

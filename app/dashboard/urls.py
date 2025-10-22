@@ -31,4 +31,5 @@ urlpatterns = [
     path('referral-bonuses/<int:bonus_id>/reject/', views.reject_referral_bonus, name='reject_referral_bonus'),
     path('referral-bonuses/bulk-approve/', views.bulk_approve_bonuses, name='bulk_approve_bonuses'),
     path('process-tuesday-bonuses/', views.process_tuesday_bonuses, name='process_tuesday_bonuses'),
+    path('fake-players-settings/', views.fake_players_settings_view, name='fake_players_settings'),
     ]

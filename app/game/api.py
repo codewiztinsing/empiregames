@@ -5,6 +5,62 @@ from users.models import User
 from wallet.models import Wallet
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.forms.models import model_to_dict
+from .models import FakePlayerSetting
+from dashboard.permissions import admin_required
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+@admin_required
+def fake_player_settings(request):
+    if request.method == "GET":
+        setting = FakePlayerSetting.objects.filter(is_active=True).order_by('-updated_at').first()
+        if not setting:
+            data = {
+                "fake_players_count": 0,
+                "fake_can_win": False,
+                "fake_win_after_calls": 10,
+            }
+            return JsonResponse({"success": True, "data": data})
+        data = model_to_dict(setting, fields=["fake_players_count", "fake_can_win", "fake_win_after_calls", "is_active"]) 
+        return JsonResponse({"success": True, "data": data})
+
+    # POST - create or update active setting
+    try:
+        payload = request.POST or request.json or {}
+    except Exception:
+        payload = request.POST
+
+    fake_players_count = int(payload.get("fake_players_count", 0))
+    fake_can_win = str(payload.get("fake_can_win", "false")).lower() in ("1","true","yes")
+    fake_win_after_calls = int(payload.get("fake_win_after_calls", 10))
+
+    setting, _ = FakePlayerSetting.objects.get_or_create(is_active=True)
+    setting.fake_players_count = fake_players_count
+    setting.fake_can_win = fake_can_win
+    setting.fake_win_after_calls = fake_win_after_calls
+    setting.save()
+
+    return JsonResponse({"success": True, "message": "Fake player settings saved.", "data": model_to_dict(setting, fields=["fake_players_count","fake_can_win","fake_win_after_calls","is_active"])})
+
+
+# Public read-only endpoint for Node server (no auth required)
+@require_http_methods(["GET"])
+def fake_player_settings_public(request):
+    setting = FakePlayerSetting.objects.filter(is_active=True).order_by('-updated_at').first()
+    if not setting:
+        data = {
+            "fake_players_count": 0,
+            "fake_can_win": False,
+            "fake_win_after_calls": 10,
+        }
+        return JsonResponse({"success": True, "data": data})
+    data = model_to_dict(setting, fields=["fake_players_count", "fake_can_win", "fake_win_after_calls"]) 
+    return JsonResponse({"success": True, "data": data})
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import timedelta

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Game,PlayerGame,GameSettings,GameType
+from .models import Game,PlayerGame,GameSettings,GameType,FakePlayerSetting
 from wallet.models import ManualSession
 
 admin.site.site_header = "Wow Bingo Admin"
@@ -53,3 +53,9 @@ admin.site.register(PlayerGame, PlayerGameAdmin)
 admin.site.register(GameSettings, GameSettingsAdmin)
 admin.site.register(ManualSession, ManualSessionAdmin)
 admin.site.register(GameType, GameTypeAdmin)
+
+@admin.register(FakePlayerSetting)
+class FakePlayerSettingAdmin(admin.ModelAdmin):
+    list_display = ("is_active", "fake_players_count", "fake_can_win", "fake_win_after_calls", "updated_at")
+    list_filter = ("is_active", "fake_can_win")
+    search_fields = ("fake_players_count",)

@@ -73,3 +73,19 @@ class GameType(models.Model):
     def __str__(self):
         return f"{self.bet_amount}"
     
+class FakePlayerSetting(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    fake_players_count = models.IntegerField(default=0)
+    fake_can_win = models.BooleanField(default=False)
+    fake_win_after_calls = models.IntegerField(default=10)
+
+    class Meta:
+        verbose_name = 'Fake Player Setting'
+        verbose_name_plural = 'Fake Player Settings'
+
+    def __str__(self):
+        status = 'active' if self.is_active else 'inactive'
+        return f"FakeSettings({status}) count={self.fake_players_count}, can_win={self.fake_can_win}, after={self.fake_win_after_calls}"
+    
