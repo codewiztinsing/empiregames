@@ -1754,8 +1754,8 @@ body {
   }
   
   .called-numbers {
-    width: 32% !important;
-    max-width: 32% !important;
+    width: 30% !important;
+    max-width: 30% !important;
     min-width: 110px !important;
     margin: 0 1px 0 0 !important;
     padding: 1px !important;
@@ -1763,9 +1763,9 @@ body {
   }
   
   .playing-section {
-    width: 66% !important;
-    min-width: 160px !important;
-    max-width: 66% !important;
+    width: 68% !important;
+    min-width: 170px !important;
+    max-width: 68% !important;
     padding: 0 !important;
     margin: 0 0 0 1px !important;
     box-sizing: border-box !important;
@@ -1865,9 +1865,9 @@ body {
   }
   
   .playing-section {
-    width: 55% !important;
-    min-width: 160px !important;
-    max-width: 55% !important;
+    width: 58% !important;
+    min-width: 170px !important;
+    max-width: 58% !important;
     padding: 0 !important;
     margin: 0 0 0 5px !important;
     box-sizing: border-box !important;
@@ -1875,8 +1875,8 @@ body {
   }
   
   .bingo-content {
-    width: 45% !important;
-    max-width: 45% !important;
+    width: 42% !important;
+    max-width: 42% !important;
     padding: 0 !important;
     margin: 0 !important;
   }
@@ -2100,9 +2100,9 @@ body {
   }
 
   .playing-section {
-    width: 50% !important;
-    min-width: 140px !important;
-    max-width: 50% !important;
+    width: 52% !important;
+    min-width: 150px !important;
+    max-width: 52% !important;
     border-radius: 0 !important;
     padding: 0 !important;
     margin: 0 !important;
@@ -2111,8 +2111,8 @@ body {
   }
 
   .called-numbers {
-    width: 40% !important;
-    max-width: 40% !important;
+    width: 38% !important;
+    max-width: 38% !important;
     border-radius: 0 0 12px 12px !important;
     margin: 0 !important;
     box-shadow: none !important;

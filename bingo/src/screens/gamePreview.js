@@ -32,7 +32,7 @@ const GamePreview = () => {
   const [winnerCardNumber, setWinnerCardNumber] = useState(null);
   const [winnerPlayerName, setWinnerPlayerName] = useState(null);
   const [markedCells, setMarkedCells] = useState([]);
-  const [winnerCountdown, setWinnerCountdown] = useState(10000);
+  const [winnerCountdown, setWinnerCountdown] = useState(5);
 
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
