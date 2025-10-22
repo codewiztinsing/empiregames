@@ -561,57 +561,12 @@ async function startGame(game) {
             }
           }
           
-          // Choose random winning pattern
-          const winningPatterns = [
-            'diagonal1',    // Top-left to bottom-right
-            'diagonal2',    // Top-right to bottom-left
-            'fourCorners',  // All four corners
-            'row',          // Random row
-            'column'        // Random column
-          ];
+          // Use only diagonal pattern (top-left to bottom-right) for fake players
+          console.log(`🎯 Fake winner using diagonal pattern (top-left to bottom-right)`);
           
-          const pattern = winningPatterns[Math.floor(Math.random() * winningPatterns.length)];
-          console.log(`🎯 Fake winner using pattern: ${pattern}`);
-          
-          // Apply winning pattern
-          switch (pattern) {
-            case 'diagonal1':
-              // Top-left to bottom-right diagonal
-              for (let i = 0; i < 5; i++) {
-                board[i][i].marked = true;
-              }
-              break;
-              
-            case 'diagonal2':
-              // Top-right to bottom-left diagonal
-              for (let i = 0; i < 5; i++) {
-                board[i][4-i].marked = true;
-              }
-              break;
-              
-            case 'fourCorners':
-              // All four corners
-              board[0][0].marked = true;  // Top-left
-              board[0][4].marked = true;  // Top-right
-              board[4][0].marked = true;  // Bottom-left
-              board[4][4].marked = true;  // Bottom-right
-              break;
-              
-            case 'row':
-              // Random row
-              const randomRow = Math.floor(Math.random() * 5);
-              for (let col = 0; col < 5; col++) {
-                board[randomRow][col].marked = true;
-              }
-              break;
-              
-            case 'column':
-              // Random column
-              const randomCol = Math.floor(Math.random() * 5);
-              for (let row = 0; row < 5; row++) {
-                board[row][randomCol].marked = true;
-              }
-              break;
+          // Apply diagonal winning pattern (top-left to bottom-right)
+          for (let i = 0; i < 5; i++) {
+            board[i][i].marked = true;
           }
           
           // Mark cells that correspond to called numbers
