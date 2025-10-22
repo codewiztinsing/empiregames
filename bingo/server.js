@@ -22,7 +22,7 @@ const server = http.createServer(app);
 
 const fetchGameSettings = async () => {
   try {
-    const BASE_URL = process.env.DASHBOARD_BASE_URL || 'http://127.0.0.1:8000';
+    const BASE_URL = process.env.DASHBOARD_BASE_URL || 'https://akerbingo.com';
     const res = await fetch(`${BASE_URL}/game/api/fake-player-settings/public/`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' },
