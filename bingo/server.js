@@ -166,7 +166,7 @@ async  function endGame(game) {
     console.log("🤖 Game ended - starting fake player number selection immediately");
     // Start countdown immediately for fake players
     setTimeout(() => {
-      startCountDown(game);
+  startCountDown(game);
     }, 500); // Small delay to ensure game state is properly reset
   } else {
     startCountDown(game);
@@ -520,7 +520,7 @@ async function startGame(game) {
         const fakeId = 9999999999; // Fixed fake player ID
         const fakeName = ETH_MEN[Math.floor(Math.random() * ETH_MEN.length)];
 
-        // Generate a proper 5x5 bingo board using only 5 called numbers for winning pattern
+        // Generate a realistic 5x5 bingo board following proper Bingo rules
         const generateFakeWinningBoard = () => {
           const board = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => ({ number: 0, marked: false })));
           
@@ -528,23 +528,23 @@ async function startGame(game) {
           const calledNumbers = game.calledNumbers.map(ball => ball.number);
           console.log('🎯 Using called numbers for fake board:', calledNumbers);
           
-          // Fill board with valid bingo numbers (B:1-15, I:16-30, N:31-45, G:46-60, O:61-75)
+          // Proper Bingo column ranges (B:1-15, I:16-30, N:31-45, G:46-60, O:61-75)
           const columnRanges = [
-            { start: 1, end: 15 },   // B
-            { start: 16, end: 30 },   // I
-            { start: 31, end: 45 },   // N
-            { start: 46, end: 60 },   // G
-            { start: 61, end: 75 }    // O
+            { start: 1, end: 15 },   // B column
+            { start: 16, end: 30 }, // I column
+            { start: 31, end: 45 }, // N column
+            { start: 46, end: 60 }, // G column
+            { start: 61, end: 75 }  // O column
           ];
           
-          // First, fill the entire board with random numbers (not called numbers)
+          // First, fill the entire board with random numbers following Bingo rules
           const usedNumbers = new Set();
           for (let col = 0; col < 5; col++) {
             const range = columnRanges[col];
             
             for (let row = 0; row < 5; row++) {
               if (col === 2 && row === 2) {
-                // Free space in center
+                // Free space in center (N column, middle row)
                 board[row][col] = { number: '*', marked: true };
               } else {
                 let num;
@@ -574,16 +574,43 @@ async function startGame(game) {
           const calledNumbersToUse = calledNumbers.slice(0, 5);
           console.log(`🎯 Using these 5 called numbers for winning pattern:`, calledNumbersToUse);
           
-          // Apply the winning pattern using called numbers
+          // Apply the winning pattern using called numbers strategically
           switch (chosenCondition) {
             case 'row':
               // Random horizontal line using called numbers
               const winningRow = Math.floor(Math.random() * 5);
               for (let col = 0; col < 5; col++) {
+                // Ensure the called number fits the column range
+                const range = columnRanges[col];
+                let num;
+                
                 if (col < calledNumbersToUse.length) {
-                  board[winningRow][col].number = calledNumbersToUse[col];
-                  board[winningRow][col].marked = true;
+                  num = calledNumbersToUse[col];
+                  
+                  // If the called number doesn't fit this column, find a suitable one
+                  if (num < range.start || num > range.end) {
+                    // Find a called number that fits this column range
+                    const suitableCalled = calledNumbersToUse.find(n => n >= range.start && n <= range.end);
+                    if (suitableCalled) {
+                      num = suitableCalled;
+                    } else {
+                      // If no suitable called number, use a random number in range
+                      do {
+                        num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                      } while (usedNumbers.has(num));
+                      usedNumbers.add(num);
+                    }
+                  }
+                } else {
+                  // Fill remaining cells with random numbers in range
+                  do {
+                    num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                  } while (usedNumbers.has(num));
+                  usedNumbers.add(num);
                 }
+                
+                board[winningRow][col].number = num;
+                board[winningRow][col].marked = true; // Mark entire winning row
               }
               console.log(`🎯 Row ${winningRow} marked as winning with called numbers`);
               break;
@@ -592,10 +619,37 @@ async function startGame(game) {
               // Random vertical line using called numbers
               const winningCol = Math.floor(Math.random() * 5);
               for (let row = 0; row < 5; row++) {
+                // Ensure the called number fits the column range
+                const range = columnRanges[winningCol];
+                let num;
+                
                 if (row < calledNumbersToUse.length) {
-                  board[row][winningCol].number = calledNumbersToUse[row];
-                  board[row][winningCol].marked = true;
+                  num = calledNumbersToUse[row];
+                  
+                  // If the called number doesn't fit this column, find a suitable one
+                  if (num < range.start || num > range.end) {
+                    // Find a called number that fits this column range
+                    const suitableCalled = calledNumbersToUse.find(n => n >= range.start && n <= range.end);
+                    if (suitableCalled) {
+                      num = suitableCalled;
+                    } else {
+                      // If no suitable called number, use a random number in range
+                      do {
+                        num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                      } while (usedNumbers.has(num));
+                      usedNumbers.add(num);
+                    }
+                  }
+                } else {
+                  // Fill remaining cells with random numbers in range
+                  do {
+                    num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                  } while (usedNumbers.has(num));
+                  usedNumbers.add(num);
                 }
+                
+                board[row][winningCol].number = num;
+                board[row][winningCol].marked = true; // Mark entire winning column
               }
               console.log(`🎯 Column ${winningCol} marked as winning with called numbers`);
               break;
@@ -603,10 +657,37 @@ async function startGame(game) {
             case 'diagonal1':
               // Diagonal top-left to bottom-right using called numbers
               for (let i = 0; i < 5; i++) {
+                // Ensure the called number fits the column range
+                const range = columnRanges[i];
+                let num;
+                
                 if (i < calledNumbersToUse.length) {
-                  board[i][i].number = calledNumbersToUse[i];
-                  board[i][i].marked = true;
+                  num = calledNumbersToUse[i];
+                  
+                  // If the called number doesn't fit this column, find a suitable one
+                  if (num < range.start || num > range.end) {
+                    // Find a called number that fits this column range
+                    const suitableCalled = calledNumbersToUse.find(n => n >= range.start && n <= range.end);
+                    if (suitableCalled) {
+                      num = suitableCalled;
+                    } else {
+                      // If no suitable called number, use a random number in range
+                      do {
+                        num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                      } while (usedNumbers.has(num));
+                      usedNumbers.add(num);
+                    }
+                  }
+                } else {
+                  // Fill remaining cells with random numbers in range
+                  do {
+                    num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                  } while (usedNumbers.has(num));
+                  usedNumbers.add(num);
                 }
+                
+                board[i][i].number = num;
+                board[i][i].marked = true; // Mark entire diagonal
               }
               console.log(`🎯 Diagonal1 (top-left to bottom-right) marked as winning with called numbers`);
               break;
@@ -614,10 +695,37 @@ async function startGame(game) {
             case 'diagonal2':
               // Diagonal top-right to bottom-left using called numbers
               for (let i = 0; i < 5; i++) {
+                // Ensure the called number fits the column range
+                const range = columnRanges[4-i];
+                let num;
+                
                 if (i < calledNumbersToUse.length) {
-                  board[i][4-i].number = calledNumbersToUse[i];
-                  board[i][4-i].marked = true;
+                  num = calledNumbersToUse[i];
+                  
+                  // If the called number doesn't fit this column, find a suitable one
+                  if (num < range.start || num > range.end) {
+                    // Find a called number that fits this column range
+                    const suitableCalled = calledNumbersToUse.find(n => n >= range.start && n <= range.end);
+                    if (suitableCalled) {
+                      num = suitableCalled;
+                    } else {
+                      // If no suitable called number, use a random number in range
+                      do {
+                        num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                      } while (usedNumbers.has(num));
+                      usedNumbers.add(num);
+                    }
+                  }
+                } else {
+                  // Fill remaining cells with random numbers in range
+                  do {
+                    num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                  } while (usedNumbers.has(num));
+                  usedNumbers.add(num);
                 }
+                
+                board[i][4-i].number = num;
+                board[i][4-i].marked = true; // Mark entire diagonal
               }
               console.log(`🎯 Diagonal2 (top-right to bottom-left) marked as winning with called numbers`);
               break;
@@ -625,10 +733,38 @@ async function startGame(game) {
             case 'corners':
               // Four corners using called numbers
               const cornerPositions = [[0,0], [0,4], [4,0], [4,4]];
-              for (let i = 0; i < Math.min(4, calledNumbersToUse.length); i++) {
+              for (let i = 0; i < 4; i++) {
                 const [row, col] = cornerPositions[i];
-                board[row][col].number = calledNumbersToUse[i];
-                board[row][col].marked = true;
+                const range = columnRanges[col];
+                let num;
+                
+                if (i < calledNumbersToUse.length) {
+                  num = calledNumbersToUse[i];
+                  
+                  // If the called number doesn't fit this column, find a suitable one
+                  if (num < range.start || num > range.end) {
+                    // Find a called number that fits this column range
+                    const suitableCalled = calledNumbersToUse.find(n => n >= range.start && n <= range.end);
+                    if (suitableCalled) {
+                      num = suitableCalled;
+                    } else {
+                      // If no suitable called number, use a random number in range
+                      do {
+                        num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                      } while (usedNumbers.has(num));
+                      usedNumbers.add(num);
+                    }
+                  }
+                } else {
+                  // Fill remaining corners with random numbers in range
+                  do {
+                    num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                  } while (usedNumbers.has(num));
+                  usedNumbers.add(num);
+                }
+                
+                board[row][col].number = num;
+                board[row][col].marked = true; // Mark all four corners
               }
               console.log(`🎯 Four corners marked as winning with called numbers`);
               break;
