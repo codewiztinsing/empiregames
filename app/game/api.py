@@ -155,14 +155,32 @@ def next_game(request):
     game = Game.objects.filter(room__entry_fee=bet_amount, ended_at__isnull=True).first()
     logger.info(f"Game: {game}")
     if not game:
-        # Create a new game room if it doesn't exist
-        room, created = GameRoom.objects.get_or_create(
-            entry_fee=bet_amount,
-            defaults={
-                'name': f'Room {bet_amount}',
-                'room_type': 'standard'
-            }
-        )
+        # Find an existing game room with the bet amount, or create a new one
+        try:
+            # Try to get the first active room with this entry fee
+            room = GameRoom.objects.filter(
+                entry_fee=bet_amount,
+                is_active=True
+            ).first()
+            
+            if not room:
+                # Create a new game room if none exists
+                room = GameRoom.objects.create(
+                    entry_fee=bet_amount,
+                    name=f'Room {bet_amount}',
+                    room_type='standard',
+                    is_active=True
+                )
+        except Exception as e:
+            logger.error(f"Error handling GameRoom for bet_amount {bet_amount}: {e}")
+            # Fallback: create a new room
+            room = GameRoom.objects.create(
+                entry_fee=bet_amount,
+                name=f'Room {bet_amount}',
+                room_type='standard',
+                is_active=True
+            )
+        
         game = Game.objects.create(room=room)
     logger.info(f"Game: {game}")
   

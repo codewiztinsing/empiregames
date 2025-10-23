@@ -2,6 +2,13 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 dotenv.config();
 
+// Helper function to normalize API URLs
+const normalizeApiUrl = (baseUrl, endpoint) => {
+  const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  const apiPrefix = normalizedBase.includes('/api/v1') ? '' : '/api/v1';
+  return `${normalizedBase}${apiPrefix}/${endpoint}`;
+};
+
 const gameWinWallet = async (player, bet_amount, win_amount, total_players)=>{
   console.log("gameWinWallet called with:", {player, bet_amount, win_amount, total_players});
   const current_game = await getCurrentGame(bet_amount)
@@ -25,7 +32,7 @@ const gameWinWallet = async (player, bet_amount, win_amount, total_players)=>{
   try{
     const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
     console.log("baseUrl",baseUrl)
-    const winUrl = `${baseUrl}game/win-game/`;
+    const winUrl = normalizeApiUrl(baseUrl, 'game/win-game/');
     console.log("winUrl",winUrl)
     console.log("Sending POST request to win-game with data:", data);
     await axios.post(winUrl, data)
@@ -69,8 +76,7 @@ const checkBalance = async (playerId) => {
 
 const getCurrentGame = async (betAmount)=>{
   const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-  
-  const currentGameUrl = `${baseUrl}game/next-game/`;
+  const currentGameUrl = normalizeApiUrl(baseUrl, 'game/next-game/');
   console.log("currentGameUrl",currentGameUrl)
   const params = {
     params: {
@@ -100,7 +106,7 @@ const gameLossWallet = async (players, betAmount, totalPlayers = null, fakePlaye
   try{
       if(!data.players) return null;
       const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-      const lossUrl = `${baseUrl}game/join-game/`;
+      const lossUrl = normalizeApiUrl(baseUrl, 'game/join-game/');
       console.log("lossUrl",lossUrl)
       console.log("data",data)
       await axios.post(lossUrl,data)
@@ -121,7 +127,7 @@ const gameLossWallet = async (players, betAmount, totalPlayers = null, fakePlaye
 
 const getGameSettings = async ()=>{
   const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-  const gameSettingsUrl = `${baseUrl}game/game-settings/`;
+  const gameSettingsUrl = normalizeApiUrl(baseUrl, 'game/game-settings/');
   const response = await axios.get(gameSettingsUrl)
   const data = response.data;
   return data;
@@ -129,7 +135,7 @@ const getGameSettings = async ()=>{
 
 const getFakePlayerSettings = async ()=>{
   const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-  const fakePlayerSettingsUrl = `${baseUrl}game/fake-player-settings/`;
+  const fakePlayerSettingsUrl = normalizeApiUrl(baseUrl, 'game/fake-player-settings/');
   const response = await axios.get(fakePlayerSettingsUrl)
   const data = response.data;
   return data;
