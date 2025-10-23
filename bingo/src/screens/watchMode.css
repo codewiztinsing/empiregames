@@ -85,8 +85,8 @@
   color: #ffd700;
 }
 
-/* Top Stats Bar - Matching Main Screen */
-.top-stats-bar {
+/* Top Stats Bar - Scoped to Watch Mode Only */
+.watch-mode-container .top-stats-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -97,7 +97,7 @@
   margin-bottom: 20px;
 }
 
-.stat-item {
+.watch-mode-container .stat-item {
   padding: 8px 16px;
   border-radius: 20px;
   font-weight: bold;
@@ -107,37 +107,37 @@
   transition: all 0.3s ease;
 }
 
-.stat-item.purple {
+.watch-mode-container .stat-item.purple {
   background: linear-gradient(135deg, #8e44ad, #9b59b6);
   color: white;
 }
 
-.stat-item.blue {
+.watch-mode-container .stat-item.blue {
   background: linear-gradient(135deg, #3498db, #5dade2);
   color: white;
 }
 
-.stat-item.green {
+.watch-mode-container .stat-item.green {
   background: linear-gradient(135deg, #27ae60, #58d68d);
   color: white;
 }
 
-.stat-item.light-green {
+.watch-mode-container .stat-item.light-green {
   background: linear-gradient(135deg, #2ecc71, #7dcea0);
   color: white;
 }
 
-.stat-item.dark-purple {
+.watch-mode-container .stat-item.dark-purple {
   background: linear-gradient(135deg, #6c3483, #8e44ad);
   color: white;
 }
 
-.language-switcher-container {
+.watch-mode-container .language-switcher-container {
   min-width: auto;
 }
 
-/* Main Game Area - Matching Main Screen */
-.main-game-area {
+/* Main Game Area - Scoped to Watch Mode Only */
+.watch-mode-container .main-game-area {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
@@ -532,88 +532,88 @@
   }
 }
 
-/* Responsive Design */
+/* Responsive Design - Scoped to Watch Mode Only */
 @media (max-width: 768px) {
-  .watch-mode-content {
+  .watch-mode-container .watch-mode-content {
     grid-template-columns: 1fr;
     gap: 15px;
     padding: 15px;
   }
   
-  .main-game-area {
+  .watch-mode-container .main-game-area {
     grid-template-columns: 1fr;
     gap: 15px;
     padding: 0 15px;
   }
   
-  .top-stats-bar {
+  .watch-mode-container .top-stats-bar {
     flex-wrap: wrap;
     gap: 10px;
     padding: 10px 15px;
   }
   
-  .stat-item {
+  .watch-mode-container .stat-item {
     flex: 1;
     min-width: 70px;
     font-size: 12px;
     padding: 6px 12px;
   }
   
-  .called-numbers-grid {
+  .watch-mode-container .called-numbers-grid {
     grid-template-columns: repeat(8, 1fr);
     gap: 6px;
   }
   
-  .called-number {
+  .watch-mode-container .called-number {
     padding: 6px;
     font-size: 12px;
   }
   
-  .bingo-numbers-board {
+  .watch-mode-container .bingo-numbers-board {
     grid-template-columns: repeat(10, 1fr);
     gap: 3px;
     max-height: 300px;
   }
   
-  .bingo-number-cell {
+  .watch-mode-container .bingo-number-cell {
     width: 25px;
     height: 25px;
     font-size: 10px;
   }
   
-  .current-ball {
+  .watch-mode-container .current-ball {
     width: 60px;
     height: 60px;
   }
   
-  .ball-number {
+  .watch-mode-container .ball-number {
     font-size: 20px;
   }
   
-  .player-cards-grid {
+  .watch-mode-container .player-cards-grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 10px;
   }
   
-  .player-card-cell {
+  .watch-mode-container .player-card-cell {
     width: 25px;
     height: 25px;
   }
   
-  .player-card-number {
+  .watch-mode-container .player-card-number {
     font-size: 10px;
   }
   
-  .winner-content {
+  .watch-mode-container .winner-content {
     padding: 30px;
     margin: 20px;
   }
   
-  .winner-title {
+  .watch-mode-container .winner-title {
     font-size: 24px;
   }
   
-  .winner-name {
+  .watch-mode-container .winner-name {
     font-size: 20px;
   }
 }

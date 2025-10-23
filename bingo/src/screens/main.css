@@ -2269,15 +2269,15 @@ body {
   
   .main-game-area {
     gap: 2px;
-    flex-direction: column;
+    flex-direction: row; /* Keep side by side even on smallest screens */
     max-width: 100%;
     padding: 0 1px 0 5px;
   }
   
   .main-bingo-board {
-    flex: 0 0 100%;
-    width: 100%;
-    max-width: 100%;
+    flex: 0 0 55%; /* Keep 55% width */
+    width: 55%;
+    max-width: 55%;
     padding: 2px;
     margin-left: 0;
     height: auto;
@@ -2285,9 +2285,10 @@ body {
   }
   
   .game-controls-section {
-    flex: 0 0 100%;
-    width: 100%;
-    max-width: 100%;
+    flex: 0 0 40%; /* Keep 40% width */
+    width: 40%;
+    max-width: 40%;
+    min-height: 300px;
   }
   
   .main-bingo-board .top-actions,
@@ -2300,12 +2301,6 @@ body {
   .main-bingo-board .bottom-action-btn {
     padding: 3px 6px;
     font-size: 8px;
-  }
-  
-  .game-controls-section {
-    flex: 1;
-    height: auto;
-    min-height: 200px;
   }
   
   .stat-item {
