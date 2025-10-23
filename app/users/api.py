@@ -501,7 +501,7 @@ def get_user_details(request, user_id: int):
             game = player_game.game
             games_list.append({
                 "id": game.id,
-                "entry_fee": float(game.entry_fee),
+                "entry_fee": float(game.room.entry_fee),
                 "status": game.status,
                 "has_bingo": player_game.has_bingo,
                 "created_at": game.created_at.isoformat(),
@@ -614,7 +614,7 @@ def get_user_games(request, user_id: int, limit: int = 20):
             game = player_game.game
             games_list.append({
                 "id": game.id,
-                "entry_fee": float(game.entry_fee),
+                "entry_fee": float(game.room.entry_fee),
                 "status": game.status,
                 "started": game.started,
                 "ended": game.ended_at is not None,

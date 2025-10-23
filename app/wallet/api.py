@@ -126,7 +126,7 @@ def update_player_wallet(request,telegram_id:int, data: WalletSchema):
 
 # /api/v1/wallet/webhook/manual/error/
 
-@router.post("/manual/callback/success/")
+@router.post("/manual/callback/success/", auth=None)
 @csrf_exempt
 def manual_success(request):
     print("[MANUAL_SUCCESS] Manual success request")
@@ -342,7 +342,7 @@ def manual_success(request):
         traceback.print_exc()
         return JsonResponse({"message": "Error processing success", "error": str(e)}, status=500)
 
-@router.post("/manual/callback/error/")
+@router.post("/manual/callback/error/", auth=None)
 @csrf_exempt
 def manual_error(request):
     print("Manual error request")
@@ -383,7 +383,7 @@ def manual_error(request):
         return JsonResponse({"message": "Error processing error"}, status=500)    
 
 
-@router.post("/manual/session/")
+@router.post("/manual/session/", auth=None)
 def manual_session(request):
     try:
         try:
@@ -423,7 +423,7 @@ def manual_session(request):
 
 
 
-@router.post("/manual/callback/cbe/success/")
+@router.post("/manual/callback/cbe/success/", auth=None)
 @csrf_exempt
 def manual_cbe_success(request):
     print("Manual success request")
@@ -569,7 +569,7 @@ def manual_cbe_success(request):
         return JsonResponse({"message": "Error processing success"}, status=500)
 
 
-@router.post("/withdrawal/request/")
+@router.post("/withdrawal/request/", auth=None)
 def withdrawal_request(request):
     try:
         try:

@@ -158,7 +158,7 @@
                             {% for pg in player_games %}
                             <tr class="text-gray-300 border-t border-dark-border">
                                 <td class="py-2">{{ pg.game.id }}</td>
-                                <td class="py-2">{{ pg.game.entry_fee }}</td>
+                                <td class="py-2">{{ pg.game.room.entry_fee }}</td>
                                 <td class="py-2">{{ pg.has_bingo }}</td>
                                 <td class="py-2">{{ pg.game.created_at|date:"M d, Y H:i" }}</td>
                     </tr>

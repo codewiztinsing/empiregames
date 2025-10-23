@@ -108,8 +108,8 @@
                         <tr class="hover:bg-dark-bg transition-colors">
                             <td class="py-3 px-4 text-white font-mono text-sm">{{ game.id }}</td>
                             <td class="py-3 px-4 text-white">
-                                {% if game.entry_fee %}
-                                    room_{{ game.entry_fee|floatformat:0 }}
+                                {% if game.room.entry_fee %}
+                                    room_{{ game.room.entry_fee|floatformat:0 }}
                                 {% else %}
                                     N/A
                                 {% endif %}
@@ -133,7 +133,7 @@
                                     </span>
                                 {% endif %}
                             </td>
-                            <td class="py-3 px-4 text-white">ETB {{ game.entry_fee|floatformat:2|default:"0.00" }}</td>
+                            <td class="py-3 px-4 text-white">ETB {{ game.room.entry_fee|floatformat:2|default:"0.00" }}</td>
                             <td class="py-3 px-4 text-white">
                                 {% if game.player_count %}
                                     {{ game.player_count }}/5
