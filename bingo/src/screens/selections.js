@@ -580,6 +580,18 @@ const Selections = () => {
     console.log('[CardSelectionDebug] ===== FUNCTION COMPLETED SUCCESSFULLY =====', { number, selectedNumber, hasSelectedCard });
   }, [isLoading, isSocketConnected, choosenNumbers, pickedNumbers, gameInProgress, balance, roomId, playerId, gameId, socket, setChoosenNumbers, setSelectedNumber, setSelectBoard, setChooseBoards, setHasSelectedCard, setToast, setIsToast, playerName, navigate]);
 
+  // Redirect to main screen if game is already in progress when user lands on selection page
+  useEffect(() => {
+    if (gameStatus === "in-progress" && !hasSelectedCard) {
+      console.log("🎮 Game already in progress - redirecting to main screen with auto-play disabled");
+      setToast("🎮 Game is already running! Redirecting to watch mode...");
+      setIsToast(true);
+      
+      // Navigate to main screen with auto-play disabled
+      navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&autoPlay=false&watchMode=true`);
+    }
+  }, [gameStatus, hasSelectedCard, playerId, roomId, playerName, navigate, setToast, setIsToast]);
+
   // Handle navigation only when countdown reaches 0
   useEffect(() => {
     if (countDown === 0 && hasSelectedCard && selectedNumber && gameStatus === "in-progress") {
@@ -824,15 +836,15 @@ const Selections = () => {
               </div>
               
               {/* Game State Indicator */}
-              <div className="game-state-indicator">
+              {/* <div className="game-state-indicator">
                 <div className={`game-state-dot ${gameStatus === 'in-progress' ? 'live' : 'waiting'}`}></div>
                 <span className="game-state-text">
                   {gameStatus === 'in-progress' ? 'Live' : 'Waiting'}
                 </span>
-              </div>
+              </div> */}
               
               {/* Game Stats */}
-              <div className="header-stats">
+              {/* <div className="header-stats">
                 <div className="header-stat players-stat">
                   <div className="stat-content">
                     <span className="stat-value">{(() => {
@@ -862,9 +874,9 @@ const Selections = () => {
                   </div>
                 </div>
               </div>
-              
+               */}
               {/* Countdown */}
-              {countDown > 0 && gameStatus === "countdown" && (
+              {/* {countDown > 0 && gameStatus === "countdown" && (
                 <div className="header-countdown">
                   <div className={`countdown-circle ${countDown <= 3 ? 'urgent' : ''}`}>
                     <span className="countdown-number">{countDown}</span>
@@ -875,7 +887,7 @@ const Selections = () => {
                     </div>
                   )}
                 </div>
-              )}
+              )} */}
               
               <div className="balance-button">
                 <span className="balance-amount">{(() => {

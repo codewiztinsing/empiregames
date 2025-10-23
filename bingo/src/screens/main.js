@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect, useCallback, useMemo } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { SocketContext } from '../contexts/socket';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import './main.css';
 import { BingoContext } from '../contexts/bingoContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -13,6 +13,13 @@ import LanguageSelector from '../components/LanguageSelector';
 
 const PlayingBoard = () => {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  
+  // Get URL parameters
+  const autoPlay = searchParams.get('autoPlay') !== 'false'; // Default to true unless explicitly false
+  const watchMode = searchParams.get('watchMode') === 'true';
+  
   const {
     selectedNumber,
     setSelectedNumber,
@@ -33,6 +40,22 @@ const PlayingBoard = () => {
     setPlayerName,
     betAmount,
   } = useContext(BingoContext);
+
+  // Watch mode and auto-play state
+  const [isWatchMode, setIsWatchMode] = useState(watchMode);
+  const [isAutoPlayDisabled, setIsAutoPlayDisabled] = useState(!autoPlay);
+
+  // Handle watch mode initialization
+  useEffect(() => {
+    if (isWatchMode) {
+      console.log("🎮 Watch mode enabled - user is observing the game");
+      toast.success("🎮 Watch Mode: You're observing the current game");
+    }
+    if (isAutoPlayDisabled) {
+      console.log("🎮 Auto-play disabled - user needs to manually select cards");
+      toast.info("🎮 Auto-play disabled - Select your cards manually");
+    }
+  }, [isWatchMode, isAutoPlayDisabled]);
 
   // Game state
   const [gameState, setGameState] = useState({
@@ -768,6 +791,29 @@ const PlayingBoard = () => {
   return (
     <div className="bingo-game-container">
       <Toaster />
+
+      {/* Watch Mode and Auto-play Indicators */}
+      {isWatchMode && (
+        <div className="watch-mode-indicator">
+          <div className="watch-mode-badge">
+            👁️ Watch Mode
+          </div>
+          <div className="watch-mode-text">
+            You're observing the current game
+          </div>
+        </div>
+      )}
+      
+      {isAutoPlayDisabled && !isWatchMode && (
+        <div className="auto-play-disabled-indicator">
+          <div className="auto-play-disabled-badge">
+            ⚠️ Auto-play Disabled
+          </div>
+          <div className="auto-play-disabled-text">
+            Select your cards manually
+          </div>
+        </div>
+      )}
 
       {isBingo && (
         <div className="bingo-winner-overlay">
