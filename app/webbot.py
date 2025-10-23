@@ -29,7 +29,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     ConversationHandler,
 )
-from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player,get_game_type
+from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player,get_game_type,get_user_by_telegram_id,get_user_wallet,update_wallet_balance,create_transaction,get_user_transactions,create_withdrawal_request,get_user_withdrawal_requests
 from asgiref.sync import sync_to_async
 from django.conf import settings as dj_settings
 from django.utils import timezone
@@ -586,20 +586,22 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         game_types = game_types_response.get('game_types', []) if game_types_response else []
         if query.data in ['10', '20', '50', '100'] or query.data in [str(game_type['bet_amount']) for game_type in game_types]:
             user_id = query.from_user.id
-            response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
-            logger.info(f"Response {response}")
-            data = response.json()
-            logger.info(f"Data {data}")
-            if data.get('phone') is None:
+            
+            # Check if user exists and is registered using Django ORM
+            user = await get_user_by_telegram_id(user_id)
+            if not user or not user.phone:
                 await query.edit_message_text(
                     text="You need to register first before playing. Use the /register command.",
                     reply_markup=instructions_options_keyboard()
                 )
                 return
             bet_amount = int(query.data)
-            wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
-            wallet_data = wallet_response.json()
-            balance = wallet_data.get('balance', 0) + wallet_data.get('total_referral_earnings', 0)
+            
+            # Get user and wallet using Django ORM
+            wallet = await get_user_wallet(user)
+            balance = wallet.balance if wallet else 0
+            # Add referral earnings if available
+            balance += getattr(user, 'total_referral_earnings', 0) if user else 0
            
           
             if balance < bet_amount:
@@ -1218,24 +1220,20 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("DEBUG: register_command function called")
     user_id = update.effective_user.id
-    BACK_URL = get_bot_seetings().get("bot_url")
     # selambingobot ref_1464395537
     referrer_id = context.args[0] if context.args else None
     context.user_data['referrer_id'] = referrer_id
     print("referrer_id = ",referrer_id)
     
-    
-    # Check if user is already registered
-    response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
-    if response.status_code == 200:
-        user_info = response.json()
-        if user_info.get('phone'):
-            await update.message.reply_text(
-                "✅ You are already registered!\n\n"
-                "🎮 Click /play to start the game"
-                "Use the menu to explore all available options."
-            )
-            return ConversationHandler.END
+    # Check if user is already registered using Django ORM
+    user = await get_user_by_telegram_id(user_id)
+    if user and user.phone:
+        await update.message.reply_text(
+            "✅ You are already registered!\n\n"
+            "🎮 Click /play to start the game"
+            "Use the menu to explore all available options."
+        )
+        return ConversationHandler.END
     
  
     contact_keyboard = ReplyKeyboardMarkup(

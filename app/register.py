@@ -1,11 +1,8 @@
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ConversationHandler, ContextTypes
-import requests
 import os
 import random
-from utils import get_bot_seetings
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
-import requests
 import re
 from telegram import (
     KeyboardButton,
@@ -15,6 +12,59 @@ from telegram import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
+import django
+from django.conf import settings
+from asgiref.sync import sync_to_async
+
+# Configure Django settings
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+django.setup()
+
+# Import Django models
+from users.models import User
+from wallet.models import Wallet
+
+# Django ORM async functions
+@sync_to_async
+def check_user_exists(telegram_id):
+    """Check if user exists by telegram_id"""
+    try:
+        user = User.objects.get(telegram_id=telegram_id)
+        return user
+    except User.DoesNotExist:
+        return None
+
+@sync_to_async
+def create_user(user_data):
+    """Create a new user using Django ORM"""
+    try:
+        user = User.objects.create(
+            telegram_id=user_data['telegram_id'],
+            phone=user_data['phone'],
+            username=user_data['username'],
+            password=user_data['password'],
+            email=user_data['email'],
+            first_name=user_data['first_name'],
+            last_name=user_data['last_name'],
+            referred_by=user_data.get('referred_by')
+        )
+        
+        # Wallet is automatically created by Django signals, so we don't need to create it manually
+        # Just get the wallet to ensure it exists
+        wallet = Wallet.objects.get(user=user)
+        
+        return user
+    except Exception as e:
+        print(f"Error creating user: {e}")
+        return None
+
+@sync_to_async
+def get_user_by_telegram_id(telegram_id):
+    """Get user by telegram_id"""
+    try:
+        return User.objects.get(telegram_id=telegram_id)
+    except User.DoesNotExist:
+        return None
 
 user_data = {}  
 # Define states for conversation
@@ -41,18 +91,13 @@ def play_options_keyboard() -> InlineKeyboardMarkup:
 
 
 async def begin_register(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    BACK_URL = get_bot_seetings().get("bot_url")
     telegram_id = update.message.from_user.id
     username = update.message.from_user.username if update.message.from_user.username else update.message.from_user.first_name
     user_data["username"] = username
 
-
-
-    url  = f"{BACK_URL}/api/v1/users/{telegram_id}/"
-    user_exists  = requests.get(url)
-    if user_exists.status_code == 200:
-        user_exists = user_exists.json()
-        
+    # Check if user exists using Django ORM
+    user = await check_user_exists(telegram_id)
+    if user:
         await update.message.reply_text(
                     text="You are already registred,please start playing:",
                     reply_markup=play_options_keyboard()
@@ -63,7 +108,6 @@ async def begin_register(update: Update, context: ContextTypes.DEFAULT_TYPE):
      
         # Create a button to share phone number
         phone_button = KeyboardButton("Share Phone Number", request_contact=True)
-    
     
         reply_markup = ReplyKeyboardMarkup([[phone_button]], resize_keyboard=True, one_time_keyboard=True)
 
@@ -76,16 +120,12 @@ def generate_random_username():
 
 async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("DEBUG: handle_phone function called")
-    BACK_URL = get_bot_seetings().get("bot_url")
     
-    # Check if user already exists
-    url = f"{BACK_URL}/api/v1/users/{update.message.from_user.id}"
+    # Check if user already exists using Django ORM
+    telegram_id = update.message.from_user.id
     try:
-        user_exists = requests.get(url)
-        print("user_exists = ", user_exists.json())
-        telegram_id = user_exists.json().get("telegram_id", None)
-        print("telegram_id = ", telegram_id)
-        if telegram_id is not None:
+        user = await get_user_by_telegram_id(telegram_id)
+        if user:
             await update.message.reply_text("You are already registered!")
             return ConversationHandler.END
     except Exception as e:
@@ -127,8 +167,9 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("user_data = ", user_data)
         
         try:
-            response = requests.post(f"{BACK_URL}/api/v1/users/register", json=user_data)
-            if response.status_code == 200 or response.status_code == 201:
+            # Create user using Django ORM
+            user = await create_user(user_data)
+            if user:
                 await update.message.reply_text("Registration completed successfully!")
                 # If user came through referral, show special message
                 if referrer_id:
@@ -138,9 +179,7 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text("Please use /play to start playing.")
                 return ConversationHandler.END
             else:
-                print(f"Registration failed: {response.json()}")
-                error_message = response.json().get('message', 'Registration failed. Please try again.')
-                await update.message.reply_text(error_message)
+                await update.message.reply_text("Registration failed. Please try again.")
                 return ConversationHandler.END
         except Exception as e:
             print(f"Error during registration: {e}")
@@ -148,7 +187,7 @@ async def handle_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return ConversationHandler.END
     else:
         await update.message.reply_text("Please share your phone number using the button below.")
-        return REGISTER
+        return PHONE
 
       
 

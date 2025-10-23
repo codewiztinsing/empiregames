@@ -232,3 +232,83 @@ def get_game_type_by_id(room_id):
         return room.room_type
     except GameRoom.DoesNotExist:
         return None
+
+@sync_to_async
+def get_user_by_telegram_id(telegram_id):
+    """Get user by telegram_id"""
+    try:
+        return User.objects.get(telegram_id=telegram_id)
+    except User.DoesNotExist:
+        return None
+
+@sync_to_async
+def get_user_wallet(user):
+    """Get user's wallet"""
+    try:
+        return Wallet.objects.get(user=user)
+    except Wallet.DoesNotExist:
+        return None
+
+@sync_to_async
+def update_wallet_balance(wallet, new_balance):
+    """Update wallet balance"""
+    try:
+        wallet.balance = new_balance
+        wallet.save()
+        return True
+    except Exception as e:
+        print(f"Error updating wallet balance: {e}")
+        return False
+
+@sync_to_async
+def create_transaction(user, transaction_type, amount, status='pending', description=''):
+    """Create a transaction"""
+    try:
+        transaction = Transaction.objects.create(
+            user=user,
+            type=transaction_type,
+            amount=amount,
+            status=status,
+            description=description
+        )
+        return transaction
+    except Exception as e:
+        print(f"Error creating transaction: {e}")
+        return None
+
+@sync_to_async
+def get_user_transactions(user, transaction_type=None):
+    """Get user transactions"""
+    try:
+        queryset = Transaction.objects.filter(user=user)
+        if transaction_type:
+            queryset = queryset.filter(type=transaction_type)
+        return list(queryset)
+    except Exception as e:
+        print(f"Error getting transactions: {e}")
+        return []
+
+@sync_to_async
+def create_withdrawal_request(user, amount, phone_number, account_name):
+    """Create a withdrawal request"""
+    try:
+        withdrawal = WithdrawalRequest.objects.create(
+            user=user,
+            amount=amount,
+            phone_number=phone_number,
+            account_name=account_name,
+            status='pending'
+        )
+        return withdrawal
+    except Exception as e:
+        print(f"Error creating withdrawal request: {e}")
+        return None
+
+@sync_to_async
+def get_user_withdrawal_requests(user):
+    """Get user's withdrawal requests"""
+    try:
+        return list(WithdrawalRequest.objects.filter(user=user))
+    except Exception as e:
+        print(f"Error getting withdrawal requests: {e}")
+        return []
