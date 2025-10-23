@@ -29,7 +29,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     ConversationHandler,
 )
-from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player,get_game_type,get_user_by_telegram_id,get_user_wallet,update_wallet_balance,create_transaction,get_user_transactions,create_withdrawal_request,get_user_withdrawal_requests
+from utils.helpers import daily_withdraw_limit,numnber_of_game_played,number_of_game_won,is_deposited_player,get_game_type,get_user_by_telegram_id,get_user_wallet,update_wallet_balance,create_transaction,get_user_transactions,create_withdrawal_request,get_user_withdrawal_requests,get_payment_settings,get_user_wallet_with_referrals,trigger_withdrawal_processing,trigger_withdrawal_validation,trigger_withdrawal_notification,trigger_limit_check,get_user_game_statistics
 from asgiref.sync import sync_to_async
 from django.conf import settings as dj_settings
 from django.utils import timezone
@@ -262,14 +262,36 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
     # Extract referral info from deep link if present
     referrer_id = None
+    print(f"DEBUG: start command - context.args = {context.args}")
     if context.args and len(context.args) > 0:
+        print(f"DEBUG: Processing args[0] = {context.args[0]}")
         try:
-            referrer_id = int(context.args[0])
-            print("referrer_id = ",referrer_id)
+            # Check if it's a ref_ format
+            if context.args[0].startswith("ref_"):
+                referrer_id = int(context.args[0].split("_")[1])
+                print(f"DEBUG: Extracted referrer_id from ref_ format: {referrer_id}")
+            else:
+                referrer_id = int(context.args[0])
+                print(f"DEBUG: Direct referrer_id: {referrer_id}")
+            
+            # Check if referrer is eligible (has made deposits)
+            from register import is_referrer_eligible
+            is_eligible = await is_referrer_eligible(referrer_id)
+            if not is_eligible:
+                await update.message.reply_text("❌ This referral link is not eligible!")
+                await update.message.reply_text("The referrer has not made any deposits yet.")
+                await update.message.reply_text("Please register without a referral link or use a different referral link.")
+                return
+            
             # Store referrer ID in user data for later use
             context.user_data['referrer_id'] = referrer_id
+            print(f"DEBUG: Stored referrer_id in context: {context.user_data['referrer_id']}")
         except ValueError:
             logger.warning(f"Invalid referrer ID format: {context.args[0]}")
+        except Exception as e:
+            logger.error(f"Error processing referrer_id: {e}")
+    else:
+        print("DEBUG: No args provided to start command")
     
     # Check if user has already selected a language
     if user_id in user_data and 'language' in user_data[user_id]:
@@ -331,7 +353,7 @@ def deposit_opitions_keyboard() -> InlineKeyboardMarkup:
 def withdraw_opitions_keyboard(context: ContextTypes.DEFAULT_TYPE) -> InlineKeyboardMarkup:
     logger.info("withdraw_opitions_keyboard")
     banks = {}
-    logger.info("banks = ",banks)
+    logger.info(f"banks = {banks}")
     # Only show Telebirr and CBE options
     keyboard = []
     banks_to_bank_id = {
@@ -357,47 +379,43 @@ async def withdraw_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     amount = update.message.text
-    # Get user's wallet balance
     telegram_id = update.effective_user.id
-    BACK_URL = get_bot_seetings().get("bot_url")
     
-    logger.info(f"Back url {BACK_URL}")
     logger.info(f"telegram_id {telegram_id}")
     logger.info(f"amount {amount}")
  
     try:
-        if LOCAL_MODE:
-            settings_json = await sync_to_async(local_get_payment_settings, thread_sensitive=True)()
-            min_withdrawal = float(settings_json.get('min_withdrawal_amount', 50))
-            max_withdrawal = float(settings_json.get('max_withdrawal_amount', 100))
-            wallet_response = await sync_to_async(local_get_wallet_by_telegram, thread_sensitive=True)(telegram_id)
-            balance = float(wallet_response.get('balance', 0)) + float(wallet_response.get('total_referral_earnings', 0)) if float(wallet_response.get('total_referral_earnings', 0)) > 500 else float(wallet_response.get('balance', 0))
-        else:
-            # Fetch wallet and payment settings via API
-            settings_resp = requests.get(f'{BACK_URL}/api/v1/wallet/payment-settings/', timeout=10)
-            settings_json = settings_resp.json() if settings_resp.status_code == 200 else {}
-            min_withdrawal = float(settings_json.get('min_withdrawal_amount', 50))
-            max_withdrawal = float(settings_json.get('max_withdrawal_amount', 100))
+        # Get user and wallet using Django ORM
+        user = await get_user_by_telegram_id(telegram_id)
+        if not user:
+            await update.message.reply_text("User not found. Please register first.")
+            return ConversationHandler.END
+            
+        # Get payment settings using Django ORM
+        settings_json = await get_payment_settings()
+        min_withdrawal = float(settings_json.get('min_withdrawal_amount', 50))
+        max_withdrawal = float(settings_json.get('max_withdrawal_amount', 100))
+        
+        # Get wallet with referral earnings using Django ORM
+        wallet_data = await get_user_wallet_with_referrals(user)
+        balance = wallet_data.get('total_balance', 0)
 
-            _resp = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}', timeout=10)
-            wallet_response = _resp.json() if _resp.headers.get('content-type','').startswith('application/json') else {}
-            balance = float(wallet_response.get('balance', 0)) + float(wallet_response.get('total_referral_earnings', 0)) if float(wallet_response.get('total_referral_earnings', 0)) > 500 else float(wallet_response.get('balance', 0))
-
-
-        daily_limit = daily_withdraw_limit(telegram_id)
-        logger.info(f"daily_withdraw_limit {daily_limit}")
-        if int(daily_limit) > 3:
+        # Check daily withdrawal limit using Django ORM
+        has_reached_daily_limit = await daily_withdraw_limit(telegram_id)
+        logger.info(f"daily_withdraw_limit reached: {has_reached_daily_limit}")
+        if has_reached_daily_limit:
             await update.message.reply_text(f"You have reached the daily withdraw limit. Please try again tomorrow.")
             return WITHDRAW_AMOUNT_CONFIRM
-        is_deposited = is_deposited_player(telegram_id)
+            
+        # Check if user has deposited using Django ORM
+        is_deposited = await is_deposited_player(telegram_id)
         if not is_deposited:
             await update.message.reply_text(f"You need to deposit first. 50 ETB minimum deposit is required to withdraw.")
             return WITHDRAW_AMOUNT_CONFIRM
 
- 
-
-        number_game_played = numnber_of_game_played(telegram_id)
-        number_game_won = number_of_game_won(telegram_id)
+        # Check games played and won using Django ORM
+        number_game_played = await numnber_of_game_played(telegram_id)
+        number_game_won = await number_of_game_won(telegram_id)
 
         if int(number_game_played) < 5:
             await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት")
@@ -412,24 +430,24 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             await update.message.reply_text(f"Withdrawal amount must be less than or equal to {max_withdrawal:.0f} ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
-       
         if int(balance) < 20:
             await update.message.reply_text(f"You must leave at least 20 ETB in your wallet. Please enter a smaller amount.")
             return WITHDRAW_AMOUNT_CONFIRM
-
 
         if float(amount) < min_withdrawal:
             await update.message.reply_text(f"Withdrawal amount must be at least {min_withdrawal:.0f} ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
-        
         # Check if withdrawal amount exceeds balance
         if int(amount) > int(balance):
-
             await update.message.reply_text(f"Insufficient funds. Your current balance is {balance} ETB")
             return WITHDRAW_AMOUNT_CONFIRM
-
         else:
+            # Optional: Trigger async validation task for additional checks
+            validation_task = await trigger_withdrawal_validation(telegram_id, float(amount))
+            if validation_task:
+                logger.info(f"Withdrawal validation task triggered: {validation_task.id}")
+            
             # Store amount in context for later use
             context.user_data['withdraw_amount'] = amount
             logger.info(f"context.user_data['withdraw_amount'] {context.user_data['withdraw_amount']}") 
@@ -441,7 +459,6 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
                 f"Please enter your {bank_name} number  where you want to receive the withdrawal:"
             )
             return GET_WITHDRAW_ACCOUNT
-
         
     except Exception as e:
         logger.error(f"Error checking wallet balance: {e}")
@@ -455,62 +472,89 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     account_number = update.message.text
-    BACK_URL = get_bot_seetings().get("bot_url")
     try:
         withdraw_amount = float(context.user_data['withdraw_amount'])
         user_telegram_id = update.effective_user.id
 
-        if LOCAL_MODE:
-            data = await sync_to_async(local_create_withdrawal_request, thread_sensitive=True)(user_telegram_id, withdraw_amount, account_number)
-        else:
-            # Save withdrawal request in backend via API
-            payload = {"telegram_id": user_telegram_id, "amount": withdraw_amount, "withdraw_account": account_number}
-            headers = {"Content-Type": "application/json", "Accept": "application/json"}
-            try:
-                resp = requests.post(f"{BACK_URL}/api/v1/wallet/withdrawal/request/", json=payload, headers=headers, timeout=15)
-                ok = resp.status_code == 200 and resp.headers.get('content-type','').startswith('application/json')
-                data = resp.json() if ok else {"success": False, "message": resp.text}
-            except Exception as http_err:
-                data = {"success": False, "message": str(http_err)}
+        # Get user using Django ORM
+        user = await get_user_by_telegram_id(user_telegram_id)
+        if not user:
+            await update.message.reply_text("User not found. Please register first.")
+            return ConversationHandler.END
 
-        if data.get("success"):
+        # Get bank name from context
+        banks_to_bank_id = context.user_data.get('banks_to_bank_id', {})
+        bank_id = context.user_data.get('bank_id', '')
+        bank_name = banks_to_bank_id.get(bank_id, 'Bank')
+
+        # Create withdrawal request using Django ORM
+        withdrawal_request = await create_withdrawal_request(
+            user=user,
+            amount=withdraw_amount,
+            phone_number=account_number,
+            account_name=account_number,
+            bank_name=bank_name,
+            withdrawal_method='bank_transfer'
+        )
+
+        if withdrawal_request:
+            # Send immediate confirmation
             await update.message.reply_text(
-                "✅ Your withdrawal request has been submitted. We will review and process it shortly."
+                "✅ Your withdrawal request has been submitted. We will review and process it shortly.\n\n"
+                f"Amount: {withdraw_amount} ETB\n"
+                f"Account: {account_number}\n"
+                f"Bank: {bank_name}\n"
+                f"Reference: WITHDRAW_{withdrawal_request.id}\n\n"
+                "You will receive a notification when the processing is complete."
             )
+            
+            # Trigger Celery task to process withdrawal
+            task = await trigger_withdrawal_processing(withdrawal_request.id)
+            if task:
+                logger.info(f"Withdrawal processing task triggered: {task.id}")
+                
+                # Send processing notification
+                await trigger_withdrawal_notification(
+                    user_telegram_id,
+                    'processing',
+                    withdraw_amount,
+                    withdrawal_request.id
+                )
+            else:
+                logger.error("Failed to trigger withdrawal processing task")
+                
         else:
             await update.message.reply_text(
-                f"❌ Failed to submit withdrawal request. {data.get('message','Please try again later.')}"
+                "❌ Failed to submit withdrawal request. Please try again later."
             )
 
         return ConversationHandler.END
     except Exception as e:
         print(f"Error sending message to user: {e}")
+        await update.message.reply_text("❌ An error occurred. Please try again later.")
+        return ConversationHandler.END
 
 
 
 async def get_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     username = update.effective_user.username
-    BACK_URL = get_bot_seetings().get("bot_url")
-    res = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
-    balance = res.json().get('balance', 0)
+    
+    # Get user and wallet using Django ORM
+    user = await get_user_by_telegram_id(user_id)
+    if not user:
+        return 0
+        
+    wallet = await get_user_wallet(user)
+    balance = wallet.balance if wallet else 0
     return balance
 
 
 async def play_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = play_options_keyboard(update) 
-    balance = get_balance(update, context)
+    balance = await get_balance(update, context)
     try:
-        BACK_URL = get_bot_seetings().get("bot_url")
-        logger.info(f"Back url {BACK_URL}")
-        res = requests.get(f'{BACK_URL}/api/v1/wallet/player/{update.effective_user.id}')
-        logger.info(f"Res {res}")
-        if res.status_code == 200:
-            balance = res.json().get('balance', 0)
-            logger.info(f"User {update.effective_user.username} balance: {balance}")
-        else:
-            balance = 0
-            logger.error(f"Failed to get balance for user {update.effective_user.username}")
+        logger.info(f"User {update.effective_user.username} balance: {balance}")
     except Exception as e:
         print(f"Error getting wallet balance: {e}")
   
@@ -780,66 +824,61 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         elif query.data == 'get_deposit_amount':
             return DEPOSIT_AMOUNT
         elif query.data == 'check_balance':
-            BACK_URL = get_bot_seetings().get("bot_url") 
+            telegram_id = query.from_user.id
             username = query.from_user.username
             first_name = query.from_user.first_name
             last_name = query.from_user.last_name
-            telegram_id = query.from_user.id
             
             try:
                 logger.info(f"Checking balance for user {telegram_id}")
-                response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
-                logger.info(f"Wallet API response status: {response.status_code}")
-                balance = response.json().get('balance', 0) if response.status_code == 200 else 0
                 
-                # Get user info and game statistics
-                user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
-                logger.info(f"User API response status: {user_response.status_code}")
-                user_info = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
-                games_played_this_week = user_info.get('games_played_this_week', 0)
+                # Get user using Django ORM
+                user = await get_user_by_telegram_id(telegram_id)
+                if not user:
+                    await query.edit_message_text("❌ User not found. Please register first.")
+                    return
                 
-            except requests.exceptions.RequestException as e:
-                logger.error(f"API request error in check_balance callback: {e}")
-                await query.edit_message_text("❌ Error fetching your balance. Please try again later.")
-                return
-            except Exception as e:
-                logger.error(f"Unexpected error in check_balance callback: {e}")
-                await query.edit_message_text("❌ An unexpected error occurred. Please try again later.")
-                return
-            
-            # Calculate remaining games needed
-            remaining_games = 0
-            
-            # Create payment summary with user details and weekly progress
-            payment_summary = (
+                # Get wallet with referral earnings using Django ORM
+                wallet_data = await get_user_wallet_with_referrals(user)
+                balance = wallet_data.get('total_balance', 0)
+                
+                # Get user game statistics using Django ORM
+                game_stats = await get_user_game_statistics(user)
+                games_played_this_week = game_stats.get('games_played_this_week', 0)
+                
+                # Create payment summary with user details and weekly progress
+                payment_summary = (
                     "🏦 Liyu Bingo BINGO STATEMENT\n" +
                     f"💰  {balance} Birr\n" +
                     f"👥  {first_name} \n" +
                     f"📄 Transaction ID: {telegram_id}\n\n" +
                     f"🔙 Back to Menu\n" 
                 ) 
-            await query.edit_message_text(text=payment_summary)
-            return
+                await query.edit_message_text(text=payment_summary)
+                return
+                
+            except Exception as e:
+                logger.error(f"Error checking balance: {e}")
+                await query.edit_message_text("❌ Error fetching your balance. Please try again later.")
+                return
         elif query.data in ['10','20']:
             player_id = query.from_user.id
             user_id = query.from_user.id
             username = query.from_user.username or query.from_user.first_name
             bet_amount = int(query.data)
             
-            # Check if user is registered
-            response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
-            data = response.json()
-            if data.get('phone') is None:
+            # Check if user is registered using Django ORM
+            user = await get_user_by_telegram_id(user_id)
+            if not user or not user.phone:
                 await query.edit_message_text(
                     text="You need to register first before playing. Use the /register command.",
                     reply_markup=instructions_options_keyboard()
                 )
                 return
             
-            # Check wallet balance
-            _resp_u = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
-            wallet_data = _resp_u.json() if _resp_u.headers.get('content-type','').startswith('application/json') else {}
-            balance = wallet_data.get('balance', 0)
+            # Check wallet balance using Django ORM
+            wallet_data = await get_user_wallet_with_referrals(user)
+            balance = wallet_data.get('total_balance', 0)
             
             # Check if balance is sufficient
             if balance < bet_amount:
@@ -894,6 +933,11 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         elif query.data == "register":
             user_id = query.from_user.id
             register_text = get_text(user_id, 'register')
+            
+            # Debug: Check if referrer_id is in context
+            print(f"DEBUG: register callback - context.user_data: {context.user_data}")
+            referrer_id = context.user_data.get('referrer_id')
+            print(f"DEBUG: register callback - referrer_id: {referrer_id}")
             
             # Use a ReplyKeyboardMarkup with request_contact to actually receive phone number
             contact_keyboard = ReplyKeyboardMarkup(
@@ -1219,11 +1263,20 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("DEBUG: register_command function called")
+    print(f"DEBUG: register_command context.user_data: {context.user_data}")
     user_id = update.effective_user.id
-    # selambingobot ref_1464395537
-    referrer_id = context.args[0] if context.args else None
-    context.user_data['referrer_id'] = referrer_id
-    print("referrer_id = ",referrer_id)
+    
+    # Check if referrer_id is already in context (from start command)
+    referrer_id = context.user_data.get('referrer_id')
+    print(f"DEBUG: register_command - referrer_id from context: {referrer_id}")
+    
+    # If not in context, try to get from args
+    if not referrer_id and context.args:
+        referrer_id = context.args[0] if context.args else None
+        context.user_data['referrer_id'] = referrer_id
+        print(f"DEBUG: register_command - set referrer_id from args: {referrer_id}")
+    
+    print(f"DEBUG: register_command final referrer_id = {referrer_id}")
     
     # Check if user is already registered using Django ORM
     user = await get_user_by_telegram_id(user_id)

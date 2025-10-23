@@ -58,8 +58,15 @@ class Transaction(models.Model):
 class WithdrawalRequest(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.FloatField()
-    status = models.CharField(choices=[("pending", "Pending"), ("success", "Success"), ("failed", "Failed")], max_length=10)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    account_name = models.CharField(max_length=100, blank=True, null=True)
+    bank_name = models.CharField(max_length=100, blank=True, null=True)
+    withdrawal_method = models.CharField(max_length=50, default='bank_transfer')
+    status = models.CharField(choices=[("pending", "Pending"), ("processing", "Processing"), ("success", "Success"), ("failed", "Failed"), ("cancelled", "Cancelled")], max_length=10, default="pending")
+    failure_reason = models.TextField(blank=True, null=True)
+    processed_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Withdrawal Request"

@@ -6,6 +6,10 @@ from decimal import Decimal
 from django.core.validators import MinValueValidator
 
 
+def generate_referral_code():
+    return get_random_string(15)
+
+
 class UserManager(BaseUserManager):
     def create_user(self, username, phone=None, telegram_id=None, password=None, tenant=None, **extra_fields):
         if not username:
@@ -52,7 +56,7 @@ class User(AbstractUser):
     telegram_id = models.CharField(max_length=15, unique=True)
     
     # Referral system
-    referral_code = models.CharField(max_length=15, default=get_random_string(15))
+    referral_code = models.CharField(max_length=15, default=generate_referral_code)
     referred_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='referrals')
     
     # User roles
