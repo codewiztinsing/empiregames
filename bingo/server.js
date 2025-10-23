@@ -561,12 +561,57 @@ async function startGame(game) {
             }
           }
           
-          // Use only diagonal pattern (top-left to bottom-right) for fake players
-          console.log(`🎯 Fake winner using diagonal pattern (top-left to bottom-right)`);
+          // Randomly choose ONE winning condition per fake board to mimic real players
+          const winningConditions = [
+            'row',      // Horizontal line
+            'column',   // Vertical line  
+            'diagonal1', // Top-left to bottom-right
+            'diagonal2', // Top-right to bottom-left
+            'corners'   // Four corners
+          ];
           
-          // Apply diagonal winning pattern (top-left to bottom-right)
-          for (let i = 0; i < 5; i++) {
-            board[i][i].marked = true;
+          const chosenCondition = winningConditions[Math.floor(Math.random() * winningConditions.length)];
+          console.log(`🎯 Fake winner using ${chosenCondition} pattern`);
+          
+          // Apply the randomly chosen winning pattern
+          switch (chosenCondition) {
+            case 'row':
+              // Random horizontal line
+              const winningRow = Math.floor(Math.random() * 5);
+              for (let col = 0; col < 5; col++) {
+                board[winningRow][col].marked = true;
+              }
+              break;
+              
+            case 'column':
+              // Random vertical line
+              const winningCol = Math.floor(Math.random() * 5);
+              for (let row = 0; row < 5; row++) {
+                board[row][winningCol].marked = true;
+              }
+              break;
+              
+            case 'diagonal1':
+              // Diagonal top-left to bottom-right
+              for (let i = 0; i < 5; i++) {
+                board[i][i].marked = true;
+              }
+              break;
+              
+            case 'diagonal2':
+              // Diagonal top-right to bottom-left
+              for (let i = 0; i < 5; i++) {
+                board[i][4-i].marked = true;
+              }
+              break;
+              
+            case 'corners':
+              // Four corners
+              board[0][0].marked = true; // Top-left
+              board[0][4].marked = true; // Top-right
+              board[4][0].marked = true; // Bottom-left
+              board[4][4].marked = true; // Bottom-right
+              break;
           }
           
           // Mark cells that correspond to called numbers
