@@ -67,7 +67,7 @@ def dashboard(request):
     games_played = Game.objects.filter(created_at__gte=thirty_days_ago).count()
     total_games = Game.objects.count()
     games_ended = Game.objects.filter(ended_at__isnull=False, created_at__gte=thirty_days_ago)
-    total_winnings = sum(game.entry_fee for game in games_ended)
+    total_winnings = sum(game.room.entry_fee for game in games_ended)
     last_30_days_commission = float(total_winnings) * 0.2
     
     # Try to fetch transaction data from API, fallback to database if API fails
@@ -433,7 +433,7 @@ def games(request):
             ended_at__isnull=False, 
             created_at__gte=timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
         ).count()
-        total_revenue = Game.objects.filter(ended_at__isnull=False).aggregate(Sum('entry_fee'))['entry_fee__sum'] or 0
+        total_revenue = Game.objects.filter(ended_at__isnull=False).aggregate(Sum('room__entry_fee'))['room__entry_fee__sum'] or 0
     
     context = {
         'games': page_obj,

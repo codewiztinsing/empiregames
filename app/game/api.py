@@ -330,7 +330,7 @@ def get_recent_games(request, limit: int = 20):
             
             games_list.append({
                 "id": game.id,
-                "entry_fee": float(game.entry_fee),
+                "entry_fee": float(game.room.entry_fee),
                 "status": game.status,
                 "started": bool(game.started_at),
                 "ended": game.ended_at is not None,
@@ -382,7 +382,7 @@ def get_games_by_status(request, status: str = None):
             
             games_list.append({
                 "id": game.id,
-                "entry_fee": float(game.entry_fee),
+                "entry_fee": float(game.room.entry_fee),
                 "status": game.status,
                 "started": bool(game.started_at),
                 "ended": game.ended_at is not None,
@@ -437,7 +437,7 @@ def get_games_by_user(request, user_id: int = None, telegram_id: str = None):
             
             games_list.append({
                 "id": game.id,
-                "entry_fee": float(game.entry_fee),
+                "entry_fee": float(game.room.entry_fee),
                 "status": game.status,
                 "started": bool(game.started_at),
                 "ended": game.ended_at is not None,
@@ -492,7 +492,7 @@ def get_detailed_games(request, limit: int = 20):
             
             games_list.append({
                 "id": game.id,
-                "entry_fee": float(game.entry_fee),
+                "entry_fee": float(game.room.entry_fee),
                 "status": game.status,
                 "started": bool(game.started_at),
                 "ended": game.ended_at is not None,
