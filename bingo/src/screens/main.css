@@ -427,9 +427,10 @@ html, body {
   }
 }
 
-/* Main Game Area */
+/* Main Game Area - Force Side by Side Layout */
 .main-game-area {
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important; /* Force horizontal layout */
   gap: 15px;
   flex: 1;
   margin-bottom: 15px;
@@ -441,13 +442,14 @@ html, body {
   box-sizing: border-box;
   padding: 0 10px 0 20px;
   justify-content: flex-start;
+  overflow-x: hidden; /* Prevent horizontal overflow */
 }
 
 /* Left Side - Main Bingo Board */
 .main-bingo-board {
-  flex: 0 0 45%;
-  width: 45%;
-  max-width: 45%;
+  flex: 0 0 45% !important;
+  width: 45% !important;
+  max-width: 45% !important;
   background-color: #ffffff;
   border-radius: 12px;
   padding: 15px;
@@ -456,9 +458,9 @@ html, body {
   display: flex;
   flex-direction: column;
   min-height: 500px;
-  height: 100%;
+  height: auto; /* Allow height to grow with content */
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible; /* Allow content to be visible */
 }
 
 /* Top Actions for Main Bingo Board */
@@ -622,16 +624,14 @@ html, body {
 
 /* Right Side - Game Controls */
 .game-controls-section {
-  flex: 0 0 50%;
-  width: 50%;
-  max-width: 50%;
+  flex: 0 0 50% !important;
+
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-height: 0;
   height: auto;
-  max-height: 400px;
   box-sizing: border-box;
+  align-items: stretch; /* Ensure proper stretching */
 }
 
 .control-buttons {
@@ -909,6 +909,20 @@ html, body {
   border-radius: 50%;
 }
 
+/* Debug headers */
+h1 {
+  color: #ff0000 !important;
+  font-size: 24px !important;
+  font-weight: bold !important;
+  margin: 10px 0 !important;
+  padding: 10px !important;
+  background-color: #ffff00 !important;
+  border: 2px solid #ff0000 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
 /* Player Card Section */
 .player-card-section {
   background-color: #ffffff;
@@ -920,8 +934,13 @@ html, body {
   min-width: 300px;
   box-sizing: border-box;
   min-height: 500px;
+  height: auto; /* Allow height to grow */
   display: flex;
   flex-direction: column;
+  visibility: visible !important; /* Force visibility */
+  opacity: 1 !important; /* Force opacity */
+  z-index: 5; /* Lower than modal but above other content */
+  position: relative; /* Ensure it's positioned */
 }
 
 .card-title {
@@ -972,11 +991,33 @@ html, body {
 }
 
 .player-card-grid {
-  display: grid;
+  display: grid !important;
   grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  gap: 3px; /* Smaller gap like in the image */
   margin-bottom: 20px;
   justify-content: center;
+  min-height: 200px; /* Ensure minimum height */
+  visibility: visible !important; /* Force visibility */
+  opacity: 1 !important; /* Force opacity */
+  background-color: #ffffff; /* White background for the grid area */
+  border: 1px solid #ddd; /* Subtle border around the entire grid */
+  border-radius: 8px; /* Slight rounding for the overall grid container */
+  padding: 8px; /* Internal padding for the grid */
+}
+
+.no-card-message {
+  grid-column: 1 / -1; /* Span all columns */
+  text-align: center;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  color: #6c757d;
+}
+
+.no-card-message p {
+  margin: 5px 0;
+  font-size: 14px;
 }
 
 .card-row {
@@ -984,22 +1025,25 @@ html, body {
 }
 
 .card-cell {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  padding: 8px;
-  font-size: 18px;
+  background-color: #ffffff; /* Clean white background */
+  border: 1px solid #ccc; /* Light gray border */
+  border-radius: 6px; /* Rounded corners */
+  padding: 4px; /* Reduced padding */
+  font-size: 14px; /* Appropriate font size */
   font-weight: bold;
-  color: #2c3e50;
+  color: #333; /* Dark gray text */
   text-align: center;
-  width: 50px;
-  height: 50px;
+  width: 40px; /* Slightly smaller to fit better */
+  height: 40px; /* Square shape */
   aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  visibility: visible !important; /* Force visibility */
+  opacity: 1 !important; /* Force opacity */
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); /* Subtle inner shadow */
 }
 
 .card-cell:active {
@@ -1009,9 +1053,10 @@ html, body {
 }
 
 .card-cell.free-space {
-  background-color: #27ae60;
-  color: white;
-  border-color: #1e7e34;
+  background-color: #ffff00 !important; /* Bright yellow background */
+  color: #333 !important; /* Dark text */
+  border: 2px solid #32cd32 !important; /* Green border */
+  font-weight: bold;
 }
 
 /* Clicked Numbers Section */
@@ -1381,7 +1426,7 @@ html, body {
   animation: slideInModal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
   flex-direction: column;
-  z-index: 10;
+  z-index: 1000; /* Higher z-index for modal */
 }
 
 /* Card Header - Compact Style */
@@ -2180,16 +2225,16 @@ html, body {
 @media (max-width: 768px) {
   /* Keep main game area side by side on tablets */
   .main-game-area {
-    flex-direction: row;
+    flex-direction: row !important;
     gap: 8px;
     max-width: 100%;
     padding: 0 5px 0 15px;
   }
   
   .main-bingo-board {
-    flex: 0 0 45%;
-    width: 45%;
-    max-width: 45%;
+    flex: 0 0 45% !important;
+    width: 45% !important;
+    max-width: 45% !important;
     padding: 4px;
     margin-left: 0;
     height: auto;
@@ -2197,11 +2242,9 @@ html, body {
   }
   
   .game-controls-section {
-    flex: 0 0 50%;
-    width: 50%;
-    max-width: 50%;
-    min-height: 250px;
-    max-height: 300px;
+    flex: 0 0 50% !important;
+    width: 50% !important;
+   
   }
   
   .main-bingo-board .top-actions,
@@ -2247,11 +2290,15 @@ html, body {
   }
   
   .card-cell {
-    font-size: 14px;
-    width: 35px;
-    height: 35px;
+    font-size: 12px; /* Smaller font for mobile */
+    width: 32px; /* Smaller size for mobile */
+    height: 32px; /* Square shape */
     aspect-ratio: 1;
-    padding: 6px;
+    padding: 3px; /* Reduced padding for mobile */
+    background-color: #ffffff; /* Maintain white background */
+    border: 1px solid #ccc; /* Maintain light gray border */
+    border-radius: 4px; /* Slightly smaller radius for mobile */
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); /* Maintain subtle shadow */
   }
   
   .ball-display {
@@ -2306,6 +2353,10 @@ html, body {
     padding: 8px;
     min-height: 400px;
     min-width: 250px;
+    height: auto !important; /* Allow height to grow */
+    overflow: visible !important; /* Allow content to be visible */
+    visibility: visible !important; /* Force visibility */
+    opacity: 1 !important; /* Force opacity */
   }
   
   .card-title {
@@ -2359,16 +2410,16 @@ html, body {
   
   /* Keep side by side even on mobile with smaller elements */
   .main-game-area {
-    flex-direction: row;
+    flex-direction: row !important;
     gap: 5px;
     max-width: 100%;
     padding: 0 3px 0 10px;
   }
   
   .main-bingo-board {
-    flex: 0 0 45%;
-    width: 45%;
-    max-width: 45%;
+    flex: 0 0 45% !important;
+    width: 45% !important;
+    max-width: 45% !important;
     padding: 3px;
     margin-left: 0;
     height: auto;
@@ -2376,11 +2427,9 @@ html, body {
   }
   
   .game-controls-section {
-    flex: 0 0 50%;
-    width: 50%;
-    max-width: 50%;
-    min-height: 200px;
-    max-height: 250px;
+    flex: 0 0 50% !important;
+    width: 50% !important;
+  
   }
   
   .main-bingo-board .top-actions,
@@ -2420,11 +2469,15 @@ html, body {
   }
   
   .card-cell {
-    font-size: 12px;
-    width: 30px;
-    height: 30px;
+    font-size: 10px; /* Even smaller font for small mobile */
+    width: 28px; /* Smaller size for small mobile */
+    height: 28px; /* Square shape */
     aspect-ratio: 1;
-    padding: 4px;
+    padding: 2px; /* Minimal padding for small mobile */
+    background-color: #ffffff; /* Maintain white background */
+    border: 1px solid #ccc; /* Maintain light gray border */
+    border-radius: 3px; /* Smaller radius for small mobile */
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); /* Maintain subtle shadow */
   }
   
   .bingo-letter {
@@ -2502,30 +2555,68 @@ html, body {
   }
 }
 
-/* Extra small screens - still keep side by side but with minimal sizing */
+/* Extra small screens - fix layout disruption */
 @media (max-width: 360px) {
   .main-game-area {
-    gap: 3px;
+    flex-direction: row !important;
+    gap: 2px;
     max-width: 100%;
-    padding: 0 2px 0 8px;
+    padding: 0 1px 0 5px;
+    overflow-x: hidden;
   }
   
   .main-bingo-board {
-    flex: 0 0 45%;
-    width: 45%;
-    max-width: 45%;
-    padding: 3px;
+    flex: 0 0 60% !important;
+    width: 60% !important;
+    max-width: 60% !important;
+    padding: 2px;
     margin-left: 0;
     height: auto;
-    min-height: 350px;
+    min-height: 300px;
+    overflow-x: hidden;
+  }
+  
+  /* Fix bingo board content overflow */
+  .main-bingo-board .bingo-board {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .main-bingo-board .bingo-row {
+    max-width: 100%;
+  }
+  
+  .main-bingo-board .bingo-cell {
+    font-size: 8px;
+    padding: 1px;
+    min-width: 12px;
+    max-width: 16px;
   }
   
   .game-controls-section {
-    flex: 0 0 50%;
-    width: 50%;
-    max-width: 50%;
-    min-height: 180px;
-    max-height: 220px;
+    flex: 0 0 38% ;
+    width: 38% ;
+    max-width: 38% ;
+    padding: 2px;
+  }
+  
+  /* Fix game controls content */
+  .game-controls-section .control-btn {
+    padding: 4px 6px;
+    font-size: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .game-controls-section .recent-numbers {
+    font-size: 8px;
+    padding: 2px;
+  }
+  
+  .game-controls-section .recent-number {
+    font-size: 7px;
+    padding: 1px 2px;
   }
   
   .main-bingo-board .top-actions,
@@ -2538,12 +2629,6 @@ html, body {
   .main-bingo-board .bottom-action-btn {
     padding: 4px 8px;
     font-size: 9px;
-  }
-  
-  .game-controls-section {
-    flex: 0.95;
-    height: auto;
-    min-height: 300px;
   }
   
   .stat-item {
@@ -2651,28 +2736,63 @@ html, body {
   }
   
   .main-game-area {
-    gap: 2px;
-    flex-direction: row; /* Keep side by side even on smallest screens */
+    gap: 1px;
+    flex-direction: row !important; /* Keep side by side even on smallest screens */
     max-width: 100%;
-    padding: 0 1px 0 5px;
+    padding: 0 1px 0 3px;
+    overflow-x: hidden;
   }
   
   .main-bingo-board {
-    flex: 0 0 45%; /* Keep 45% width */
-    width: 45%;
-    max-width: 45%;
-    padding: 2px;
+    flex: 0 0 62% !important; /* Give more space to bingo board */
+    width: 62% !important;
+    max-width: 62% !important;
+    padding: 1px;
     margin-left: 0;
     height: auto;
-    min-height: 300px;
+    min-height: 280px;
+    overflow-x: hidden;
+  }
+  
+  /* Fix bingo board content overflow for 320px */
+  .main-bingo-board .bingo-board {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .main-bingo-board .bingo-cell {
+    font-size: 7px;
+    padding: 1px;
+    min-width: 10px;
+    max-width: 14px;
   }
   
   .game-controls-section {
-    flex: 0 0 50%; /* Keep 50% width */
-    width: 50%;
-    max-width: 50%;
-    min-height: 150px;
-    max-height: 200px;
+    flex: 0 0 36% !important; /* Reduce controls section */
+    width: 36% !important;
+    max-width: 36% !important;
+    min-height: 120px;
+    max-height: 180px;
+    padding: 1px;
+  }
+  
+  /* Fix game controls content for 320px */
+  .game-controls-section .control-btn {
+    padding: 3px 4px;
+    font-size: 7px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .game-controls-section .recent-numbers {
+    font-size: 7px;
+    padding: 1px;
+  }
+  
+  .game-controls-section .recent-number {
+    font-size: 6px;
+    padding: 1px;
   }
   
   .main-bingo-board .top-actions,

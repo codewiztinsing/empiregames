@@ -60,7 +60,12 @@ const PlayingBoard = () => {
         },
       });
     }
-  }, [isWatchMode, isAutoPlayDisabled]);
+    
+    // Debug selectedNumber
+    console.log('Debug - selectedNumber:', selectedNumber);
+    console.log('Debug - selectBoard:', selectBoard);
+    console.log('Debug - URL params:', window.location.search);
+  }, [isWatchMode, isAutoPlayDisabled, selectedNumber, selectBoard]);
 
   // Game state
   const [gameState, setGameState] = useState({
@@ -1176,6 +1181,9 @@ const PlayingBoard = () => {
             </div>
           )}
 
+          
+          
+
           {/* Ball Display - Only show when game is in progress */}
           {gameStatus === 'in-progress' && (
             <div className="ball-display-container">
@@ -1188,9 +1196,13 @@ const PlayingBoard = () => {
               </div>
             </div>
           )}
+
+          
+
+
     
           {/* Player Card */}
-      {selectedNumber && (
+      {(selectedNumber || selectBoard) && (
             <div className="player-card-section">
               <div className="card-title">Card Number {selectedNumber}</div>
               
@@ -1205,7 +1217,7 @@ const PlayingBoard = () => {
 
              
               <div className="player-card-grid">
-                {selectBoard && selectBoard.map((row, rowIndex) => {
+                {selectBoard && selectBoard.length > 0 ? selectBoard.map((row, rowIndex) => {
                   console.log('Rendering row:', rowIndex, 'with data:', row);
                   return (
                     <div key={rowIndex} className="card-row">
@@ -1221,10 +1233,16 @@ const PlayingBoard = () => {
                           </div>
                         );
                       })}
-          </div>
+                    </div>
                   );
-                })}
-          </div>
+                }) : (
+                  <div className="no-card-message">
+                    <p>No card data available</p>
+                    <p>selectedNumber: {selectedNumber}</p>
+                    <p>selectBoard: {selectBoard ? 'exists' : 'null'}</p>
+                  </div>
+                )}
+              </div>
           
               {/* Bingo Button */}
               <button 
