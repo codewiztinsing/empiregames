@@ -130,28 +130,60 @@ def update_player_wallet(request,telegram_id:int, data: WalletSchema):
 @csrf_exempt
 def manual_success(request):
     print("[MANUAL_SUCCESS] Manual success request")
+    print("[MANUAL_SUCCESS] Request method:", request.method)
+    print("[MANUAL_SUCCESS] Request headers:", dict(request.headers))
+    print("[MANUAL_SUCCESS] Content type:", request.content_type)
     try:
         try:
             decoded_body = request.body.decode('utf-8') if isinstance(request.body, (bytes, bytearray)) else str(request.body)
         except Exception as decode_err:
             print("[MANUAL_SUCCESS] Body decode error:", decode_err)
             decoded_body = str(request.body)
+        
         print("[MANUAL_SUCCESS] Raw body:", decoded_body)
+        
+        # Handle empty body
+        if not decoded_body or decoded_body.strip() == '':
+            print("[MANUAL_SUCCESS] Empty request body, returning success")
+            return JsonResponse({"message": "Empty request body received", "status": "success"}, status=200)
+        
         try:
             data = json.loads(decoded_body or '{}')
         except json.JSONDecodeError as jde:
             print("[MANUAL_SUCCESS] JSON decode error:", jde)
-            return JsonResponse({"error": "invalid_json", "details": str(jde)}, status=400)
-        print("[MANUAL_SUCCESS] Parsed JSON:", data)
+            print("[MANUAL_SUCCESS] Attempting to parse as form data")
+            # Try to parse as form data if JSON fails
+            try:
+                data = dict(request.POST)
+                if not data:
+                    data = {}
+                print("[MANUAL_SUCCESS] Parsed as form data:", data)
+            except Exception as form_err:
+                print("[MANUAL_SUCCESS] Form data parse error:", form_err)
+                return JsonResponse({"error": "invalid_data_format", "details": str(jde)}, status=400)
+        print("[MANUAL_SUCCESS] Parsed data:", data)
         session_id = data.get("session_id")
         status = data.get("status")
+        
+        # Log what we received
+        print("[MANUAL_SUCCESS] Session ID:", session_id)
+        print("[MANUAL_SUCCESS] Status:", status)
+        
+        # If no session_id, try to handle gracefully
+        if not session_id:
+            print("[MANUAL_SUCCESS] Warning: No session_id provided")
+            # Return success but log the issue
+            return JsonResponse({"message": "No session_id provided", "status": "received"}, status=200)
         # Extract payer number from either top-level or nested 'data'
         details = data.get("data") or {}
         transaction_number = details.get("transaction_number")
-        payer_telebirr_no = data.get("payer_telebirr_no") or details.get("payer_telebirr_no") or details.get("credited_account")
+        payer_telebirr_no = data.get("payer_telebirr_no") or details.get("payer_telebirr_no") or details.get("credited_account") or data.get("phone") or details.get("phone")
         print("payer_telebirr_no = ", payer_telebirr_no)
+        
+        # Make payer_telebirr_no optional for more flexible processing
         if not payer_telebirr_no:
-            return JsonResponse({"message": "Missing payer_telebirr_no"}, status=400)
+            print("[MANUAL_SUCCESS] Warning: No payer_telebirr_no found, proceeding with session_id only")
+            # Don't return error, just log warning and continue
 
         if status == "success":
             manual_session = ManualSession.objects.filter(session_id=session_id).first()
