@@ -14,10 +14,9 @@ import LanguageSelector from '../components/LanguageSelector';
 const PlayingBoard = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   
   // Get URL parameters
-  const autoPlay = searchParams.get('autoPlay') !== 'false'; // Default to true unless explicitly false
+  const urlAutoPlay = searchParams.get('autoPlay') !== 'false'; // Default to true unless explicitly false
   const watchMode = searchParams.get('watchMode') === 'true';
   
   const {
@@ -43,7 +42,7 @@ const PlayingBoard = () => {
 
   // Watch mode and auto-play state
   const [isWatchMode, setIsWatchMode] = useState(watchMode);
-  const [isAutoPlayDisabled, setIsAutoPlayDisabled] = useState(!autoPlay);
+  const [isAutoPlayDisabled, setIsAutoPlayDisabled] = useState(!urlAutoPlay);
 
   // Handle watch mode initialization
   useEffect(() => {
