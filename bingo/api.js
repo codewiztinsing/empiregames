@@ -6,7 +6,9 @@ dotenv.config();
 const normalizeApiUrl = (baseUrl, endpoint) => {
   const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
   const apiPrefix = normalizedBase.includes('/api/v1') ? '' : '/api/v1';
-  return `${normalizedBase}${apiPrefix}/${endpoint}`;
+  const finalUrl = `${normalizedBase}${apiPrefix}/${endpoint}`;
+  console.log(`[URL Normalize] baseUrl: ${baseUrl}, normalizedBase: ${normalizedBase}, apiPrefix: '${apiPrefix}', endpoint: ${endpoint}, finalUrl: ${finalUrl}`);
+  return finalUrl;
 };
 
 const gameWinWallet = async (player, bet_amount, win_amount, total_players)=>{
