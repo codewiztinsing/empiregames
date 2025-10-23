@@ -447,9 +447,9 @@ html, body {
 
 /* Left Side - Main Bingo Board */
 .main-bingo-board {
-  flex: 0 0 45% !important;
-  width: 45% !important;
-  max-width: 45% !important;
+  flex: 0 0 40% !important; /* Reduced from 45% to 40% */
+  width: 40% !important; /* Reduced from 45% to 40% */
+  max-width: 40% !important; /* Reduced from 45% to 40% */
   background-color: #ffffff;
   border-radius: 12px;
   padding: 15px;
@@ -624,8 +624,9 @@ html, body {
 
 /* Right Side - Game Controls */
 .game-controls-section {
-  flex: 0 0 50% !important;
-
+  flex: 0 0 55% !important; /* Increased from 50% to 55% */
+  width: 55% !important; /* Increased from 50% to 55% */
+  max-width: 55% !important; /* Increased from 50% to 55% */
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -948,13 +949,13 @@ h1 {
   font-weight: bold;
   color: #2c3e50;
   text-align: center;
-  margin-bottom: 15px;
+  margin-bottom: 0; /* Remove space between title and grid */
 }
 
 .card-bingo-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 0; /* Remove space between header and grid */
 }
 
 .card-letter {
@@ -995,6 +996,7 @@ h1 {
   grid-template-columns: repeat(5, 1fr);
   gap: 3px; /* Smaller gap like in the image */
   margin-bottom: 20px;
+  margin-top: 0; /* Remove space between header and grid */
   justify-content: center;
   min-height: 200px; /* Ensure minimum height */
   visibility: visible !important; /* Force visibility */
@@ -2361,7 +2363,7 @@ h1 {
   
   .card-title {
     font-size: 10px;
-    margin-bottom: 4px;
+    margin-bottom: 0; /* Remove space between title and grid on mobile */
   }
   
   /* Bottom actions responsive */
@@ -2417,9 +2419,9 @@ h1 {
   }
   
   .main-bingo-board {
-    flex: 0 0 45% !important;
-    width: 45% !important;
-    max-width: 45% !important;
+    flex: 0 0 40% !important; /* Reduced from 45% to 40% */
+    width: 40% !important; /* Reduced from 45% to 40% */
+    max-width: 40% !important; /* Reduced from 45% to 40% */
     padding: 3px;
     margin-left: 0;
     height: auto;
@@ -2427,9 +2429,9 @@ h1 {
   }
   
   .game-controls-section {
-    flex: 0 0 50% !important;
-    width: 50% !important;
-  
+    flex: 0 0 55% !important; /* Increased from 50% to 55% */
+    width: 55% !important; /* Increased from 50% to 55% */
+    max-width: 55% !important; /* Increased from 50% to 55% */
   }
   
   .main-bingo-board .top-actions,
@@ -2469,14 +2471,14 @@ h1 {
   }
   
   .card-cell {
-    font-size: 10px; /* Even smaller font for small mobile */
-    width: 28px; /* Smaller size for small mobile */
-    height: 28px; /* Square shape */
+    font-size: 9px; /* Even smaller font for 360px screens */
+    width: 24px; /* Smaller size for 360px screens */
+    height: 24px; /* Square shape */
     aspect-ratio: 1;
-    padding: 2px; /* Minimal padding for small mobile */
+    padding: 1px; /* Minimal padding for 360px screens */
     background-color: #ffffff; /* Maintain white background */
     border: 1px solid #ccc; /* Maintain light gray border */
-    border-radius: 3px; /* Smaller radius for small mobile */
+    border-radius: 2px; /* Smaller radius for 360px screens */
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); /* Maintain subtle shadow */
   }
   
@@ -2566,9 +2568,9 @@ h1 {
   }
   
   .main-bingo-board {
-    flex: 0 0 60% !important;
-    width: 60% !important;
-    max-width: 60% !important;
+    flex: 0 0 50% !important; /* Reduced from 60% to 50% */
+    width: 50% !important; /* Reduced from 60% to 50% */
+    max-width: 50% !important; /* Reduced from 60% to 50% */
     padding: 2px;
     margin-left: 0;
     height: auto;
@@ -2594,9 +2596,9 @@ h1 {
   }
   
   .game-controls-section {
-    flex: 0 0 38% ;
-    width: 38% ;
-    max-width: 38% ;
+    flex: 0 0 48% !important; /* Increased from 38% to 48% */
+    width: 48% !important; /* Increased from 38% to 48% */
+    max-width: 48% !important; /* Increased from 38% to 48% */
     padding: 2px;
   }
   
@@ -2643,8 +2645,8 @@ h1 {
   
   .card-cell {
     font-size: 14px;
-    width: 32px;
-    height: 32px;
+    width: 30x;
+    height: 30px;
     aspect-ratio: 1;
     padding: 6px;
   }
