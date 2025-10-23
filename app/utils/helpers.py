@@ -1,5 +1,12 @@
 import requests
 from decouple import config
+import os
+import django
+from django.conf import settings
+
+# Configure Django settings
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+django.setup()
 
 BACK_URL = config("BACK_URL")
 
@@ -79,26 +86,53 @@ def verify_receipt(message,paymentMethod,session_id):
 
 
 
+
+from game.models import GameRoom
+import logging
+
+logger = logging.getLogger(__name__)
+
 def get_game_type():
+    """
+    Get all active game rooms from Django model
+    
+    Returns:
+        dict: Dictionary containing game_types list
+    """
+    print("++++++++++++++game rooms++++++++++++++")
     try:
-        response = requests.get(f"{BACK_URL}/api/v1/game/game-rooms/")
-        if response.status_code == 200:
-            data = response.json()
-            # Convert game_rooms to game_types format for backward compatibility
-            game_rooms = data.get('game_rooms', [])
-            game_types = []
-            for room in game_rooms:
-                game_types.append({
-                    'bet_amount': str(room['entry_fee']),
-                    'commission': str(room.get('house_edge_percentage', 0)),
-                    'id': room['id'],
-                    'name': room.get('name', f"Game Room {room['entry_fee']} ETB")
-                })
-            return {'game_types': game_types}
-        else:
-            logger.error(f"Failed to fetch game rooms: {response.status_code}")
-            return None
+        # Get all active game rooms from Django model
+        game_rooms = GameRoom.objects.filter(is_active=True)
+        print("game_rooms = ",game_rooms)
+        game_types = []
+        
+        for room in game_rooms:
+            print("room = ",room)
+            game_types.append({
+                'bet_amount': str(room.entry_fee),
+                'commission': str(room.house_edge_percentage or 0),
+                'id': room.id,
+                'name': room.name or f"Game Room {room.entry_fee} ETB"
+            })
+        
+        return {'game_types': game_types}
     except Exception as e:
-        logger.error(f"Error fetching game rooms: {e}")
+        logger.error(f"Error fetching game rooms from Django model: {e}")
         return None
 
+def get_game_type_by_id(room_id):
+    """
+    Retrieve the type of a game room by its ID.
+
+    Args:
+        room_id (int): The primary key of the GameRoom.
+
+    Returns:
+        str or None: The room_type if found, else None.
+    """
+    try:
+        room = GameRoom.objects.get(pk=room_id)
+        print("room = ",room)
+        return room.room_type
+    except GameRoom.DoesNotExist:
+        return None

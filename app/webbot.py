@@ -307,28 +307,27 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Function to create the play options keyboardF
 def play_options_keyboard(update: Update) -> InlineKeyboardMarkup:
-    game_types_response = get_game_type()
-    game_types = game_types_response.get('game_types', []) if game_types_response else []
-    logger.info(f"game_types = {game_types}")
-    keyboard = []
-    for game_type in game_types:
-        if int(game_type['bet_amount']) == 10:
-            # Open the specific Telegram link when Play 10 is clicked
-            keyboard.append([
-                InlineKeyboardButton(
-                    f"🎮 Play {game_type['bet_amount']}",
-                    url="https://t.me/liyuchewatabotbot/liyuchawata"
-                )
-            ])
-        else:
-            keyboard.append([
-                InlineKeyboardButton(
-                    f"🎮 Play {game_type['bet_amount']}",
-                    web_app=WebAppInfo(url=f"https://liyuchawata.akerbingo.com/bingo/?playerId={update.effective_user.id}&betAmount={game_type['bet_amount']}&playerName={update.effective_user.username}")
-                )
-            ])
-    keyboard.append([InlineKeyboardButton("🔙 Back to Menu", callback_data='back')])
-    return InlineKeyboardMarkup(keyboard)
+    logger.info("open the play game link")
+    return InlineKeyboardMarkup([[InlineKeyboardButton("🎮 Play Game", url="https://t.me/liyuchewatabotbot/liyuchawata")]])
+    # keyboard = []
+    # for game_type in game_types:
+    #     if int(game_type['bet_amount']) == 10:
+    #         # Open the specific Telegram link when Play 10 is clicked
+    #         keyboard.append([
+    #             InlineKeyboardButton(
+    #                 f"🎮 Play Game",
+    #                 url="https://t.me/liyuchewatabotbot/liyuchawata"
+    #             )
+    #         ])
+    #     else:
+    #         keyboard.append([
+    #             InlineKeyboardButton(
+    #                 f"🎮 Play {game_type['bet_amount']}",
+    #                 web_app=WebAppInfo(url=f"https://liyuchawata.akerbingo.com/bingo/?playerId={update.effective_user.id}&betAmount={game_type['bet_amount']}&playerName={update.effective_user.username}")
+    #             )
+    #         ])
+    # keyboard.append([InlineKeyboardButton("🔙 Back to Menu", callback_data='back')])
+    # return InlineKeyboardMarkup(keyboard)
 
 
 
