@@ -510,7 +510,8 @@ async function startGame(game) {
 
         // Generate a proper 5x5 bingo board using called numbers
         const generateFakeWinningBoard = () => {
-          const board = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => ({ number: 0, marked: false })));
+          // Generate board in same format as real players: [column][row] structure
+          const board = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => ({ number: null, marked: false })));
           
           // Get called numbers for realistic board
           const calledNumbers = game.calledNumbers.map(ball => ball.number);
@@ -525,71 +526,105 @@ async function startGame(game) {
             { start: 61, end: 75 }    // O
           ];
           
-          // Fill each column prioritizing called numbers, then random for rest
+          // First, fill the entire board with random numbers following Bingo rules
+          // Structure: board[column][row] - same as real player boards
+          const usedNumbers = new Set();
           for (let col = 0; col < 5; col++) {
             const range = columnRanges[col];
-            const usedNumbers = new Set();
-            
-            // Get called numbers in this column range
-            const calledInRange = calledNumbers.filter(n => n >= range.start && n <= range.end);
-            console.log(`🎯 Column ${col} (${range.start}-${range.end}): Called numbers:`, calledInRange);
+            const usedInColumn = new Set();
             
             for (let row = 0; row < 5; row++) {
               if (col === 2 && row === 2) {
                 // Free space in center
-                board[row][col] = { number: '*', marked: true };
+                board[col][row] = { number: '*', marked: true };
               } else {
                 let num;
+                do {
+                  num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                } while (usedInColumn.has(num));
                 
-                // First priority: Use called numbers from this column
-                const availableCalled = calledInRange.filter(n => !usedNumbers.has(n));
-                if (availableCalled.length > 0) {
-                  // Use a called number
-                  num = availableCalled[Math.floor(Math.random() * availableCalled.length)];
-                  console.log(`🎯 Using called number ${num} for [${row}][${col}]`);
-                } else {
-                  // Second priority: Use random numbers to fill remaining cells
-                  do {
-                    num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
-                  } while (usedNumbers.has(num));
-                  console.log(`🎯 Using random number ${num} for [${row}][${col}]`);
-                }
-                
-                usedNumbers.add(num);
-                board[row][col] = { number: num, marked: false };
+                usedInColumn.add(num);
+                board[col][row] = { number: num, marked: false };
               }
             }
           }
           
-          // Use only diagonal pattern (top-left to bottom-right) for fake players
-          console.log(`🎯 Fake winner using diagonal pattern (top-left to bottom-right)`);
+          // Randomly choose ONE winning condition
+          const winningConditions = [
+            'row',      // Horizontal line
+            'column',   // Vertical line  
+            'diagonal1', // Top-left to bottom-right
+            'diagonal2', // Top-right to bottom-left
+            'corners'   // Four corners
+          ];
           
-          // Apply diagonal winning pattern (top-left to bottom-right)
-          for (let i = 0; i < 5; i++) {
-            board[i][i].marked = true;
-          }
+          const chosenCondition = winningConditions[Math.floor(Math.random() * winningConditions.length)];
+          console.log(`🎯 Fake winner using ${chosenCondition} pattern`);
           
-          // Mark cells that correspond to called numbers
-          for (let row = 0; row < 5; row++) {
-            for (let col = 0; col < 5; col++) {
-              if (board[row][col].number !== '*' && calledNumbers.includes(board[row][col].number)) {
-                board[row][col].marked = true;
+          // Use only 5 called numbers to fulfill the chosen winning condition
+          const calledNumbersToUse = calledNumbers.slice(0, 5);
+          console.log(`🎯 Using these 5 called numbers for winning pattern:`, calledNumbersToUse);
+          
+          // Apply the winning pattern by marking cells as winning (don't replace numbers)
+          // Structure: board[column][row] - same as real player boards
+          switch (chosenCondition) {
+            case 'row':
+              // Random horizontal line - just mark the existing numbers as winning
+              const winningRow = Math.floor(Math.random() * 5);
+              for (let col = 0; col < 5; col++) {
+                board[col][winningRow].marked = true; // Mark entire winning row
               }
-            }
+              console.log(`🎯 Row ${winningRow} marked as winning`);
+              break;
+              
+            case 'column':
+              // Random vertical line - just mark the existing numbers as winning
+              const winningCol = Math.floor(Math.random() * 5);
+              for (let row = 0; row < 5; row++) {
+                board[winningCol][row].marked = true; // Mark entire winning column
+              }
+              console.log(`🎯 Column ${winningCol} marked as winning`);
+              break;
+              
+            case 'diagonal1':
+              // Diagonal top-left to bottom-right - just mark the existing numbers as winning
+              for (let i = 0; i < 5; i++) {
+                board[i][i].marked = true; // Mark entire diagonal
+              }
+              console.log(`🎯 Diagonal1 (top-left to bottom-right) marked as winning`);
+              break;
+              
+            case 'diagonal2':
+              // Diagonal top-right to bottom-left - just mark the existing numbers as winning
+              for (let i = 0; i < 5; i++) {
+                board[4-i][i].marked = true; // Mark entire diagonal
+              }
+              console.log(`🎯 Diagonal2 (top-right to bottom-left) marked as winning`);
+              break;
+              
+            case 'corners':
+              // Four corners - just mark the existing numbers as winning
+              const cornerPositions = [[0,0], [0,4], [4,0], [4,4]];
+              for (let i = 0; i < 4; i++) {
+                const [col, row] = cornerPositions[i];
+                board[col][row].marked = true; // Mark all four corners
+              }
+              console.log(`🎯 Four corners marked as winning`);
+              break;
           }
           
           // Debug: Log the complete board structure
           console.log('🎯 Complete fake winning board:');
-          board.forEach((row, rowIndex) => {
-            const rowStr = row.map(cell => `${cell.number}${cell.marked ? '✓' : ' '}`).join(' | ');
-            console.log(`Row ${rowIndex}: ${rowStr}`);
+          board.forEach((column, colIndex) => {
+            const colStr = column.map(cell => `${cell.number}${cell.marked ? '✓' : ' '}`).join(' | ');
+            console.log(`Column ${colIndex}: ${colStr}`);
           });
           
           // Count total numbers and marked cells
           let totalNumbers = 0;
           let markedCells = 0;
-          board.forEach(row => {
-            row.forEach(cell => {
+          board.forEach(column => {
+            column.forEach(cell => {
               if (cell.number !== '*') totalNumbers++;
               if (cell.marked) markedCells++;
             });
@@ -601,12 +636,7 @@ async function startGame(game) {
 
         const winningCard = generateFakeWinningBoard();
 
-        // Transpose the board from [row][col] to [col][row] format for client compatibility
-        const transposedCard = Array.from({ length: 5 }, (_, colIndex) => 
-          Array.from({ length: 5 }, (_, rowIndex) => winningCard[rowIndex][colIndex])
-        );
-
-        console.log('🎯 Transposed card for client:', JSON.stringify(transposedCard, null, 2));
+        console.log('🎯 Generated card for client:', JSON.stringify(winningCard, null, 2));
 
         game.winner = fakeId;
 
@@ -632,8 +662,8 @@ async function startGame(game) {
         io.emit("winBingo", {
           isBingo: true,
           playerId: fakeId,
-          markedCells: transposedCard,
-          winningCard: transposedCard,
+          markedCells: winningCard,
+          winningCard: winningCard,
           winner: fakeId,
           calledNumbers: game.calledNumbers,
           playerCard: 1,
@@ -649,8 +679,8 @@ async function startGame(game) {
         io.emit("bingoWinner", {
           isBingo: true,
           playerId: fakeId,
-          markedCells: transposedCard,
-          winningCard: transposedCard,
+          markedCells: winningCard,
+          winningCard: winningCard,
           winner: fakeId,
           winnerCardNumber: 1,
           winnerPlayerName: fakeName,
