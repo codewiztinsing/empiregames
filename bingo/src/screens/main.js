@@ -139,7 +139,7 @@ const PlayingBoard = () => {
 
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
-
+  
   // ✅ Socket event bindings
   useEffect(() => {
     if (!socket) return;
@@ -443,9 +443,9 @@ const PlayingBoard = () => {
   useEffect(() => {
     if (!isBingo) {
       setWinnerCountdown(5); // Reset countdown when not showing winner
-      return;
-    }
-
+        return;
+      }
+      
     const countdownInterval = setInterval(() => {
       setWinnerCountdown((prev) => {
         if (prev <= 1) {
@@ -480,16 +480,16 @@ const PlayingBoard = () => {
     
     if (selectedCell.size === 0) {
       toast.error('Please select some numbers first!');
-      return;
-    }
-    
-    socket.emit('bingo', {
-      gameId,
+        return;
+      }
+      
+      socket.emit('bingo', {
+        gameId,
       roomId,
       playerId,
       markedCells: Array.from(selectedCell),
       playerName,
-      board,
+        board,
       boardNumber,
     });
     
@@ -677,16 +677,16 @@ const PlayingBoard = () => {
     <div className="game-container">
       <Toaster />
 
-  {isBingo && (
-  <div className="bingo-winner-overlay">
-    <div className="bingo-winner-card">
+      {isBingo && (
+        <div className="bingo-winner-overlay">
+          <div className="bingo-winner-card">
       <div className="winner-countdown">
         <p>Returning to home in: {winnerCountdown} seconds</p>
       </div>
       <div className="winner-card-header">
         <p className='winner-card-header-text'>Bingo Winner!</p>
-      </div>
-
+              </div>
+            
       <p className='winner-card-header-winner-number' style={{
         color: "green",
         fontSize: "1.6rem",
@@ -705,10 +705,10 @@ const PlayingBoard = () => {
     {["B", "I", "N", "G", "O"].map((letter, index) => (
       <div key={index} className="winning-card-cell">
         <span>{letter}</span>
-      </div>
+              </div>
     ))}
-  </div>
-
+            </div>
+            
   {(() => {
     console.log('🎯 CLIENT: Rendering winning card...');
     console.log('🎯 CLIENT: winningCard state:', winningCard);
@@ -799,22 +799,22 @@ const PlayingBoard = () => {
             style={{ backgroundColor: bgColor }}
           >
             <span>{cell?.number || '?'}</span>
-          </div>
+              </div>
         );
       })}
     </div>
   ))}
-</div>
-
+            </div>
+            
       <div className="choosen-numbers">
         <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
         <button className="close-winner-button" onClick={handleCloseWinner}>
           <p>Close</p>
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
 
       <div className="stats-bar">
@@ -836,7 +836,7 @@ const PlayingBoard = () => {
           <span>ጥሪ </span>
           <span>{totalCalledNumbers}</span>
         </div>
-      </div>
+          </div>
 
 <div className='middle-container'>
 <div className="called-numbers">
@@ -877,7 +877,7 @@ const PlayingBoard = () => {
                 {i + 16}
               </div>
             ))}
-          </div>
+        </div>
           <div className="column">
             <div className="column-header called-number-col" style={{
               backgroundColor: "#00022E", /* Green for N */
@@ -889,9 +889,9 @@ const PlayingBoard = () => {
 
               >
                 {i + 31}
-              </div>
+                  </div>
             ))}
-          </div>
+                    </div>
           <div className="column">
             <div className="column-header called-number-col" style={{
               backgroundColor: "#00022E", /* Blue for G */
@@ -903,9 +903,9 @@ const PlayingBoard = () => {
                 id={`G${i + 46}`}
               >
                 {i + 46}
-              </div>
+                  </div>
             ))}
-          </div>
+            </div>
           <div className="column">
             <div className="column-header called-number-col" style={{
               backgroundColor: "#00022E", /* Purple for O */
@@ -917,12 +917,12 @@ const PlayingBoard = () => {
 
               >
                 {i + 61}
-              </div>
+                  </div>
             ))}
           </div>
         </div>
-    
-      </div>
+
+              </div>
 
 
       <div className="bingo-content">
@@ -941,20 +941,20 @@ const PlayingBoard = () => {
 
                     <div className="ball">
                     {lastBall.combined}
-                  </div>
+                        </div>
 
-                    </div>
+                      </div>
 
-                  </div>
+              </div>
               
                 
-                </div>
-              ) : (
+            </div>
+          ) : (
                 <div className="waiting-state">
                
-                </div>
+              </div>
               )}
-            </div>
+              </div>
 
             {/* Recently Called Numbers */}
             <div className="recent-calls-container">
@@ -962,7 +962,7 @@ const PlayingBoard = () => {
                 {recentCalledNumbers.map((number, index) => (
                   <div key={index} className={`recent-call-number ${number === '*' ? 'placeholder' : 'called'}`}>
                     {number}
-                  </div>
+            </div>
                 ))}
               </div>
             </div>
@@ -994,8 +994,8 @@ const PlayingBoard = () => {
               <div className="waiting-content">
                 <div className="waiting-spinner"></div>
                 <p className="waiting-text">Please wait, until game finished</p>
-              </div>
             </div>
+          </div>
           )}
 
 
@@ -1022,12 +1022,12 @@ const PlayingBoard = () => {
                     }}
                   >
                     {row[colIndex]}
-                  </div>
+                          </div>
                 ))}
-              </div>
+          </div>
             ))}
           </div>
-
+          
           <div className='selected-number'>
             <p className='selected-number-label'>የካርቴላ ቁጥር :-</p>
             <p className='selected-number-value'>{selectedNumber}</p>
@@ -1042,18 +1042,18 @@ const PlayingBoard = () => {
                 }}
           >
              {(firstBoardLost || isDisqualified) ? "Disqualified" : "BINGO!"}
-          </button>
+              </button>
         </>
       )}
+           
+            </div>
 
-          </div>
-
+              </div>
         </div>
-      </div>
 
-    
+        
 </div>
-      
+        
     </div>
   );
 };

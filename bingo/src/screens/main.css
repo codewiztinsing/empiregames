@@ -60,7 +60,7 @@
   .referral-nav-buttons {
     gap: 8px;
     flex-wrap: wrap;
-    justify-content: center;
+  justify-content: center;
   }
   
   .referral-nav-btn {
@@ -149,13 +149,13 @@ body {
 
 .game-countdown {
   color:white;
-  font-size: 10px;
+    font-size: 10px;
   font-weight: bold;
-}
-
+  }
+  
 .game-starting-text {
   color:white;
-  font-size: 10px;
+    font-size: 10px;
   font-weight: bold;
 }
 
@@ -167,7 +167,7 @@ body {
 .recent-called-numbers{
   min-width: 180px;
   display: flex;
-  height: 30px;
+    height: 30px;
   align-items: center;
   background-color: #262129;
  
@@ -190,7 +190,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+    font-size: 10px;
   font-weight: bold;
   color:white;
 }
@@ -286,13 +286,13 @@ body {
   }
   .language-select {
     background-color: #706c8b;
-    color: white;
-    border: none;
+  color: white;
+  border: none;
     padding: 5px;
     border-radius: 5px;
     font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
+  font-weight: bold;
+  cursor: pointer;
     
   }
 

@@ -46,7 +46,7 @@ const fetchGameSettings = async () => {
     return newSettings;
   } catch (e) {
     console.error("Error fetching game settings:", e);
-    return {
+  return {
       gameSpeed: Number(process.env.GAME_SPEED || 4000),
       countDown: Number(process.env.COUNT_DOWN || 30),
       fakePlayersCount: Number(process.env.FAKE_PLAYERS_COUNT || 0),
@@ -244,7 +244,7 @@ function startCountDown(game) {
         const displayTotalReset2 = (game.selectedNumbers.filter(num => num !== null).length) + (game.fakePickedNumbers ? game.fakePickedNumbers.size : 0);
         const displayWinReset2 = displayTotalReset2 * game.roomId * 0.78;
 
-        io.emit("gameState", {
+      io.emit("gameState", {
         gameId: game.id,
         roomId: game.roomId,
         pickedNumbers: { numbers: game.selectedNumbers.filter(num => num !== null), fake: Array.from(game.fakePickedNumbers || []) },
@@ -373,7 +373,7 @@ function startCountDown(game) {
         
         const displayTotalReset = (game.selectedNumbers.filter(num => num !== null).length) + (game.fakePickedNumbers ? game.fakePickedNumbers.size : 0);
         const displayWinReset = displayTotalReset * game.roomId * 0.78;
-
+        
         io.emit("gameState", {
           gameId: game.id,
           roomId: game.roomId,
@@ -479,7 +479,7 @@ async function startGame(game) {
     const realPlayersCount = game.selectedNumbers.filter(num => num !== null).length;
     const fakePlayersCount = game.fakePickedNumbers ? game.fakePickedNumbers.size : 0;
     const actualTotalPlayers = realPlayersCount + fakePlayersCount;
-
+  
     io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
@@ -508,7 +508,7 @@ async function startGame(game) {
         const fakeId = 9999999999; // Fixed fake player ID
         const fakeName = ETH_MEN[Math.floor(Math.random() * ETH_MEN.length)];
 
-        // Generate a proper 5x5 bingo board using called numbers
+        // Generate a proper 5x5 bingo board using only 5 called numbers for winning pattern
         const generateFakeWinningBoard = () => {
           const board = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => ({ number: 0, marked: false })));
           
@@ -525,14 +525,10 @@ async function startGame(game) {
             { start: 61, end: 75 }    // O
           ];
           
-          // Fill each column prioritizing called numbers, then random for rest
+          // First, fill the entire board with random numbers (not called numbers)
+          const usedNumbers = new Set();
           for (let col = 0; col < 5; col++) {
             const range = columnRanges[col];
-            const usedNumbers = new Set();
-            
-            // Get called numbers in this column range
-            const calledInRange = calledNumbers.filter(n => n >= range.start && n <= range.end);
-            console.log(`🎯 Column ${col} (${range.start}-${range.end}): Called numbers:`, calledInRange);
             
             for (let row = 0; row < 5; row++) {
               if (col === 2 && row === 2) {
@@ -540,20 +536,9 @@ async function startGame(game) {
                 board[row][col] = { number: '*', marked: true };
               } else {
                 let num;
-                
-                // First priority: Use called numbers from this column
-                const availableCalled = calledInRange.filter(n => !usedNumbers.has(n));
-                if (availableCalled.length > 0) {
-                  // Use a called number
-                  num = availableCalled[Math.floor(Math.random() * availableCalled.length)];
-                  console.log(`🎯 Using called number ${num} for [${row}][${col}]`);
-                } else {
-                  // Second priority: Use random numbers to fill remaining cells
-                  do {
-                    num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
-                  } while (usedNumbers.has(num));
-                  console.log(`🎯 Using random number ${num} for [${row}][${col}]`);
-                }
+                do {
+                  num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                } while (usedNumbers.has(num));
                 
                 usedNumbers.add(num);
                 board[row][col] = { number: num, marked: false };
@@ -561,7 +546,7 @@ async function startGame(game) {
             }
           }
           
-          // Randomly choose ONE winning condition per fake board to mimic real players
+          // Randomly choose ONE winning condition
           const winningConditions = [
             'row',      // Horizontal line
             'column',   // Vertical line  
@@ -573,54 +558,68 @@ async function startGame(game) {
           const chosenCondition = winningConditions[Math.floor(Math.random() * winningConditions.length)];
           console.log(`🎯 Fake winner using ${chosenCondition} pattern`);
           
-          // Apply the randomly chosen winning pattern
+          // Use only 5 called numbers to fulfill the chosen winning condition
+          const calledNumbersToUse = calledNumbers.slice(0, 5);
+          console.log(`🎯 Using these 5 called numbers for winning pattern:`, calledNumbersToUse);
+          
+          // Apply the winning pattern using called numbers
           switch (chosenCondition) {
             case 'row':
-              // Random horizontal line
+              // Random horizontal line using called numbers
               const winningRow = Math.floor(Math.random() * 5);
               for (let col = 0; col < 5; col++) {
-                board[winningRow][col].marked = true;
+                if (col < calledNumbersToUse.length) {
+                  board[winningRow][col].number = calledNumbersToUse[col];
+                  board[winningRow][col].marked = true;
+                }
               }
+              console.log(`🎯 Row ${winningRow} marked as winning with called numbers`);
               break;
               
             case 'column':
-              // Random vertical line
+              // Random vertical line using called numbers
               const winningCol = Math.floor(Math.random() * 5);
               for (let row = 0; row < 5; row++) {
-                board[row][winningCol].marked = true;
+                if (row < calledNumbersToUse.length) {
+                  board[row][winningCol].number = calledNumbersToUse[row];
+                  board[row][winningCol].marked = true;
+                }
               }
+              console.log(`🎯 Column ${winningCol} marked as winning with called numbers`);
               break;
               
             case 'diagonal1':
-              // Diagonal top-left to bottom-right
+              // Diagonal top-left to bottom-right using called numbers
               for (let i = 0; i < 5; i++) {
-                board[i][i].marked = true;
+                if (i < calledNumbersToUse.length) {
+                  board[i][i].number = calledNumbersToUse[i];
+                  board[i][i].marked = true;
+                }
               }
+              console.log(`🎯 Diagonal1 (top-left to bottom-right) marked as winning with called numbers`);
               break;
               
             case 'diagonal2':
-              // Diagonal top-right to bottom-left
+              // Diagonal top-right to bottom-left using called numbers
               for (let i = 0; i < 5; i++) {
-                board[i][4-i].marked = true;
+                if (i < calledNumbersToUse.length) {
+                  board[i][4-i].number = calledNumbersToUse[i];
+                  board[i][4-i].marked = true;
+                }
               }
+              console.log(`🎯 Diagonal2 (top-right to bottom-left) marked as winning with called numbers`);
               break;
               
             case 'corners':
-              // Four corners
-              board[0][0].marked = true; // Top-left
-              board[0][4].marked = true; // Top-right
-              board[4][0].marked = true; // Bottom-left
-              board[4][4].marked = true; // Bottom-right
-              break;
-          }
-          
-          // Mark cells that correspond to called numbers
-          for (let row = 0; row < 5; row++) {
-            for (let col = 0; col < 5; col++) {
-              if (board[row][col].number !== '*' && calledNumbers.includes(board[row][col].number)) {
+              // Four corners using called numbers
+              const cornerPositions = [[0,0], [0,4], [4,0], [4,4]];
+              for (let i = 0; i < Math.min(4, calledNumbersToUse.length); i++) {
+                const [row, col] = cornerPositions[i];
+                board[row][col].number = calledNumbersToUse[i];
                 board[row][col].marked = true;
               }
-            }
+              console.log(`🎯 Four corners marked as winning with called numbers`);
+              break;
           }
           
           // Debug: Log the complete board structure
@@ -739,9 +738,9 @@ async function startGame(game) {
           // Start new countdown immediately
           startCountDown(game);
           
-          io.emit("gameStatus", {
+      io.emit("gameStatus", {
             status: "waiting",
-            roomId: game.roomId,
+        roomId: game.roomId,
             gameId: game.id
           });
         }, 1000);
@@ -757,10 +756,10 @@ async function startGame(game) {
       endGame(game);
     }
   };
-
+    
   // Emit the first ball immediately when the game starts (do not wait for gameSpeed)
   emitNextBall();
-
+   
   // Subsequent balls follow the configured game speed
   const gameInterval = setInterval(async () => {
     await emitNextBall();
