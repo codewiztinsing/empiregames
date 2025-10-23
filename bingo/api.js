@@ -100,7 +100,7 @@ const gameLossWallet = async (players, betAmount, totalPlayers = null, fakePlaye
   try{
       if(!data.players) return null;
       const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-      const lossUrl = `${baseUrl}/api/v1/game/join-game/`;
+      const lossUrl = `${baseUrl}game/join-game/`;
       console.log("lossUrl",lossUrl)
       console.log("data",data)
       await axios.post(lossUrl,data)
