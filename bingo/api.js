@@ -70,7 +70,7 @@ const checkBalance = async (playerId) => {
 const getCurrentGame = async (betAmount)=>{
   const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
   
-  const currentGameUrl = `${baseUrl}/api/v1/game/next-game/`;
+  const currentGameUrl = `${baseUrl}game/next-game/`;
   console.log("currentGameUrl",currentGameUrl)
   const params = {
     params: {
