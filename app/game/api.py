@@ -197,8 +197,20 @@ def game_settings(request):
     if not game_settings:
         game_settings = GameSettings.objects.create(game_speed=5000,count_down_time=30)
     
-    # Get fake player settings
-    fake_settings = FakePlayerSettings.get_solo()
+    # Get fake player settings with error handling
+    try:
+        fake_settings = FakePlayerSettings.get_solo()
+        logger.info(f"Fake player settings loaded: {fake_settings}")
+    except Exception as e:
+        logger.error(f"Error loading fake player settings: {e}")
+        # Create default fake player settings if none exist
+        fake_settings = FakePlayerSettings.objects.create(
+            max_fake_players=50,
+            calls_before_fake_winner=10,
+            real_players_threshold=10,
+            fake_players_can_win=True
+        )
+        logger.info(f"Created default fake player settings: {fake_settings}")
     
     return GameSettingsSchema(
         game_speed=game_settings.game_speed,

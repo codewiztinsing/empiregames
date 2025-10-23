@@ -20,9 +20,28 @@ const server = http.createServer(app);
 
 
 const getConstant = async () => {
-  return {
-    gameSpeed: 5000,
-    countDown: 30
+  try {
+    const gameSettings = await getGameSettings();
+    console.log('Game settings from API:', gameSettings);
+    return {
+      gameSpeed: gameSettings.game_speed || 5000,
+      countDown: gameSettings.count_down_time || 30,
+      max_fake_players: gameSettings.max_fake_players || 50,
+      calls_before_fake_winner: gameSettings.calls_before_fake_winner || 10,
+      real_players_threshold: gameSettings.real_players_threshold || 10,
+      fake_players_can_win: gameSettings.fake_players_can_win !== undefined ? gameSettings.fake_players_can_win : true
+    };
+  } catch (error) {
+    console.error('Error fetching game settings:', error);
+    // Return default values if API call fails
+    return {
+      gameSpeed: 5000,
+      countDown: 30,
+      max_fake_players: 50,
+      calls_before_fake_winner: 10,
+      real_players_threshold: 10,
+      fake_players_can_win: true
+    };
   }
 }
 
