@@ -485,15 +485,6 @@ const PlayingBoard = () => {
     
     return (
       <div className="winning-card">
-        {/* Header Row */}
-        <div className="winning-card-row">
-          {["B", "I", "N", "G", "O"].map((letter, index) => (
-            <div key={index} className="winning-card-cell winning-card-header">
-              <span className="bingo-letter">{letter}</span>
-            </div>
-          ))}
-        </div>
-        
         {/* Number Rows */}
         {card[0].map((_, rowIndex) => (
           <div key={rowIndex} className="winning-card-row">
@@ -505,7 +496,7 @@ const PlayingBoard = () => {
               // Get the actual number for this cell position
               let displayNumber;
               if (cell.number === '*') {
-                displayNumber = 'FREE';
+                displayNumber = 'F';
               } else if (cell.number !== undefined && cell.number !== null) {
                 displayNumber = cell.number;
               } else {
@@ -525,9 +516,9 @@ const PlayingBoard = () => {
               
               let cellClass = 'winning-card-cell';
               if (isWinningCell) {
-                cellClass += ' winning-complete';
-              } else if (isMarked) {
-                cellClass += ' winning-marked';
+                cellClass += ' winning-cell';
+              } else if (cell.number === '*') {
+                cellClass += ' free-space';
               }
               
               return (
@@ -535,7 +526,7 @@ const PlayingBoard = () => {
                   key={colIndex} 
                   className={cellClass}
                 >
-                  <span>{displayNumber}</span>
+                  {displayNumber}
                 </div>
               );
             })}
@@ -652,8 +643,9 @@ const PlayingBoard = () => {
         console.log('🔄 Emitted refresh event to restart game');
       }
       
-      // Navigate to home screen with all query parameters
+      // Navigate to home screen with all query parameters, then force a reload
       navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+      window.location.reload();
       
       // Show success message
       toast.success('🎮 Game refreshed! Ready for next round!');
@@ -896,34 +888,31 @@ const PlayingBoard = () => {
           <div className="liyu-logo-rain">🎯</div>
           
           <div className="bingo-winner-card">
-          <div className="winner-summary">
-                <span className="summary-text">
-                  {winnerPlayerName === playerName ? (
-                    <>🎊 Congratulations! You won with Card #{winnerCardNumber} 🎊</>
-                  ) : (
-                    <>🏆 {winnerPlayerName} won with Card #{winnerCardNumber} 🏆</>
-                  )}
-                </span>
-              </div>
-            
-            {/* Content Area */}
-            <div className="winner-content">
-              {/* Winner Information */}
-             
-             
-              {/* Winning Card Display */}
-              <div className="winning-card-section">
-                {renderWinningCard(winningCard)}
-              </div>
+            {/* Card Header */}
+            <div className="winner-card-header">
+              <h2 className="winner-card-title">Card Number {winnerCardNumber}</h2>
             </div>
             
-            {/* Action Buttons */}
+            {/* BINGO Letters Row */}
+            <div className="bingo-letters-row">
+              <div className="bingo-letter b">B</div>
+              <div className="bingo-letter i">I</div>
+              <div className="bingo-letter n">N</div>
+              <div className="bingo-letter g">G</div>
+              <div className="bingo-letter o">O</div>
+            </div>
+            
+            {/* Winning Card Display */}
+            <div className="winning-card-section">
+              {renderWinningCard(winningCard)}
+            </div>
+            
+            {/* Action Button */}
             <div className="winner-actions">
-          
               <button className="close-winner-button" onClick={handleCloseWinner}>
-                <span className="button-icon">✨</span>
+                <span className="button-icon">🎮</span>
                 <span className="button-text">{t('game.continuePlaying')}</span>
-                <span className="button-icon">✨</span>
+                <span className="button-icon">🎮</span>
               </button>
             </div>
           </div>

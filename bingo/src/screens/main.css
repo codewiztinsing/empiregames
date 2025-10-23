@@ -7,11 +7,85 @@
 
 body {
   font-family: 'Arial', 'Helvetica', sans-serif;
-  background-color: #e67e22; /* Orange background from image */
+  background-color: #e67e22 !important; /* Orange background from image - force override */
   margin: 0;
   padding: 0;
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+/* Fix distorted screen issues */
+html, body {
+  background-color: #e67e22 !important;
+  background: #e67e22 !important;
+}
+
+/* Override any conflicting background styles */
+.bingo-game-container,
+.bingo-container,
+.main-container {
+  background-color: #e67e22 !important;
+  background: #e67e22 !important;
+}
+
+/* Fix layout distortion and overflow issues */
+.bingo-game-container {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Prevent horizontal scrolling */
+* {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Fix any container overflow */
+.main-game-area,
+.bingo-content,
+.game-controls-section,
+.player-card-section {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* Fix distorted screen on mobile devices */
+@media (max-width: 768px) {
+  body {
+    background-color: #e67e22 !important;
+    overflow-x: hidden !important;
+  }
+  
+  .bingo-game-container {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    padding: 5px !important;
+    margin: 0 !important;
+  }
+  
+  .main-game-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  
+  .bingo-content {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .bingo-game-container {
+    padding: 2px !important;
+  }
+  
+  .main-game-area {
+    gap: 5px !important;
+  }
 }
 
 /* Main Game Container */
@@ -1288,51 +1362,330 @@ body {
   }
 }
 
-/* Enhanced Winner Card - Reduced Height, No Overflow, Perfect Centering with Shimmer */
+/* Enhanced Winner Card - Image-inspired Design */
 .bingo-winner-card {
-  background: linear-gradient(145deg, 
-    #ffffff 0%, 
-    #f8f9fa 25%, 
-    #ffffff 50%, 
-    #f0f8ff 75%, 
-    #ffffff 100%
-  );
-  border-radius: 30px;
+  background: #ffffff;
+  border-radius: 12px;
   padding: 0;
-  max-width: 90vw;
-  width: 100%;
+  max-width: 320px;
   max-height: 70vh;
   height: auto;
   text-align: center;
   box-shadow: 
-    0 30px 60px rgba(0, 0, 0, 0.5),
-    0 0 0 2px rgba(255, 215, 0, 0.4),
-    inset 0 2px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.1);
-  border: 3px solid rgba(255, 215, 0, 0.6);
-  animation: slideInModal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    0 6px 12px rgba(0, 0, 0, 0.3),
+    0 0 0 2px #333,
+    0 0 0 4px #fff,
+    inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 2px solid #333;
   position: relative;
-  overflow: visible;
+  animation: slideInModal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
   flex-direction: column;
   z-index: 10;
 }
 
+/* Card Header - Compact Style */
+.winner-card-header {
+  background: linear-gradient(135deg, #ff6b35, #ffd700, #ff6b35);
+  padding: 8px 15px;
+  border-radius: 12px 12px 0 0;
+  margin: 0;
+  border-bottom: 2px solid #333;
+  position: relative;
+}
+
+.winner-card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.1) 2px,
+    rgba(255, 255, 255, 0.1) 4px
+  );
+  border-radius: 12px 12px 0 0;
+}
+
+.winner-card-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
+  margin: 0;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+/* BINGO Letters Row - Compact Style */
+.bingo-letters-row {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 15px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+.bingo-letter {
+  width: 28px;
+  height: 20px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 12px;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.bingo-letter.b { background-color: #dc3545; }
+.bingo-letter.i { background-color: #28a745; }
+.bingo-letter.n { background-color: #fd7e14; }
+.bingo-letter.g { background-color: #007bff; }
+.bingo-letter.o { background-color: #6f42c1; }
+
+/* Winning Card Grid - Compact Style */
+.winning-card-section {
+  padding: 10px;
+  background: #ffffff;
+  border: 2px solid #333;
+  border-radius: 6px;
+  margin: 8px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.winning-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-width: 240px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 6px;
+}
+
+.winning-card-row {
+  display: flex;
+  gap: 1px;
+}
+
+.winning-card-cell {
+  width: 42px;
+  height: 42px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 11px;
+  color: #333;
+  background: #ffffff;
+  border: 1px solid #ccc;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.winning-card-cell.winning-cell {
+  background: #32cd32 !important;
+  border: 2px solid #228b22 !important;
+  color: #000;
+  font-weight: bold;
+  animation: winningCellPulse 1s ease-in-out infinite;
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    0 0 8px rgba(50, 205, 50, 0.5);
+}
+
+.winning-card-cell.free-space {
+  background: #32cd32 !important;
+  border: 2px solid #228b22 !important;
+  color: #000;
+  font-weight: bold;
+  font-size: 11px;
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    0 0 8px rgba(50, 205, 50, 0.5);
+}
+
+@keyframes winningCellPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Action Button - Compact Style */
+.winner-actions {
+  padding: 10px 15px;
+  background: #f8f9fa;
+  border-top: 2px solid #333;
+  border-radius: 0 0 12px 12px;
+}
+
+.close-winner-button {
+  width: 100%;
+  padding: 10px 15px;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border: 2px solid #0056b3;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.close-winner-button:hover {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  transform: translateY(-1px);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.button-icon {
+  font-size: 16px;
+}
+
+.button-text {
+  font-size: 14px;
+}
+
+/* Add card texture effect */
 .bingo-winner-card::before {
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(255, 255, 255, 0.4), 
-    transparent
-  );
-  animation: cardShimmer 3s ease-in-out infinite;
-  border-radius: 30px;
-  z-index: 1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(0, 0, 0, 0.03) 1px,
+      rgba(0, 0, 0, 0.03) 2px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(0, 0, 0, 0.03) 1px,
+      rgba(0, 0, 0, 0.03) 2px
+    );
+  pointer-events: none;
+  border-radius: 12px;
+}
+
+/* Responsive Design for Winner Modal - Compact */
+@media (max-width: 768px) {
+  .bingo-winner-card {
+    max-width: 280px;
+    margin: 5px;
+  }
+  
+  .winner-card-header {
+    padding: 12px 15px;
+  }
+  
+  .winner-card-title {
+    font-size: 14px;
+  }
+  
+  .bingo-letters-row {
+    padding: 10px 15px;
+    gap: 4px;
+  }
+  
+  .bingo-letter {
+    width: 30px;
+    height: 22px;
+    font-size: 14px;
+  }
+  
+  .winning-card-section {
+    padding: 12px;
+    margin: 0;
+  }
+  
+  .winning-card-cell {
+    width: 42px;
+    height: 42px;
+    font-size: 12px;
+  }
+  
+  .winner-actions {
+    padding: 15px;
+  }
+  
+  .close-winner-button {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bingo-winner-card {
+    max-width: 260px;
+    margin: 3px;
+  }
+  
+  .winner-card-header {
+    padding: 10px 12px;
+  }
+  
+  .winner-card-title {
+    font-size: 13px;
+  }
+  
+  .bingo-letters-row {
+    padding: 8px 12px;
+    gap: 3px;
+  }
+  
+  .bingo-letter {
+    width: 28px;
+    height: 20px;
+    font-size: 13px;
+  }
+  
+  .winning-card-section {
+    padding: 10px;
+    margin: 0;
+  }
+  
+  .winning-card-cell {
+    width: 38px;
+    height: 38px;
+    font-size: 11px;
+  }
+  
+  .winner-actions {
+    padding: 12px;
+  }
+  
+  .close-winner-button {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
 }
 
 @keyframes cardShimmer {
@@ -1424,7 +1777,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  margin: 15px auto;
   background: linear-gradient(135deg, #f8f9fa, #e9ecef);
   padding: 15px;
   border-radius: 15px;
@@ -1719,7 +2071,6 @@ body {
 }
 
 .winning-card-section {
-  margin: 25px 0;
   display: block;
   visibility: visible;
 }
@@ -2556,10 +2907,7 @@ body {
   color: #dc3545;
 }
 
-/* Enhanced Winning Card Section - Compact */
-.winning-card-section {
-  margin-bottom: 15px;
-}
+
 
 .winning-card-title {
   font-size: 20px;
@@ -2706,7 +3054,7 @@ body {
 @media (max-width: 480px) {
   .winning-card {
     width: 250px;
-    height: 250px;
+    height: 3000px;
     padding: 10px;
   }
   
