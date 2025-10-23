@@ -152,13 +152,25 @@ async  function endGame(game) {
   game.countDown = 30;
   game.isCountStart = false;
   game.fauldMadePlayers.clear();
+  // Reset fake picked numbers for immediate selection
+  game.fakePickedNumbers = new Set();
 
   for (const [socketId, user] of users.entries()) {
     if (user.gameId === game.id) users.delete(socketId);
   }
 
   const data = await updateLastGame(game.roomId);
-  startCountDown(game);
+  
+  // Start fake player number selection immediately if configured
+  if (game.fakeSettings?.fakePlayersCount > 0) {
+    console.log("🤖 Game ended - starting fake player number selection immediately");
+    // Start countdown immediately for fake players
+    setTimeout(() => {
+      startCountDown(game);
+    }, 500); // Small delay to ensure game state is properly reset
+  } else {
+    startCountDown(game);
+  }
 
   io.emit("gameStatus", {
     status: "waiting",
@@ -735,8 +747,11 @@ async function startGame(game) {
           game.staticWinAmount = null;
           game.fakePickedNumbers = new Set();
           
-          // Start new countdown immediately
-          startCountDown(game);
+          // Start fake player number selection immediately for next game
+          console.log("🤖 Fake player won - starting fake player number selection immediately for next game");
+          setTimeout(() => {
+            startCountDown(game);
+          }, 500); // Small delay to ensure game state is properly reset
           
       io.emit("gameStatus", {
             status: "waiting",
