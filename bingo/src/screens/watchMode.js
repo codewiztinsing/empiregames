@@ -206,12 +206,35 @@ const WatchModeScreen = () => {
 
       return () => clearTimeout(timer);
     } else if (isBingo && winnerCountdown === 0) {
+      // Reset game state and emit refresh event
+      setGameState(prev => ({
+        ...prev,
+        isBingo: false,
+        winnerCardNumber: null,
+        winnerPlayerName: null,
+        winningCard: null,
+        winnerCountdown: 5,
+        gameStatus: 'waiting',
+        calledNumbers: [],
+        lastBall: null,
+        totalCalledNumbers: 0,
+        recentCalledNumbers: ['*', '*', '*'],
+        gameCountdown: 0
+      }));
+      
+      // Emit refresh event to server to restart the game
+      if (socket && gameId) {
+        socket.emit('handleRefresh', { gameId: gameId });
+        console.log('🔄 Watch Mode: Emitted refresh event to restart game');
+      }
+      
       // Navigate back to selection screen after winner countdown
       setTimeout(() => {
         navigate('/');
+        toast.success('🎮 Game refreshed! Ready for next round!');
       }, 2000);
     }
-  }, [isBingo, winnerCountdown, navigate]);
+  }, [isBingo, winnerCountdown, navigate, socket, gameId, toast]);
 
   // Toggle mute
   const toggleMute = () => {
@@ -361,8 +384,8 @@ const WatchModeScreen = () => {
 
         {/* Right Side - Game Info */}
         <div className="game-info-section">
-          {/* Current Ball */}
-          {lastBall && (
+          {/* Current Ball - Only show when game is in progress */}
+          {gameStatus === 'in-progress' && lastBall && (
             <div className="current-ball-section">
               <div className="current-ball-label">Current Ball</div>
               <div className="current-ball">

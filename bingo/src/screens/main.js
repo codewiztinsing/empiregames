@@ -631,19 +631,38 @@ const PlayingBoard = () => {
 
   const handleCloseWinner = useCallback(() => {
     try {
+      // Reset winner modal state and game state
       updateGameState({
         isBingo: false,
         winnerCardNumber: null,
         winnerPlayerName: null,
-        winningCard: null
+        winningCard: null,
+        winnerCountdown: 5,
+        gameStatus: 'waiting',
+        calledNumbers: [],
+        lastBall: null,
+        totalCalledNumbers: 0,
+        recentCalledNumbers: ['*', '*', '*'],
+        gameCountdown: 0
       });
+      
+      // Emit refresh event to server to restart the game
+      if (socket && gameId) {
+        socket.emit('handleRefresh', { gameId: gameId });
+        console.log('🔄 Emitted refresh event to restart game');
+      }
       
       // Navigate to home screen with all query parameters
       navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+      
+      // Show success message
+      toast.success('🎮 Game refreshed! Ready for next round!');
+      
     } catch (error) {
       console.error('Error closing winner:', error);
+      toast.error('❌ Error refreshing game. Please try again.');
     }
-  }, [updateGameState, navigate, playerId, roomId, playerName]);
+  }, [updateGameState, navigate, playerId, roomId, playerName, socket, gameId, toast]);
 
   // Deposit reminder handlers
   const handleCloseDepositReminder = useCallback(() => {
@@ -1168,16 +1187,18 @@ const PlayingBoard = () => {
             </div>
           )}
 
-          {/* Ball Display */}
-          <div className="ball-display-container">
-            <div className="ball-display">
-              {lastBall ? (
-                <div className="ball-number">{lastBall.combined}</div>
-              ) : (
-                <div className="ball-placeholder"></div>
-              )}
+          {/* Ball Display - Only show when game is in progress */}
+          {gameStatus === 'in-progress' && (
+            <div className="ball-display-container">
+              <div className="ball-display">
+                {lastBall ? (
+                  <div className="ball-number">{lastBall.combined}</div>
+                ) : (
+                  <div className="ball-placeholder"></div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
     
           {/* Player Card */}
       {selectedNumber && (
