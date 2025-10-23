@@ -45,7 +45,7 @@ async def handle_manual_payment(update: Update, context: ContextTypes.DEFAULT_TY
         amount = context.user_data.get('deposit_amount', 0)
         
         session_id = response.json().get("session_id")
-        phone_number = get_user_phone(update.effective_user.id)
+        phone_number = await get_user_phone(update.effective_user.id)
         if manual_payment_method == "manual_telebirr":
             # Initialize with 0 amount, callback will update with correct amount
             initialize_manual_session(0, session_id, phone_number)

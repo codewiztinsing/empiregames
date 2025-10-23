@@ -3,58 +3,152 @@ from decouple import config
 import os
 import django
 from django.conf import settings
+from django.db.models import Sum, Count, Q
+from datetime import datetime, timedelta
+from asgiref.sync import sync_to_async
 
 # Configure Django settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
+# Import Django models
+from users.models import User
+from wallet.models import Wallet, Transaction, WithdrawalRequest
+from game.models import GameRoom, Game, PlayerGame
+from finance.models import Account, Transaction as FinanceTransaction, WithdrawalRequest as FinanceWithdrawalRequest
+
 BACK_URL = config("BACK_URL")
 
+@sync_to_async
 def daily_withdraw_limit(user_id):
-    response = requests.get(f"{BACK_URL}/api/v1/users/{user_id}/daily-withdraw-limit")
-    if response.status_code == 200:
-        return response.json().get("daily_withdraw_limit",0)
-    else:
-        return 0
-  
+    """
+    Get daily withdrawal limit for a user using Django ORM
     
-
-def numnber_of_game_played(user_id):
-    response = requests.get(f"{BACK_URL}/api/v1/users/{user_id}/number-of-game-played")
-    if response.status_code == 200:
-        return response.json().get("number_of_game_played")
-    else:
+    Args:
+        user_id (int): User's telegram_id
+        
+    Returns:
+        float: Daily withdrawal limit amount
+    """
+    try:
+        user = User.objects.get(telegram_id=user_id)
+        wallet = Wallet.objects.filter(user=user).first()
+        
+        if wallet:
+            # Get today's withdrawals
+            today = datetime.now().date()
+            daily_withdrawals = WithdrawalRequest.objects.filter(
+                user=user,
+                created_at__date=today,
+                status='success'
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            
+            # Return remaining limit (assuming 1000 ETB daily limit)
+            daily_limit = 1000.0
+            return max(0, daily_limit - float(daily_withdrawals))
+        else:
+            return 0
+    except User.DoesNotExist:
+        return 0
+    except Exception as e:
+        print(f"Error getting daily withdraw limit: {e}")
         return 0
 
+@sync_to_async
+def numnber_of_game_played(user_id):
+    """
+    Get number of games played by a user using Django ORM
+    
+    Args:
+        user_id (int): User's telegram_id
+        
+    Returns:
+        int: Number of games played
+    """
+    try:
+        user = User.objects.get(telegram_id=user_id)
+        games_played = PlayerGame.objects.filter(user=user).count()
+        return games_played
+    except User.DoesNotExist:
+        return 0
+    except Exception as e:
+        print(f"Error getting number of games played: {e}")
+        return 0
+
+@sync_to_async
 def number_of_game_won(user_id):
-    response = requests.get(f"{BACK_URL}/api/v1/users/{user_id}/number-of-game-won")
-    if response.status_code == 200:
-        return response.json().get("number_of_game_won")
-    else:
+    """
+    Get number of games won by a user using Django ORM
+    
+    Args:
+        user_id (int): User's telegram_id
+        
+    Returns:
+        int: Number of games won
+    """
+    try:
+        user = User.objects.get(telegram_id=user_id)
+        games_won = PlayerGame.objects.filter(user=user, has_bingo=True).count()
+        return games_won
+    except User.DoesNotExist:
+        return 0
+    except Exception as e:
+        print(f"Error getting number of games won: {e}")
         return 0
 
 # is deposited player
+@sync_to_async
 def is_deposited_player(user_id):
-    response = requests.get(f"{BACK_URL}/api/v1/users/{user_id}/is-deposited")
-    print("is deposited response = ",response.json())
-    if response.status_code == 200:
-        return response.json().get("is_deposited")
-    else:
+    """
+    Check if a user has made any deposits using Django ORM
+    
+    Args:
+        user_id (int): User's telegram_id
+        
+    Returns:
+        bool: True if user has made deposits, False otherwise
+    """
+    try:
+        user = User.objects.get(telegram_id=user_id)
+        has_deposits = Transaction.objects.filter(
+            user=user, 
+            type='DEPOSIT',
+            status='success'
+        ).exists()
+        print(f"is deposited for user {user_id}: {has_deposits}")
+        return has_deposits
+    except User.DoesNotExist:
+        print(f"User {user_id} not found")
+        return False
+    except Exception as e:
+        print(f"Error checking if user is deposited: {e}")
         return False
     
 
 
 
+@sync_to_async
 def get_user_phone(user_id):
+    """
+    Get user's phone number using Django ORM
+    
+    Args:
+        user_id (int): User's telegram_id
+        
+    Returns:
+        str: User's phone number or None if not found
+    """
     print(f"DEBUG: Getting phone for user_id: {user_id}")
-    response = requests.get(f"{BACK_URL}/api/v1/users/{user_id}")
-    print("phone number response = ",response.json())
-    if response.status_code == 200:
-        phone = response.json().get("phone")
+    try:
+        user = User.objects.get(telegram_id=user_id)
+        phone = user.phone
         print(f"DEBUG: Retrieved phone number: {phone} (type: {type(phone)})")
         return phone
-    else:
-        print(f"DEBUG: Failed to get phone for user_id: {user_id}, status: {response.status_code}")
+    except User.DoesNotExist:
+        print(f"DEBUG: User {user_id} not found")
+        return None
+    except Exception as e:
+        print(f"DEBUG: Error getting phone for user_id: {user_id}, error: {e}")
         return None
     
 def verify_receipt(message,paymentMethod,session_id):
@@ -92,6 +186,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+@sync_to_async
 def get_game_type():
     """
     Get all active game rooms from Django model
@@ -120,6 +215,7 @@ def get_game_type():
         logger.error(f"Error fetching game rooms from Django model: {e}")
         return None
 
+@sync_to_async
 def get_game_type_by_id(room_id):
     """
     Retrieve the type of a game room by its ID.

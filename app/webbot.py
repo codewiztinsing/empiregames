@@ -582,7 +582,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     try:
         # Get game types for validation
-        game_types_response = get_game_type()
+        game_types_response = await get_game_type()
         game_types = game_types_response.get('game_types', []) if game_types_response else []
         if query.data in ['10', '20', '50', '100'] or query.data in [str(game_type['bet_amount']) for game_type in game_types]:
             user_id = query.from_user.id
@@ -1163,15 +1163,7 @@ all_public_commands_descriptions = [
         "Invite"
         ),
 
-    BotCommand(
-        "change_sponsor", 
-        "Change Sponsor"
-        ),
-
-    BotCommand(
-        "show_id", 
-        "Show My ID"
-        )
+ 
     ]
 
 
@@ -1188,12 +1180,12 @@ async def handle_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     referrer_id = context.user_data.get('referrer_id')
     logger.info(f"referrer_id = {referrer_id}")
 
-    response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
-    if response.status_code != 200:
-        await update.message.reply_text(
-            "You need to register first before inviting others. Use the /register command."
-        )
-        return
+    # response = requests.get(f'{BACK_URL}/api/v1/users/{user_id}')
+    # if response.status_code != 200:
+    #     await update.message.reply_text(
+    #         "You need to register first before inviting others. Use the /register command."
+    #     )
+    #     return
 
     # Get user's wallet balance
     _wr = requests.get(f'{BACK_URL}/api/v1/wallet/player/{user_id}')
