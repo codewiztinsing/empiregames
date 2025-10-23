@@ -279,8 +279,9 @@ body {
   }
   
   .recent-balls-container {
-    padding: 10px;
+    padding: 12px;
     border-radius: 6px;
+    min-height: 70px;
   }
   
   .recent-balls-label {
@@ -323,8 +324,9 @@ body {
   }
   
   .recent-balls-container {
-    padding: 8px;
+    padding: 10px;
     border-radius: 6px;
+    min-height: 65px;
   }
   
   .recent-balls-label {
@@ -551,9 +553,10 @@ body {
   max-width: 50%;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px;
   min-height: 0;
-  height: 100%;
+  height: auto;
+  max-height: 400px;
   box-sizing: border-box;
 }
 
@@ -600,11 +603,15 @@ body {
 .recent-balls-container {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 8px;
-  padding: 12px;
+  padding: 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   text-align: center;
   position: relative;
   overflow: hidden;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .recent-balls-container::before {
@@ -832,12 +839,13 @@ body {
 .player-card-section {
   background-color: #ffffff;
   border-radius: 12px;
-  padding: 15px;
+  padding: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 100%;
+  min-width: 300px;
   box-sizing: border-box;
-  min-height: 400px;
+  min-height: 500px;
   display: flex;
   flex-direction: column;
 }
@@ -892,8 +900,9 @@ body {
 .player-card-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 20px;
+  justify-content: center;
 }
 
 .card-row {
@@ -904,12 +913,14 @@ body {
   background-color: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 8px;
-  padding: 16px 8px;
+  padding: 8px;
   font-size: 18px;
   font-weight: bold;
   color: #2c3e50;
   text-align: center;
-  min-height: 50px;
+  width: 50px;
+  height: 50px;
+  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1838,7 +1849,8 @@ body {
     flex: 0 0 50%;
     width: 50%;
     max-width: 50%;
-    min-height: 300px;
+    min-height: 250px;
+    max-height: 300px;
   }
   
   .main-bingo-board .top-actions,
@@ -1885,8 +1897,10 @@ body {
   
   .card-cell {
     font-size: 14px;
-    min-height: 35px;
-    padding: 8px 4px;
+    width: 35px;
+    height: 35px;
+    aspect-ratio: 1;
+    padding: 6px;
   }
   
   .ball-display {
@@ -1914,8 +1928,9 @@ body {
   }
   
   .recent-balls-container {
-    padding: 4px;
+    padding: 8px;
     border-radius: 4px;
+    min-height: 60px;
   }
   
   .recent-balls-label {
@@ -1937,8 +1952,9 @@ body {
   }
   
   .player-card-section {
-    padding: 4px;
-    min-height: 300px;
+    padding: 8px;
+    min-height: 400px;
+    min-width: 250px;
   }
   
   .card-title {
@@ -2011,7 +2027,8 @@ body {
     flex: 0 0 50%;
     width: 50%;
     max-width: 50%;
-    min-height: 250px;
+    min-height: 200px;
+    max-height: 250px;
   }
   
   .main-bingo-board .top-actions,
@@ -2037,10 +2054,11 @@ body {
   }
   
   .player-card-section {
-    padding: 8px;
+    padding: 10px;
     width: 100%;
     max-width: 100%;
-    min-height: 250px;
+    min-height: 350px;
+    min-width: 200px;
   }
   
   .number-cell {
@@ -2051,8 +2069,10 @@ body {
   
   .card-cell {
     font-size: 12px;
-    min-height: 30px;
-    padding: 6px 3px;
+    width: 30px;
+    height: 30px;
+    aspect-ratio: 1;
+    padding: 4px;
   }
   
   .bingo-letter {
@@ -2151,6 +2171,8 @@ body {
     flex: 0 0 50%;
     width: 50%;
     max-width: 50%;
+    min-height: 180px;
+    max-height: 220px;
   }
   
   .main-bingo-board .top-actions,
@@ -2183,8 +2205,10 @@ body {
   
   .card-cell {
     font-size: 14px;
-    min-height: 32px;
-    padding: 8px 4px;
+    width: 32px;
+    height: 32px;
+    aspect-ratio: 1;
+    padding: 6px;
   }
   
   .bingo-letter {
@@ -2293,7 +2317,8 @@ body {
     flex: 0 0 50%; /* Keep 50% width */
     width: 50%;
     max-width: 50%;
-    min-height: 300px;
+    min-height: 150px;
+    max-height: 200px;
   }
   
   .main-bingo-board .top-actions,
