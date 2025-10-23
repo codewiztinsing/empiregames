@@ -6,6 +6,7 @@ import './i18n'; // Initialize i18n
 
 import PlayingBoard from './screens/main';
 import SelectionScreen from './screens/selections';
+import WatchModeScreen from './screens/watchMode';
 import Landing from './screens/landing';
 import Profile from './screens/Profile';
 import Transactions from './screens/Transactions';
@@ -38,6 +39,11 @@ function App() {
                 <Route path="/play" element={
                   <ProtectedRoute>
                     <PlayingBoard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/watch" element={
+                  <ProtectedRoute>
+                    <WatchModeScreen />
                   </ProtectedRoute>
                 } />
                 <Route path="/profile" element={

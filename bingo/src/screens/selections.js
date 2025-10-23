@@ -587,8 +587,8 @@ const Selections = () => {
       setToast("🎮 Game is already running! Redirecting to watch mode...");
       setIsToast(true);
       
-      // Navigate to main screen with auto-play disabled
-      navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&autoPlay=false&watchMode=true`);
+      // Navigate to watch mode screen
+      navigate(`/watch?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
     }
   }, [gameStatus, hasSelectedCard, playerId, roomId, playerName, navigate, setToast, setIsToast]);
 

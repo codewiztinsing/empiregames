@@ -52,7 +52,13 @@ const PlayingBoard = () => {
     }
     if (isAutoPlayDisabled) {
       console.log("🎮 Auto-play disabled - user needs to manually select cards");
-      toast.info("🎮 Auto-play disabled - Select your cards manually");
+      toast("🎮 Auto-play disabled - Select your cards manually", {
+        icon: "⚠️",
+        style: {
+          background: "#f093fb",
+          color: "white",
+        },
+      });
     }
   }, [isWatchMode, isAutoPlayDisabled]);
 
@@ -77,7 +83,7 @@ const PlayingBoard = () => {
     recentCalledNumbers: ['*', '*', '*'],
     winnerCountdown: 5,
     isMuted: false,
-    autoPlay: false,
+    autoPlay: urlAutoPlay, // Use URL parameter value
     gameCountdown: 0,
     gameStatus: 'waiting',
     showDepositReminder: false, // Control deposit reminder popup
@@ -810,6 +816,40 @@ const PlayingBoard = () => {
           </div>
           <div className="auto-play-disabled-text">
             Select your cards manually
+          </div>
+        </div>
+      )}
+
+      {/* Watch Mode Blurred Card Overlay */}
+      {isWatchMode && (
+        <div className="watch-mode-overlay">
+          <div className="blurred-card-container">
+            <div className="blurred-card">
+              <div className="blurred-card-header">
+                <div className="blurred-card-title">🎯 BINGO CARD</div>
+                <div className="blurred-card-subtitle">Watch Mode</div>
+              </div>
+              <div className="blurred-card-grid">
+                {Array.from({ length: 25 }, (_, index) => (
+                  <div key={index} className="blurred-card-cell">
+                    <div className="blurred-number">
+                      {index === 12 ? '★' : '?'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="blurred-card-footer">
+                <div className="blurred-card-status">
+                  👁️ Observing Game
+                </div>
+              </div>
+            </div>
+            <div className="watch-mode-effects">
+              <div className="floating-icon">👁️</div>
+              <div className="floating-icon">🎯</div>
+              <div className="floating-icon">🎮</div>
+              <div className="floating-icon">⭐</div>
+            </div>
           </div>
         </div>
       )}
