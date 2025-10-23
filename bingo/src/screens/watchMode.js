@@ -331,9 +331,7 @@ const WatchModeScreen = () => {
         <div className="stat-item green">Prize {winAmount} ETB</div>
         <div className="stat-item light-green">Called {totalCalledNumbers}/75</div>
         
-        <div className="stat-item dark-purple language-switcher-container">
-          <LanguageSelector />
-        </div>
+      
       </div>
 
       {/* Main Game Area */}
@@ -434,10 +432,7 @@ const WatchModeScreen = () => {
         </div>
       )}
 
-      {/* Language Selector */}
-      <div className="language-selector-watch">
-        <LanguageSelector />
-      </div>
+    
     </div>
   );
 };
