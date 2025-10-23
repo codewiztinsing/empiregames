@@ -289,25 +289,7 @@ const WatchModeScreen = () => {
     <div className="watch-mode-container">
       <Toaster />
       
-      {/* Debug Information */}
-      <div className="debug-info" style={{ 
-        position: 'fixed', 
-        top: '10px', 
-        right: '10px', 
-        background: 'rgba(0,0,0,0.8)', 
-        color: 'white', 
-        padding: '10px', 
-        borderRadius: '5px',
-        fontSize: '12px',
-        zIndex: 1000
-      }}>
-        <div>Total Players: {totalPlayers}</div>
-        <div>Called Numbers: {totalCalledNumbers}</div>
-        <div>Game Status: {gameStatus}</div>
-        <div>Called Numbers Array: {calledNumbers.length}</div>
-        <div>Recent Numbers: {recentCalledNumbers.length}</div>
-        <div>Last Ball: {lastBall ? (typeof lastBall === 'object' ? lastBall.number || lastBall.combined : lastBall) : 'None'}</div>
-      </div>
+   
 
       {/* Header */}
       <div className="watch-mode-header">
