@@ -222,6 +222,7 @@ function startCountDown(game) {
     console.log("❌ Cannot start countdown - isCountStart:", game.isCountStart, "players:", game.players?.size, "hasFakePlayers:", hasFakePlayers);
     return;
   }
+  
   clearGameIntervals(game.id);
   game.countDown = 30; // Always reset to 30 when starting countdown
   game.isCountStart = true;
@@ -863,10 +864,17 @@ io.on('connection', (socket) => {
   socket.emit("waitingGames", waitingGames);
 
   socket.on("joinGame", (data) => {
+    console.log("🎮 Player attempting to join:", data.playerId, "to room:", data.roomId);
     const game = activeGames.get(data.roomId);
-    if (!data.playerId || !game) return;
+    if (!data.playerId || !game) {
+      console.log("❌ Join failed - missing playerId or game");
+      return;
+    }
+
+    console.log("🎮 Current game status:", game.status, "isCountStart:", game.isCountStart);
 
     if (game.status === 'in-progress') {
+      console.log("❌ Join blocked - game in progress");
       socket.emit('joinError', {
         roomId: data.roomId,
         message: 'Game is already in progress. Please wait for the next round.'
@@ -875,6 +883,7 @@ io.on('connection', (socket) => {
     }
 
     if (game.players.has(data.playerId)) {
+      console.log("❌ Join blocked - player already in game");
       socket.emit('joinError', {
         roomId: data.roomId,
         message: 'Already in game. Finish or leave current game.'
@@ -882,6 +891,7 @@ io.on('connection', (socket) => {
       return;
     }
 
+    console.log("✅ Player joining - adding to game");
     game.selectedNumbers.push(data.selectedNumber)
     game.selectedNumbers.push(data.selectedNumber2)
 
@@ -931,8 +941,13 @@ io.on('connection', (socket) => {
     const hasFakePlayers = game.fakeSettings?.fakePlayersCount > 0;
     const hasEnoughRealPlayers = game.players && game.players.size >= 2;
     
+    console.log("🔍 Player joining - isCountStart:", game.isCountStart, "hasFakePlayers:", hasFakePlayers, "hasEnoughRealPlayers:", hasEnoughRealPlayers, "currentCountdown:", game.countDown);
+    
     if (!game.isCountStart && (hasFakePlayers || hasEnoughRealPlayers)) {
+      console.log("✅ Starting countdown for new player");
       startCountDown(game);
+    } else if (game.isCountStart) {
+      console.log("⏸️ Countdown already running, not resetting");
     }
 
     users.set(socket.id, {
