@@ -755,28 +755,39 @@ const PlayingBoard = () => {
           winningCard[2][4].marked &&
           winningCard[4][2].marked;
 
-        // Does this cell belong to a winning line?
-        const inWinningLine =
-          (rowComplete && cell.marked) ||
-          (colComplete && cell.marked) ||
-          (diagonalComplete && cell.marked) ||
-          (reverseDiagonalComplete && cell.marked) ||
-          (fourCornersComplete &&
-            cell.marked &&
-            ((colIndex === 0 && (rowIndex === 0 || rowIndex === 4)) ||
-             (colIndex === 4 && (rowIndex === 0 || rowIndex === 4)))) ||
-          (fourEdgesComplete &&
-            cell.marked &&
-            ((colIndex === 0 && rowIndex === 2) ||
-             (colIndex === 2 && (rowIndex === 0 || rowIndex === 4)) ||
-             (colIndex === 4 && rowIndex === 2)));
+        // Determine which winning pattern is active
+        let isPartOfWinningPattern = false;
+        
+        if (rowComplete) {
+          isPartOfWinningPattern = true; // This entire row is part of winning pattern
+        } else if (colComplete) {
+          isPartOfWinningPattern = true; // This entire column is part of winning pattern
+        } else if (diagonalComplete && rowIndex === colIndex) {
+          isPartOfWinningPattern = true; // Main diagonal
+        } else if (reverseDiagonalComplete && rowIndex + colIndex === 4) {
+          isPartOfWinningPattern = true; // Reverse diagonal
+        } else if (fourCornersComplete &&
+          ((colIndex === 0 && (rowIndex === 0 || rowIndex === 4)) ||
+           (colIndex === 4 && (rowIndex === 0 || rowIndex === 4)))) {
+          isPartOfWinningPattern = true; // Four corners
+        } else if (fourEdgesComplete &&
+          ((colIndex === 0 && rowIndex === 2) ||
+           (colIndex === 2 && (rowIndex === 0 || rowIndex === 4)) ||
+           (colIndex === 4 && rowIndex === 2))) {
+          isPartOfWinningPattern = true; // Four edges
+        }
+
+        // Does this cell belong to a winning line AND was it marked?
+        const inWinningLine = isPartOfWinningPattern && cell.marked;
 
         // Final background color
         let bgColor = "white";
         if (inWinningLine) {
-          bgColor = "green";   // part of winning line
+          bgColor = "green";   // part of winning line and marked
+        } else if (isPartOfWinningPattern && !cell.marked) {
+          bgColor = "#ffcccc"; // part of winning pattern but NOT marked (missed)
         } else if (cell.marked) {
-          bgColor = "red";     // marked but not winning
+          bgColor = "red";     // marked but not part of winning pattern
         }
 
         // Debug cell rendering
@@ -792,11 +803,19 @@ const PlayingBoard = () => {
           });
         }
 
+        // Add red strikethrough for missed cells in winning pattern
+        const cellStyle = {
+          backgroundColor: bgColor,
+          textDecoration: isPartOfWinningPattern && !cell.marked ? 'line-through' : 'none',
+          textDecorationColor: isPartOfWinningPattern && !cell.marked ? 'red' : 'transparent',
+          textDecorationThickness: isPartOfWinningPattern && !cell.marked ? '3px' : '1px'
+        };
+
         return (
           <div
             key={colIndex}
             className="winning-card-cell"
-            style={{ backgroundColor: bgColor }}
+            style={cellStyle}
           >
             <span>{cell?.number || '?'}</span>
           </div>
