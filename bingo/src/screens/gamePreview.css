@@ -509,3 +509,146 @@
     font-size: 0.9rem;
   }
 }
+
+/* Bingo Winner Overlay Styles */
+.bingo-winner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.bingo-winner-card {
+  background-color: #25253f;
+  padding: 2rem;
+  border-radius: 10px;
+  text-align: center;
+  max-width: 80%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.bingo-winner-card h2 {
+  color: #4CAF50;
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.winning-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 1.5rem;
+}
+
+.winning-card-row {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.winner-card-header-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: rgb(75, 146, 165);
+}
+
+.winner-card-header-winner-number {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: green !important;
+  animation: fadeIn 0.8s infinite;
+}
+
+@keyframes fadeIn {
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+
+  25% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+.winning-card-cell {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.winning-card-cell.marked {
+  background-color: green;
+  color: white;
+}
+
+.close-winner-button {
+  background-color: red;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: 60px;
+  height: 40px;
+}
+
+.close-winner-button:hover {
+  background-color: #45a049;
+}
+
+/* Winner Countdown Styles */
+.winner-countdown {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+  color: white;
+  padding: 15px 25px;
+  border-radius: 15px 15px 0 0;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  animation: pulse 1s infinite;
+  margin: -2rem -2rem 20px -2rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
+}
+
+.winner-countdown p {
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+}
+
+.choosen-numbers {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.choosen-number {
+  color: #ff6b35;
+  font-weight: bold;
+}

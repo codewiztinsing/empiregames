@@ -33,6 +33,13 @@ const GamePreview = () => {
   const [winnerPlayerName, setWinnerPlayerName] = useState(null);
   const [markedCells, setMarkedCells] = useState([]);
   const [winnerCountdown, setWinnerCountdown] = useState(5);
+  
+  // Handler to close winner modal
+  const handleCloseWinner = () => {
+    setIsBingo(false);
+    navigate(`/?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`);
+    window.location.reload();
+  };
 
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -142,12 +149,8 @@ const GamePreview = () => {
         setWinnerCountdown(prev => prev - 1);
       }, 1000);
       return () => clearTimeout(timer);
-    } else if (isBingo && winnerCountdown === 0) {
-      // Navigate to selection screen when countdown reaches 0
-      navigate(`/?playerId=${encodeURIComponent(playerId)}&betAmount=${encodeURIComponent(roomId)}&playerName=${encodeURIComponent(playerName)}`);
-      window.location.reload();
     }
-  }, [isBingo, winnerCountdown, navigate, playerId, roomId, playerName]);
+  }, [isBingo, winnerCountdown]);
 
   const handleJoinGame = () => {
     if (!playerId || !roomId || !playerName) {
@@ -376,6 +379,9 @@ const GamePreview = () => {
       {isBingo && (
         <div className="bingo-winner-overlay">
           <div className="bingo-winner-card">
+            <div className="winner-countdown">
+              <p>Returning to home in: {winnerCountdown} seconds</p>
+            </div>
             <div className="winner-card-header">
               <p className='winner-card-header-text'>Bingo Winner!</p>
             </div>
@@ -406,55 +412,83 @@ const GamePreview = () => {
               <div key={rowIndex} className="winning-card-row">
                 {winningCard.map((row, colIndex) => {
                   const cell = row[rowIndex];
-                  // Check win conditions
-                  const rowComplete = winningCard.every(r => r[rowIndex].marked);
-                  const colComplete = winningCard[colIndex].every(c => c.marked);
-                  const diagonalComplete =
-                    rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
-                  const reverseDiagonalComplete =
-                    rowIndex + colIndex === 4 && winningCard.every((r, i) => r[4 - i].marked);
+                  
+                  // Use stored winning pattern if available (for fake winners)
+                  let isPartOfWinningPattern = false;
+                  
+                  if (winningCard._winningPattern && winningCard._winningPositions) {
+                    // Use the stored winning pattern (only ONE pattern)
+                    const isWinningCell = winningCard._winningPositions.some(pos => pos[0] === colIndex && pos[1] === rowIndex);
+                    isPartOfWinningPattern = isWinningCell;
+                  } else {
+                    // Fallback to checking all patterns (for real winners)
+                    const rowComplete = winningCard.every(r => r[rowIndex].marked);
+                    const colComplete = winningCard[colIndex].every(c => c.marked);
+                    const diagonalComplete =
+                      rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
+                    const reverseDiagonalComplete =
+                      rowIndex + colIndex === 4 && winningCard.every((r, i) => r[4 - i].marked);
 
-                  const fourCornersComplete =
-                    winningCard[0][0].marked &&
-                    winningCard[0][4].marked &&
-                    winningCard[4][0].marked &&
-                    winningCard[4][4].marked;
+                    const fourCornersComplete =
+                      winningCard[0][0].marked &&
+                      winningCard[0][4].marked &&
+                      winningCard[4][0].marked &&
+                      winningCard[4][4].marked;
 
-                  const fourEdgesComplete =
-                    winningCard[0][2].marked &&
-                    winningCard[2][0].marked &&
-                    winningCard[2][4].marked &&
-                    winningCard[4][2].marked;
+                    const fourEdgesComplete =
+                      winningCard[0][2].marked &&
+                      winningCard[2][0].marked &&
+                      winningCard[2][4].marked &&
+                      winningCard[4][2].marked;
 
-                  // Does this cell belong to a winning line?
-                  const inWinningLine =
-                    (rowComplete && cell.marked) ||
-                    (colComplete && cell.marked) ||
-                    (diagonalComplete && cell.marked) ||
-                    (reverseDiagonalComplete && cell.marked) ||
-                    (fourCornersComplete &&
-                      cell.marked &&
+                    if (rowComplete) {
+                      isPartOfWinningPattern = true;
+                    } else if (colComplete) {
+                      isPartOfWinningPattern = true;
+                    } else if (diagonalComplete && rowIndex === colIndex) {
+                      isPartOfWinningPattern = true;
+                    } else if (reverseDiagonalComplete && rowIndex + colIndex === 4) {
+                      isPartOfWinningPattern = true;
+                    } else if (fourCornersComplete &&
                       ((colIndex === 0 && (rowIndex === 0 || rowIndex === 4)) ||
-                       (colIndex === 4 && (rowIndex === 0 || rowIndex === 4)))) ||
-                    (fourEdgesComplete &&
-                      cell.marked &&
+                       (colIndex === 4 && (rowIndex === 0 || rowIndex === 4)))) {
+                      isPartOfWinningPattern = true;
+                    } else if (fourEdgesComplete &&
                       ((colIndex === 0 && rowIndex === 2) ||
                        (colIndex === 2 && (rowIndex === 0 || rowIndex === 4)) ||
-                       (colIndex === 4 && rowIndex === 2)));
+                       (colIndex === 4 && rowIndex === 2))) {
+                      isPartOfWinningPattern = true;
+                    }
+                  }
+
+                  // Does this cell belong to a winning line AND was it marked?
+                  const inWinningLine = isPartOfWinningPattern && cell.marked;
 
                   // Final background color
                   let bgColor = "white";
                   if (inWinningLine) {
-                    bgColor = "green";   // part of winning line
+                    bgColor = "green";   // part of winning line and marked
+                  } else if (isPartOfWinningPattern && !cell.marked) {
+                    bgColor = "#ffcccc"; // part of winning pattern but NOT marked (missed)
                   } else if (cell.marked) {
-                    bgColor = "red";     // marked but not winning
+                    bgColor = "red";     // marked but not part of winning pattern
+                  } else if (!cell.marked) {
+                    bgColor = "red";     // marked false (not part of winning pattern)
                   }
+
+                  // Add red strikethrough for missed cells in winning pattern
+                  const cellStyle = {
+                    backgroundColor: bgColor,
+                    textDecoration: isPartOfWinningPattern && !cell.marked ? 'line-through' : 'none',
+                    textDecorationColor: isPartOfWinningPattern && !cell.marked ? 'red' : 'transparent',
+                    textDecorationThickness: isPartOfWinningPattern && !cell.marked ? '3px' : '1px'
+                  };
 
                   return (
                     <div
                       key={colIndex}
                       className="winning-card-cell"
-                      style={{ backgroundColor: bgColor }}
+                      style={cellStyle}
                     >
                       <span>{cell?.number || '?'}</span>
                     </div>
@@ -466,9 +500,9 @@ const GamePreview = () => {
 
             <div className="choosen-numbers">
               <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
-              <div className="winner-countdown">
-                <p>Redirecting to selection in: {winnerCountdown}s</p>
-              </div>
+              <button className="close-winner-button" onClick={handleCloseWinner}>
+                <p>Close</p>
+              </button>
             </div>
           </div>
         </div>

@@ -626,13 +626,49 @@ async function startGame(game) {
           
           // Place called numbers in winning positions and mark ONLY winning cells as true
           console.log('🎯 DEBUG: Placing called numbers in winning positions:', winningPositions);
+          
+          // Helper function to get column index for a number
+          const getColumnForNumber = (num) => {
+            if (num >= 1 && num <= 15) return 0;   // B
+            if (num >= 16 && num <= 30) return 1;  // I
+            if (num >= 31 && num <= 45) return 2;  // N
+            if (num >= 46 && num <= 60) return 3;  // G
+            if (num >= 61 && num <= 75) return 4;  // O
+            return 0; // default to B
+          };
+          
+          // Create a map of column -> available numbers from called numbers
+          const numbersByColumn = {};
+          for (let col = 0; col < 5; col++) {
+            numbersByColumn[col] = [];
+          }
+          
+          calledNumbers.forEach(num => {
+            const col = getColumnForNumber(num);
+            numbersByColumn[col].push(num);
+          });
+          
+          console.log('🎯 DEBUG: Numbers grouped by column:', numbersByColumn);
+          
+          // Place numbers in winning positions, ensuring they belong to the correct column
           winningPositions.forEach((pos, idx) => {
             const [col, row] = pos;
-            if (calledNumbersToUse[idx]) {
-              board[col][row].number = calledNumbersToUse[idx];
-              board[col][row].marked = true; // Mark as winning
-              console.log(`🎯 DEBUG: Placed ${calledNumbersToUse[idx]} at [${col},${row}] - marked as winning`);
+            const range = columnRanges[col];
+            
+            // Find a number from called numbers that belongs to this column
+            let numberToPlace = null;
+            if (numbersByColumn[col] && numbersByColumn[col].length > 0) {
+              numberToPlace = numbersByColumn[col][idx % numbersByColumn[col].length];
             }
+            
+            // If no number found for this column, generate a random one within range
+            if (!numberToPlace) {
+              numberToPlace = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+            }
+            
+            board[col][row].number = numberToPlace;
+            board[col][row].marked = true; // Mark as winning
+            console.log(`🎯 DEBUG: Placed ${numberToPlace} at [${col},${row}] - marked as winning`);
           });
           
           // All other cells remain marked as false (not part of winning pattern)
