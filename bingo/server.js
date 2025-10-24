@@ -143,7 +143,15 @@ function clearGameIntervals(gameId) {
 
 async  function endGame(game) {
   clearGameIntervals(game.id);
+  
+  // Reset all player-related data
   game.players.clear();
+  game.selectedNumbers = [];
+  game.selectedNumbersToPlayer.clear();
+  game.numberOfBoardsToPlayer.clear();
+  game.disconnectedPlayers.clear();
+  game.fauldMadePlayers.clear();
+  
   game.calledNumbers = [];
   game.currentCall = null;
   game.status = "waiting";
@@ -151,11 +159,9 @@ async  function endGame(game) {
   game.winner = null;
   game.countDown = 30;
   game.isCountStart = false;
-  game.fauldMadePlayers.clear();
   
   // Reset fake player selections and static values for next game
   game.fakePickedNumbers = new Set();
-  game.selectedNumbers = [];
   game.staticTotalPlayers = null;
   game.staticWinAmount = null;
 
@@ -747,6 +753,15 @@ async function startGame(game) {
         setTimeout(() => {
           // Reset game state similar to endGame but keep players
           clearGameIntervals(game.id);
+          
+          // Reset all player-related data
+          game.players.clear();
+          game.selectedNumbers = [];
+          game.selectedNumbersToPlayer.clear();
+          game.numberOfBoardsToPlayer.clear();
+          game.disconnectedPlayers.clear();
+          game.fauldMadePlayers.clear();
+          
           game.calledNumbers = [];
           game.currentCall = null;
           game.status = "waiting";
@@ -754,11 +769,9 @@ async function startGame(game) {
           game.winner = null;
           game.countDown = 30;
           game.isCountStart = false;
-          game.fauldMadePlayers.clear();
           game.staticTotalPlayers = null;
           game.staticWinAmount = null;
           game.fakePickedNumbers = new Set();
-          game.selectedNumbers = []; // Reset selected numbers for next game
           
           // Start new countdown immediately
           startCountDown(game);
