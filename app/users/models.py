@@ -76,6 +76,8 @@ class User(AbstractUser):
     games_played_this_week = models.PositiveIntegerField(default=0)
     last_game_date = models.DateField(null=True, blank=True)
     last_week_reset = models.DateField(null=True, blank=True)
+    consecutive_games_bet = models.PositiveIntegerField(default=0)  # Track consecutive games bet for bonus
+    last_bonus_redeemed_at = models.DateTimeField(null=True, blank=True)  # Track when bonus was last redeemed
     
     # Security
     failed_login_attempts = models.PositiveIntegerField(default=0)

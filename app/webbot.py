@@ -17,6 +17,7 @@ from telegram import (
 )
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from datetime import datetime, timedelta
+from decimal import Decimal
 # Removed payment gateway integrations; keep only needed utils
 from utils import get_bot_seetings, get_user_phone
 # Removed Chapa/AddisPay integrations
@@ -66,7 +67,11 @@ LANGUAGE_TEXTS = {
         'amharic': '🇪🇹 Amharic',
         'oromo': '🇪🇹 Oromo',
         'somali': '🇸🇴 Somali',
-        'tigrinya': '🇪🇹 Tigrinya'
+        'tigrinya': '🇪🇹 Tigrinya',
+        'user_not_found': 'User not found. Please register first.',
+        'bonus_earned': '🎉 Congratulations! You\'ve earned a bonus!\n\n💰 Bonus Amount: {amount:.2f} ETB\n🎮 Consecutive Games: {games}\n\nYour bonus has been added to your wallet. Keep playing to earn more bonuses!',
+        'bonus_progress': '📊 Consecutive Games Bonus Progress\n\n🎮 Games Bet: {current}/10\n🎯 Games Needed: {needed}\n\nBet {needed} more consecutive game(s) to earn a 20 ETB bonus!',
+        'error_occurred': 'An error occurred. Please try again later.'
     },
     'am': {
         'welcome': 'ወደ ሊዩ ቢንጎ እንኳን ደህና መጡ!',
@@ -81,7 +86,11 @@ LANGUAGE_TEXTS = {
         'amharic': '🇪🇹 አማርኛ',
         'oromo': '🇪🇹 Oromo',
         'somali': '🇸🇴 Somali',
-        'tigrinya': '🇪🇹 Tigrinya'
+        'tigrinya': '🇪🇹 Tigrinya',
+        'user_not_found': 'ተጠቃሚ አልተገኘም። እባክዎ በመጀመሪያ ይመዝገቡ።',
+        'bonus_earned': '🎉 እንኳን ደስ አለህ! ጉርሻ አግኝተሃል!\n\n💰 የጉርሻ መጠን: {amount:.2f} ብር\n🎮 ተከታታይ ጨዋታዎች: {games}\n\nጉርሻዎ ወደ የገንዘብ ቦርሳዎ ተጨመረ። ተጨማሪ ጉርሻዎችን ለማግኘት መጫወት ይቀጥሉ!',
+        'bonus_progress': '📊 ተከታታይ ጨዋታዎች ጉርሻ ሂደት\n\n🎮 የተጫወቱ ጨዋታዎች: {current}/10\n🎯 የሚያስፈልጉ ጨዋታዎች: {needed}\n\n20 ብር ጉርሻ ለማግኘት {needed} ተጨማሪ ተከታታይ ጨዋታ(ዎች) ይጫወቱ!',
+        'error_occurred': 'ስህተት ተፈጥሯል። እባክዎ ቆይተው ይሞክሩ።'
     },
     'om': {
         'welcome': 'Liyu Bingo irratti baga nagaan dhufte!',
@@ -96,7 +105,11 @@ LANGUAGE_TEXTS = {
         'amharic': '🇪🇹 Amharic',
         'oromo': '🇪🇹 Afaan Oromoo',
         'somali': '🇸🇴 Somali',
-        'tigrinya': '🇪🇹 Tigrinya'
+        'tigrinya': '🇪🇹 Tigrinya',
+        'user_not_found': 'Fayyadamaa hin argamne. Maaloo jalqaba galma\'i.',
+        'bonus_earned': '🎉 Bagaan gahe! Bonas argatte!\n\n💰 Gatii Bonas: {amount:.2f} ETB\n🎮 Tapha Walitti Fufan: {games}\n\nBonas kee wallet kee keessatti dabalamuun isaa. Bonas dabalataa argachuuf tapha itti fufi!',
+        'bonus_progress': '📊 Tapha Walitti Fufan Bonas Fooyya\'ii\n\n🎮 Tapha Taphatame: {current}/10\n🎯 Tapha Barbaachisan: {needed}\n\nBonas 20 ETB argachuuf tapha walitti fufan {needed} dabalataa taphadi!',
+        'error_occurred': 'Dogoggorri ta\'e. Maaloo booda itti yaali.'
     },
     'so': {
         'welcome': 'Ku soo dhawoow Liyu Bingo!',
@@ -111,7 +124,11 @@ LANGUAGE_TEXTS = {
         'amharic': '🇪🇹 Amharic',
         'oromo': '🇪🇹 Oromo',
         'somali': '🇸🇴 Soomaali',
-        'tigrinya': '🇪🇹 Tigrinya'
+        'tigrinya': '🇪🇹 Tigrinya',
+        'user_not_found': 'Isticmaalaha lama heli. Fadlan marka hore isdiiwaangeli.',
+        'bonus_earned': '🎉 Hambalyo! Waxaad heshay bonus!\n\n💰 Qadarka Bonus: {amount:.2f} ETB\n🎮 Ciyaaraha Isku Xiga: {games}\n\nBonuskaaga ayaa lagu daray walletkaaga. Si aad u hesho bonusyo dheeraad ah ciyaar sii wad!',
+        'bonus_progress': '📊 Horumarka Bonuska Ciyaaraha Isku Xiga\n\n🎮 Ciyaaraha La Ciyaaray: {current}/10\n🎯 Ciyaaraha Loo Baahan Yahay: {needed}\n\nSi aad u hesho bonus 20 ETB ciyaar isku xiga {needed} dheeraad ah ciyaar!',
+        'error_occurred': 'Qalad ayaa dhacay. Fadlan dib u isku day.'
     },
     'ti': {
         'welcome': 'ናይ ሊዩ ቢንጎ እንቋዕ ብደሓን መጻእኩም!',
@@ -126,7 +143,11 @@ LANGUAGE_TEXTS = {
         'amharic': '🇪🇹 Amharic',
         'oromo': '🇪🇹 Oromo',
         'somali': '🇸🇴 Somali',
-        'tigrinya': '🇪🇹 ትግርኛ'
+        'tigrinya': '🇪🇹 ትግርኛ',
+        'user_not_found': 'ተጠቃሚ ኣይተረኽበን። በጃኹም ብመጀመርታ ተመዝግቡ።',
+        'bonus_earned': '🎉 እንቋዕ ደስ ኢልኩም! ቦነስ ረኺብኩም!\n\n💰 ዋጋ ቦነስ: {amount:.2f} ETB\n🎮 ተኸታታይ ጸወታታት: {games}\n\nቦነስኩም ናብ ዋለትኩም ተወሲኹ። ተወሳኺ ቦነስ ንምርካብ ጸወታ ቀጽሉ!',
+        'bonus_progress': '📊 ተኸታታይ ጸወታታት ቦነስ ምዕባለ\n\n🎮 ዝተጸወቱ ጸወታታት: {current}/10\n🎯 ዘድልዩ ጸወታታት: {needed}\n\nቦነስ 20 ETB ንምርካብ {needed} ተወሳኺ ተኸታታይ ጸወታ(ታት) ጸወቱ!',
+        'error_occurred': 'ጌጋ ተፈጢሩ። በጃኹም ድሕሪ እንደገና ፈትኑ።'
     }
 }
 
@@ -1209,6 +1230,11 @@ all_public_commands_descriptions = [
         "Invite"
         ),
 
+    BotCommand(
+        "redeem", 
+        "Redeem Bonus"
+        ),
+
  
     ]
 
@@ -1459,6 +1485,80 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
+async def redeem_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Redeem bonus for betting 10 consecutive games
+    Awards 20 birr bonus if user has bet 10 consecutive games
+    """
+    telegram_id = update.effective_user.id
+    BACK_URL = get_bot_seetings().get("bot_url")
+    
+    try:
+        # Get user
+        if LOCAL_MODE:
+            user = await get_user_by_telegram_id(telegram_id)
+            if not user:
+                await update.message.reply_text(get_text(telegram_id, 'user_not_found'))
+                return ConversationHandler.END
+        else:
+            user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
+            if user_response.status_code != 200:
+                await update.message.reply_text(get_text(telegram_id, 'user_not_found'))
+                return ConversationHandler.END
+            user_data = user_response.json()
+        
+        # Get consecutive games bet count
+        consecutive_games = user.consecutive_games_bet if LOCAL_MODE else user_data.get('consecutive_games_bet', 0)
+        
+        if consecutive_games >= 10:
+            # User is eligible for bonus
+            bonus_amount = 20.00
+            
+            # Add bonus to wallet
+            if LOCAL_MODE:
+                wallet = await get_user_wallet(user)
+                wallet.balance += Decimal(str(bonus_amount))
+                await sync_to_async(wallet.save)()
+                
+                # Reset consecutive games counter
+                user.consecutive_games_bet = 0
+                user.last_bonus_redeemed_at = timezone.now()
+                await sync_to_async(user.save)()
+            else:
+                # Call API to add bonus
+                bonus_response = requests.post(
+                    f'{BACK_URL}/api/v1/wallet/add-bonus/',
+                    json={'telegram_id': telegram_id, 'amount': bonus_amount}
+                )
+                
+                if bonus_response.status_code == 200:
+                    # Reset consecutive games counter via API
+                    requests.post(
+                        f'{BACK_URL}/api/v1/users/reset-consecutive-games/',
+                        json={'telegram_id': telegram_id}
+                    )
+            
+            message = get_text(telegram_id, 'bonus_earned').format(
+                amount=bonus_amount,
+                games=consecutive_games
+            )
+        else:
+            # User needs more games
+            games_needed = 10 - consecutive_games
+            message = get_text(telegram_id, 'bonus_progress').format(
+                current=consecutive_games,
+                needed=games_needed
+            )
+        
+        await update.message.reply_text(message)
+        return ConversationHandler.END
+        
+    except Exception as e:
+        logger.error(f"Error in redeem_command: {e}")
+        await update.message.reply_text(get_text(telegram_id, 'error_occurred'))
+        return ConversationHandler.END
+
+
 def main() -> None:
     BOT_TOKEN = get_bot_seetings().get("bot_token")
     application = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
@@ -1487,6 +1587,7 @@ def main() -> None:
     application.add_handler(CommandHandler('check_balance', check_balance_command))
     application.add_handler(CommandHandler('deposit', deposit_command))
     application.add_handler(CommandHandler('show_id', show_id_command))
+    application.add_handler(CommandHandler('redeem', redeem_command))
     application.add_handler(conversation_handler)
     application.add_handler(CommandHandler('invite', handle_invite))  
     application.run_polling(allowed_updates=Update.ALL_TYPES)

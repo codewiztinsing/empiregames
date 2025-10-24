@@ -131,6 +131,11 @@ def charge_player(players, entry_fee, game_id):
             wallet.save()
             logger.info(f"Wallet balance after deduction: {wallet.balance}")
             
+            # Increment consecutive games bet counter
+            player_obj.consecutive_games_bet += 1
+            player_obj.save(update_fields=['consecutive_games_bet'])
+            logger.info(f"Updated consecutive games bet: {player_obj.consecutive_games_bet}")
+            
             # Create transaction record
             transaction = push_transaction(
                 player_obj.telegram_id, 
