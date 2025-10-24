@@ -681,6 +681,7 @@ const PlayingBoard = () => {
   const handleLeaveGame = useCallback(() => {
     try {
       navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
+      window.location.reload();
     } catch (error) {
       console.error('Error leaving game:', error);
     }
