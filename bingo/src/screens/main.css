@@ -461,6 +461,7 @@ html, body {
   height: auto; /* Allow height to grow with content */
   box-sizing: border-box;
   overflow: visible; /* Allow content to be visible */
+  overflow-x: hidden; /* Prevent horizontal overflow */
 }
 
 /* Top Actions for Main Bingo Board */
@@ -542,6 +543,8 @@ html, body {
   gap: 1px;
   margin-bottom: 5px;
   flex-shrink: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .bingo-letter {
@@ -555,6 +558,8 @@ html, body {
   font-size: 16px;
   color: white;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .bingo-letter.red {
@@ -884,29 +889,40 @@ html, body {
 }
 
 .ball-display {
-  width: 100px;
-  height: 100px;
-  border: 6px solid #3498db;
+  width: 150px;
+  height: 150px;
+  border: 8px solid #FFD700;
   border-radius: 50%;
-  background-color: #000000;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.6), 0 0 0 4px rgba(255, 215, 0, 0.3);
+  animation: ballPulse 2s ease-in-out infinite;
+}
+
+@keyframes ballPulse {
+  0%, 100% {
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.6), 0 0 0 4px rgba(255, 215, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 12px 48px rgba(102, 126, 234, 0.8), 0 0 0 8px rgba(255, 215, 0, 0.5);
+  }
 }
 
 .ball-number {
-  color: white;
-  font-size: 24px;
+  color: #FFD700;
+  font-size: 36px;
   font-weight: bold;
   text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .ball-placeholder {
   width: 100%;
   height: 100%;
-  background-color: #000000;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 50%;
 }
 
@@ -928,7 +944,7 @@ h1 {
 .player-card-section {
   background-color: #ffffff;
   border-radius: 12px;
-  padding: 20px;
+  padding: 10px;
   box-shadow: 
     0 4px 12px rgba(0, 0, 0, 0.1),
     0 2px 4px rgba(0, 0, 0, 0.06),
@@ -945,6 +961,7 @@ h1 {
   opacity: 1 !important; /* Force opacity */
   z-index: 5; /* Lower than modal but above other content */
   position: relative; /* Ensure it's positioned */
+  overflow-x: hidden !important; /* Prevent horizontal overflow */
   border: 1px solid rgba(0, 0, 0, 0.05); /* Very subtle border */
 }
 
@@ -964,18 +981,20 @@ h1 {
   border: 1px solid #ddd; /* Border to match grid */
   border-radius: 8px 8px 0 0; /* Rounded top corners */
   padding: 8px; /* Padding around letters */
-  gap: 2px; /* Small gap between letters */
+  gap: 0; /* No gap between letters */
+  overflow-x: hidden !important; /* Prevent horizontal overflow */
+  max-width: 100% !important;
 }
 
 .card-letter {
   flex: 1; /* Equal width for all letters */
-  height: 35px; /* Fixed height */
+  height: 28px; /* Reduced height */
   border-radius: 4px; /* Slightly rounded corners */
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 16px; /* Slightly smaller font */
+  font-size: 13px; /* Reduced font size */
   color: white;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(0, 0, 0, 0.1); /* Subtle border */
@@ -1015,8 +1034,10 @@ h1 {
   background-color: #ffffff; /* White background for the grid area */
   border: 1px solid #ddd; /* Border to match header */
   border-radius: 0 0 8px 8px; /* Rounded bottom corners to connect with header */
-  padding: 6px; /* Reduced padding for tighter look */
+  padding: 10px; /* Increased padding for wider look */
   border-top: none; /* Remove top border to connect with header */
+  overflow-x: hidden !important; /* Prevent horizontal overflow */
+  max-width: 100% !important;
 }
 
 .no-card-message {
@@ -1059,6 +1080,7 @@ h1 {
   opacity: 1 !important; /* Force opacity */
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05); /* Very subtle inner shadow */
   position: relative; /* For potential overlays */
+  margin: 0; /* Remove margin */
 }
 
 .card-cell:active {
@@ -2341,12 +2363,17 @@ h1 {
   }
   
   .ball-display {
-    width: 60px;
-    height: 60px;
+    width: 90px;
+    height: 90px;
+    border: 5px solid #FFD700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5), 0 0 0 2px rgba(255, 215, 0, 0.3);
   }
   
   .ball-number {
-    font-size: 12px;
+    font-size: 18px;
+    color: #FFD700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
   }
   
   .control-btn {
@@ -2534,12 +2561,17 @@ h1 {
   }
   
   .ball-display {
-    width: 50px;
-    height: 50px;
+    width: 75px;
+    height: 75px;
+    border: 4px solid #FFD700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 3px 12px rgba(102, 126, 234, 0.5), 0 0 0 2px rgba(255, 215, 0, 0.3);
   }
   
   .ball-number {
-    font-size: 10px;
+    font-size: 15px;
+    color: #FFD700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
   }
   
   .control-btn {
@@ -2608,39 +2640,95 @@ h1 {
     overflow-x: hidden;
   }
   
+  .player-card-section {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    padding: 3px !important;
+    min-height: auto !important;
+  }
+  
+  .player-card-grid {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    gap: 0 !important;
+    padding: 2px !important;
+  }
+  
+  .card-cell {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    font-size: 10px !important;
+    width: 22px !important;
+    height: 22px !important;
+  }
+  
+  .card-bingo-header {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    padding: 3px !important;
+    gap: 0 !important;
+  }
+  
+  .card-letter {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 11px !important;
+  }
+  
+  .card-title {
+    font-size: 12px !important;
+  }
+  
   .main-bingo-board {
-    flex: 0 0 50% !important; /* Reduced from 60% to 50% */
-    width: 50% !important; /* Reduced from 60% to 50% */
-    max-width: 50% !important; /* Reduced from 60% to 50% */
-    padding: 2px;
+    flex: 0 0 45% !important; /* Reduced from 50% to 45% */
+    width: 45% !important; /* Reduced from 50% to 45% */
+    max-width: 45% !important; /* Reduced from 50% to 45% */
+    padding: 1px;
     margin-left: 0;
     height: auto;
     min-height: 300px;
-    overflow-x: hidden;
+    overflow-x: hidden !important;
   }
   
   /* Fix bingo board content overflow */
   .main-bingo-board .bingo-board {
-    max-width: 100%;
-    overflow-x: hidden;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  
+  .main-bingo-board .bingo-header {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    gap: 0 !important;
+  }
+  
+  .main-bingo-board .bingo-letter {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    font-size: 10px !important;
+    height: 20px !important;
   }
   
   .main-bingo-board .bingo-row {
-    max-width: 100%;
+    max-width: 100% !important;
   }
   
   .main-bingo-board .bingo-cell {
-    font-size: 8px;
-    padding: 1px;
-    min-width: 12px;
-    max-width: 16px;
+    font-size: 7px !important;
+    padding: 1px !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
   }
   
   .game-controls-section {
-    flex: 0 0 48% !important; /* Increased from 38% to 48% */
-    width: 48% !important; /* Increased from 38% to 48% */
-    max-width: 48% !important; /* Increased from 38% to 48% */
-    padding: 2px;
+    flex: 0 0 53% !important; /* Increased from 48% to 53% */
+    width: 53% !important; /* Increased from 48% to 53% */
+    max-width: 53% !important; /* Increased from 48% to 53% */
+    padding: 1px;
   }
   
   /* Fix game controls content */
@@ -2685,32 +2773,58 @@ h1 {
   }
   
   .card-cell {
-    font-size: 14px;
-    width: 30px;
-    height: 30px;
+    font-size: 10px;
+    width: 22px;
+    height: 22px;
     aspect-ratio: 1;
-    padding: 6px;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    max-width: 100%;
+    border-width: 1px;
   }
   
-  .bingo-letter {
-    width: 18px;
-    height: 18px;
-    font-size: 9px;
+  .player-card-section {
+    padding: 3px;
+    max-width: 100%;
+    overflow-x: hidden;
+    min-height: auto;
+  }
+  
+  .player-card-grid {
+    gap: 0;
+    padding: 2px;
+  }
+  
+  .card-bingo-header {
+    padding: 3px;
+    gap: 0;
   }
   
   .card-letter {
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    padding: 2px;
+  }
+  
+  .card-title {
+    font-size: 12px;
+    margin-bottom: 3px;
   }
   
   .ball-display {
-    width: 70px;
-    height: 70px;
+    width: 105px;
+    height: 105px;
+    border: 6px solid #FFD700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 6px 24px rgba(102, 126, 234, 0.6), 0 0 0 3px rgba(255, 215, 0, 0.3);
   }
   
   .ball-number {
-    font-size: 14px;
+    font-size: 21px;
+    color: #FFD700;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
   }
   
   .control-btn {

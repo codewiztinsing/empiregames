@@ -997,7 +997,7 @@ const Selections = () => {
                 return (
                   <button
                     key={number}
-                    className={`konjo-number-cell ${isPicked ? 'picked' : ''} ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                    className={`konjo-number-cell ${isPicked ? 'player-picked' : ''} ${isSelected ? 'player-selected' : ''} ${!isSocketConnected ? 'disabled' : ''}`}
                     onClick={() => handleNumberClick(number)}
                     disabled={isDisabled}
                   >

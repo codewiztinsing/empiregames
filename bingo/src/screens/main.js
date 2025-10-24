@@ -1116,8 +1116,39 @@ const PlayingBoard = () => {
             </button>
               </div>
 
-          {/* Bonus and Countdown / Recent Balls */}
-          {gameStatus === 'in-progress' ? (
+          {/* Bonus and Countdown */}
+          {gameStatus === 'in-progress' ? null : (
+            <div className="bonus-countdown">
+              <div className="bonus-indicator">
+                <span className="star">⭐</span>
+                {t('game.bonusOn')}
+              </div>
+              <div className="countdown-display">
+                <span className="countdown-label">{t('game.countdown')}</span>
+                <span className={`countdown-timer ${gameStatus === 'in-progress' ? 'active' : ''}`}>
+                  {gameCountdown || countDown || 0} : 01
+                </span>
+              </div>
+            </div>
+          )}
+
+          
+
+          {/* Ball Display - Only show when game is in progress */}
+          {gameStatus === 'in-progress' && (
+            <div className="ball-display-container">
+              <div className="ball-display">
+                {lastBall ? (
+                  <div className="ball-number">{lastBall.combined}</div>
+                ) : (
+                  <div className="ball-placeholder"></div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Recent Balls - Only show when game is in progress */}
+          {gameStatus === 'in-progress' && (
             <div className="recent-balls-container">
               <div className="recent-balls-label">{t('game.recentBalls')}</div>
               <div className="recent-balls-display">
@@ -1164,35 +1195,6 @@ const PlayingBoard = () => {
                     ))
                   ];
                 })()}
-              </div>
-            </div>
-          ) : (
-            <div className="bonus-countdown">
-              <div className="bonus-indicator">
-                <span className="star">⭐</span>
-                {t('game.bonusOn')}
-              </div>
-              <div className="countdown-display">
-                <span className="countdown-label">{t('game.countdown')}</span>
-                <span className={`countdown-timer ${gameStatus === 'in-progress' ? 'active' : ''}`}>
-                  {gameCountdown || countDown || 0} : 01
-                </span>
-              </div>
-            </div>
-          )}
-
-          
-          
-
-          {/* Ball Display - Only show when game is in progress */}
-          {gameStatus === 'in-progress' && (
-            <div className="ball-display-container">
-              <div className="ball-display">
-                {lastBall ? (
-                  <div className="ball-number">{lastBall.combined}</div>
-                ) : (
-                  <div className="ball-placeholder"></div>
-                )}
               </div>
             </div>
           )}
