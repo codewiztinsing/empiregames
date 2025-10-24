@@ -744,26 +744,33 @@ const handleGlobals = (state) => {
           winningCard[2][4].marked &&
           winningCard[4][2].marked;
 
-        // Determine which winning pattern is active
+        // Use stored winning pattern if available (for fake winners)
         let isPartOfWinningPattern = false;
         
-        if (rowComplete) {
-          isPartOfWinningPattern = true; // This entire row is part of winning pattern
-        } else if (colComplete) {
-          isPartOfWinningPattern = true; // This entire column is part of winning pattern
-        } else if (diagonalComplete && rowIndex === colIndex) {
-          isPartOfWinningPattern = true; // Main diagonal
-        } else if (reverseDiagonalComplete && rowIndex + colIndex === 4) {
-          isPartOfWinningPattern = true; // Reverse diagonal
-        } else if (fourCornersComplete &&
-          ((colIndex === 0 && (rowIndex === 0 || rowIndex === 4)) ||
-           (colIndex === 4 && (rowIndex === 0 || rowIndex === 4)))) {
-          isPartOfWinningPattern = true; // Four corners
-        } else if (fourEdgesComplete &&
-          ((colIndex === 0 && rowIndex === 2) ||
-           (colIndex === 2 && (rowIndex === 0 || rowIndex === 4)) ||
-           (colIndex === 4 && rowIndex === 2))) {
-          isPartOfWinningPattern = true; // Four edges
+        if (winningCard._winningPattern && winningCard._winningPositions) {
+          // Use the stored winning pattern (only ONE pattern)
+          const isWinningCell = winningCard._winningPositions.some(pos => pos[0] === colIndex && pos[1] === rowIndex);
+          isPartOfWinningPattern = isWinningCell;
+        } else {
+          // Fallback to checking all patterns (for real winners)
+          if (rowComplete) {
+            isPartOfWinningPattern = true; // This entire row is part of winning pattern
+          } else if (colComplete) {
+            isPartOfWinningPattern = true; // This entire column is part of winning pattern
+          } else if (diagonalComplete && rowIndex === colIndex) {
+            isPartOfWinningPattern = true; // Main diagonal
+          } else if (reverseDiagonalComplete && rowIndex + colIndex === 4) {
+            isPartOfWinningPattern = true; // Reverse diagonal
+          } else if (fourCornersComplete &&
+            ((colIndex === 0 && (rowIndex === 0 || rowIndex === 4)) ||
+             (colIndex === 4 && (rowIndex === 0 || rowIndex === 4)))) {
+            isPartOfWinningPattern = true; // Four corners
+          } else if (fourEdgesComplete &&
+            ((colIndex === 0 && rowIndex === 2) ||
+             (colIndex === 2 && (rowIndex === 0 || rowIndex === 4)) ||
+             (colIndex === 4 && rowIndex === 2))) {
+            isPartOfWinningPattern = true; // Four edges
+          }
         }
 
         // Does this cell belong to a winning line AND was it marked?
@@ -777,6 +784,8 @@ const handleGlobals = (state) => {
           bgColor = "#ffcccc"; // part of winning pattern but NOT marked (missed)
         } else if (cell.marked) {
           bgColor = "red";     // marked but not part of winning pattern
+        } else if (!cell.marked) {
+          bgColor = "red";     // marked false (not part of winning pattern)
         }
 
         // Add red strikethrough for missed cells in winning pattern

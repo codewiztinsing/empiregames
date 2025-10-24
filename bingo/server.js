@@ -563,57 +563,71 @@ async function startGame(game) {
           const chosenCondition = winningConditions[Math.floor(Math.random() * winningConditions.length)];
           console.log(`🎯 Fake winner using ${chosenCondition} pattern`);
           
-          // Use only 5 called numbers to fulfill the chosen winning condition
+          // Use called numbers to fulfill the chosen winning condition
           const calledNumbersToUse = calledNumbers.slice(0, 5);
           console.log(`🎯 Using these 5 called numbers for winning pattern:`, calledNumbersToUse);
           
-          // Apply the winning pattern by marking cells as winning (don't replace numbers)
-          // Structure: board[column][row] - same as real player boards
+          // Get winning positions based on condition
+          let winningPositions = [];
           switch (chosenCondition) {
             case 'row':
-              // Random horizontal line - just mark the existing numbers as winning
               const winningRow = Math.floor(Math.random() * 5);
               for (let col = 0; col < 5; col++) {
-                board[col][winningRow].marked = true; // Mark entire winning row
+                if (col !== 2 || winningRow !== 2) { // Skip center
+                  winningPositions.push([col, winningRow]);
+                }
               }
-              console.log(`🎯 Row ${winningRow} marked as winning`);
               break;
               
             case 'column':
-              // Random vertical line - just mark the existing numbers as winning
               const winningCol = Math.floor(Math.random() * 5);
               for (let row = 0; row < 5; row++) {
-                board[winningCol][row].marked = true; // Mark entire winning column
+                if (winningCol !== 2 || row !== 2) { // Skip center
+                  winningPositions.push([winningCol, row]);
+                }
               }
-              console.log(`🎯 Column ${winningCol} marked as winning`);
               break;
               
             case 'diagonal1':
-              // Diagonal top-left to bottom-right - just mark the existing numbers as winning
               for (let i = 0; i < 5; i++) {
-                board[i][i].marked = true; // Mark entire diagonal
+                if (i !== 2) { // Skip center
+                  winningPositions.push([i, i]);
+                }
               }
-              console.log(`🎯 Diagonal1 (top-left to bottom-right) marked as winning`);
               break;
               
             case 'diagonal2':
-              // Diagonal top-right to bottom-left - just mark the existing numbers as winning
               for (let i = 0; i < 5; i++) {
-                board[4-i][i].marked = true; // Mark entire diagonal
+                if (i !== 2) { // Skip center
+                  winningPositions.push([4-i, i]);
+                }
               }
-              console.log(`🎯 Diagonal2 (top-right to bottom-left) marked as winning`);
               break;
               
             case 'corners':
-              // Four corners - just mark the existing numbers as winning
-              const cornerPositions = [[0,0], [0,4], [4,0], [4,4]];
-              for (let i = 0; i < 4; i++) {
-                const [col, row] = cornerPositions[i];
-                board[col][row].marked = true; // Mark all four corners
-              }
-              console.log(`🎯 Four corners marked as winning`);
+              winningPositions = [[0,0], [0,4], [4,0], [4,4]];
               break;
           }
+          
+          // Place called numbers in winning positions and mark ONLY winning cells as true
+          console.log('🎯 DEBUG: Placing called numbers in winning positions:', winningPositions);
+          winningPositions.forEach((pos, idx) => {
+            const [col, row] = pos;
+            if (calledNumbersToUse[idx]) {
+              board[col][row].number = calledNumbersToUse[idx];
+              board[col][row].marked = true; // Mark as winning
+              console.log(`🎯 DEBUG: Placed ${calledNumbersToUse[idx]} at [${col},${row}] - marked as winning`);
+            }
+          });
+          
+          // All other cells remain marked as false (not part of winning pattern)
+          console.log('🎯 DEBUG: All non-winning cells remain marked as false');
+          
+          // Store the winning pattern info in the board for client to use
+          board._winningPattern = chosenCondition;
+          board._winningPositions = winningPositions;
+          console.log('🎯 DEBUG: Stored winning pattern:', chosenCondition);
+          console.log('🎯 DEBUG: Stored winning positions:', winningPositions);
           
           // Debug: Log the complete board structure
           console.log('🎯 Complete fake winning board:');
@@ -661,6 +675,14 @@ async function startGame(game) {
           console.error('❌ Error calling win API for fake player:', error);
         }
 
+        console.log('🎯 DEBUG: Emitting winBingo event');
+        console.log('🎯 DEBUG: Winning card metadata before emit:', {
+          hasWinningPattern: !!winningCard._winningPattern,
+          winningPattern: winningCard._winningPattern,
+          hasWinningPositions: !!winningCard._winningPositions,
+          winningPositions: winningCard._winningPositions
+        });
+        
         io.emit("winBingo", {
           isBingo: true,
           playerId: fakeId,
@@ -675,8 +697,13 @@ async function startGame(game) {
           gameId: game.id,
           total_winAmount: game.total_winAmount,
           total_players: game.total_players + (game.fakePickedNumbers ? game.fakePickedNumbers.size : 0),
-          roomId: game.roomId
+          roomId: game.roomId,
+          // Explicitly include winning pattern metadata
+          winningPattern: winningCard._winningPattern,
+          winningPositions: winningCard._winningPositions
         });
+        
+        console.log('🎯 DEBUG: winBingo event emitted successfully');
 
         io.emit("bingoWinner", {
           isBingo: true,

@@ -48,7 +48,7 @@ const PlayingBoard = () => {
   const [recentCalledNumbers, setRecentCalledNumbers] = useState(['*', '*', '*']);
   // Display-only: picked numbers including fake during countdown
   const [pickedNumbers, setPickedNumbers] = useState([]);
-  const [winnerCountdown, setWinnerCountdown] = useState(10000);
+  const [winnerCountdown, setWinnerCountdown] = useState(5);
 
   // Generate static Bingo board function based on card number (deterministic LCG)
   const generateCombination = (cardNumber = selectedNumber) => {
@@ -149,7 +149,7 @@ const PlayingBoard = () => {
       console.log("totalCalledNumbers",totalCalledNumbers)
       console.log("data.total_called_numbers",data.called_numbers)
 
-      if (data.called_numbers.length === 75) {
+      if (data.called_numbers && data.called_numbers.length === 75) {
         setToast("All 75 numbers have been called! Please select new cards for the next game.");
         setIsToast(true);
         navigate(`/?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}`);
@@ -322,8 +322,26 @@ const PlayingBoard = () => {
   
 
     const handleWinBingo = (data) => {
+      console.log('🎯 CLIENT DEBUG: Received winBingo event:', data);
+      console.log('🎯 CLIENT DEBUG: Winning card data:', data.winningCard);
+      console.log('🎯 CLIENT DEBUG: Winning card metadata:', {
+        hasWinningPattern: !!data.winningPattern,
+        winningPattern: data.winningPattern,
+        hasWinningPositions: !!data.winningPositions,
+        winningPositions: data.winningPositions
+      });
+      
       if (data.winningCard) {
-        setWinningCard(data.markedCells);
+        // Attach metadata to the winning card
+        const winningCardWithMetadata = data.markedCells;
+        if (data.winningPattern) {
+          winningCardWithMetadata._winningPattern = data.winningPattern;
+        }
+        if (data.winningPositions) {
+          winningCardWithMetadata._winningPositions = data.winningPositions;
+        }
+        
+        setWinningCard(winningCardWithMetadata);
         setIsBingo(data.isBingo);
         setWinner(data.playerId);
         setWinnerCardNumber(data.winner_Number);
@@ -442,7 +460,7 @@ const PlayingBoard = () => {
   // ✅ Handle winner countdown and navigation
   useEffect(() => {
     if (!isBingo) {
-      setWinnerCountdown(5); // Reset countdown when not showing winner
+      setWinnerCountdown(1000); // Reset countdown when not showing winner
       return;
     }
 
@@ -755,26 +773,62 @@ const PlayingBoard = () => {
           winningCard[2][4].marked &&
           winningCard[4][2].marked;
 
-        // Determine which winning pattern is active
+        // Use stored winning pattern if available (for fake winners)
         let isPartOfWinningPattern = false;
         
-        if (rowComplete) {
-          isPartOfWinningPattern = true; // This entire row is part of winning pattern
-        } else if (colComplete) {
-          isPartOfWinningPattern = true; // This entire column is part of winning pattern
-        } else if (diagonalComplete && rowIndex === colIndex) {
-          isPartOfWinningPattern = true; // Main diagonal
-        } else if (reverseDiagonalComplete && rowIndex + colIndex === 4) {
-          isPartOfWinningPattern = true; // Reverse diagonal
-        } else if (fourCornersComplete &&
-          ((colIndex === 0 && (rowIndex === 0 || rowIndex === 4)) ||
-           (colIndex === 4 && (rowIndex === 0 || rowIndex === 4)))) {
-          isPartOfWinningPattern = true; // Four corners
-        } else if (fourEdgesComplete &&
-          ((colIndex === 0 && rowIndex === 2) ||
-           (colIndex === 2 && (rowIndex === 0 || rowIndex === 4)) ||
-           (colIndex === 4 && rowIndex === 2))) {
-          isPartOfWinningPattern = true; // Four edges
+        // Debug: Log winning pattern info
+        if (rowIndex === 0 && colIndex === 0) {
+          console.log('🎯 CLIENT DEBUG: Winning card metadata:', {
+            hasWinningPattern: !!winningCard._winningPattern,
+            winningPattern: winningCard._winningPattern,
+            hasWinningPositions: !!winningCard._winningPositions,
+            winningPositions: winningCard._winningPositions
+          });
+        }
+        
+        if (winningCard._winningPattern && winningCard._winningPositions) {
+          // Use the stored winning pattern (only ONE pattern)
+          const isWinningCell = winningCard._winningPositions.some(pos => pos[0] === colIndex && pos[1] === rowIndex);
+          isPartOfWinningPattern = isWinningCell;
+          
+          // Debug first cell
+          if (rowIndex === 0 && colIndex === 0) {
+            console.log('🎯 CLIENT DEBUG: Using stored winning pattern');
+            console.log('🎯 CLIENT DEBUG: Is winning cell:', isWinningCell);
+          }
+        } else {
+          // Fallback to checking all patterns (for real winners)
+          if (rowComplete) {
+            isPartOfWinningPattern = true; // This entire row is part of winning pattern
+          } else if (colComplete) {
+            isPartOfWinningPattern = true; // This entire column is part of winning pattern
+          } else if (diagonalComplete && rowIndex === colIndex) {
+            isPartOfWinningPattern = true; // Main diagonal
+          } else if (reverseDiagonalComplete && rowIndex + colIndex === 4) {
+            isPartOfWinningPattern = true; // Reverse diagonal
+          } else if (fourCornersComplete &&
+            ((colIndex === 0 && (rowIndex === 0 || rowIndex === 4)) ||
+             (colIndex === 4 && (rowIndex === 0 || rowIndex === 4)))) {
+            isPartOfWinningPattern = true; // Four corners
+          } else if (fourEdgesComplete &&
+            ((colIndex === 0 && rowIndex === 2) ||
+             (colIndex === 2 && (rowIndex === 0 || rowIndex === 4)) ||
+             (colIndex === 4 && rowIndex === 2))) {
+            isPartOfWinningPattern = true; // Four edges
+          }
+          
+          // Debug first cell
+          if (rowIndex === 0 && colIndex === 0) {
+            console.log('🎯 CLIENT DEBUG: Using fallback pattern detection');
+            console.log('🎯 CLIENT DEBUG: Pattern checks:', {
+              rowComplete,
+              colComplete,
+              diagonalComplete,
+              reverseDiagonalComplete,
+              fourCornersComplete,
+              fourEdgesComplete
+            });
+          }
         }
 
         // Does this cell belong to a winning line AND was it marked?
@@ -788,18 +842,19 @@ const PlayingBoard = () => {
           bgColor = "#ffcccc"; // part of winning pattern but NOT marked (missed)
         } else if (cell.marked) {
           bgColor = "red";     // marked but not part of winning pattern
+        } else if (!cell.marked) {
+          bgColor = "red";     // marked false (not part of winning pattern)
         }
 
-        // Debug cell rendering
-        if (rowIndex === 0 && colIndex === 0) {
-          console.log('🎯 CLIENT: Rendering first cell:', {
-            rowIndex,
-            colIndex,
-            cell,
+        // Debug cell rendering for multiple cells
+        if ((rowIndex === 0 && colIndex === 0) || (rowIndex === 0 && colIndex === 1) || (rowIndex === 1 && colIndex === 0)) {
+          console.log(`🎯 CLIENT DEBUG: Cell [${colIndex},${rowIndex}]:`, {
             cellNumber: cell?.number,
             cellMarked: cell?.marked,
+            isPartOfWinningPattern,
+            inWinningLine,
             bgColor,
-            inWinningLine
+            isWinningCell: isPartOfWinningPattern && cell.marked
           });
         }
 
