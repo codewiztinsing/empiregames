@@ -234,7 +234,7 @@ function startCountDown(game) {
   }
 
   const countdownInterval = setInterval(() => {
-    console.log("⏱️ Countdown tick - game:", game.id, "countdown:", game.countDown, "players:", game.players.size);
+    // console.log("⏱️ Countdown tick - game:", game.id, "countdown:", game.countDown, "players:", game.players.size);
     game._fakePickTick = (game._fakePickTick + 1) % 1000000; // prevent overflow
     
     // Check if we still have fake players configured during countdown
@@ -435,9 +435,16 @@ async function startGame(game) {
     };
   });
 
-  io.emit("gameStatus",{
+    // Calculate fake and real player counts
+    const realPlayersCount = game.players.size;
+    const fakePlayersCount = game.fakePickedNumbers ? game.fakePickedNumbers.size : 0;
+    
+    io.emit("gameStatus",{
     status: "in-progress",
-    roomId: game.roomId
+    roomId: game.roomId,
+    real_players: realPlayersCount,
+    fake_players: fakePlayersCount,
+    total_players: realPlayersCount + fakePlayersCount
   })
 
   const players = Array.from(game.players.keys()).map(playerId => ({
@@ -445,7 +452,7 @@ async function startGame(game) {
     numberOfBoards: 1
   }));
 
-  game.total_players = game.players.size
+  game.total_players = realPlayersCount + fakePlayersCount
   game.total_winAmount = game.selectedNumbers.length * game.roomId * 0.78
 
   try {
@@ -467,7 +474,6 @@ async function startGame(game) {
     }
     game.currentCall = ball;
     game.calledNumbers.push(ball);
-    game.selectedNumbers = [];
     console.log("🎯 Called ball:", ball.combined, "total called:", game.calledNumbers.length);
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
 
@@ -479,7 +485,7 @@ async function startGame(game) {
     console.log("game.win_amount (base):", game.win_amount)
 
     // Calculate total players based on actual picked numbers (real + fake)
-    const realPlayersCount = game.selectedNumbers.filter(num => num !== null).length;
+    const realPlayersCount = game.players.size;
     const fakePlayersCount = game.fakePickedNumbers ? game.fakePickedNumbers.size : 0;
     const actualTotalPlayers = realPlayersCount + fakePlayersCount;
 
@@ -491,6 +497,8 @@ async function startGame(game) {
       count_down: game.countDown,
       // Use actual picked numbers count to match pickedNumbers
       total_players: actualTotalPlayers,
+      real_players: realPlayersCount,
+      fake_players: fakePlayersCount,
       win_amount: actualTotalPlayers * game.roomId * 0.78,
       lastBall: ball,
       called_numbers: game.calledNumbers,
@@ -792,7 +800,7 @@ function handleRefresh(data){
   if (!game) return;
   
   // Calculate total players based on actual picked numbers (real + fake)
-  const realPlayersCount = game.selectedNumbers.filter(num => num !== null).length;
+  const realPlayersCount = game.players.size;
   const fakePlayersCount = game.fakePickedNumbers ? game.fakePickedNumbers.size : 0;
   const actualTotalPlayers = realPlayersCount + fakePlayersCount;
   
@@ -801,6 +809,8 @@ function handleRefresh(data){
     roomId: game.roomId,
     // Use actual picked numbers count to match pickedNumbers
     total_players: actualTotalPlayers,
+    real_players: realPlayersCount,
+    fake_players: fakePlayersCount,
     pickedNumbers: game.selectedNumbers,
     game_status: game.status,
     count_down: game.countDown,
@@ -912,7 +922,11 @@ io.on('connection', (socket) => {
 
     const win_amount = total_players * game.roomId * 0.78
     game.total_winAmount = win_amount
-    game.total_players = total_players
+    
+    // Calculate fake and real player counts
+    const realPlayersCount = game.players.size;
+    const fakePlayersCount = game.fakePickedNumbers ? game.fakePickedNumbers.size : 0;
+    game.total_players = realPlayersCount + fakePlayersCount
 
 
     // socket.join(data.roomId);
@@ -926,11 +940,14 @@ io.on('connection', (socket) => {
   
   
     const playersList = [...game.players.keys()];
+    
     io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers,
       total_players: game.total_players,
+      real_players: realPlayersCount,
+      fake_players: fakePlayersCount,
       game_status: game.status,
       count_down: game.countDown,
       players: playersList,
@@ -1177,11 +1194,18 @@ socket.on("faulMadePlayer", (data) => {
     
 
     io.emit("pickedNumbers", { roomId: game.roomId, numbers: game.selectedNumbers });
+    
+    // Calculate fake and real player counts
+    const realPlayersCount = game.players.size;
+    const fakePlayersCount = game.fakePickedNumbers ? game.fakePickedNumbers.size : 0;
+    
     io.emit("gameState", {
       gameId: game.id,
       roomId: game.roomId,
       pickedNumbers: game.selectedNumbers,
-      total_players: game.selectedNumbers.length,
+      total_players: realPlayersCount + fakePlayersCount,
+      real_players: realPlayersCount,
+      fake_players: fakePlayersCount,
       game_status: game.status,
     })
   
@@ -1294,6 +1318,10 @@ socket.on("faulMadePlayer", (data) => {
             game.selectedNumbers = game?.selectedNumbers?.filter(num => num !== selectedNumber2);
           }
     
+          // Calculate fake and real player counts
+          const realPlayersCount = game.players.size;
+          const fakePlayersCount = game.fakePickedNumbers ? game.fakePickedNumbers.size : 0;
+          
           io.emit("gameState", {
             message: `User ${user.playerId} disconnected`,
             gameId: game.id,
@@ -1303,7 +1331,9 @@ socket.on("faulMadePlayer", (data) => {
               if (selectedNumber2 && num === selectedNumber2) return false;
               return true;
             }),
-            total_players: game.selectedNumbers.length,
+            total_players: realPlayersCount + fakePlayersCount,
+            real_players: realPlayersCount,
+            fake_players: fakePlayersCount,
             game_status: game.status,
             count_down: game.countDown
           });
