@@ -197,8 +197,8 @@ function startCountDown(game) {
     if (total < 10) {
       game.staticTotalPlayers = 10; // minimum 10 players
     } else {
-      // Pick a random number between 10 and total (inclusive) - but only once
-      game.staticTotalPlayers = Math.floor(Math.random() * (total - 10 + 1)) + 10;
+      // Use exact total (real + fake) instead of random range
+      game.staticTotalPlayers = total;
     }
     
     game.staticWinAmount = game.staticTotalPlayers * game.roomId * 0.78;
@@ -293,29 +293,25 @@ function startCountDown(game) {
         const remaining = targetFakePlayers - game.fakePickedNumbers.size;
         let toAdd = 0;
 
-        // Much slower pace: add only every 3-4 seconds to mimic real players
-        const shouldAttemptThisTick = (game._fakePickTick % 3 === 0);
+        // Faster pace: add every second to reach target quickly
+        const shouldAttemptThisTick = (game._fakePickTick % 1 === 0);
 
         if (shouldAttemptThisTick && remaining > 0) {
-          // Very slow base rate: approach target very gradually
+          // Faster base rate: approach target more quickly
           const secondsLeft = Math.max(1, game.countDown);
-          const baseRate = Math.ceil(remaining / (secondsLeft * 2)); // Much slower approach
+          const baseRate = Math.ceil(remaining / Math.max(secondsLeft, 1)); // Faster approach
 
-          // Very small bursts (1-2 max) to feel like individual players joining
-          toAdd = Math.min(1, Math.max(0, baseRate));
+          // Small bursts (1-3 max) to feel like individual players joining
+          toAdd = Math.min(3, Math.max(1, baseRate));
 
-          // More random jitter: often skip cycles to feel organic
-          if (Math.random() < 0.5 && toAdd > 0) {
-            toAdd = 0; // Skip this cycle entirely
+          // Less random jitter: rarely skip cycles
+          if (Math.random() < 0.1 && toAdd > 0) {
+            toAdd = Math.max(1, toAdd - 1); // Reduce by 1 instead of skipping
           }
 
-          // In final 5 seconds, slightly increase but still gradual
+          // In final 5 seconds, accelerate to reach target
           if (game.countDown <= 5) {
-            toAdd = Math.min(2, remaining, Math.max(toAdd, 0));
-            // Still random chance to skip even in final seconds
-            if (Math.random() < 0.3) {
-              toAdd = 0;
-            }
+            toAdd = Math.min(5, remaining, Math.max(toAdd, 1));
           }
         }
 

@@ -230,10 +230,17 @@ def manual_success(request):
             net_amount = max(deposit_amount - fee, 0.0)
             print(f"[MANUAL_SUCCESS] deposit_amount={deposit_amount} fee={fee} net_amount={net_amount}")
             
-            # Update manual session with correct amount
-            manual_session.amount = net_amount
-            wallet.balance += net_amount
-            print("wallet balance = ",wallet.balance)
+            # Update manual session with correct amount and apply deposit bonus
+            bonus = 0.0
+            if net_amount >= 200:
+                bonus = 50.0
+            elif net_amount >= 100:
+                bonus = 20.0
+
+            final_amount = net_amount + bonus
+            manual_session.amount = final_amount
+            wallet.balance += final_amount
+            print(f"wallet balance = {wallet.balance}, (deposit={net_amount}, bonus={bonus})")
             wallet.save()
             manual_session.status = "success"
             manual_session.save()
@@ -245,20 +252,41 @@ def manual_success(request):
                 reference=manual_session.session_id
             )
             transaction.save()
+            if bonus > 0:
+                Transaction.objects.create(
+                    user=user,
+                    amount=bonus,
+                    type="BONUS",
+                    status="success",
+                    reference=f"{manual_session.session_id}-BONUS"
+                )
             
             # Notify user about successful deposit
             if user.telegram_id:
                 try:
                     bot_token = config('BOT_TOKEN')
                     telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                    message = (
-                        f"🎉 Deposit Successful! 🎉\n\n"
-                        f"💰 Amount: {net_amount} ETB\n"
-                        f"💎 Total Credited: {net_amount} ETB\n"
-                        f"📊 New Balance: {wallet.balance} ETB\n"
-                        f"🔗 Reference: {manual_session.session_id}\n\n"
-                        f"✅ Your account has been credited successfully!"
-                    )
+                    # Build message depending on bonus
+                    if bonus > 0:
+                        message = (
+                            f"🎉 Deposit Successful! 🎉\n\n"
+                            f"💰 Amount: {net_amount} ETB\n"
+                            f"💎 Bonus: {bonus} ETB\n"
+                            f"💎 Total Credited: {final_amount} ETB\n"
+                            f"📊 New Balance: {wallet.balance} ETB\n"
+                            f"🔗 Reference: {manual_session.session_id}\n\n"
+                            f"✅ Your account has been credited successfully!\n"
+                            f"🎁 Congratulations! You received a bonus of {bonus} ETB."
+                        )
+                    else:
+                        message = (
+                            f"🎉 Deposit Successful! 🎉\n\n"
+                            f"💰 Amount: {net_amount} ETB\n"
+                            f"💎 Total Credited: {final_amount} ETB\n"
+                            f"📊 New Balance: {wallet.balance} ETB\n"
+                            f"🔗 Reference: {manual_session.session_id}\n\n"
+                            f"✅ Your account has been credited successfully!"
+                        )
                     telegram_payload = {
                         'chat_id': user.telegram_id,
                         'text': message,
