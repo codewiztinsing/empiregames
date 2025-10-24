@@ -910,16 +910,17 @@ const PlayingBoard = () => {
             {/* Winning Card Display */}
             <div className="winning-card-section">
               {renderWinningCard(winningCard)}
-            </div>
-            
-            {/* Action Button */}
-            <div className="winner-actions">
+              <div className="winner-actions">
               <button className="close-winner-button" onClick={handleCloseWinner}>
                 <span className="button-icon">🎮</span>
                 <span className="button-text">{t('game.continuePlaying')}</span>
                 <span className="button-icon">🎮</span>
               </button>
             </div>
+            </div>
+            
+            {/* Action Button */}
+          
           </div>
         </div>
       )}
