@@ -637,18 +637,34 @@ async function startGame(game) {
             return 0; // default to B
           };
           
-          // Create a map of column -> available numbers from called numbers
+          // Get real player selected numbers to avoid using them
+          const realPlayerNumbers = new Set();
+          if (game.selectedNumbersToPlayer) {
+            for (const [playerId, numbers] of game.selectedNumbersToPlayer.entries()) {
+              if (Array.isArray(numbers)) {
+                numbers.forEach(num => {
+                  if (num && num !== null) realPlayerNumbers.add(num);
+                });
+              }
+            }
+          }
+          
+          console.log('🎯 DEBUG: Real player selected numbers to avoid:', Array.from(realPlayerNumbers));
+          
+          // Create a map of column -> available numbers from called numbers (excluding real player numbers)
           const numbersByColumn = {};
           for (let col = 0; col < 5; col++) {
             numbersByColumn[col] = [];
           }
           
           calledNumbers.forEach(num => {
-            const col = getColumnForNumber(num);
-            numbersByColumn[col].push(num);
+            if (!realPlayerNumbers.has(num)) {
+              const col = getColumnForNumber(num);
+              numbersByColumn[col].push(num);
+            }
           });
           
-          console.log('🎯 DEBUG: Numbers grouped by column:', numbersByColumn);
+          console.log('🎯 DEBUG: Available called numbers grouped by column (excluding real player numbers):', numbersByColumn);
           
           // Place numbers in winning positions, ensuring they belong to the correct column
           winningPositions.forEach((pos, idx) => {
@@ -662,8 +678,18 @@ async function startGame(game) {
             }
             
             // If no number found for this column, generate a random one within range
+            // Make sure it's not a real player number
             if (!numberToPlace) {
-              numberToPlace = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+              let attempts = 0;
+              do {
+                numberToPlace = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                attempts++;
+              } while (realPlayerNumbers.has(numberToPlace) && attempts < 50);
+              
+              // If still couldn't find a unique number, use any number in range
+              if (realPlayerNumbers.has(numberToPlace)) {
+                numberToPlace = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+              }
             }
             
             board[col][row].number = numberToPlace;
