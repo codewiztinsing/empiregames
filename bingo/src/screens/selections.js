@@ -1055,12 +1055,7 @@ const Selections = () => {
                   backdropFilter: 'blur(2px)',
                 }}
               >
-                <div className="modal-content" style={{
-                  background: 'linear-gradient(180deg, #0f1224 0%, #1b1f3b 100%)',
-                  borderRadius: 16,
-                  boxShadow: '0 12px 40px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.06)',
-                  overflow: 'hidden'
-                }}>
+                <div className="modal-content">
                   {/* Header */}
                   <div style={{
                     display: 'flex',
@@ -1133,21 +1128,8 @@ const Selections = () => {
                             {col.map((num, rowIndex) => (
                               <div
                                 key={`${colIndex}-${rowIndex}`}
-                                style={{
-                                  height: 48,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  borderRadius: 10,
-                                  color: num === '*' ? '#0f172a' : '#e5e7eb',
-                                  fontWeight: 700,
-                                  background: num === '*'
-                                    ? 'linear-gradient(180deg, #a7f3d0 0%, #34d399 100%)'
-                                    : 'radial-gradient(120% 120% at 20% 10%, rgba(124,58,237,0.9) 0%, rgba(79,70,229,0.85) 55%, rgba(59,130,246,0.8) 100%)',
-                                  boxShadow: num === '*'
-                                    ? '0 4px 12px rgba(16,185,129,0.35)'
-                                    : '0 4px 12px rgba(99,102,241,0.35)'
-                                }}
+                                className="konjo-number-cell"
+                               
                               >
                                 {num === '*' ? (
                                   <div style={{ textAlign: 'center', lineHeight: 1.1 }}>
