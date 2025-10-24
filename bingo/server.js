@@ -152,12 +152,20 @@ async  function endGame(game) {
   game.countDown = 30;
   game.isCountStart = false;
   game.fauldMadePlayers.clear();
+  
+  // Reset fake player selections and static values for next game
+  game.fakePickedNumbers = new Set();
+  game.selectedNumbers = [];
+  game.staticTotalPlayers = null;
+  game.staticWinAmount = null;
 
   for (const [socketId, user] of users.entries()) {
     if (user.gameId === game.id) users.delete(socketId);
   }
 
   const data = await updateLastGame(game.roomId);
+  
+  // Start countdown immediately for next game
   startCountDown(game);
 
   io.emit("gameStatus", {
@@ -716,6 +724,7 @@ async function startGame(game) {
           game.staticTotalPlayers = null;
           game.staticWinAmount = null;
           game.fakePickedNumbers = new Set();
+          game.selectedNumbers = []; // Reset selected numbers for next game
           
           // Start new countdown immediately
           startCountDown(game);
