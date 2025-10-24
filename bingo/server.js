@@ -34,7 +34,7 @@ const fetchGameSettings = async () => {
     }
     // also get main game settings via existing helper if available
     const gameSpeed = Number(process.env.GAME_SPEED || 4000);
-    const countDown = Number(process.env.COUNT_DOWN || 30);
+    const countDown = Number(process.env.COUNT_DOWN || 10);
     const newSettings = {
       gameSpeed,
       countDown,
@@ -943,11 +943,14 @@ io.on('connection', (socket) => {
     
     console.log("🔍 Player joining - isCountStart:", game.isCountStart, "hasFakePlayers:", hasFakePlayers, "hasEnoughRealPlayers:", hasEnoughRealPlayers, "currentCountdown:", game.countDown);
     
+    // Only start countdown if it's NOT already running
     if (!game.isCountStart && (hasFakePlayers || hasEnoughRealPlayers)) {
       console.log("✅ Starting countdown for new player");
       startCountDown(game);
     } else if (game.isCountStart) {
       console.log("⏸️ Countdown already running, not resetting");
+    } else {
+      console.log("⏸️ Not starting countdown - conditions not met");
     }
 
     users.set(socket.id, {
@@ -1191,8 +1194,11 @@ socket.on("faulMadePlayer", (data) => {
     })
 
     // Check if countdown is running and we have less than 2 players
-    if (game.isCountStart && game.players.size < 2) {
-      console.log("🔄 Less than 2 players during countdown - resetting countdown from 30");
+    // Only reset if no fake players are configured
+    const hasFakePlayers = game.fakeSettings?.fakePlayersCount > 0;
+    
+    if (game.isCountStart && game.players.size < 2 && !hasFakePlayers) {
+      console.log("🔄 Less than 2 players during countdown and no fake players - resetting countdown from 30");
       clearGameIntervals(game.id);
       game.isCountStart = false;
       game.countDown = 30;
@@ -1209,12 +1215,13 @@ socket.on("faulMadePlayer", (data) => {
       });
       
       // Start countdown if fake players are configured or if we have 2+ real players
-      const hasFakePlayers = game.fakeSettings?.fakePlayersCount > 0;
       const hasEnoughRealPlayers = game.players.size >= 2;
       
       if (hasFakePlayers || hasEnoughRealPlayers) {
         startCountDown(game);
       }
+    } else if (game.isCountStart && game.players.size < 2 && hasFakePlayers) {
+      console.log("⏸️ Less than 2 real players but fake players configured - continuing countdown");
     }
     
   })
@@ -1306,8 +1313,11 @@ socket.on("faulMadePlayer", (data) => {
           users.delete(socket.id);
 
           // Check if countdown is running and we have less than 2 players
-          if (game.isCountStart && game.players.size < 2) {
-            console.log("🔄 Less than 2 players during countdown - resetting countdown from 30");
+          // Only reset if no fake players are configured
+          const hasFakePlayers = game.fakeSettings?.fakePlayersCount > 0;
+          
+          if (game.isCountStart && game.players.size < 2 && !hasFakePlayers) {
+            console.log("🔄 Less than 2 players during countdown and no fake players - resetting countdown from 30");
             clearGameIntervals(game.id);
             game.isCountStart = false;
             game.countDown = 30;
@@ -1324,12 +1334,13 @@ socket.on("faulMadePlayer", (data) => {
             });
             
             // Start countdown if fake players are configured or if we have 2+ real players
-            const hasFakePlayers = game.fakeSettings?.fakePlayersCount > 0;
             const hasEnoughRealPlayers = game.players.size >= 2;
             
             if (hasFakePlayers || hasEnoughRealPlayers) {
               startCountDown(game);
             }
+          } else if (game.isCountStart && game.players.size < 2 && hasFakePlayers) {
+            console.log("⏸️ Less than 2 real players but fake players configured - continuing countdown");
           }
         } else if(game.status === "in-progress") {
           // On disconnect during in-progress, simply remove active mapping without rejoin tracking
