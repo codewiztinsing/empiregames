@@ -213,12 +213,12 @@ function startCountDown(game) {
     console.log("🎯 Static total players calculated - real:", realPlayers, "fake:", fakePlayers, "static total:", game.staticTotalPlayers, "static win:", game.staticWinAmount);
   }
   
-  // Allow countdown to start if we have fake players configured, even with 0 real players
+  // Always start countdown if fake players are configured, regardless of real players
   const hasFakePlayers = game.fakeSettings?.fakePlayersCount > 0;
-  const hasEnoughPlayers = game.players && game.players.size >= 2;
-  const canStartWithFakeOnly = hasFakePlayers && game.players && game.players.size >= 0;
   
-  if (game.isCountStart || !game.players || (!hasEnoughPlayers && !canStartWithFakeOnly)) {
+  // If fake players are configured, always start countdown (even with 0 real players)
+  // Only prevent if already started or if no fake players configured
+  if (game.isCountStart || !hasFakePlayers) {
     console.log("❌ Cannot start countdown - isCountStart:", game.isCountStart, "players:", game.players?.size, "hasFakePlayers:", hasFakePlayers);
     return;
   }
@@ -236,13 +236,12 @@ function startCountDown(game) {
     console.log("⏱️ Countdown tick - game:", game.id, "countdown:", game.countDown, "players:", game.players.size);
     game._fakePickTick = (game._fakePickTick + 1) % 1000000; // prevent overflow
     
-    // Check if we still have enough players during countdown (allow fake players to continue)
+    // Check if we still have fake players configured during countdown
     const hasFakePlayersDuringCountdown = game.fakeSettings?.fakePlayersCount > 0;
-    const hasEnoughPlayersDuringCountdown = game.players.size >= 2;
-    const canContinueWithFakeOnly = hasFakePlayersDuringCountdown && game.players.size >= 0;
     
-    if (!hasEnoughPlayersDuringCountdown && !canContinueWithFakeOnly) {
-      console.log("🔄 Not enough players during countdown - resetting countdown");
+    // Always continue if fake players are configured, regardless of real players
+    if (!hasFakePlayersDuringCountdown) {
+      console.log("🔄 No fake players configured - resetting countdown");
       clearInterval(countdownInterval);
       game.isCountStart = false;
       game.countDown = 30;
@@ -363,13 +362,12 @@ function startCountDown(game) {
   
 
     if (game.countDown === 0) {
-      // Final check before starting game - allow fake players to start game
+      // Final check before starting game - always start if fake players are configured
       const hasFakePlayersAtStart = game.fakeSettings?.fakePlayersCount > 0;
-      const hasEnoughPlayersAtStart = game.players.size >= 2;
-      const canStartWithFakeOnlyAtStart = hasFakePlayersAtStart && game.players.size >= 0;
       
-      if (!hasEnoughPlayersAtStart && !canStartWithFakeOnlyAtStart) {
-        console.log("❌ Not enough players to start game - resetting countdown");
+      // Always start if fake players are configured, regardless of real players
+      if (!hasFakePlayersAtStart) {
+        console.log("❌ No fake players configured - resetting countdown");
         clearInterval(countdownInterval);
         game.isCountStart = false;
         game.countDown = 30;
@@ -902,7 +900,11 @@ io.on('connection', (socket) => {
   
     });
 
-    if (!game.isCountStart && game.players && game.players.size >= 2) {
+    // Start countdown if fake players are configured or if we have 2+ real players
+    const hasFakePlayers = game.fakeSettings?.fakePlayersCount > 0;
+    const hasEnoughRealPlayers = game.players && game.players.size >= 2;
+    
+    if (!game.isCountStart && (hasFakePlayers || hasEnoughRealPlayers)) {
       startCountDown(game);
     }
 
@@ -1164,8 +1166,11 @@ socket.on("faulMadePlayer", (data) => {
         count_down: game.countDown
       });
       
-      // Only start countdown if we have at least 2 players
-      if (game.players.size >= 2) {
+      // Start countdown if fake players are configured or if we have 2+ real players
+      const hasFakePlayers = game.fakeSettings?.fakePlayersCount > 0;
+      const hasEnoughRealPlayers = game.players.size >= 2;
+      
+      if (hasFakePlayers || hasEnoughRealPlayers) {
         startCountDown(game);
       }
     }
@@ -1276,8 +1281,11 @@ socket.on("faulMadePlayer", (data) => {
               count_down: game.countDown
             });
             
-            // Only start countdown if we have at least 2 players
-            if (game.players.size >= 2) {
+            // Start countdown if fake players are configured or if we have 2+ real players
+            const hasFakePlayers = game.fakeSettings?.fakePlayersCount > 0;
+            const hasEnoughRealPlayers = game.players.size >= 2;
+            
+            if (hasFakePlayers || hasEnoughRealPlayers) {
               startCountDown(game);
             }
           }
