@@ -456,7 +456,7 @@ const PlayingBoard = () => {
       }
       return winningCells;
     }
-    
+    // 
     // Check four corners
     if (card[0][0].marked && card[0][4].marked && card[4][0].marked && card[4][4].marked) {
       winningCells.push({ row: 0, col: 0 });
