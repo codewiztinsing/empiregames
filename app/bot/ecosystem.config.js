@@ -3,14 +3,14 @@ module.exports = {
     {
       name: 'empire-support-bot',
       script: 'support.py',
-      interpreter: '/home/tinsae/Desktop/projects/empiregames/app/venv/bin/python',
-      cwd: '/home/tinsae/Desktop/projects/empiregames/app/bot',
-      env_file: '/home/tinsae/Desktop/projects/empiregames/app/bot/config.env',
+      interpreter: '/var/www/empiregames/app/venv/bin/python',
+      cwd: '/var/www/empiregames/app/bot',
+      env_file: '/var/www/empiregames/app/bot/config.env',
       
       // Logging
-      log_file: '/home/tinsae/Desktop/projects/empiregames/logs/support-bot.log',
-      out_file: '/home/tinsae/Desktop/projects/empiregames/logs/support-bot-out.log',
-      error_file: '/home/tinsae/Desktop/projects/empiregames/logs/support-bot-error.log',
+      log_file: '/var/www/empiregames/logs/support-bot.log',
+      out_file: '/var/www/empiregames/logs/support-bot-out.log',
+      error_file: '/var/www/empiregames/logs/support-bot-error.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss',
       merge_logs: true,
       
@@ -27,7 +27,7 @@ module.exports = {
       // Environment variables
       env: {
         NODE_ENV: 'production',
-        PYTHONPATH: '/home/tinsae/Desktop/projects/empiregames/app'
+        PYTHONPATH: '/var/www/empiregames/app'
       },
       
       // Monitoring
@@ -53,11 +53,11 @@ module.exports = {
   // Deployment configuration (optional)
   deploy: {
     production: {
-      user: 'tinsae',
+      user: 'www-data',
       host: 'localhost',
       ref: 'origin/main',
       repo: 'git@github.com:your-repo/empiregames.git',
-      path: '/home/tinsae/Desktop/projects/empiregames',
+      path: '/var/www/empiregames',
       'post-deploy': 'cd app/bot && npm install && ./run_support_bot.sh restart'
     }
   }

@@ -7,9 +7,9 @@ set -e  # Exit on any error
 
 # Configuration
 BOT_NAME="empire-support-bot"
-BOT_DIR="/home/tinsae/Desktop/projects/empiregames/app/bot"
-PYTHON_ENV="/home/tinsae/Desktop/projects/empiregames/app/venv"
-LOG_DIR="/home/tinsae/Desktop/projects/empiregames/logs"
+BOT_DIR="/var/www/empiregames/app/bot"
+PYTHON_ENV="/var/www/empiregames/app/venv"
+LOG_DIR="/var/www/empiregames/logs"
 CONFIG_FILE="config.env"
 
 # Colors for output

@@ -5,12 +5,12 @@ Wants=network.target
 
 [Service]
 Type=simple
-User=tinsae
-Group=tinsae
-WorkingDirectory=/home/tinsae/Desktop/projects/empiregames/app/bot
-Environment=PATH=/home/tinsae/Desktop/projects/empiregames/app/venv/bin:/usr/local/bin:/usr/bin:/bin
-Environment=PYTHONPATH=/home/tinsae/Desktop/projects/empiregames/app
-ExecStart=/home/tinsae/Desktop/projects/empiregames/app/venv/bin/python support.py
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/empiregames/app/bot
+Environment=PATH=/var/www/empiregames/app/venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=/var/www/empiregames/app
+ExecStart=/var/www/empiregames/app/venv/bin/python support.py
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=10
@@ -23,7 +23,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/home/tinsae/Desktop/projects/empiregames/logs
+ReadWritePaths=/var/www/empiregames/logs
 
 [Install]
 WantedBy=multi-user.target
