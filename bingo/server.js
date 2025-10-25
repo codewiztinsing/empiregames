@@ -524,6 +524,33 @@ async function startGame(game) {
         // Use fixed fake player ID for transaction purposes
         const fakeId = 9999999999; // Fixed fake player ID
         const fakeName = ETH_MEN[Math.floor(Math.random() * ETH_MEN.length)];
+        
+        // Generate a unique card number that real users haven't selected
+        const realPlayerCardNumbers = new Set();
+        if (game.selectedNumbersToPlayer) {
+          for (const [playerId, numbers] of game.selectedNumbersToPlayer.entries()) {
+            if (Array.isArray(numbers)) {
+              numbers.forEach(num => {
+                if (num && num !== null) realPlayerCardNumbers.add(num);
+              });
+            }
+          }
+        }
+        
+        // Generate a random card number that's not used by real players (up to 400)
+        let fakeCardNumber;
+        let attempts = 0;
+        do {
+          fakeCardNumber = Math.floor(Math.random() * 400) + 1;
+          attempts++;
+        } while (realPlayerCardNumbers.has(fakeCardNumber) && attempts < 400);
+        
+        // If still couldn't find a unique number, use a high number
+        if (realPlayerCardNumbers.has(fakeCardNumber)) {
+          fakeCardNumber = Math.floor(Math.random() * 100) + 500;
+        }
+        
+        console.log('🎯 DEBUG: Generated fake card number:', fakeCardNumber, 'Real player card numbers:', Array.from(realPlayerCardNumbers));
 
         // Generate a proper 5x5 bingo board using called numbers
         const generateFakeWinningBoard = () => {
@@ -545,10 +572,10 @@ async function startGame(game) {
           
           // First, fill the entire board with random numbers following Bingo rules
           // Structure: board[column][row] - same as real player boards
-          const usedNumbers = new Set();
+          const usedNumbers = new Set(); // Global tracking to prevent duplicates across entire board
           for (let col = 0; col < 5; col++) {
             const range = columnRanges[col];
-            const usedInColumn = new Set();
+            const usedInColumn = new Set(); // Column-specific tracking
             
             for (let row = 0; row < 5; row++) {
               if (col === 2 && row === 2) {
@@ -556,11 +583,25 @@ async function startGame(game) {
                 board[col][row] = { number: '*', marked: true };
               } else {
                 let num;
+                let attempts = 0;
                 do {
                   num = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
-                } while (usedInColumn.has(num));
+                  attempts++;
+                } while ((usedInColumn.has(num) || usedNumbers.has(num)) && attempts < 50);
+                
+                // If we couldn't find a unique number, try a different approach
+                if (usedInColumn.has(num) || usedNumbers.has(num)) {
+                  // Find any available number in this column's range
+                  for (let i = range.start; i <= range.end; i++) {
+                    if (!usedInColumn.has(i) && !usedNumbers.has(i)) {
+                      num = i;
+                      break;
+                    }
+                  }
+                }
                 
                 usedInColumn.add(num);
+                usedNumbers.add(num);
                 board[col][row] = { number: num, marked: false };
               }
             }
@@ -666,32 +707,50 @@ async function startGame(game) {
           
           console.log('🎯 DEBUG: Available called numbers grouped by column (excluding real player numbers):', numbersByColumn);
           
-          // Place numbers in winning positions, ensuring they belong to the correct column
+          // Place numbers in winning positions, ensuring they belong to the correct column and are unique
           winningPositions.forEach((pos, idx) => {
             const [col, row] = pos;
             const range = columnRanges[col];
             
-            // Find a number from called numbers that belongs to this column
+            // Find a number from called numbers that belongs to this column and isn't already used
             let numberToPlace = null;
             if (numbersByColumn[col] && numbersByColumn[col].length > 0) {
-              numberToPlace = numbersByColumn[col][idx % numbersByColumn[col].length];
+              // Try to find a called number that's not already on the board
+              for (let i = 0; i < numbersByColumn[col].length; i++) {
+                const candidate = numbersByColumn[col][(idx + i) % numbersByColumn[col].length];
+                if (!usedNumbers.has(candidate)) {
+                  numberToPlace = candidate;
+                  break;
+                }
+              }
             }
             
             // If no number found for this column, generate a random one within range
-            // Make sure it's not a real player number
+            // Make sure it's not a real player number and not already used on the board
             if (!numberToPlace) {
               let attempts = 0;
               do {
                 numberToPlace = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
                 attempts++;
-              } while (realPlayerNumbers.has(numberToPlace) && attempts < 50);
+              } while ((realPlayerNumbers.has(numberToPlace) || usedNumbers.has(numberToPlace)) && attempts < 50);
               
-              // If still couldn't find a unique number, use any number in range
-              if (realPlayerNumbers.has(numberToPlace)) {
-                numberToPlace = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+              // If still couldn't find a unique number, find any available number in range
+              if (realPlayerNumbers.has(numberToPlace) || usedNumbers.has(numberToPlace)) {
+                for (let i = range.start; i <= range.end; i++) {
+                  if (!realPlayerNumbers.has(i) && !usedNumbers.has(i)) {
+                    numberToPlace = i;
+                    break;
+                  }
+                }
+                // Last resort: use any number in range
+                if (realPlayerNumbers.has(numberToPlace) || usedNumbers.has(numberToPlace)) {
+                  numberToPlace = Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
+                }
               }
             }
             
+            // Add to used numbers to prevent future duplicates
+            usedNumbers.add(numberToPlace);
             board[col][row].number = numberToPlace;
             board[col][row].marked = true; // Mark as winning
             console.log(`🎯 DEBUG: Placed ${numberToPlace} at [${col},${row}] - marked as winning`);
@@ -767,8 +826,8 @@ async function startGame(game) {
           winningCard: winningCard,
           winner: fakeId,
           calledNumbers: game.calledNumbers,
-          playerCard: 1,
-          winner_Number: 1,
+          playerCard: fakeCardNumber,
+          winner_Number: fakeCardNumber,
           playerName: fakeName,
           currentCall: game.currentCall,
           gameId: game.id,
@@ -788,7 +847,7 @@ async function startGame(game) {
           markedCells: winningCard,
           winningCard: winningCard,
           winner: fakeId,
-          winnerCardNumber: 1,
+          winnerCardNumber: fakeCardNumber,
           winnerPlayerName: fakeName,
           gameId: game.id,
           roomId: game.roomId
