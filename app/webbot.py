@@ -19,7 +19,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 from datetime import datetime, timedelta
 from decimal import Decimal
 # Removed payment gateway integrations; keep only needed utils
-from utils import get_bot_seetings, get_user_phone
+from utils import get_bot_seetings, get_user_phone, leaderboard_command
 # Removed Chapa/AddisPay integrations
 from telegram.ext import (
     Application,
@@ -63,6 +63,7 @@ LANGUAGE_TEXTS = {
         'deposit': '💳 Deposit',
         'contact_support': '📞 Contact Support',
         'instructions': '📚 Instructions',
+        'leaderboard': '🏆 Leaderboard',
         'english': '🇺🇸 English',
         'amharic': '🇪🇹 Amharic',
         'oromo': '🇪🇹 Oromo',
@@ -82,6 +83,7 @@ LANGUAGE_TEXTS = {
         'deposit': '💳 ገንዘብ ያስገቡ',
         'contact_support': '📞 ድጋፍ ያግኙ',
         'instructions': '📚 መመሪያዎች',
+        'leaderboard': '🏆 አሸናፊዎች',
         'english': '🇺🇸 English',
         'amharic': '🇪🇹 አማርኛ',
         'oromo': '🇪🇹 Oromo',
@@ -101,6 +103,7 @@ LANGUAGE_TEXTS = {
         'deposit': '💳 Qarshii galchi',
         'contact_support': '📞 Deeggarsa argadhu',
         'instructions': '📚 Qajeelchii',
+        'leaderboard': '🏆 Abbaa Duulaa',
         'english': '🇺🇸 English',
         'amharic': '🇪🇹 Amharic',
         'oromo': '🇪🇹 Afaan Oromoo',
@@ -120,6 +123,7 @@ LANGUAGE_TEXTS = {
         'deposit': '💳 Lacag geli',
         'contact_support': '📞 Hel taageero',
         'instructions': '📚 Tilmaamaha',
+        'leaderboard': '🏆 Hogaamiyayaasha',
         'english': '🇺🇸 English',
         'amharic': '🇪🇹 Amharic',
         'oromo': '🇪🇹 Oromo',
@@ -139,6 +143,7 @@ LANGUAGE_TEXTS = {
         'deposit': '💳 ገንዘብ ኣብልዑ',
         'contact_support': '📞 ሓገዝ ረኸቡ',
         'instructions': '📚 መምርሒታት',
+        'leaderboard': '🏆 ኣሸናፊታት',
         'english': '🇺🇸 English',
         'amharic': '🇪🇹 Amharic',
         'oromo': '🇪🇹 Oromo',
@@ -188,8 +193,9 @@ def main_menu_keyboard(user_id):
          InlineKeyboardButton(texts['register'], callback_data='register')],
         [InlineKeyboardButton(texts['check_balance'], callback_data='check_balance'),
          InlineKeyboardButton(texts['deposit'], callback_data='deposit')],
-        [InlineKeyboardButton(texts['contact_support'], callback_data='contact_support'),
+        [InlineKeyboardButton(texts['leaderboard'], callback_data='leaderboard'),
          InlineKeyboardButton(texts['instructions'], callback_data='instructions')],
+        [InlineKeyboardButton(texts['contact_support'], callback_data='contact_support')],
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -920,6 +926,10 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             reply_markup = InlineKeyboardMarkup(keyboard)
             await query.message.reply_text("Start playing Liyu bingo", reply_markup=reply_markup)
 
+        elif query.data == 'leaderboard':
+            # Call the leaderboard command from helpers
+            await leaderboard_command(query, context)
+
         elif query.data == 'deposit':
             await query.edit_message_text(
                 text="💰 እንዲሞላልዎት የሚፈልጉትን የገንዘብ መጠን ያስገቡ:"
@@ -1380,7 +1390,10 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
     games_played = int(games_played_this_week) if games_played_this_week is not None else 0
     remaining_games = 0
 
-    phone = get_user_phone(telegram_id)
+    phone = await get_user_phone(telegram_id)
+    if not phone:
+        phone = "Not found"
+    print("phone = ",phone)
     # Create appealing balance message
     if balance > 0:
         message = (
@@ -1588,6 +1601,7 @@ def main() -> None:
     application.add_handler(CommandHandler('deposit', deposit_command))
     application.add_handler(CommandHandler('show_id', show_id_command))
     application.add_handler(CommandHandler('redeem', redeem_command))
+    application.add_handler(CommandHandler('leaderboard', leaderboard_command))
     application.add_handler(conversation_handler)
     application.add_handler(CommandHandler('invite', handle_invite))  
     application.run_polling(allowed_updates=Update.ALL_TYPES)

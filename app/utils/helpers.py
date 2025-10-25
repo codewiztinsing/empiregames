@@ -461,3 +461,67 @@ def notify_referrer_bonus(referrer_telegram_id, referred_user_name):
     except Exception as e:
         print(f"Error notifying referrer: {e}")
         return False
+
+
+async def leaderboard_command(update, context):
+    """Handle /leaderboard command - Show top players by number of wins"""
+    try:
+        # Query to get users with most WIN transactions using sync_to_async
+        top_players = await sync_to_async(
+            lambda: list(Transaction.objects.filter(
+                type='WIN',
+                status='success'
+            ).values(
+                'user__username',
+                'user__first_name',
+                'user__last_name'
+            ).annotate(
+                win_count=Count('id')
+            ).order_by('-win_count')[:10])
+        )()
+        
+        if not top_players:
+            await update.message.reply_text(
+                "🏆 **Leaderboard**\n\n"
+                "No winners yet! Be the first to win and get on the leaderboard! 🎯"
+            )
+            return
+        
+        # Format the leaderboard message
+        message = "🏆 **TOP WINNERS LEADERBOARD** 🏆\n\n"
+        
+        for i, player in enumerate(top_players, 1):
+            username = player['user__username'] or "Anonymous"
+            first_name = player['user__first_name'] or ""
+            last_name = player['user__last_name'] or ""
+            
+            # Create display name
+            if first_name and last_name:
+                display_name = f"{first_name} {last_name}"
+            elif first_name:
+                display_name = first_name
+            else:
+                display_name = f"@{username}"
+            
+            # Add emoji based on position
+            if i == 1:
+                medal = "🥇"
+            elif i == 2:
+                medal = "🥈"
+            elif i == 3:
+                medal = "🥉"
+            else:
+                medal = f"{i}."
+            
+            win_count = player['win_count']
+            message += f"{medal} **{display_name}** - {win_count} wins\n"
+        
+        message += "\n🎯 Keep playing to climb the leaderboard!"
+        
+        await update.message.reply_text(message, parse_mode='Markdown')
+        
+    except Exception as e:
+        print(f"Error in leaderboard command: {e}")
+        await update.message.reply_text(
+            "❌ Sorry, there was an error loading the leaderboard. Please try again later."
+        )
