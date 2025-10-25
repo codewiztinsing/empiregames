@@ -14,6 +14,7 @@ import InvitedUsers from './screens/InvitedUsers';
 import ReferralDashboard from './components/ReferralDashboard';
 import ReferralCodeInput from './components/ReferralCodeInput';
 import ReferralLanding from './components/ReferralLanding';
+import CustomBoard from './screens/CustomBoard';
 
 // Import authentication components
 import AuthGuard from './components/AuthGuard';
@@ -74,6 +75,11 @@ function App() {
                 <Route path="/referral-landing" element={
                   <ProtectedRoute>
                     <ReferralLanding />
+                  </ProtectedRoute>
+                } />
+                <Route path="/custom-board" element={
+                  <ProtectedRoute>
+                    <CustomBoard />
                   </ProtectedRoute>
                 } />
                 

@@ -30,7 +30,7 @@ async def admin_check(update: Update):
     """Check if user is admin"""
     # Handle both regular updates and callback queries
     if hasattr(update, 'effective_user'):
-        user_id = update.effective_user.id
+    user_id = update.effective_user.id
     else:
         user_id = update.from_user.id
     return user_id == ADMIN_ID
@@ -708,7 +708,7 @@ async def handle_search_input(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def view_transactions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Handle both regular updates and callback queries
     if hasattr(update, 'effective_user'):
-        user_id = update.effective_user.id
+    user_id = update.effective_user.id
     else:
         user_id = update.from_user.id
         
@@ -717,9 +717,9 @@ async def view_transactions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not history:
         msg = "🕘 No transactions found."
     else:
-        msg = "📄 Your Transaction History:\n\n"
+    msg = "📄 Your Transaction History:\n\n"
         for idx, tx in enumerate(history, 1):
-            msg += (
+        msg += (
                 f"{idx}. {tx.type.capitalize()} - {tx.amount} Birr\n"
                 f"   Status: {tx.status}\n"
                 f"   Date: {tx.created_at.strftime('%Y-%m-%d %H:%M')}\n"

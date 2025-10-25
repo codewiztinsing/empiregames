@@ -1,0 +1,30 @@
+[Unit]
+Description=Empire Games Web Bot
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/empiregames/app
+Environment=PATH=/var/www/empiregames/app/venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=/var/www/empiregames/app
+Environment=DJANGO_SETTINGS_MODULE=core.settings
+ExecStart=/var/www/empiregames/app/venv/bin/python webbot.py
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=empire-webbot
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/empiregames/logs
+
+[Install]
+WantedBy=multi-user.target

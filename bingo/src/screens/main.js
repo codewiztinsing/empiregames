@@ -7,6 +7,7 @@ import { BingoContext } from '../contexts/bingoContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faVolumeMute, faVolumeUp, faSignOutAlt, faSync } from '@fortawesome/free-solid-svg-icons';
 import { generateFixedCard } from '../helpers/fixedBingoCards';
+import config from '../config/api';
 import { hasBingo, checkBingoPatterns, markCardNumber } from '../helpers/fixedBingoCards';
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from '../components/LanguageSelector';
@@ -43,6 +44,10 @@ const PlayingBoard = () => {
   // Watch mode and auto-play state
   const [isWatchMode, setIsWatchMode] = useState(watchMode);
   const [isAutoPlayDisabled, setIsAutoPlayDisabled] = useState(!urlAutoPlay);
+  
+  // Custom card state
+  const [userCustomCard, setUserCustomCard] = useState(null);
+  const [isUsingCustomCard, setIsUsingCustomCard] = useState(false);
 
   // Handle watch mode initialization
   useEffect(() => {
@@ -178,16 +183,59 @@ const PlayingBoard = () => {
     if (urlSelectedNumber) {
       const selectedNum = parseInt(urlSelectedNumber);
       setSelectedNumber(selectedNum);
-        // Generate card data using fixed card system
-        const generateCard = (cardNumber) => {
-          return generateFixedCard(cardNumber);
-        };
+        // Generate card data (custom or default)
         setSelectBoard(generateCard(selectedNum));
       }
     };
 
     initializeFromURL();
   }, [setPlayerId, setRoomId, setPlayerName, setSelectedNumber, setSelectBoard]);
+
+  // Fetch user's custom card
+  const fetchUserCustomCard = async () => {
+    if (!playerId) return;
+    
+    try {
+      const response = await fetch(`${config.API_BASE_URL}/game/custom-cards/default/?telegram_id=${playerId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.card) {
+          setUserCustomCard(data.card);
+          setIsUsingCustomCard(true);
+          console.log('Using custom card:', data.card.name);
+        } else {
+          setIsUsingCustomCard(false);
+          console.log('No custom card found, using default');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching custom card:', error);
+      setIsUsingCustomCard(false);
+    }
+  };
+
+  // Modified card generation function
+  const generateCard = (cardNumber) => {
+    if (isUsingCustomCard && userCustomCard) {
+      // Use custom card numbers
+      const customNumbers = userCustomCard.numbers;
+      return {
+        B: customNumbers.B || [],
+        I: customNumbers.I || [],
+        N: customNumbers.N || [],
+        G: customNumbers.G || [],
+        O: customNumbers.O || []
+      };
+    } else {
+      // Use default fixed card system
+      return generateFixedCard(cardNumber);
+    }
+  };
+
+  // Load custom card on component mount
+  useEffect(() => {
+    fetchUserCustomCard();
+  }, [playerId]);
 
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -992,6 +1040,15 @@ const PlayingBoard = () => {
       <div className="main-game-area">
         {/* Left Side - Main Bingo Board */}
         <div className="main-bingo-board">
+          {/* Custom Card Indicator */}
+          {isUsingCustomCard && userCustomCard && (
+            <div className="custom-card-indicator">
+              <div className="custom-card-badge">
+                ✨ Custom Card: {userCustomCard.name}
+              </div>
+            </div>
+          )}
+          
           {/* BINGO Header */}
           <div className="bingo-header">
             <div className="bingo-letter red">B</div>

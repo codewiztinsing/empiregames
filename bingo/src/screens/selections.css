@@ -14,15 +14,46 @@ body {
   overflow-x: hidden;
 }
 
-/* Modal content white background for selections screen only */
-.modal-content {
-  background-color: white !important;
+/* Responsive modal heights for different screen sizes */
+@media (max-height: 600px) {
+  .modal-content {
+    max-height: 60vh !important;
+    margin: 1vh auto !important;
+  }
+}
+
+@media (max-height: 500px) {
+  .modal-content {
+    max-height: 55vh !important;
+    margin: 0.5vh auto !important;
+  }
+}
+
+@media (max-height: 400px) {
+  .modal-content {
+    max-height: 50vh !important;
+    margin: 0.5vh auto !important;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 480px) and (max-height: 700px) {
+  .modal-content {
+    max-height: 65vh !important;
+    margin: 1vh auto !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .modal-content {
+    max-height: 60vh !important;
+    margin: 1vh auto !important;
+  }
 }
 
 /* KONJO Bingo Design */
 .konjo-selections-container {
   min-height: 100vh;
-  background-color: #1a237e;
   display: flex;
   flex-direction: column;
   width: 100vw;
@@ -512,7 +543,8 @@ body {
   margin-bottom: 15px;
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow: visible;
+  position: relative;
 }
 
 .konjo-number-cell {
@@ -530,9 +562,10 @@ body {
   justify-content: center;
   min-height: clamp(32px, 8vw, 48px);
   aspect-ratio: 1;
+  position: relative;
+  z-index: 1;
   width: 100%;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  position: relative;
   overflow: hidden;
 }
 
@@ -554,10 +587,11 @@ body {
 .konjo-number-cell:hover:not(.disabled):not(.player-selected):not(.player-picked) {
   background: linear-gradient(135deg, #e3f2fd, #bbdefb);
   border-color: #2196f3;
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 6px 20px rgba(33, 150, 243, 0.3);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
   color: #1976d2;
   border-width: 1px;
+  z-index: 10;
 }
 
 .konjo-number-cell.selected {
@@ -565,9 +599,10 @@ body {
   border-color: #9A7209 !important;
   border-width: 1px !important;
   color: white !important;
-  box-shadow: 0 6px 20px rgba(218, 165, 32, 0.4) !important;
-  transform: scale(1.05) !important;
+  box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4) !important;
+  transform: scale(1.02) !important;
   animation: selectedPulse 2s infinite;
+  z-index: 5;
 }
 
 .konjo-number-cell.picked {
@@ -576,9 +611,10 @@ body {
   border-width: 1px !important;
   color: white !important;
   cursor: not-allowed !important;
-  box-shadow: 0 6px 20px rgba(218, 165, 32, 0.4) !important;
-  transform: scale(1.05) !important;
+  box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4) !important;
+  transform: scale(1.02) !important;
   animation: pickedShake 0.5s ease-in-out;
+  z-index: 5;
 }
 
 .konjo-number-cell.player-selected {
@@ -587,9 +623,10 @@ body {
   border-color: #9A7209 !important;
   border-width: 1px !important;
   color: white !important;
-  box-shadow: 0 6px 20px rgba(218, 165, 32, 0.4) !important;
-  transform: scale(1.05) !important;
+  box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4) !important;
+  transform: scale(1.02) !important;
   animation: selectedPulse 2s infinite;
+  z-index: 5;
 }
 
 .konjo-number-cell.player-picked {
@@ -599,9 +636,10 @@ body {
   border-width: 1px !important;
   color: white !important;
   cursor: not-allowed !important;
-  box-shadow: 0 6px 20px rgba(218, 165, 32, 0.4) !important;
-  transform: scale(1.05) !important;
+  box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4) !important;
+  transform: scale(1.02) !important;
   animation: pickedShake 0.5s ease-in-out;
+  z-index: 5;
 }
 
 .konjo-number-cell.disabled {
@@ -708,6 +746,8 @@ body {
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease-in-out;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
 }
 
 .konjo-card-preview.show {
@@ -719,7 +759,7 @@ body {
   border-radius: 20px;
   max-width: 700px;
   width: 95%;
-  max-height: 90vh;
+  max-height: 75vh;
   overflow-y: auto;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   transform: translateX(-100%);
@@ -729,6 +769,37 @@ body {
 
 .konjo-card-preview.show .modal-content {
   transform: translateX(0);
+}
+
+/* Responsive adjustments for konjo-card-preview modal */
+@media (max-height: 600px) {
+  .konjo-card-preview .modal-content {
+    max-height: 65vh;
+  }
+}
+
+@media (max-height: 500px) {
+  .konjo-card-preview .modal-content {
+    max-height: 60vh;
+  }
+}
+
+@media (max-height: 400px) {
+  .konjo-card-preview .modal-content {
+    max-height: 55vh;
+  }
+}
+
+@media (max-width: 480px) and (max-height: 700px) {
+  .konjo-card-preview .modal-content {
+    max-height: 70vh;
+  }
+}
+
+@media (max-width: 360px) {
+  .konjo-card-preview .modal-content {
+    max-height: 65vh;
+  }
 }
 
 .modal-header {
@@ -844,11 +915,11 @@ body {
 
 /* Bingo Card Styles */
 .bingo-card {
-  background-color: #fefefe; /* Off-white background like in the image */
-  border: 3px solid #ffd700; /* Bright yellow border like in the image */
+  background: linear-gradient(135deg, #fefefe 0%, #f8f9fa 100%);
+  border: 3px solid #ffd700;
   border-radius: 20px;
   padding: 25px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   margin: 0 auto;
   position: relative;
   max-width: 650px;
@@ -951,14 +1022,15 @@ body {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
-  background-color: #f5f5f5; /* Light gray background for the grid */
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
   padding: 30px;
   border-radius: 18px;
-  border: 3px solid #333; /* Black border around the grid */
+  border: 3px solid #333;
   min-height: 300px;
   min-width: 300px;
   width: 100%;
   max-width: 300px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .bingo-row {
@@ -2945,5 +3017,68 @@ body {
   
   .sidebar-item span {
     font-size: 16px;
+  }
+}
+
+/* Custom Card Buttons */
+.custom-card-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  justify-content: center;
+}
+
+.custom-card-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.custom-card-btn.create-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.custom-card-btn.create-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+}
+
+.custom-card-btn.manage-btn {
+  background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(26, 35, 126, 0.3);
+}
+
+.custom-card-btn.manage-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(26, 35, 126, 0.4);
+}
+
+/* Responsive Custom Card Buttons */
+@media (max-width: 768px) {
+  .custom-card-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .custom-card-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-card-btn {
+    padding: 6px 12px;
+    font-size: 12px;
   }
 }

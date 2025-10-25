@@ -1,0 +1,354 @@
+/* Custom Card Editor Styles */
+.custom-card-editor-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.custom-card-editor {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.custom-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  border-bottom: 2px solid #e9ecef;
+  background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+  color: white;
+  border-radius: 20px 20px 0 0;
+}
+
+.custom-card-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: #ff4757;
+  border: none;
+  color: white;
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: #ff3742;
+  transform: scale(1.1);
+}
+
+.custom-card-content {
+  padding: 30px;
+}
+
+.card-name-section {
+  margin-bottom: 20px;
+}
+
+.card-name-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.card-name-section input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.card-name-section input:focus {
+  outline: none;
+  border-color: #1a237e;
+  box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1);
+}
+
+.card-options {
+  margin-bottom: 20px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  color: #2c3e50;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  margin-right: 10px;
+  width: 18px;
+  height: 18px;
+  accent-color: #1a237e;
+}
+
+.card-generator {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.generate-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.generate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.bingo-card-editor {
+  background: #fefefe;
+  border: 3px solid #ffd700;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.bingo-header {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.bingo-letter {
+  background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(26, 35, 126, 0.3);
+}
+
+.bingo-grid-editor {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.bingo-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bingo-cell-editor {
+  position: relative;
+}
+
+.number-input {
+  width: 100%;
+  height: 50px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.number-input:focus {
+  outline: none;
+  border-color: #1a237e;
+  box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1);
+  background: #f8f9ff;
+}
+
+.number-input.error {
+  border-color: #dc3545;
+  background: #fff5f5;
+}
+
+.number-input.error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.error-message {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #dc3545;
+  color: white;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-top: 2px;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+}
+
+.cancel-btn, .save-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(26, 35, 126, 0.3);
+}
+
+.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 35, 126, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .custom-card-editor {
+    margin: 10px;
+    max-height: 95vh;
+  }
+  
+  .custom-card-content {
+    padding: 20px;
+  }
+  
+  .custom-card-header {
+    padding: 15px 20px;
+  }
+  
+  .custom-card-header h2 {
+    font-size: 20px;
+  }
+  
+  .bingo-letter {
+    font-size: 18px;
+    padding: 10px;
+  }
+  
+  .number-input {
+    height: 40px;
+    font-size: 16px;
+  }
+  
+  .card-actions {
+    flex-direction: column;
+  }
+  
+  .cancel-btn, .save-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-card-editor-overlay {
+    padding: 10px;
+  }
+  
+  .bingo-header {
+    gap: 4px;
+  }
+  
+  .bingo-grid-editor {
+    gap: 4px;
+  }
+  
+  .bingo-column {
+    gap: 4px;
+  }
+  
+  .bingo-letter {
+    font-size: 16px;
+    padding: 8px;
+  }
+  
+  .number-input {
+    height: 35px;
+    font-size: 14px;
+  }
+}
+
+/* Animation for modal appearance */
+.custom-card-editor-overlay {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.custom-card-editor {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

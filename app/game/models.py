@@ -313,4 +313,106 @@ class FakePlayerSettings(models.Model):
             # For backward compatibility, get the first one
             obj, created = cls.objects.get_or_create(pk=1)
         return obj
+
+
+class CustomBingoCard(models.Model):
+    """
+    Custom bingo cards created by users
+    """
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='custom_bingo_cards')
+    
+    # Card details
+    name = models.CharField(max_length=100)
+    is_default = models.BooleanField(default=False)
+    
+    # Card numbers stored as JSON
+    numbers = models.JSONField(default=dict, help_text="Bingo card numbers organized by column (B, I, N, G, O)")
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'game_custom_bingo_card'
+        verbose_name = 'Custom Bingo Card'
+        verbose_name_plural = 'Custom Bingo Cards'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_default']),
+            models.Index(fields=['user', 'created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.name}"
+    
+    def clean(self):
+        """Validate the card numbers"""
+        from django.core.exceptions import ValidationError
+        
+        if not isinstance(self.numbers, dict):
+            raise ValidationError("Numbers must be a dictionary")
+        
+        # Check if all required columns are present
+        required_columns = ['B', 'I', 'N', 'G', 'O']
+        for column in required_columns:
+            if column not in self.numbers:
+                raise ValidationError(f"Missing column: {column}")
+            
+            if not isinstance(self.numbers[column], list) or len(self.numbers[column]) != 5:
+                raise ValidationError(f"Column {column} must contain exactly 5 numbers")
+        
+        # Validate number ranges
+        column_ranges = {
+            'B': (1, 15),
+            'I': (16, 30),
+            'N': (31, 45),
+            'G': (46, 60),
+            'O': (61, 75)
+        }
+        
+        all_numbers = []
+        for column, numbers in self.numbers.items():
+            min_val, max_val = column_ranges[column]
+            for number in numbers:
+                if not isinstance(number, int) or number < min_val or number > max_val:
+                    raise ValidationError(f"Number {number} in column {column} is out of range ({min_val}-{max_val})")
+                all_numbers.append(number)
+        
+        # Check for duplicates
+        if len(all_numbers) != len(set(all_numbers)):
+            raise ValidationError("Duplicate numbers found in the card")
+    
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_user_default_card(cls, user):
+        """Get the user's default custom card"""
+        return cls.objects.filter(user=user, is_default=True).first()
+    
+    @classmethod
+    def get_user_cards(cls, user):
+        """Get all custom cards for a user"""
+        return cls.objects.filter(user=user).order_by('-is_default', '-created_at')
+    
+    @classmethod
+    def set_default_card(cls, user, card_id):
+        """Set a card as default and unset others"""
+        # Unset all other default cards for this user
+        cls.objects.filter(user=user, is_default=True).update(is_default=False)
+        
+        # Set the specified card as default
+        cls.objects.filter(user=user, id=card_id).update(is_default=True)
+    
+    def get_card_numbers(self):
+        """Get formatted card numbers"""
+        return {
+            'B': self.numbers.get('B', []),
+            'I': self.numbers.get('I', []),
+            'N': self.numbers.get('N', []),
+            'G': self.numbers.get('G', []),
+            'O': self.numbers.get('O', [])
+        }
     
