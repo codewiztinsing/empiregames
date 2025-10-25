@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SocketContext } from '../contexts/socket';
 import { BingoContext } from '../contexts/bingoContext';
+import Spinner from '../components/Spinner';
 import './gamePreview.css';
 
 const GamePreview = () => {
@@ -340,39 +341,9 @@ const GamePreview = () => {
               </div>
             </div>
 
-            {/* Blurred playing area */}
-            <div className='boards-container blurred-section'>
-              <div className="blur-overlay">
-                <div className="blur-content">
-                  <div className="blur-message">
-                    <h2>🎮 Game in Progress</h2>
-                    
-                 
-                  </div>
-                </div>
-              </div>
-              
-              {/* Blurred board preview */}
-              <div className="board-row">
-                <div className='board-cell-main header-bingo-style'>B</div>
-                <div className='board-cell-main header-bingo-style'>I</div>
-                <div className='board-cell-main header-bingo-style'>N</div>
-                <div className='board-cell-main header-bingo-style'>G</div>
-                <div className='board-cell-main header-bingo-style'>O</div>
-              </div>
-              
-              {/* Sample blurred board */}
-              <div className="bingo-board blurred">
-                {Array.from({ length: 5 }, (_, rowIndex) => (
-                  <div key={rowIndex} className="board-row">
-                    {Array.from({ length: 5 }, (_, colIndex) => (
-                      <div key={colIndex} className="board-cell-main blurred-cell">
-                        {rowIndex === 2 && colIndex === 2 ? '*' : '?'}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
+            {/* Game in Progress Section */}
+            <div className='boards-container'>
+              <Spinner message="Please wait until game finished" />
             </div>
           </div>
         </div>

@@ -57,7 +57,7 @@
   flex-direction: column;
   align-items: center;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: black;
   border-radius: 8px;
   min-width: 80px;
 }
@@ -71,7 +71,6 @@
 .stat-item span:last-child {
   font-size: 1.1rem;
   font-weight: bold;
-  color: #ff6b35;
 }
 
 /* Middle Container */
