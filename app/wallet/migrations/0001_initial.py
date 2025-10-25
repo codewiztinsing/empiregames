@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('users', '0002_user_created_at_user_games_played_this_week_and_more'),
+        # ('users', '0002_user_created_at_user_games_played_this_week_and_more'),
     ]
 
     operations = [

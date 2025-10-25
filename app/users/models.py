@@ -5,10 +5,14 @@ from django.contrib.auth.models import Group, Permission
 from decimal import Decimal
 from django.core.validators import MinValueValidator
 
+def generate_referral_code():
+    """Generate a unique referral code"""
+    return get_random_string(15)
+
 class User(AbstractUser):
     phone = models.CharField(max_length=15, unique=True)
     telegram_id = models.CharField(max_length=15, unique=True)
-    referral_code = models.CharField(max_length=15, default=get_random_string(15))
+    referral_code = models.CharField(max_length=15, default=generate_referral_code)
     referred_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='referrals')
     is_agent = models.BooleanField(default=False)  # Default to customer, not agent
     sponsor_changed = models.BooleanField(default=False)  # Can only change once

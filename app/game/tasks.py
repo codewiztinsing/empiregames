@@ -95,14 +95,14 @@ def charge_player(players_dict, entry_fee, game_id):
                         # Add used referral bonus to wallet to allow bet deduction
                         wallet.balance += used_bonus
             wallet.save()
-                        push_transaction.delay(player.telegram_id, used_bonus, used_bonus, "REFERRAL_BONUS", "success", game_id)
+            push_transaction.delay(player.telegram_id, used_bonus, used_bonus, "REFERRAL_BONUS", "success", game_id)
 
-                        # Deduct the remaining amount now
-                        wallet.balance -= remaining_required
-                        wallet.save()
-                        push_transaction.delay(player.telegram_id, remaining_required, remaining_required, "BET", "success", game_id)
+            # Deduct the remaining amount now
+            wallet.balance -= remaining_required
+            wallet.save()
+            push_transaction.delay(player.telegram_id, remaining_required, remaining_required, "BET", "success", game_id)
 
-                charged_players.append(player.id)
+            charged_players.append(player.id)
             logger.info(f"Successfully charged player {player_id}")
             
         except Exception as e:
