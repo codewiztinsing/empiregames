@@ -28,7 +28,10 @@
     "bingoGame": "Tapha Bingo",
     "transactionHistory": "Seenaa Fe'umsa",
     "invitedUsers": "Fayyadamaawwan Lakkofsaman",
-    "language": "Afaan"
+    "language": "Afaan",
+    "customCards": "Kaardiiwwan Fayyadamaa",
+    "createCard": "Kaardii Uum",
+    "myCards": "Kaardiiwwan Koo"
   },
   "auth": {
     "login": "Seenu",

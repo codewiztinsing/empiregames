@@ -28,7 +28,10 @@
     "bingoGame": "Bingo Game",
     "transactionHistory": "Transaction History",
     "invitedUsers": "Invited Users",
-    "language": "Language"
+    "language": "Language",
+    "customCards": "Custom Cards",
+    "createCard": "Create Card",
+    "myCards": "My Cards"
   },
   "auth": {
     "login": "Login",

@@ -28,7 +28,10 @@
     "bingoGame": "ቢንጎ ጨዋታ",
     "transactionHistory": "ግብይት ታሪክ",
     "invitedUsers": "የተጋባው ተጠቃሚዎች",
-    "language": "ቋንቋ"
+    "language": "ቋንቋ",
+    "customCards": "ብጁ ካርዶች",
+    "createCard": "ካርድ ፍጠር",
+    "myCards": "የኔ ካርዶች"
   },
   "auth": {
     "login": "ግባ",

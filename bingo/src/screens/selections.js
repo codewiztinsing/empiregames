@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faBars, faTimes, faGamepad, faUser, faHistory, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faBars, faTimes, faGamepad, faUser, faHistory, faUsers, faEdit, faEye } from '@fortawesome/free-solid-svg-icons';
 import { SocketContext } from '../contexts/socket';
 import Toaster from '../components/Toaster';
 import LanguageSelector from '../components/LanguageSelector';
@@ -914,27 +914,6 @@ const Selections = () => {
               <div className="info-button">{t('game.betAmount')} {roomId} {t('currency.birr')}</div>
             </div>
             <div className="action-buttons">
-              {/* Custom Card Buttons */}
-              <div className="custom-card-buttons">
-                <button 
-                  className="custom-card-btn create-btn"
-                  onClick={() => {
-                    console.log('Create Card button clicked');
-                    navigate('/custom-board');
-                  }}
-                  title="Create Custom Card"
-                >
-                  ✏️ Create Card
-                </button>
-                <button 
-                  className="custom-card-btn manage-btn"
-                  onClick={() => navigate('/custom-board')}
-                  title="Manage Custom Cards"
-                >
-                  🎯 My Cards
-                </button>
-              </div>
-              
               <button 
                 className="start-button"
                 onClick={() => {
@@ -1260,6 +1239,26 @@ const Selections = () => {
                   <FontAwesomeIcon icon={faUsers} className="sidebar-icon" />
                   <span>{t('navigation.invitedUsers')}</span>
                 </div>
+                
+                {/* Custom Card Section */}
+                <div className="sidebar-custom-cards-section">
+                  <div className="sidebar-custom-cards-title">{t('navigation.customCards')}</div>
+                  <div className="sidebar-item" onClick={() => {
+                    setIsSidebarOpen(false);
+                    navigate('/custom-board');
+                  }}>
+                    <FontAwesomeIcon icon={faEdit} className="sidebar-icon" />
+                    <span>{t('navigation.createCard')}</span>
+                  </div>
+                  <div className="sidebar-item" onClick={() => {
+                    setIsSidebarOpen(false);
+                    navigate('/custom-board');
+                  }}>
+                    <FontAwesomeIcon icon={faEye} className="sidebar-icon" />
+                    <span>{t('navigation.myCards')}</span>
+                  </div>
+                </div>
+                
                 <div className="sidebar-language-section">
                   <div className="sidebar-language-title">{t('navigation.language')}</div>
                   <LanguageSelector />
