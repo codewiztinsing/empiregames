@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Game, GameRoom, PlayerGame, GameSettings, FakePlayerSettings
+from .models import Game, GameRoom, PlayerGame, GameSettings, FakePlayerSettings, CustomBingoCard
 from wallet.models import ManualSession
 
 admin.site.site_header = "Wow Bingo Admin"
@@ -60,9 +60,51 @@ class FakePlayerSettingsAdmin(admin.ModelAdmin):
         return True
 
 
+class CustomBingoCardAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'name', 'is_default', 'created_at', 'updated_at')
+    list_filter = ('is_default', 'created_at', 'updated_at')
+    search_fields = ('user__username', 'user__telegram_id', 'name')
+    readonly_fields = ('created_at', 'updated_at')
+    list_per_page = 20
+    
+    fieldsets = (
+        ('Card Information', {
+            'fields': ('user', 'name', 'is_default')
+        }),
+        ('Card Numbers', {
+            'fields': ('numbers',),
+            'description': 'Bingo card numbers organized by column (B, I, N, G, O)'
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        })
+    )
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')
+    
+    actions = ['set_as_default', 'unset_default']
+    
+    def set_as_default(self, request, queryset):
+        """Set selected cards as default for their users"""
+        updated_count = 0
+        for card in queryset:
+            CustomBingoCard.set_default_card(card.user, card.id)
+            updated_count += 1
+        self.message_user(request, f"{updated_count} cards set as default successfully.")
+    set_as_default.short_description = "Set as default card"
+    
+    def unset_default(self, request, queryset):
+        """Unset default status for selected cards"""
+        updated = queryset.filter(is_default=True).update(is_default=False)
+        self.message_user(request, f"{updated} cards unset as default.")
+    unset_default.short_description = "Unset default status"
+
+
 admin.site.register(Game, GameAdmin)
 admin.site.register(GameRoom, GameRoomAdmin)
 admin.site.register(PlayerGame, PlayerGameAdmin)
 admin.site.register(GameSettings, GameSettingsAdmin)
 admin.site.register(FakePlayerSettings, FakePlayerSettingsAdmin)
+admin.site.register(CustomBingoCard, CustomBingoCardAdmin)
 # ManualSession is registered in wallet.admin

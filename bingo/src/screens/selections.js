@@ -82,6 +82,8 @@ const Selections = () => {
   const [currentPromotion, setCurrentPromotion] = useState(null);
   const [showPromotionModal, setShowPromotionModal] = useState(false);
   const { user, token, isAuthenticated } = useAuth();
+  
+  
 
   // Fetch fake player settings
   const fetchFakePlayerSettings = async () => {
@@ -912,6 +914,27 @@ const Selections = () => {
               <div className="info-button">{t('game.betAmount')} {roomId} {t('currency.birr')}</div>
             </div>
             <div className="action-buttons">
+              {/* Custom Card Buttons */}
+              <div className="custom-card-buttons">
+                <button 
+                  className="custom-card-btn create-btn"
+                  onClick={() => {
+                    console.log('Create Card button clicked');
+                    navigate('/custom-board');
+                  }}
+                  title="Create Custom Card"
+                >
+                  ✏️ Create Card
+                </button>
+                <button 
+                  className="custom-card-btn manage-btn"
+                  onClick={() => navigate('/custom-board')}
+                  title="Manage Custom Cards"
+                >
+                  🎯 My Cards
+                </button>
+              </div>
+              
               <button 
                 className="start-button"
                 onClick={() => {
@@ -1244,6 +1267,9 @@ const Selections = () => {
               </div>
             </div>
         </div>
+        
+        
+        
         </>
       )}
     </>

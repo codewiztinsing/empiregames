@@ -44,6 +44,19 @@ def verify_jwt(token):
 class JWTAuth(HttpBearer):
     def authenticate(self, request, token):
         try:
+            # Check if we're in development mode and bypass auth
+            from django.conf import settings
+            if getattr(settings, 'DEBUG', False):
+                print("[JWTDebug] DEBUG mode - bypassing authentication")
+                # Create a mock payload for development
+                request.user_payload = {
+                    'telegram_id': '123456789',  # Default test user
+                    'username': 'test_user',
+                    'first_name': 'Test',
+                    'last_name': 'User'
+                }
+                return token
+            
             payload = decode_jwt(token)
             if not payload:
                 print("[JWTDebug] authenticate failed: payload is None")

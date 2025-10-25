@@ -12,10 +12,11 @@ from decimal import Decimal
 from utils.fake_players_factory import count_real_players_in_games
 from .tasks import activate_fake_players, deactivate_fake_players
 from datetime import timedelta
-from .models import Game, GameRoom, PlayerGame, GameSettings, FakePlayerSettings
+from .models import Game, GameRoom, PlayerGame, GameSettings, FakePlayerSettings, CustomBingoCard
 from .tasks import charge_player,push_transaction,update_player_balance
 from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema,GameRoomSchema,GameRoomListSchema
 from ninja.errors import HttpError  # Correct import
+from django.core.exceptions import ValidationError
 
 
 logger = logging.getLogger(__name__)
@@ -509,5 +510,276 @@ def get_detailed_games(request, limit: int = 20):
         }, status=200)
     except Exception as e:
         print(f"Error getting detailed games: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+# Custom Bingo Card API Endpoints
+@game_router.get("/custom-cards/")
+def get_user_custom_cards(request, telegram_id: str):
+    """Get all custom cards for a user"""
+    try:
+        from django.conf import settings
+        
+        # In development mode, create a test user if it doesn't exist
+        if getattr(settings, 'DEBUG', False):
+            user, created = User.objects.get_or_create(
+                telegram_id=telegram_id,
+                defaults={
+                    'username': f'test_user_{telegram_id}',
+                    'first_name': 'Test',
+                    'last_name': 'User',
+                    'phone': '1234567890'
+                }
+            )
+            if created:
+                logger.info(f"Created test user for telegram_id: {telegram_id}")
+        else:
+            user = get_object_or_404(User, telegram_id=telegram_id)
+        
+        cards = CustomBingoCard.get_user_cards(user)
+        
+        cards_list = []
+        for card in cards:
+            cards_list.append({
+                "id": card.id,
+                "name": card.name,
+                "is_default": card.is_default,
+                "numbers": card.get_card_numbers(),
+                "created_at": card.created_at.isoformat(),
+                "updated_at": card.updated_at.isoformat()
+            })
+        
+        return JsonResponse({
+            "cards": cards_list,
+            "count": len(cards_list)
+        }, status=200)
+    except Exception as e:
+        logger.error(f"Error getting custom cards: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@game_router.get("/custom-cards/default/")
+def get_user_default_card(request, telegram_id: str):
+    """Get user's default custom card"""
+    try:
+        from django.conf import settings
+        
+        # In development mode, create a test user if it doesn't exist
+        if getattr(settings, 'DEBUG', False):
+            user, created = User.objects.get_or_create(
+                telegram_id=telegram_id,
+                defaults={
+                    'username': f'test_user_{telegram_id}',
+                    'first_name': 'Test',
+                    'last_name': 'User',
+                    'phone': '1234567890'
+                }
+            )
+            if created:
+                logger.info(f"Created test user for telegram_id: {telegram_id}")
+        else:
+            user = get_object_or_404(User, telegram_id=telegram_id)
+        
+        card = CustomBingoCard.get_user_default_card(user)
+        
+        if card:
+            return JsonResponse({
+                "card": {
+                    "id": card.id,
+                    "name": card.name,
+                    "is_default": card.is_default,
+                    "numbers": card.get_card_numbers(),
+                    "created_at": card.created_at.isoformat(),
+                    "updated_at": card.updated_at.isoformat()
+                }
+            }, status=200)
+        else:
+            return JsonResponse({
+                "card": None,
+                "message": "No default card found"
+            }, status=200)
+    except Exception as e:
+        logger.error(f"Error getting default card: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@game_router.post("/custom-cards/create/")
+def create_custom_card(request, telegram_id: str, name: str, numbers: dict, is_default: bool = False):
+    """Create a new custom bingo card"""
+    try:
+        from django.conf import settings
+        
+        # In development mode, create a test user if it doesn't exist
+        if getattr(settings, 'DEBUG', False):
+            user, created = User.objects.get_or_create(
+                telegram_id=telegram_id,
+                defaults={
+                    'username': f'test_user_{telegram_id}',
+                    'first_name': 'Test',
+                    'last_name': 'User',
+                    'phone': '1234567890'
+                }
+            )
+            if created:
+                logger.info(f"Created test user for telegram_id: {telegram_id}")
+        else:
+            user = get_object_or_404(User, telegram_id=telegram_id)
+        
+        # Validate numbers format
+        if not isinstance(numbers, dict):
+            return JsonResponse({"error": "Numbers must be a dictionary"}, status=400)
+        
+        # Check if user already has a card with this name
+        if CustomBingoCard.objects.filter(user=user, name=name).exists():
+            return JsonResponse({"error": "A card with this name already exists"}, status=400)
+        
+        # Create the card
+        card = CustomBingoCard(
+            user=user,
+            name=name,
+            numbers=numbers,
+            is_default=is_default
+        )
+        
+        try:
+            card.full_clean()  # This will call the clean() method
+            card.save()
+            
+            # If this is set as default, unset others
+            if is_default:
+                CustomBingoCard.set_default_card(user, card.id)
+            
+            return JsonResponse({
+                "card": {
+                    "id": card.id,
+                    "name": card.name,
+                    "is_default": card.is_default,
+                    "numbers": card.get_card_numbers(),
+                    "created_at": card.created_at.isoformat(),
+                    "updated_at": card.updated_at.isoformat()
+                },
+                "message": "Card created successfully"
+            }, status=201)
+        except ValidationError as ve:
+            return JsonResponse({"error": str(ve)}, status=400)
+            
+    except Exception as e:
+        logger.error(f"Error creating custom card: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@game_router.put("/custom-cards/{card_id}/")
+def update_custom_card(request, card_id: int, telegram_id: str, name: str = None, numbers: dict = None, is_default: bool = None):
+    """Update an existing custom bingo card"""
+    try:
+        user = get_object_or_404(User, telegram_id=telegram_id)
+        card = get_object_or_404(CustomBingoCard, id=card_id, user=user)
+        
+        # Update fields if provided
+        if name is not None:
+            # Check if another card with this name exists
+            if CustomBingoCard.objects.filter(user=user, name=name).exclude(id=card_id).exists():
+                return JsonResponse({"error": "A card with this name already exists"}, status=400)
+            card.name = name
+        
+        if numbers is not None:
+            card.numbers = numbers
+        
+        if is_default is not None:
+            card.is_default = is_default
+        
+        try:
+            card.full_clean()  # This will call the clean() method
+            card.save()
+            
+            # If this is set as default, unset others
+            if is_default:
+                CustomBingoCard.set_default_card(user, card.id)
+            
+            return JsonResponse({
+                "card": {
+                    "id": card.id,
+                    "name": card.name,
+                    "is_default": card.is_default,
+                    "numbers": card.get_card_numbers(),
+                    "created_at": card.created_at.isoformat(),
+                    "updated_at": card.updated_at.isoformat()
+                },
+                "message": "Card updated successfully"
+            }, status=200)
+        except ValidationError as ve:
+            return JsonResponse({"error": str(ve)}, status=400)
+            
+    except Exception as e:
+        logger.error(f"Error updating custom card: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@game_router.delete("/custom-cards/{card_id}/")
+def delete_custom_card(request, card_id: int, telegram_id: str):
+    """Delete a custom bingo card"""
+    try:
+        user = get_object_or_404(User, telegram_id=telegram_id)
+        card = get_object_or_404(CustomBingoCard, id=card_id, user=user)
+        
+        card_name = card.name
+        card.delete()
+        
+        return JsonResponse({
+            "message": f"Card '{card_name}' deleted successfully"
+        }, status=200)
+    except Exception as e:
+        logger.error(f"Error deleting custom card: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@game_router.post("/custom-cards/{card_id}/set-default/")
+def set_default_card(request, card_id: int, telegram_id: str):
+    """Set a custom card as default"""
+    try:
+        user = get_object_or_404(User, telegram_id=telegram_id)
+        card = get_object_or_404(CustomBingoCard, id=card_id, user=user)
+        
+        CustomBingoCard.set_default_card(user, card_id)
+        
+        return JsonResponse({
+            "message": f"Card '{card.name}' set as default successfully"
+        }, status=200)
+    except Exception as e:
+        logger.error(f"Error setting default card: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@game_router.get("/custom-cards/generate-random/")
+def generate_random_card(request, telegram_id: str):
+    """Generate a random bingo card for preview"""
+    try:
+        import random
+        
+        # Column ranges
+        column_ranges = {
+            'B': (1, 15),
+            'I': (16, 30),
+            'N': (31, 45),
+            'G': (46, 60),
+            'O': (61, 75)
+        }
+        
+        numbers = {}
+        for column, (min_val, max_val) in column_ranges.items():
+            # Generate 5 unique random numbers for this column
+            column_numbers = []
+            while len(column_numbers) < 5:
+                num = random.randint(min_val, max_val)
+                if num not in column_numbers:
+                    column_numbers.append(num)
+            numbers[column] = sorted(column_numbers)
+        
+        return JsonResponse({
+            "numbers": numbers,
+            "message": "Random card generated successfully"
+        }, status=200)
+    except Exception as e:
+        logger.error(f"Error generating random card: {e}")
         return JsonResponse({"error": str(e)}, status=500)
    
