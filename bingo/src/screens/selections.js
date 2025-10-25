@@ -149,9 +149,9 @@ const Selections = () => {
 
     if (sessionPlayerId) {
       socket.emit("playerJoined", { playerId: sessionPlayerId, roomId: fixedBetAmount });
-
+      
       // Request all player selections
-      socket.emit("getAllPlayerSelections", {
+      socket.emit("getAllPlayerSelections", { 
         playerId: sessionPlayerId,
         roomId: 10
       });
@@ -360,7 +360,7 @@ const Selections = () => {
             // Show toast when balance is not available
             setToast("💰 Balance not available, please deposit");
             setIsToast(true);
-          } else {
+        } else {
             console.log('[BalanceDebug] Balance response', { status: response.status, parsed: numericBalance, raw: data });
             setBalance(numericBalance);
           }
@@ -461,7 +461,7 @@ const Selections = () => {
       setIsToast(true);
       return;
     }
-    
+
     if (isPicked) {
       setToast(`Card ${number} is already selected by another player`);
       setIsToast(true);
@@ -497,7 +497,7 @@ const Selections = () => {
       // Allow card selection even with zero balance, but show warning
       if (currentBalance < roomId && !isSelected) {
         setToast('💰 Low balance detected. You can select cards but need to deposit to join the game');
-        setIsToast(true);
+      setIsToast(true);
         // Don't return - allow the selection to proceed
       }
       
@@ -599,12 +599,12 @@ const Selections = () => {
       if (balance >= parseInt(roomId)) {
         console.log("✅ Countdown reached zero - navigating to play screen with sufficient balance");
         setToast(`🎮 Game starting! Joining with Card ${selectedNumber}!`);
-        setIsToast(true);
+      setIsToast(true);
       } else {
         console.log("⚠️ Countdown reached zero - navigating to play screen with low balance");
         setToast(`🎮 Game starting! Joining with Card ${selectedNumber}! Low balance detected.`);
-        setIsToast(true);
-      }
+      setIsToast(true);
+    }
       const hasSufficientBalance = balance >= parseInt(roomId);
       navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}&hasSufficientBalance=${hasSufficientBalance}`);
     }
@@ -704,8 +704,8 @@ const Selections = () => {
                 <div key={i} className={`particle particle-${i + 1}`}></div>
               ))}
             </div>
-          </div>
-          
+      </div>
+
           <div className="loading-content">
             <div className="loading-logo">
               <div className="logo-text">LIYU</div>
@@ -802,7 +802,7 @@ const Selections = () => {
     </div>
   </div>
 )}
-
+     
       {/* Promotion Modal */}
       {showPromotionModal && currentPromotion && (
         <PromotionModal
@@ -825,7 +825,7 @@ const Selections = () => {
               </div>
               <div className="konjo-logo">Liyu</div>
             </div>
-            
+
             <div className="konjo-header-right">
               {/* Connection Status Indicator */}
               <div className="connection-indicator">
@@ -833,8 +833,8 @@ const Selections = () => {
                 <span className="connection-text">
                   {isSocketConnected ? 'Connected' : 'Connecting'}
                 </span>
-              </div>
-              
+            </div>
+
               {/* Game State Indicator */}
               {/* <div className="game-state-indicator">
                 <div className={`game-state-dot ${gameStatus === 'in-progress' ? 'live' : 'waiting'}`}></div>
@@ -855,8 +855,8 @@ const Selections = () => {
                       // Use the total players from backend (includes real + random fake players)
                       return gameStats.totalPlayers || 0;
                     })()}</span>
-                  </div>
-                </div>
+              </div>
+            </div>
                 <div className="header-stat prize-stat">
                   <div className="stat-content">
                     <span className="stat-value">{(() => {
@@ -866,8 +866,8 @@ const Selections = () => {
                       });
                       return gameStats.totalWinAmount ? gameStats.totalWinAmount.toFixed(0) : '0';
                     })()}</span>
-                  </div>
-                </div>
+          </div>
+              </div>
                 <div className="header-stat called-stat">
                   <div className="stat-content">
                     <span className="stat-value">{gameStats.totalCalledNumbers || 0}/75</span>
@@ -884,8 +884,8 @@ const Selections = () => {
                   {countDown <= 5 && (
                     <div className="countdown-status">
                       {countDown <= 3 ? '🚨 Starting Soon!' : '⏰ Get Ready!'}
-                    </div>
-                  )}
+            </div>
+            )}
                 </div>
               )} */}
               
@@ -994,18 +994,18 @@ const Selections = () => {
                 const isPicked = pickedNumbers.includes(number);
                 const isDisabled = isPicked || !isSocketConnected || gameInProgress;
 
-                return (
-                  <button
-                    key={number}
+              return (
+                <button
+                  key={number}
                     className={`konjo-number-cell ${isPicked ? 'player-picked' : ''} ${isSelected ? 'player-selected' : ''} ${!isSocketConnected ? 'disabled' : ''}`}
                     onClick={() => handleNumberClick(number)}
-                    disabled={isDisabled}
+                  disabled={isDisabled}
                   >
                     {number}
-                  </button>
-                );
-              })}
-            </div>
+                </button>
+              );
+            })}
+          </div>
 
             {/* Pagination Controls */}
             <div className="pagination-controls">
@@ -1030,8 +1030,8 @@ const Selections = () => {
                       {page}
                     </button>
                   )
-                ))}
-              </div>
+                      ))}
+                    </div>
               
               <button 
                 className="pagination-btn"
@@ -1040,7 +1040,7 @@ const Selections = () => {
               >
                 Next
               </button>
-            </div>
+                  </div>
 
             {/* Selected Card Preview Modal (Enhanced) */}
             {selectedNumber && (
@@ -1138,13 +1138,13 @@ const Selections = () => {
                                   </div>
                                 ) : (
                                   <span style={{ fontSize: 16 }}>{num}</span>
-                                )}
-                              </div>
-                            ))}
+                            )}
                           </div>
                         ))}
                       </div>
-                    </div>
+                    ))}
+                  </div>
+                </div>
 
                     {/* Footer actions */}
                     <div style={{ display: 'flex', gap: 12, marginTop: 14 }}>
@@ -1195,16 +1195,16 @@ const Selections = () => {
                       >
                         ✖ {t('common.close') || 'Close'}
                       </button>
-                    </div>
+              </div>
                   </div>
                 </div>
-              </div>
-            )}
+            </div>
+          )}
 
             {/* Countdown removed - navigation happens immediately on card selection */}
                   </div>
 
-          
+
         </div>
       )}
 

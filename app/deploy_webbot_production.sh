@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Empire Games Support Bot - Production Deployment Script
+# Empire Games Web Bot - Production Deployment Script
 # For production server at /var/www/empiregames
 
 set -e  # Exit on any error
 
 # Production Configuration
-BOT_NAME="empire-support-bot"
-BOT_DIR="/var/www/empiregames/app/bot"
+BOT_NAME="empire-webbot"
+BOT_DIR="/var/www/empiregames/app"
 PYTHON_ENV="/var/www/empiregames/app/venv"
 LOG_DIR="/var/www/empiregames/logs"
 CONFIG_FILE="config.env"
@@ -114,7 +114,7 @@ install_dependencies() {
     log "Installing Python dependencies..."
     source "$PYTHON_ENV/bin/activate"
     pip install --upgrade pip
-    pip install -r "$BOT_DIR/../requirements.txt" --quiet
+    pip install -r "$BOT_DIR/requirements.txt" --quiet
     success "Dependencies installed"
 }
 
@@ -128,12 +128,12 @@ start_bot() {
     
     # Start the bot
     cd "$BOT_DIR"
-    pm2 start ecosystem.config.js
+    pm2 start webbot_ecosystem.config.js
     
     if [ $? -eq 0 ]; then
-        success "Bot started successfully!"
-        log "Bot logs: $LOG_DIR/support-bot.log"
-        log "Error logs: $LOG_DIR/support-bot-error.log"
+        success "Web Bot started successfully!"
+        log "Bot logs: $LOG_DIR/webbot.log"
+        log "Error logs: $LOG_DIR/webbot-error.log"
     else
         error "Failed to start bot"
         exit 1
@@ -151,17 +151,17 @@ setup_pm2_startup() {
 # Setup systemd service
 setup_systemd() {
     log "Setting up systemd service..."
-    cp "$BOT_DIR/empire-support-bot.service" /etc/systemd/system/
+    cp "$BOT_DIR/empire-webbot.service" /etc/systemd/system/
     systemctl daemon-reload
-    systemctl enable empire-support-bot
+    systemctl enable empire-webbot
     success "Systemd service configured"
 }
 
 # Setup log rotation
 setup_logrotate() {
     log "Setting up log rotation..."
-    cat > /etc/logrotate.d/empire-support-bot << EOF
-$LOG_DIR/*.log {
+    cat > /etc/logrotate.d/empire-webbot << EOF
+$LOG_DIR/webbot*.log {
     daily
     missingok
     rotate 30
@@ -180,53 +180,53 @@ EOF
 # Create monitoring script
 create_monitoring() {
     log "Creating monitoring script..."
-    cat > /usr/local/bin/empire-bot-monitor << 'EOF'
+    cat > /usr/local/bin/empire-webbot-monitor << 'EOF'
 #!/bin/bash
-# Empire Bot Health Check Script
+# Empire Web Bot Health Check Script
 
-BOT_NAME="empire-support-bot"
+BOT_NAME="empire-webbot"
 LOG_DIR="/var/www/empiregames/logs"
 
 # Check if bot is running
 if ! pm2 list | grep -q "$BOT_NAME.*online"; then
-    echo "ERROR: Bot is not running!"
+    echo "ERROR: Web Bot is not running!"
     pm2 restart $BOT_NAME
     exit 1
 fi
 
 # Check for errors in logs
-if [ -f "$LOG_DIR/support-bot-error.log" ]; then
-    ERROR_COUNT=$(tail -n 100 "$LOG_DIR/support-bot-error.log" | grep -c "ERROR" || true)
+if [ -f "$LOG_DIR/webbot-error.log" ]; then
+    ERROR_COUNT=$(tail -n 100 "$LOG_DIR/webbot-error.log" | grep -c "ERROR" || true)
     if [ "$ERROR_COUNT" -gt 10 ]; then
         echo "WARNING: High error count in logs: $ERROR_COUNT"
     fi
 fi
 
-echo "Bot health check passed"
+echo "Web Bot health check passed"
 EOF
-    chmod +x /usr/local/bin/empire-bot-monitor
+    chmod +x /usr/local/bin/empire-webbot-monitor
     success "Monitoring script created"
 }
 
 # Setup cron job for monitoring
 setup_cron() {
     log "Setting up cron job for monitoring..."
-    (crontab -u $WEB_USER -l 2>/dev/null; echo "*/5 * * * * /usr/local/bin/empire-bot-monitor") | crontab -u $WEB_USER -
+    (crontab -u $WEB_USER -l 2>/dev/null; echo "*/5 * * * * /usr/local/bin/empire-webbot-monitor") | crontab -u $WEB_USER -
     success "Cron job configured"
 }
 
 # Show status
 show_status() {
-    log "Bot status:"
+    log "Web Bot status:"
     pm2 status "$BOT_NAME"
     echo ""
     log "Systemd service status:"
-    systemctl status empire-support-bot --no-pager
+    systemctl status empire-webbot --no-pager
 }
 
 # Main deployment function
 deploy() {
-    log "Starting production deployment..."
+    log "Starting production deployment for Web Bot..."
     
     check_permissions
     check_pm2
@@ -247,7 +247,7 @@ deploy() {
 
 # Show help
 show_help() {
-    echo "Empire Games Support Bot - Production Deployment"
+    echo "Empire Games Web Bot - Production Deployment"
     echo ""
     echo "Usage: $0 [COMMAND]"
     echo ""
@@ -289,7 +289,7 @@ main() {
             pm2 logs "$BOT_NAME" --lines 50
             ;;
         "monitor")
-            /usr/local/bin/empire-bot-monitor
+            /usr/local/bin/empire-webbot-monitor
             ;;
         "help"|"-h"|"--help")
             show_help

@@ -1,40 +1,51 @@
-# Empire Games Support Bot - Professional Deployment Guide
+# Empire Games Support Bot - Production Deployment Guide
 
-This guide provides professional deployment options for the Empire Games Support Bot using PM2, systemd, and other production-ready tools.
+This guide provides professional deployment options for the Empire Games Support Bot using PM2, systemd, and other production-ready tools for production server at `/var/www/empiregames`.
 
 ## 🚀 Quick Start
 
-### Option 1: PM2 (Recommended)
+### Production Deployment (Recommended)
+
+```bash
+# Copy files to production server
+sudo cp -r /path/to/bot/files /var/www/empiregames/app/bot/
+
+# Run full production deployment
+sudo /var/www/empiregames/app/bot/deploy_production.sh deploy
+```
+
+### Option 1: PM2 Script
 
 ```bash
 # Make script executable
-chmod +x run_support_bot.sh
+chmod +x /var/www/empiregames/app/bot/run_support_bot.sh
 
 # Start the bot
-./run_support_bot.sh start
+sudo /var/www/empiregames/app/bot/run_support_bot.sh start
 
 # View logs
-./run_support_bot.sh logs
+sudo /var/www/empiregames/app/bot/run_support_bot.sh logs
 
 # Monitor
-./run_support_bot.sh monitor
+sudo /var/www/empiregames/app/bot/run_support_bot.sh monitor
 ```
 
 ### Option 2: PM2 Ecosystem File
 
 ```bash
 # Start with ecosystem file
-pm2 start ecosystem.config.js
+cd /var/www/empiregames/app/bot
+sudo pm2 start ecosystem.config.js
 
 # Or start specific app
-pm2 start ecosystem.config.js --only empire-support-bot
+sudo pm2 start ecosystem.config.js --only empire-support-bot
 ```
 
 ### Option 3: Systemd Service
 
 ```bash
 # Copy service file
-sudo cp empire-support-bot.service /etc/systemd/system/
+sudo cp /var/www/empiregames/app/bot/empire-support-bot.service /etc/systemd/system/
 
 # Reload systemd
 sudo systemctl daemon-reload
@@ -84,12 +95,13 @@ LOG_LEVEL=INFO
 ### 2. Directory Structure
 
 ```
-/home/tinsae/Desktop/projects/empiregames/
+/var/www/empiregames/
 ├── app/
 │   ├── bot/
 │   │   ├── support.py
 │   │   ├── config.env
 │   │   ├── run_support_bot.sh
+│   │   ├── deploy_production.sh
 │   │   └── ecosystem.config.js
 │   └── venv/
 └── logs/
@@ -103,17 +115,29 @@ LOG_LEVEL=INFO
 ### PM2 Script Commands
 
 ```bash
-./run_support_bot.sh start      # Start the bot
-./run_support_bot.sh stop       # Stop the bot
-./run_support_bot.sh restart    # Restart the bot
-./run_support_bot.sh status     # Show status
-./run_support_bot.sh logs       # Show logs
-./run_support_bot.sh tail       # Real-time logs
-./run_support_bot.sh monitor    # PM2 dashboard
-./run_support_bot.sh save       # Save PM2 config
-./run_support_bot.sh setup      # Setup startup script
-./run_support_bot.sh clean      # Clean logs
-./run_support_bot.sh install    # Install dependencies
+sudo /var/www/empiregames/app/bot/run_support_bot.sh start      # Start the bot
+sudo /var/www/empiregames/app/bot/run_support_bot.sh stop       # Stop the bot
+sudo /var/www/empiregames/app/bot/run_support_bot.sh restart    # Restart the bot
+sudo /var/www/empiregames/app/bot/run_support_bot.sh status     # Show status
+sudo /var/www/empiregames/app/bot/run_support_bot.sh logs       # Show logs
+sudo /var/www/empiregames/app/bot/run_support_bot.sh tail       # Real-time logs
+sudo /var/www/empiregames/app/bot/run_support_bot.sh monitor    # PM2 dashboard
+sudo /var/www/empiregames/app/bot/run_support_bot.sh save       # Save PM2 config
+sudo /var/www/empiregames/app/bot/run_support_bot.sh setup     # Setup startup script
+sudo /var/www/empiregames/app/bot/run_support_bot.sh clean      # Clean logs
+sudo /var/www/empiregames/app/bot/run_support_bot.sh install    # Install dependencies
+```
+
+### Production Deployment Commands
+
+```bash
+sudo /var/www/empiregames/app/bot/deploy_production.sh deploy    # Full deployment
+sudo /var/www/empiregames/app/bot/deploy_production.sh start     # Start bot
+sudo /var/www/empiregames/app/bot/deploy_production.sh stop      # Stop bot
+sudo /var/www/empiregames/app/bot/deploy_production.sh restart   # Restart bot
+sudo /var/www/empiregames/app/bot/deploy_production.sh status    # Show status
+sudo /var/www/empiregames/app/bot/deploy_production.sh logs      # Show logs
+sudo /var/www/empiregames/app/bot/deploy_production.sh monitor   # Monitor health
 ```
 
 ### Direct PM2 Commands
@@ -169,23 +193,23 @@ pm2 flush empire-support-bot  # Clear logs
 
 ### Log Files
 
-- **Main Log**: `/home/tinsae/Desktop/projects/empiregames/logs/support-bot.log`
-- **Output Log**: `/home/tinsae/Desktop/projects/empiregames/logs/support-bot-out.log`
-- **Error Log**: `/home/tinsae/Desktop/projects/empiregames/logs/support-bot-error.log`
+- **Main Log**: `/var/www/empiregames/logs/support-bot.log`
+- **Output Log**: `/var/www/empiregames/logs/support-bot-out.log`
+- **Error Log**: `/var/www/empiregames/logs/support-bot-error.log`
 
 ### Log Rotation
 
 Add to `/etc/logrotate.d/empire-support-bot`:
 
 ```
-/home/tinsae/Desktop/projects/empiregames/logs/*.log {
+/var/www/empiregames/logs/*.log {
     daily
     missingok
     rotate 30
     compress
     delaycompress
     notifempty
-    create 644 tinsae tinsae
+    create 644 www-data www-data
     postrotate
         pm2 reload empire-support-bot
     endscript
@@ -197,12 +221,9 @@ Add to `/etc/logrotate.d/empire-support-bot`:
 ### 1. User Permissions
 
 ```bash
-# Create dedicated user
-sudo useradd -r -s /bin/false empire-bot
-
-# Set ownership
-sudo chown -R empire-bot:empire-bot /home/tinsae/Desktop/projects/empiregames/app/bot
-sudo chown -R empire-bot:empire-bot /home/tinsae/Desktop/projects/empiregames/logs
+# Set ownership to www-data
+sudo chown -R www-data:www-data /var/www/empiregames/app/bot
+sudo chown -R www-data:www-data /var/www/empiregames/logs
 ```
 
 ### 2. Firewall Configuration
