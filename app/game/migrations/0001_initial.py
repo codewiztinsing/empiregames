@@ -18,75 +18,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='FakePlayerSettings',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('max_fake_players', models.PositiveIntegerField(default=50)),
-                ('calls_before_fake_winner', models.PositiveIntegerField(default=10)),
-                ('real_players_threshold', models.PositiveIntegerField(default=10)),
-                ('fake_players_can_win', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-            ],
-            options={
-                'verbose_name': 'Fake Player Settings',
-                'verbose_name_plural': 'Fake Player Settings',
-            },
-        ),
-        migrations.CreateModel(
-            name='GameSettings',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('default_countdown_duration', models.PositiveIntegerField(default=30)),
-                ('default_game_speed', models.PositiveIntegerField(default=5000)),
-                ('default_house_edge', models.DecimalField(decimal_places=2, default=22.0, max_digits=5)),
-                ('max_fake_players', models.PositiveIntegerField(default=50)),
-                ('fake_player_threshold', models.PositiveIntegerField(default=10)),
-                ('fake_players_can_win', models.BooleanField(default=True)),
-                ('fake_winner_probability', models.DecimalField(decimal_places=2, default=30.0, max_digits=5)),
-                ('max_games_per_day', models.PositiveIntegerField(default=1000)),
-                ('max_games_per_hour', models.PositiveIntegerField(default=100)),
-                ('min_entry_fee', models.DecimalField(decimal_places=2, default=1.0, max_digits=10)),
-                ('max_entry_fee', models.DecimalField(decimal_places=2, default=10000.0, max_digits=10)),
-                ('custom_settings', models.JSONField(blank=True, default=dict)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-            ],
-            options={
-                'verbose_name': 'Game Settings',
-                'verbose_name_plural': 'Game Settings',
-            },
-        ),
-        migrations.CreateModel(
-            name='GameRoom',
-            fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=200)),
-                ('room_type', models.CharField(choices=[('standard', 'Standard'), ('premium', 'Premium'), ('vip', 'VIP'), ('tournament', 'Tournament')], default='standard', max_length=20)),
-                ('entry_fee', models.DecimalField(decimal_places=2, max_digits=10, validators=[django.core.validators.MinValueValidator(Decimal('0.01'))])),
-                ('currency', models.CharField(default='ETB', max_length=3)),
-                ('max_players', models.PositiveIntegerField(default=100)),
-                ('min_players', models.PositiveIntegerField(default=1)),
-                ('is_active', models.BooleanField(default=True)),
-                ('countdown_duration', models.PositiveIntegerField(default=30)),
-                ('game_speed', models.PositiveIntegerField(default=5000)),
-                ('max_fake_players', models.PositiveIntegerField(default=50)),
-                ('fake_player_threshold', models.PositiveIntegerField(default=10)),
-                ('house_edge_percentage', models.DecimalField(decimal_places=2, default=22.0, max_digits=5)),
-                ('prize_pool_percentage', models.DecimalField(decimal_places=2, default=78.0, max_digits=5)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('is_deleted', models.BooleanField(default=False)),
-                ('deleted_at', models.DateTimeField(blank=True, null=True)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-            ],
-            options={
-                'verbose_name': 'Game Room',
-                'verbose_name_plural': 'Game Rooms',
-                'ordering': ['entry_fee', 'name'],
-            },
-        ),
-        migrations.CreateModel(
             name='Game',
             fields=[
                 ('id', models.BigAutoField(primary_key=True, serialize=False)),
@@ -111,7 +42,6 @@ class Migration(migrations.Migration):
                 ('is_deleted', models.BooleanField(default=False)),
                 ('deleted_at', models.DateTimeField(blank=True, null=True)),
                 ('winner', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='won_games', to=settings.AUTH_USER_MODEL)),
-                ('room', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='games', to='game.gameroom')),
             ],
             options={
                 'verbose_name': 'Game',
@@ -133,28 +63,14 @@ class Migration(migrations.Migration):
                 ('numbers_matched', models.PositiveIntegerField(default=0)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('bet_transaction', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='bet_player_games', to='finance.transaction')),
                 ('game', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='player_games', to='game.game')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='player_games', to=settings.AUTH_USER_MODEL)),
-                ('win_transaction', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='win_player_games', to='finance.transaction')),
             ],
             options={
                 'verbose_name': 'Player Game',
                 'verbose_name_plural': 'Player Games',
                 'ordering': ['-joined_at'],
             },
-        ),
-        migrations.AddIndex(
-            model_name='gameroom',
-            index=models.Index(fields=['entry_fee'], name='game_gamero_entry_f_ee3635_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='gameroom',
-            index=models.Index(fields=['room_type'], name='game_gamero_room_ty_138f7e_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='game',
-            index=models.Index(fields=['room', 'created_at'], name='game_game_room_id_11bd05_idx'),
         ),
         migrations.AddIndex(
             model_name='game',
