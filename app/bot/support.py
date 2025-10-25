@@ -1058,7 +1058,7 @@ if __name__ == "__main__":
     logger = logging.getLogger(__name__)
     logger.info("Starting support bot...")
     try:
-        app = ApplicationBuilder().token("8320136714:AAHvPGC8EvP7qiJGiak5EKnt0-qrzmmb4IA").build()
+        app = ApplicationBuilder().token("8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY").build()
         
         # Add command handlers
         app.add_handler(CommandHandler("start", start_command))

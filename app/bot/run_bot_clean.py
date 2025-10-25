@@ -20,7 +20,7 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
     
     # Set the bot token
-    os.environ['TELEGRAM_BOT_TOKEN'] = '8320136714:AAHvPGC8EvP7qiJGiak5EKnt0-qrzmmb4IA'
+    os.environ['TELEGRAM_BOT_TOKEN'] = '8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY'
     
     # Get the directory of this script
     script_dir = os.path.dirname(os.path.abspath(__file__))

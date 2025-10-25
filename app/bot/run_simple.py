@@ -16,7 +16,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Set the bot token
-os.environ['TELEGRAM_BOT_TOKEN'] = '8320136714:AAHvPGC8EvP7qiJGiak5EKnt0-qrzmmb4IA'
+os.environ['TELEGRAM_BOT_TOKEN'] = '8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY'
 
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
