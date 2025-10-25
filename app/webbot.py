@@ -95,8 +95,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     referrer_id = None
     if context.args and len(context.args) > 0:
         try:
-                referrer_id = int(context.args[0])
-            print("referrer_id = ",referrer_id)
+            referrer_id = int(context.args[0])
+            print("referrer_id = ", referrer_id)
             
             # Store referrer ID in user data for later use
             context.user_data['referrer_id'] = referrer_id
@@ -112,7 +112,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                     # Only show the reply_markup (menu) on the last page
                     if image_file == welcome_images[-1]:
                         await update.message.reply_photo(photo=photo, caption='Select an option:', reply_markup=reply_markup)
-    else:
+                    else:
                         await update.message.reply_photo(photo=photo)
             except FileNotFoundError:
                 logger.warning(f"Welcome image not found: {image_file}")
@@ -329,7 +329,7 @@ async def play_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.info(f"Res {res}")
         if res.status_code == 200:
             balance = res.json().get('balance', 0)
-        logger.info(f"User {update.effective_user.username} balance: {balance}")
+            logger.info(f"User {update.effective_user.username} balance: {balance}")
         else:
             balance = 0
             logger.error(f"Failed to get balance for user {update.effective_user.username}")
@@ -563,21 +563,21 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             except Exception as e:
                 logger.error(f"Unexpected error in check_balance callback: {e}")
                 await query.edit_message_text("❌ An unexpected error occurred. Please try again later.")
-                    return
+                return
                 
             # Calculate remaining games needed
             remaining_games = 0
-                
-                # Create payment summary with user details and weekly progress
-                payment_summary = (
-                    "🏦 Aker BINGO STATEMENT\n" +
-                    f"💰  {balance} Birr\n" +
-                    f"👥  {first_name} \n" +
-                    f"📄 Transaction ID: {telegram_id}\n\n" +
-                    f"🔙 Back to Menu\n" 
-                ) 
-                await query.edit_message_text(text=payment_summary)
-                return
+            
+            # Create payment summary with user details and weekly progress
+            payment_summary = (
+                "🏦 Aker BINGO STATEMENT\n" +
+                f"💰  {balance} Birr\n" +
+                f"👥  {first_name} \n" +
+                f"📄 Transaction ID: {telegram_id}\n\n" +
+                f"🔙 Back to Menu\n" 
+            ) 
+            await query.edit_message_text(text=payment_summary)
+            return
         elif query.data in ['10','20']:
             player_id = query.from_user.id
             user_id = query.from_user.id
@@ -1213,8 +1213,8 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     BACK_URL = get_bot_seetings().get("bot_url")
     # selambingobot ref_1464395537
-        referrer_id = context.args[0] if context.args else None
-        context.user_data['referrer_id'] = referrer_id
+    referrer_id = context.args[0] if context.args else None
+    context.user_data['referrer_id'] = referrer_id
     print("referrer_id = ",referrer_id)
     
     
@@ -1223,7 +1223,7 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if response.status_code == 200:
         user_data = response.json()
         if user_data.get('phone'):
-        await update.message.reply_text(
+            await update.message.reply_text(
             "✅ You are already registered!\n\n"
             "🎮 Click /play to start the game"
             "Use the menu to explore all available options."
@@ -1266,15 +1266,15 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
     
     try:
         # Get wallet balance
-            wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
-            logger.info(f"Wallet API response status: {wallet_response.status_code}")
-            wallet_data = wallet_response.json() if wallet_response.headers.get('content-type','').startswith('application/json') else {}
+        wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
+        logger.info(f"Wallet API response status: {wallet_response.status_code}")
+        wallet_data = wallet_response.json() if wallet_response.headers.get('content-type','').startswith('application/json') else {}
         balance = wallet_data.get('balance', 0)
         logger.info(f"Balance retrieved: {balance}")
         
         # Get user info and game statistics
-            user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
-            logger.info(f"User API response status: {user_response.status_code}")
+        user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
+        logger.info(f"User API response status: {user_response.status_code}")
         user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
         games_played_this_week = user_data.get('games_played_this_week', 0) or 0
         logger.info(f"Games played this week: {games_played_this_week}")
@@ -1313,21 +1313,19 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
         message = (
         f"💰 Hey {user_name}! Your Current Account Balance!\n"
         f"📱 **Phone Number:** {phone}\n"
-        f"🎯 **Balance: {balance:.2f} ETB\n"
-        f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
-        f"🎯 **Total Balance: {total_balance:.2f} ETB\n"
-        f"💵 **Withdrawable Balance: {withdrawable_balance:.2f} ETB\n"
-
+        f"🎯 **Balance:** {balance:.2f} ETB\n"
+        f"🎁 **Referral Bonus:** {referral_bonus:.2f} ETB\n"
+        f"🎯 **Total Balance:** {total_balance:.2f} ETB\n"
+        f"💵 **Withdrawable Balance:** {withdrawable_balance:.2f} ETB\n"
         )
     else:
         message = (
         f"💰 Hey {user_name}! Your Current Account Balance!\n"
         f"📱 **Phone Number:** {phone}\n"
-        f"🎯 **Balance: {balance:.2f} ETB\n"
-        f"🎁 **Referral Bonus: {referral_bonus:.2f} ETB\n"
-        f"🎯 **Total Balance: {total_balance:.2f} ETB\n"
-        f"💵 **Withdrawable Balance: {withdrawable_balance:.2f} ETB\n"
-       
+        f"🎯 **Balance:** {balance:.2f} ETB\n"
+        f"🎁 **Referral Bonus:** {referral_bonus:.2f} ETB\n"
+        f"🎯 **Total Balance:** {total_balance:.2f} ETB\n"
+        f"💵 **Withdrawable Balance:** {withdrawable_balance:.2f} ETB\n"
         )
 
     await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
