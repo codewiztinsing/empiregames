@@ -460,7 +460,7 @@ const PlayingBoard = () => {
   // ✅ Handle winner countdown and navigation
   useEffect(() => {
     if (!isBingo) {
-      setWinnerCountdown(5000); // Reset countdown when not showing winner
+      setWinnerCountdown(5); // Reset countdown when not showing winner
       return;
     }
 
