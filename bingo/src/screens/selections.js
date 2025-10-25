@@ -4,6 +4,7 @@ import { faArrowLeft, faBars, faTimes, faGamepad, faUser, faHistory, faUsers, fa
 import { SocketContext } from '../contexts/socket';
 import Toaster from '../components/Toaster';
 import LanguageSelector from '../components/LanguageSelector';
+import ReusableModal from '../components/ReusableModal';
 import './selections.css';
 import { useNavigate } from 'react-router-dom';
 import { BingoContext } from '../contexts/bingoContext';
@@ -740,70 +741,78 @@ const Selections = () => {
         </div>
       )}
 
-{isBingo && (
-  <div className="bingo-winner-overlay">
-    <div className="bingo-winner-card" style={{ maxHeight: '80vh', overflowY: 'auto', width: '100%', maxWidth: 480 }}>
-      <div className="winner-card-header">
-        <p className='winner-card-header-text'>Bingo Winner!</p>
-      </div>
-      <p className='winner-card-header-winner-number' style={{
-        color: "green",
-        fontSize: "1.6rem",
-        fontWeight: "bold"
-      }}>አሸናፊ ካርድ ቁጥር : {winnerCardNumber}</p>
-      <p className='winner-card-header-text' style={{
-          color: "green",
-        fontSize: "1.6rem",
-        fontWeight: "bold"
-      }}>
-        {winnerPlayerName === playerName ? (
-          <>🎉 Congratulations! You won! 🎉</>
-        ) : (
-          <>ስም : {winnerPlayerName} is Winner</>
-        )}
-      </p>
-     
-<div className="winning-card">
-  <div className="winning-card-row">
-    {["B", "I", "N", "G", "O"].map((letter, index) => (
-      <div key={index} className="winning-card-cell">
-        <span>{letter}</span>
-      </div>
-    ))}
-  </div>
-              {winningCard && winningCard[0] && winningCard[0].map((_, rowIndex) => (
-    <div key={rowIndex} className="winning-card-row">
-      {winningCard.map((row, colIndex) => {
-        const cell = row[rowIndex];
-        const rowComplete = winningCard.every(r => r[rowIndex].marked);
-        const colComplete = winningCard[colIndex].every(c => c.marked);
-                    const diagonalComplete = rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
-                    const reverseDiagonalComplete = rowIndex + colIndex === 4 && winningCard.every((r, i) => r[4 - i].marked);
-                    const fourCornersComplete = winningCard[0][0].marked && winningCard[0][4].marked && winningCard[4][0].marked && winningCard[4][4].marked;
-                    const fourEdgesComplete = winningCard[0][2].marked && winningCard[2][0].marked && winningCard[2][4].marked && winningCard[4][2].marked;
+{/* Winner Modal */}
+<ReusableModal
+  isOpen={isBingo}
+  onClose={() => setIsBingo(false)}
+  title="🎉 Bingo Winner! 🎉"
+  size="large"
+>
+  <div style={{ textAlign: 'center' }}>
+    <div style={{
+      color: "green",
+      fontSize: "1.4rem",
+      fontWeight: "bold",
+      marginBottom: "16px"
+    }}>
+      አሸናፊ ካርድ ቁጥር : {winnerCardNumber}
+    </div>
+    
+    <div style={{
+      color: "green",
+      fontSize: "1.4rem",
+      fontWeight: "bold",
+      marginBottom: "20px"
+    }}>
+      {winnerPlayerName === playerName ? (
+        <>🎉 Congratulations! You won! 🎉</>
+      ) : (
+        <>ስም : {winnerPlayerName} is Winner</>
+      )}
+    </div>
 
-        let bgColor = "white";
-                    if (rowComplete || colComplete || diagonalComplete || reverseDiagonalComplete || fourCornersComplete || fourEdgesComplete) {
-                      bgColor = "green";
-        } else if (cell.marked) {
-                      bgColor = "red";
-        }
-
-        return (
-                      <div key={colIndex} className="winning-card-cell" style={{ backgroundColor: bgColor }}>
-            <span>{cell.number}</span>
+    {/* Winning Card */}
+    <div className="winning-card" style={{ marginBottom: "20px" }}>
+      <div className="winning-card-row">
+        {["B", "I", "N", "G", "O"].map((letter, index) => (
+          <div key={index} className="winning-card-cell">
+            <span>{letter}</span>
           </div>
-        );
-      })}
-    </div>
-  ))}
-</div>
-      <div className="choosen-numbers">
-        <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
+        ))}
       </div>
+      {winningCard && winningCard[0] && winningCard[0].map((_, rowIndex) => (
+        <div key={rowIndex} className="winning-card-row">
+          {winningCard.map((row, colIndex) => {
+            const cell = row[rowIndex];
+            const rowComplete = winningCard.every(r => r[rowIndex].marked);
+            const colComplete = winningCard[colIndex].every(c => c.marked);
+            const diagonalComplete = rowIndex === colIndex && winningCard.every((r, i) => r[i].marked);
+            const reverseDiagonalComplete = rowIndex + colIndex === 4 && winningCard.every((r, i) => r[4 - i].marked);
+            const fourCornersComplete = winningCard[0][0].marked && winningCard[0][4].marked && winningCard[4][0].marked && winningCard[4][4].marked;
+            const fourEdgesComplete = winningCard[0][2].marked && winningCard[2][0].marked && winningCard[2][4].marked && winningCard[4][2].marked;
+
+            let bgColor = "white";
+            if (rowComplete || colComplete || diagonalComplete || reverseDiagonalComplete || fourCornersComplete || fourEdgesComplete) {
+              bgColor = "green";
+            } else if (cell.marked) {
+              bgColor = "red";
+            }
+
+            return (
+              <div key={colIndex} className="winning-card-cell" style={{ backgroundColor: bgColor }}>
+                <span>{cell.number}</span>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+
+    <div className="choosen-numbers">
+      <span className="choosen-number">የካርቴላ ቁጥር :- {winnerCardNumber}</span>
     </div>
   </div>
-)}
+</ReusableModal>
      
       {/* Promotion Modal */}
       {showPromotionModal && currentPromotion && (
@@ -1045,162 +1054,110 @@ const Selections = () => {
                   </div>
 
             {/* Selected Card Preview Modal (Enhanced) */}
-            {selectedNumber && (
-              <div 
-                className="konjo-card-preview show"
-                onClick={(e) => {
-                  if (e.target === e.currentTarget) {
-                    setSelectedNumber(null);
-                  }
-                }}
-                style={{
-                  backdropFilter: 'blur(2px)',
-                }}
-              >
-                <div className="modal-content">
-                  {/* Header */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '14px 16px',
-                    borderBottom: '1px solid rgba(255,255,255,0.08)'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10
-                    }}>
-                      <div style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 8,
-                        background: 'radial-gradient(120% 120% at 10% 10%, #ff799a 0%, #7a5cff 55%, #2dd4bf 100%)',
-                        boxShadow: '0 0 20px rgba(122,92,255,0.45)'
-                      }} />
-                      <div style={{ color: '#E7E9F7', fontWeight: 700, fontSize: 16 }}>
-                        {t('game.preview')} • #{selectedNumber}
-                      </div>
+            <ReusableModal
+              isOpen={!!selectedNumber}
+              onClose={() => setSelectedNumber(null)}
+              title={`${t('game.preview')} • #${selectedNumber}`}
+              size="medium"
+            >
+              {/* Fancy card frame */}
+              <div style={{
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)',
+                borderRadius: 14,
+                padding: 12,
+                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06), 0 8px 28px rgba(0,0,0,0.25)'
+              }}>
+                {/* BINGO header chips */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: 8 }}>
+                  {['B','I','N','G','O'].map((l, i) => (
+                    <div key={i} style={{
+                      textAlign: 'center',
+                      color: '#111827',
+                      fontWeight: 800,
+                      letterSpacing: 1.5,
+                      borderRadius: 10,
+                      padding: '8px 0',
+                      background: 'linear-gradient(180deg, #fdfbfb 0%, #ebeef8 100%)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                    }}>{l}</div>
+                  ))}
+                </div>
+
+                {/* Numbers grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+                  {selectBoard.map((col, colIndex) => (
+                    <div key={colIndex} style={{ display: 'grid', gap: 6 }}>
+                      {col.map((num, rowIndex) => (
+                         <div
+                           key={`${colIndex}-${rowIndex}`}
+                           className="konjo-preview-number-cell"
+                         >
+                          {num === '*' ? (
+                            <div style={{ textAlign: 'center', lineHeight: 1.1 }}>
+                              <div style={{ fontSize: 10, fontWeight: 800 }}>FREE</div>
+                              <div style={{ fontSize: 10, opacity: 0.9 }}>SPACE</div>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: 16 }}>{num}</span>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                    <button 
-                      onClick={() => setSelectedNumber(null)}
-                      aria-label="Close bingo card"
-                      style={{
-                        background: 'transparent',
-                        color: '#9aa0c3',
-                        border: 'none',
-                        fontSize: 22,
-                        lineHeight: '22px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-
-                  {/* Body */}
-                  <div className="modal-body" style={{ padding: 16 }}>
-                    {/* Fancy card frame */}
-                    <div style={{
-                      background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)',
-                      borderRadius: 14,
-                      padding: 12,
-                      boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06), 0 8px 28px rgba(0,0,0,0.25)'
-                    }}>
-                      {/* BINGO header chips */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, marginBottom: 8 }}>
-                        {['B','I','N','G','O'].map((l, i) => (
-                          <div key={i} style={{
-                            textAlign: 'center',
-                            color: '#111827',
-                            fontWeight: 800,
-                            letterSpacing: 1.5,
-                            borderRadius: 10,
-                            padding: '8px 0',
-                            background: 'linear-gradient(180deg, #fdfbfb 0%, #ebeef8 100%)',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                          }}>{l}</div>
-                        ))}
-                      </div>
-
-                      {/* Numbers grid */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
-                        {selectBoard.map((col, colIndex) => (
-                          <div key={colIndex} style={{ display: 'grid', gap: 6 }}>
-                            {col.map((num, rowIndex) => (
-                               <div
-                                 key={`${colIndex}-${rowIndex}`}
-                                 className="konjo-preview-number-cell"
-                               >
-                                {num === '*' ? (
-                                  <div style={{ textAlign: 'center', lineHeight: 1.1 }}>
-                                    <div style={{ fontSize: 10, fontWeight: 800 }}>FREE</div>
-                                    <div style={{ fontSize: 10, opacity: 0.9 }}>SPACE</div>
-                                  </div>
-                                ) : (
-                                  <span style={{ fontSize: 16 }}>{num}</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
-
-                    {/* Footer actions */}
-                    <div style={{ display: 'flex', gap: 12, marginTop: 14 }}>
-                      <button 
-                        className="bingo-start-button"
-                        onClick={() => {
-                          if (hasSelectedCard && selectedNumber) {
-                            // Allow joining regardless of balance - show appropriate message
-                            if (Number(balance) >= parseInt(roomId)) {
-                              setToast(`🎮 Joining game with Card ${selectedNumber}! Good luck!`);
-                              setIsToast(true);
-                            } else {
-                              setToast(`🎮 Joining game with Card ${selectedNumber}! Low balance detected - deposit to continue playing.`);
-                              setIsToast(true);
-                            }
-                            const hasSufficientBalance = Number(balance) >= parseInt(roomId);
-                            navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}&hasSufficientBalance=${hasSufficientBalance}`);
-                          } else {
-                            setToast(t('game.cardNotSelected'));
-                            setIsToast(true);
-                          }
-                        }}
-                        style={{
-                          flex: 1,
-                          background: 'linear-gradient(180deg, #22d3ee 0%, #3b82f6 100%)',
-                          border: 'none',
-                          color: 'white',
-                          borderRadius: 10,
-                          padding: '12px 14px',
-                          fontWeight: 800,
-                          boxShadow: '0 6px 16px rgba(56,189,248,0.35)',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🚀 {t('game.startGame')}
-                      </button>
-                      <button
-                        onClick={() => setSelectedNumber(null)}
-                        style={{
-                          background: 'transparent',
-                          border: '1px solid rgba(255,255,255,0.15)',
-                          color: '#c7c9e2',
-                          borderRadius: 10,
-                          padding: '12px 14px',
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        ✖ {t('common.close') || 'Close'}
-                      </button>
               </div>
-                  </div>
-                </div>
-            </div>
-          )}
+
+              {/* Footer actions */}
+              <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+                <button 
+                  className="bingo-start-button"
+                  onClick={() => {
+                    if (hasSelectedCard && selectedNumber) {
+                      // Allow joining regardless of balance - show appropriate message
+                      if (Number(balance) >= parseInt(roomId)) {
+                        setToast(`🎮 Joining game with Card ${selectedNumber}! Good luck!`);
+                        setIsToast(true);
+                      } else {
+                        setToast(`🎮 Joining game with Card ${selectedNumber}! Low balance detected - deposit to continue playing.`);
+                        setIsToast(true);
+                      }
+                      const hasSufficientBalance = Number(balance) >= parseInt(roomId);
+                      navigate(`/play?playerId=${playerId}&betAmount=${roomId}&playerName=${playerName}&selectedNumber=${selectedNumber}&hasSufficientBalance=${hasSufficientBalance}`);
+                    } else {
+                      setToast(t('game.cardNotSelected'));
+                      setIsToast(true);
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    background: 'linear-gradient(180deg, #22d3ee 0%, #3b82f6 100%)',
+                    border: 'none',
+                    color: 'white',
+                    borderRadius: 10,
+                    padding: '12px 14px',
+                    fontWeight: 800,
+                    boxShadow: '0 6px 16px rgba(56,189,248,0.35)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🚀 {t('game.startGame')}
+                </button>
+                <button
+                  onClick={() => setSelectedNumber(null)}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#c7c9e2',
+                    borderRadius: 10,
+                    padding: '12px 14px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  ✖ {t('common.close') || 'Close'}
+                </button>
+              </div>
+            </ReusableModal>
 
             {/* Countdown removed - navigation happens immediately on card selection */}
                   </div>
