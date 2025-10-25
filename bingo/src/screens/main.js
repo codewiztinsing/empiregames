@@ -11,6 +11,7 @@ import config from '../config/api';
 import { hasBingo, checkBingoPatterns, markCardNumber } from '../helpers/fixedBingoCards';
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from '../components/LanguageSelector';
+import ReusableModal from '../components/ReusableModal';
 
 const PlayingBoard = () => {
   const { t } = useTranslation();
@@ -919,60 +920,98 @@ const PlayingBoard = () => {
         </div>
       )}
 
-      {isBingo && (
-        <div className="bingo-winner-overlay">
-          {/* Liyu Logo Rain Animation */}
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          <div className="liyu-logo-rain">🎯</div>
-          
-          <div className="bingo-winner-card">
-            {/* Card Header */}
-            <div className="winner-card-header">
-              <h2 className="winner-card-title">Card Number {winnerCardNumber}</h2>
+      {/* Winner Modal */}
+      <ReusableModal
+        isOpen={isBingo}
+        onClose={handleCloseWinner}
+        title={`🎉 Bingo Winner! Card #${winnerCardNumber} 🎉`}
+        size="large"
+      >
+        <div style={{ textAlign: 'center' }}>
+          {/* Winner Information */}
+          <div style={{
+            marginBottom: '24px',
+            padding: '16px',
+            background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+            borderRadius: '12px',
+            border: '2px solid #0ea5e9'
+          }}>
+            <div style={{
+              fontSize: '1.5rem',
+              fontWeight: 'bold',
+              color: '#0c4a6e',
+              marginBottom: '8px'
+            }}>
+              🏆 Winner: {winnerPlayerName} 🏆
             </div>
-            
-            {/* BINGO Letters Row */}
-            <div className="bingo-letters-row">
-              <div className="bingo-letter b">B</div>
-              <div className="bingo-letter i">I</div>
-              <div className="bingo-letter n">N</div>
-              <div className="bingo-letter g">G</div>
-              <div className="bingo-letter o">O</div>
+            <div style={{
+              fontSize: '1.2rem',
+              color: '#0369a1',
+              fontWeight: '600'
+            }}>
+              Card Number: {winnerCardNumber}
             </div>
-            
-            {/* Winning Card Display */}
-            <div className="winning-card-section">
+          </div>
+
+          {/* Winning Card Display */}
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              color: '#374151',
+              marginBottom: '12px'
+            }}>
+              Winning Card Pattern
+            </div>
+            <div style={{
+              display: 'inline-block',
+              padding: '16px',
+              background: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              border: '2px solid #10b981'
+            }}>
               {renderWinningCard(winningCard)}
-              <div className="winner-actions">
-              <button className="close-winner-button" onClick={handleCloseWinner}>
-                <span className="button-icon">🎮</span>
-                <span className="button-text">{t('game.continuePlaying')}</span>
-                <span className="button-icon">🎮</span>
-              </button>
             </div>
-            </div>
-            
-            {/* Action Button */}
-          
+          </div>
+
+          {/* Action Button */}
+          <div style={{ marginTop: '20px' }}>
+            <button 
+              className="close-winner-button"
+              onClick={handleCloseWinner}
+              style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '16px 32px',
+                fontSize: '1.1rem',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                margin: '0 auto'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.4)';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
+              }}
+            >
+              <span>🎮</span>
+              <span>{t('game.continuePlaying')}</span>
+              <span>🎮</span>
+            </button>
           </div>
         </div>
-      )}
+      </ReusableModal>
 
       {/* Deposit Reminder Popup */}
       {showDepositReminder && !gameState.hasSufficientBalance && (
