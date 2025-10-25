@@ -28,7 +28,10 @@
     "bingoGame": "Ciyaarta Bingo",
     "transactionHistory": "Taariikhda Ganacsiga",
     "invitedUsers": "Isticmaalayaasha La Casuumay",
-    "language": "Luqadda"
+    "language": "Luqadda",
+    "customCards": "Kaararka Gaarka ah",
+    "createCard": "Kaar Samee",
+    "myCards": "Kaararkayga"
   },
   "auth": {
     "login": "Gali",
