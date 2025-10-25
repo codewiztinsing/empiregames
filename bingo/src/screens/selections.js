@@ -1128,11 +1128,10 @@ const Selections = () => {
                         {selectBoard.map((col, colIndex) => (
                           <div key={colIndex} style={{ display: 'grid', gap: 6 }}>
                             {col.map((num, rowIndex) => (
-                              <div
-                                key={`${colIndex}-${rowIndex}`}
-                                className="konjo-number-cell"
-                               
-                              >
+                               <div
+                                 key={`${colIndex}-${rowIndex}`}
+                                 className="konjo-preview-number-cell"
+                               >
                                 {num === '*' ? (
                                   <div style={{ textAlign: 'center', lineHeight: 1.1 }}>
                                     <div style={{ fontSize: 10, fontWeight: 800 }}>FREE</div>
