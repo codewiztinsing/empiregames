@@ -166,6 +166,57 @@ class AgentAdmin(admin.ModelAdmin):
     view_referrals.short_description = "View referrals for selected agents"
 
 
+class WithdrawalRequestAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'amount', 'status', 'processed_by', 'created_at', 'processed_at']
+    list_filter = ['status', 'created_at', 'processed_at']
+    search_fields = ['user__username', 'user__phone', 'user__telegram_id', 'amount']
+    readonly_fields = ['created_at', 'updated_at']
+    list_per_page = 20
+    
+    fieldsets = (
+        ('Request Information', {
+            'fields': ('user', 'amount', 'status')
+        }),
+        ('Processing', {
+            'fields': ('processed_by', 'processed_at', 'admin_notes')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        })
+    )
+    
+    actions = ['approve_requests', 'reject_requests', 'mark_completed']
+    
+    def approve_requests(self, request, queryset):
+        approved_count = 0
+        for withdrawal in queryset.filter(status='pending'):
+            withdrawal.status = 'approved'
+            withdrawal.processed_by = request.user
+            withdrawal.processed_at = timezone.now()
+            withdrawal.save()
+            approved_count += 1
+        self.message_user(request, f"{approved_count} withdrawal requests approved successfully.")
+    approve_requests.short_description = "Approve selected requests"
+    
+    def reject_requests(self, request, queryset):
+        updated = queryset.filter(status='pending').update(
+            status='rejected',
+            processed_by=request.user,
+            processed_at=timezone.now()
+        )
+        self.message_user(request, f"{updated} withdrawal requests rejected.")
+    reject_requests.short_description = "Reject selected requests"
+    
+    def mark_completed(self, request, queryset):
+        updated = queryset.filter(status='approved').update(
+            status='completed',
+            processed_by=request.user,
+            processed_at=timezone.now()
+        )
+        self.message_user(request, f"{updated} withdrawal requests marked as completed.")
+    mark_completed.short_description = "Mark approved requests as completed"
+
+
 admin.site.register(User, UserAdmin)
 admin.site.register(SupportUser, SupportUserAdmin)
 admin.site.register(WithdrawalRequest, WithdrawalRequestAdmin)
