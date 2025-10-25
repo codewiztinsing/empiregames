@@ -45,7 +45,7 @@ def charge_player(players_dict, entry_fee, game_id):
     """
     logger.info(f"Charging players for game {game_id}: {players_dict}")
     charged_players = []
-
+    
     for player_id, number_of_boards in players_dict.items():
         try:
             player = get_object_or_404(User, telegram_id=player_id)
@@ -57,7 +57,7 @@ def charge_player(players_dict, entry_fee, game_id):
             if Transaction.objects.filter(reference=game_id, type="BET", user=player).exists():
                 logger.info(f"BET transaction already exists for player {player_id}")
                 continue
-
+            
             with transaction.atomic():
                 # -----------------------
                 # Step 1: Deduct from wallet
@@ -94,7 +94,7 @@ def charge_player(players_dict, entry_fee, game_id):
                     if used_bonus > 0:
                         # Add used referral bonus to wallet to allow bet deduction
                         wallet.balance += used_bonus
-                        wallet.save()
+            wallet.save()
                         push_transaction.delay(player.telegram_id, used_bonus, used_bonus, "REFERRAL_BONUS", "success", game_id)
 
                         # Deduct the remaining amount now
@@ -103,14 +103,14 @@ def charge_player(players_dict, entry_fee, game_id):
                         push_transaction.delay(player.telegram_id, remaining_required, remaining_required, "BET", "success", game_id)
 
                 charged_players.append(player.id)
-                logger.info(f"Successfully charged player {player_id}")
-
+            logger.info(f"Successfully charged player {player_id}")
+            
         except Exception as e:
             logger.error(f"Error charging player {player_id}: {e}")
-
+    
     logger.info(f"All charged players: {charged_players}")
     return charged_players
-
+    
 # -------------------------------
 # Update player balance for wins
 # -------------------------------
@@ -129,7 +129,7 @@ def update_player_balance(player_id, win_amount, game_id):
             wallet.balance += float(win_amount)
             wallet.save()
             push_transaction.delay(player.telegram_id, win_amount, win_amount, "WIN", "success", game_id)
-
+            
             game.ended = True
             game.started = False
             game.save()
@@ -141,8 +141,8 @@ def update_player_balance(player_id, win_amount, game_id):
             except Exception as e:
                 logger.error(f"Error processing referral bonuses: {e}")
 
-        return True, wallet.balance
-
+            return True, wallet.balance
+            
     except Exception as e:
         logger.error(f"Error updating player balance {player_id}: {e}")
         return False, 0

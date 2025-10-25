@@ -149,6 +149,9 @@ const GamePreview = () => {
         setWinnerCountdown(prev => prev - 1);
       }, 1000);
       return () => clearTimeout(timer);
+    } else if (isBingo && winnerCountdown === 0) {
+      // Auto-redirect when countdown reaches 0
+      handleCloseWinner();
     }
   }, [isBingo, winnerCountdown]);
 

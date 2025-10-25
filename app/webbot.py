@@ -95,9 +95,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     referrer_id = None
     if context.args and len(context.args) > 0:
         try:
-            referrer_id = int(context.args[0])
+                referrer_id = int(context.args[0])
             print("referrer_id = ",referrer_id)
-
+            
             # Store referrer ID in user data for later use
             context.user_data['referrer_id'] = referrer_id
         except ValueError:
@@ -112,7 +112,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                     # Only show the reply_markup (menu) on the last page
                     if image_file == welcome_images[-1]:
                         await update.message.reply_photo(photo=photo, caption='Select an option:', reply_markup=reply_markup)
-                    else:
+    else:
                         await update.message.reply_photo(photo=photo)
             except FileNotFoundError:
                 logger.warning(f"Welcome image not found: {image_file}")
@@ -185,7 +185,7 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Get user's wallet balance
     telegram_id = update.effective_user.id
     BACK_URL = get_bot_seetings().get("bot_url")
-
+    
     logger.info(f"Back url {BACK_URL}")
     logger.info(f"telegram_id {telegram_id}")
     logger.info(f"amount {amount}")
@@ -196,7 +196,7 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         settings_json = settings_resp.json() if settings_resp.status_code == 200 else {}
         min_withdrawal = float(settings_json.get('min_withdrawal_amount', 50))
         max_withdrawal = float(settings_json.get('max_withdrawal_amount', 100))
-
+        
         _resp = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}', timeout=10)
         wallet_response = _resp.json() if _resp.headers.get('content-type','').startswith('application/json') else {}
         balance = float(wallet_response.get('balance', 0)) + float(wallet_response.get('total_referral_earnings', 0)) if float(wallet_response.get('total_referral_earnings', 0)) > 500 else float(wallet_response.get('balance', 0))
@@ -206,7 +206,7 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         if float(balance) - float(amount) <= 21:
             await update.message.reply_text("You must leave at least 21 ETB in your wallet after withdrawing. Please enter a smaller amount.")
             return WITHDRAW_AMOUNT_CONFIRM
-
+            
         daily_limit = daily_withdraw_limit(telegram_id)
         logger.info(f"daily_withdraw_limit {daily_limit}")
         if int(daily_limit) > 1:
@@ -237,7 +237,7 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             await update.message.reply_text(f"Withdrawal amount must be less than or equal to {max_withdrawal:.0f} ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
-       
+
         if int(balance) < 20:
             await update.message.reply_text(f"You must leave at least 20 ETB in your wallet. Please enter a smaller amount.")
             return WITHDRAW_AMOUNT_CONFIRM
@@ -247,13 +247,13 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
             await update.message.reply_text(f"Withdrawal amount must be at least {min_withdrawal:.0f} ETB")
             return WITHDRAW_AMOUNT_CONFIRM
 
-        
+
         # Check if withdrawal amount exceeds balance
         if int(amount) > int(balance):
 
             await update.message.reply_text(f"Insufficient funds. Your current balance is {balance} ETB")
             return WITHDRAW_AMOUNT_CONFIRM
-
+            
         else:
             # Store amount in context for later use
             context.user_data['withdraw_amount'] = amount
@@ -329,7 +329,7 @@ async def play_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.info(f"Res {res}")
         if res.status_code == 200:
             balance = res.json().get('balance', 0)
-            logger.info(f"User {update.effective_user.username} balance: {balance}")
+        logger.info(f"User {update.effective_user.username} balance: {balance}")
         else:
             balance = 0
             logger.error(f"Failed to get balance for user {update.effective_user.username}")
@@ -563,21 +563,21 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             except Exception as e:
                 logger.error(f"Unexpected error in check_balance callback: {e}")
                 await query.edit_message_text("❌ An unexpected error occurred. Please try again later.")
-                return
-            
+                    return
+                
             # Calculate remaining games needed
             remaining_games = 0
-            
-            # Create payment summary with user details and weekly progress
-            payment_summary = (
+                
+                # Create payment summary with user details and weekly progress
+                payment_summary = (
                     "🏦 Aker BINGO STATEMENT\n" +
                     f"💰  {balance} Birr\n" +
                     f"👥  {first_name} \n" +
                     f"📄 Transaction ID: {telegram_id}\n\n" +
                     f"🔙 Back to Menu\n" 
                 ) 
-            await query.edit_message_text(text=payment_summary)
-            return
+                await query.edit_message_text(text=payment_summary)
+                return
         elif query.data in ['10','20']:
             player_id = query.from_user.id
             user_id = query.from_user.id
@@ -1152,7 +1152,7 @@ all_public_commands_descriptions = [
         "change_sponsor", 
         "Change Sponsor"
         ),
-
+ 
     BotCommand(
         "show_id", 
         "Show My ID"
@@ -1213,8 +1213,8 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     BACK_URL = get_bot_seetings().get("bot_url")
     # selambingobot ref_1464395537
-    referrer_id = context.args[0] if context.args else None
-    context.user_data['referrer_id'] = referrer_id
+        referrer_id = context.args[0] if context.args else None
+        context.user_data['referrer_id'] = referrer_id
     print("referrer_id = ",referrer_id)
     
     
@@ -1223,12 +1223,12 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if response.status_code == 200:
         user_data = response.json()
         if user_data.get('phone'):
-            await update.message.reply_text(
-                "✅ You are already registered!\n\n"
-                "🎮 Click /play to start the game"
-                "Use the menu to explore all available options."
-            )
-            return ConversationHandler.END
+        await update.message.reply_text(
+            "✅ You are already registered!\n\n"
+            "🎮 Click /play to start the game"
+            "Use the menu to explore all available options."
+        )
+        return ConversationHandler.END
     
     # Send welcome image first
     try:
@@ -1248,7 +1248,7 @@ async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except FileNotFoundError:
         # Fallback if image not found
         pass
-    
+ 
     contact_keyboard = ReplyKeyboardMarkup(
                 [[KeyboardButton(text="📞 Share Phone Number", request_contact=True)]],
                 resize_keyboard=True,
@@ -1266,15 +1266,15 @@ async def check_balance_command(update: Update, context: ContextTypes.DEFAULT_TY
     
     try:
         # Get wallet balance
-        wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
-        logger.info(f"Wallet API response status: {wallet_response.status_code}")
-        wallet_data = wallet_response.json() if wallet_response.headers.get('content-type','').startswith('application/json') else {}
+            wallet_response = requests.get(f'{BACK_URL}/api/v1/wallet/player/{telegram_id}')
+            logger.info(f"Wallet API response status: {wallet_response.status_code}")
+            wallet_data = wallet_response.json() if wallet_response.headers.get('content-type','').startswith('application/json') else {}
         balance = wallet_data.get('balance', 0)
         logger.info(f"Balance retrieved: {balance}")
         
         # Get user info and game statistics
-        user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
-        logger.info(f"User API response status: {user_response.status_code}")
+            user_response = requests.get(f'{BACK_URL}/api/v1/users/{telegram_id}')
+            logger.info(f"User API response status: {user_response.status_code}")
         user_data = user_response.json() if user_response.headers.get('content-type','').startswith('application/json') else {}
         games_played_this_week = user_data.get('games_played_this_week', 0) or 0
         logger.info(f"Games played this week: {games_played_this_week}")
@@ -1386,7 +1386,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logger.error(f"Error getting referrer profile: {e}")
             await update.effective_message.reply_text(f"Welcome! You were referred by user {referrer_id}")
-        
+   
         # Send welcome image first
         try:
             # with open('wellcomenote.jpg', 'rb') as photo:
