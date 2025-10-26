@@ -197,7 +197,7 @@ const PlayingBoard = () => {
     if (!playerId) return;
     
     try {
-      const response = await fetch(`${config.API_BASE_URL}/game/custom-cards/default/?telegram_id=${playerId}`);
+      const response = await fetch(`${config.API_BASE_URL}game/custom-cards/default/?telegram_id=${playerId}`);
       if (response.ok) {
         const data = await response.json();
         if (data.card) {

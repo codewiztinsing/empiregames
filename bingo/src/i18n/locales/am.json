@@ -102,7 +102,8 @@
     "alreadyInProgressWait": "ጨዋታ ቀድሞውኑ እየተጫወተ ነው! እባክዎ ለሚቀጥለው ዙር ይጠብቁ።",
     "waitForNextRound": "እባክዎ ካርድ ለመምረጥ ለሚቀጥለው ዙር ይጠብቁ።",
     "live": "ቀጥታ",
-    "connecting": "በመገናኘት ላይ"
+    "connecting": "በመገናኘት ላይ",
+    "preview": "የጨዋታ ቅድመ እይታ"
   },
   "promotion": {
     "title": "ልዩ ማስተዋወቂያ!",

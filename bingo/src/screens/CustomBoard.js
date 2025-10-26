@@ -31,6 +31,17 @@ const CustomBoard = () => {
   });
   const [isDefault, setIsDefault] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Debug logging for cardName changes
+  useEffect(() => {
+    console.log('📝 [CardName] State changed:', { 
+      cardName, 
+      length: cardName?.length,
+      trimmed: cardName?.trim(),
+      trimmedLength: cardName?.trim()?.length
+    });
+  }, [cardName]);
 
   // Column ranges
   const columnRanges = {
@@ -91,57 +102,122 @@ const CustomBoard = () => {
   };
 
   const saveCustomCard = async () => {
-    if (!user?.telegram_id) return;
+    console.log('🎯 [SaveCard] Starting save card process...');
+    console.log('🎯 [SaveCard] User data:', { 
+      telegram_id: user?.telegram_id, 
+      username: user?.username,
+      hasUser: !!user 
+    });
     
-    if (!cardName.trim()) {
-      setToast('Please enter a card name');
-      setIsToast(true);
+    if (!user?.telegram_id) {
+      console.log('❌ [SaveCard] No user or telegram_id found, aborting');
       return;
     }
     
-    if (!validateCard()) {
+    console.log('🎯 [SaveCard] Card validation starting...');
+    
+    console.log('🎯 [SaveCard] Validating card data...');
+    const isValid = validateCard();
+    console.log('🎯 [SaveCard] Card validation result:', { isValid, errors });
+    
+    if (!isValid) {
+      console.log('❌ [SaveCard] Card validation failed, showing error');
       setToast('Please fix all errors before saving');
       setIsToast(true);
       return;
     }
     
+    console.log('🎯 [SaveCard] Setting saving state to true');
+    setIsSaving(true);
+    
     try {
-      const url = editingCard 
-        ? `${config.API_BASE_URL}game/custom-cards/${editingCard.id}/`
-        : `${config.API_BASE_URL}game/custom-cards/create/`;
+      const cardData = {
+        numbers: cardNumbers,
+        is_default: isDefault
+      };
       
-      const method = editingCard ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          telegram_id: user.telegram_id,
-          name: cardName.trim(),
-          numbers: cardNumbers,
-          is_default: isDefault
-        })
+      console.log('🎯 [SaveCard] Prepared card data:', {
+        cardData,
+        editingCard: editingCard ? { id: editingCard.id, name: editingCard.name } : null,
+        isUpdate: !!editingCard
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        setToast(`✅ Custom card "${cardName}" ${editingCard ? 'updated' : 'saved'} successfully!`);
-        setIsToast(true);
-        fetchUserCustomCards();
-        fetchUserDefaultCard();
-        setEditingCard(null);
-        resetForm();
+      let result;
+      if (editingCard) {
+        console.log('🔄 [SaveCard] Updating existing card with ID:', editingCard.id);
+        console.log('🔄 [SaveCard] Update payload:', {
+          telegram_id: user.telegram_id,
+          ...cardData
+        });
+        
+        result = await customCardsAPI.updateCustomCard(editingCard.id, {
+          telegram_id: user.telegram_id,
+          ...cardData
+        });
+        
+        console.log('✅ [SaveCard] Update API response:', result);
       } else {
-        const error = await response.json();
-        setToast(`❌ Error: ${error.error}`);
-        setIsToast(true);
+        console.log('🆕 [SaveCard] Creating new card');
+        console.log('🆕 [SaveCard] Create payload:', {
+          telegram_id: user.telegram_id,
+          ...cardData
+        });
+        
+        result = await customCardsAPI.createCustomCard(user.telegram_id, cardData);
+        
+        console.log('✅ [SaveCard] Create API response:', result);
       }
-    } catch (error) {
-      console.error('Error saving custom card:', error);
-      setToast('❌ Error saving custom card');
+      
+      console.log('🎉 [SaveCard] Card saved successfully, showing success message');
+      setToast(`✅ Custom card ${editingCard ? 'updated' : 'saved'} successfully!`);
       setIsToast(true);
+      
+      console.log('🔄 [SaveCard] Refreshing cards list and default card...');
+      await fetchUserCustomCards();
+      await fetchUserDefaultCard();
+      
+      console.log('🧹 [SaveCard] Resetting form and exiting edit mode');
+      setEditingCard(null);
+      resetForm();
+      
+      console.log('✅ [SaveCard] Save process completed successfully');
+      
+    } catch (error) {
+      console.error('❌ [SaveCard] Error occurred during save:', error);
+      console.error('❌ [SaveCard] Error details:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config,
+        validationErrors: error.response?.data?.errors || error.response?.data?.error || 'No validation details'
+      });
+      
+      // Extract detailed error message
+      let errorMessage = 'Unknown error occurred';
+      if (error.response?.data?.errors) {
+        // Handle validation errors object
+        const errors = error.response.data.errors;
+        if (typeof errors === 'object') {
+          errorMessage = Object.entries(errors)
+            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+            .join('; ');
+        } else {
+          errorMessage = errors;
+        }
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      console.log('❌ [SaveCard] Final error message:', errorMessage);
+      
+      setToast(`❌ Error saving custom card: ${errorMessage}`);
+      setIsToast(true);
+    } finally {
+      console.log('🏁 [SaveCard] Setting saving state to false');
+      setIsSaving(false);
     }
   };
 
@@ -149,24 +225,18 @@ const CustomBoard = () => {
     if (!user?.telegram_id) return;
     
     try {
-      const response = await fetch(`${config.API_BASE_URL}/game/custom-cards/${cardId}/?telegram_id=${user.telegram_id}`, {
-        method: 'DELETE'
-      });
+      await customCardsAPI.deleteCustomCard(cardId);
+      setToast(`✅ Custom card deleted successfully!`);
+      setIsToast(true);
       
-      if (response.ok) {
-        const data = await response.json();
-        setToast(`✅ ${data.message}`);
-        setIsToast(true);
-        fetchUserCustomCards();
-        fetchUserDefaultCard();
-      } else {
-        const error = await response.json();
-        setToast(`❌ Error: ${error.error}`);
-        setIsToast(true);
-      }
+      // Refresh the cards list and default card
+      await fetchUserCustomCards();
+      await fetchUserDefaultCard();
+      
     } catch (error) {
       console.error('Error deleting custom card:', error);
-      setToast('❌ Error deleting custom card');
+      const errorMessage = error.response?.data?.error || error.message || 'Unknown error occurred';
+      setToast(`❌ Error deleting custom card: ${errorMessage}`);
       setIsToast(true);
     }
   };
@@ -175,30 +245,18 @@ const CustomBoard = () => {
     if (!user?.telegram_id) return;
     
     try {
-      const response = await fetch(`${config.API_BASE_URL}/game/custom-cards/${cardId}/set-default/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          telegram_id: user.telegram_id
-        })
-      });
+      await customCardsAPI.setDefaultCard(cardId);
+      setToast(`✅ Custom card set as default successfully!`);
+      setIsToast(true);
       
-      if (response.ok) {
-        const data = await response.json();
-        setToast(`✅ ${data.message}`);
-        setIsToast(true);
-        fetchUserCustomCards();
-        fetchUserDefaultCard();
-      } else {
-        const error = await response.json();
-        setToast(`❌ Error: ${error.error}`);
-        setIsToast(true);
-      }
+      // Refresh the cards list and default card
+      await fetchUserCustomCards();
+      await fetchUserDefaultCard();
+      
     } catch (error) {
       console.error('Error setting default card:', error);
-      setToast('❌ Error setting default card');
+      const errorMessage = error.response?.data?.error || error.message || 'Unknown error occurred';
+      setToast(`❌ Error setting default card: ${errorMessage}`);
       setIsToast(true);
     }
   };
@@ -222,7 +280,30 @@ const CustomBoard = () => {
     return numbers.sort((a, b) => a - b);
   };
 
-  const generateRandomCard = () => {
+  const generateRandomCard = async () => {
+    if (!user?.telegram_id) return;
+    
+    try {
+      // Try to get a random card from the API first
+      const randomCardData = await customCardsAPI.generateRandomCard(user.telegram_id);
+      
+      if (randomCardData && randomCardData.numbers) {
+        setCardNumbers(randomCardData.numbers);
+        setErrors({});
+        setToast('✅ Random card generated successfully!');
+        setIsToast(true);
+      } else {
+        // Fallback to local generation
+        generateRandomCardLocal();
+      }
+    } catch (error) {
+      console.error('Error generating random card from API:', error);
+      // Fallback to local generation
+      generateRandomCardLocal();
+    }
+  };
+
+  const generateRandomCardLocal = () => {
     const newCardNumbers = {};
     Object.keys(columnRanges).forEach(column => {
       newCardNumbers[column] = generateRandomColumn(column);
@@ -258,31 +339,49 @@ const CustomBoard = () => {
   };
 
   const validateCard = () => {
+    console.log('🔍 [ValidateCard] Starting validation...');
+    console.log('🔍 [ValidateCard] Card numbers to validate:', cardNumbers);
+    
     const newErrors = {};
     const usedNumbers = new Set();
     
     Object.keys(columnRanges).forEach(column => {
       const range = columnRanges[column];
+      console.log(`🔍 [ValidateCard] Validating column ${column} with range ${range.min}-${range.max}`);
       
       for (let i = 0; i < 5; i++) {
         const value = cardNumbers[column][i];
         const errorKey = `${column}-${i}`;
         
+        console.log(`🔍 [ValidateCard] Validating ${column}[${i}] = "${value}"`);
+        
         if (value === '') {
           newErrors[errorKey] = 'Number is required';
+          console.log(`❌ [ValidateCard] ${errorKey}: Number is required`);
         } else {
           const num = parseInt(value);
           if (isNaN(num)) {
             newErrors[errorKey] = 'Invalid number';
+            console.log(`❌ [ValidateCard] ${errorKey}: Invalid number "${value}"`);
           } else if (num < range.min || num > range.max) {
             newErrors[errorKey] = `Must be between ${range.min}-${range.max}`;
+            console.log(`❌ [ValidateCard] ${errorKey}: Out of range ${num} (${range.min}-${range.max})`);
           } else if (usedNumbers.has(num)) {
             newErrors[errorKey] = 'Number already used';
+            console.log(`❌ [ValidateCard] ${errorKey}: Number ${num} already used`);
           } else {
             usedNumbers.add(num);
+            console.log(`✅ [ValidateCard] ${errorKey}: Valid number ${num}`);
           }
         }
       }
+    });
+    
+    console.log('🔍 [ValidateCard] Validation complete:', {
+      errors: newErrors,
+      errorCount: Object.keys(newErrors).length,
+      isValid: Object.keys(newErrors).length === 0,
+      usedNumbers: Array.from(usedNumbers)
     });
     
     setErrors(newErrors);
@@ -290,6 +389,14 @@ const CustomBoard = () => {
   };
 
   const resetForm = () => {
+    console.log('🧹 [ResetForm] Resetting form...');
+    console.log('🧹 [ResetForm] Previous state:', {
+      cardName,
+      cardNumbers,
+      isDefault,
+      editingCard: editingCard ? { id: editingCard.id, name: editingCard.name } : null
+    });
+    
     setCardName('');
     setCardNumbers({
       B: Array(5).fill(''),
@@ -301,6 +408,8 @@ const CustomBoard = () => {
     setIsDefault(false);
     setErrors({});
     setEditingCard(null);
+    
+    console.log('🧹 [ResetForm] Form reset complete');
   };
 
   // Load custom cards on component mount
@@ -347,7 +456,7 @@ const CustomBoard = () => {
                 {userCustomCards.map((card) => (
                   <div key={card.id} className="card-item">
                     <div className="card-info">
-                      <h3>{card.name}</h3>
+                      <h3>Card #{card.id}</h3>
                       {card.is_default && <span className="default-badge">Default</span>}
                     </div>
                     <div className="card-preview">
@@ -402,6 +511,22 @@ const CustomBoard = () => {
           <h2>{editingCard ? 'Edit Card' : 'Create New Card'}</h2>
           
           <div className="editor-form">
+            <div className="form-group">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={isDefault}
+                  onChange={(e) => {
+                    console.log('🔘 [IsDefault] Checkbox changed:', { 
+                      oldValue: isDefault, 
+                      newValue: e.target.checked 
+                    });
+                    setIsDefault(e.target.checked);
+                  }}
+                />
+                Set as default card
+              </label>
+            </div>
           
          
             
@@ -446,9 +571,9 @@ const CustomBoard = () => {
               <button className="cancel-btn" onClick={resetForm}>
                 Cancel
               </button>
-              <button className="save-btn" onClick={saveCustomCard}>
+              <button className="save-btn" onClick={saveCustomCard} disabled={isSaving}>
                 <FontAwesomeIcon icon={faSave} />
-                {editingCard ? 'Update Card' : 'Save Card'}
+                {isSaving ? 'Saving...' : (editingCard ? 'Update Card' : 'Save Card')}
               </button>
             </div>
           </div>

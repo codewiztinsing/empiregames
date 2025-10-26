@@ -1,4 +1,5 @@
 import config from '../config/api';
+import apiClient from '../services/apiClient';
 
 const API_BASE_URL = config.API_BASE_URL;
 
@@ -7,22 +8,8 @@ export const customCardsAPI = {
   // Get all custom cards for a user
   async getUserCustomCards(telegramId) {
     try {
-      const response = await fetch(`${API_BASE_URL}game/custom-cards/?telegram_id=${telegramId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          // No custom cards found, return empty array
-          return [];
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const response = await apiClient.get(`game/custom-cards/?telegram_id=${telegramId}`);
+      const data = response.data;
       return data.results || data.cards || data || [];
     } catch (error) {
       console.error('Error fetching user custom cards:', error);
@@ -35,22 +22,8 @@ export const customCardsAPI = {
   // Get user's default custom card
   async getUserDefaultCard(telegramId) {
     try {
-      const response = await fetch(`${API_BASE_URL}game/custom-cards/default/?telegram_id=${telegramId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          // No default card found
-          return null;
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const response = await apiClient.get(`game/custom-cards/default/?telegram_id=${telegramId}`);
+      const data = response.data;
       return data.card || data;
     } catch (error) {
       console.error('Error fetching user default card:', error);
@@ -63,25 +36,30 @@ export const customCardsAPI = {
   // Create a new custom card
   async createCustomCard(telegramId, cardData) {
     try {
-      const response = await fetch(`${API_BASE_URL}game/custom-cards/create/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          telegram_id: telegramId,
-          ...cardData
-        }),
+      console.log('🆕 [API] Creating custom card:', { telegramId, cardData });
+      
+      const response = await apiClient.post(`game/custom-cards/create/`, {
+        telegram_id: telegramId,
+        ...cardData
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
+      
+      console.log('✅ [API] Create card response:', {
+        status: response.status,
+        data: response.data,
+        headers: response.headers
+      });
+      
+      return response.data;
     } catch (error) {
-      console.error('Error creating custom card:', error);
+      console.error('❌ [API] Error creating custom card:', error);
+      console.error('❌ [API] Create card error details:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config,
+        validationErrors: error.response?.data?.errors || error.response?.data?.error || 'No validation details'
+      });
       throw error;
     }
   },
@@ -89,22 +67,26 @@ export const customCardsAPI = {
   // Update an existing custom card
   async updateCustomCard(cardId, cardData) {
     try {
-      const response = await fetch(`${API_BASE_URL}game/custom-cards/${cardId}/`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cardData),
+      console.log('🔄 [API] Updating custom card:', { cardId, cardData });
+      
+      const response = await apiClient.put(`game/custom-cards/${cardId}/`, cardData);
+      
+      console.log('✅ [API] Update card response:', {
+        status: response.status,
+        data: response.data,
+        headers: response.headers
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
+      
+      return response.data;
     } catch (error) {
-      console.error('Error updating custom card:', error);
+      console.error('❌ [API] Error updating custom card:', error);
+      console.error('❌ [API] Update card error details:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config
+      });
       throw error;
     }
   },
@@ -112,17 +94,7 @@ export const customCardsAPI = {
   // Delete a custom card
   async deleteCustomCard(cardId) {
     try {
-      const response = await fetch(`${API_BASE_URL}game/custom-cards/${cardId}/`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+      await apiClient.delete(`game/custom-cards/${cardId}/`);
       return true;
     } catch (error) {
       console.error('Error deleting custom card:', error);
@@ -133,19 +105,8 @@ export const customCardsAPI = {
   // Set a card as default
   async setDefaultCard(cardId) {
     try {
-      const response = await fetch(`${API_BASE_URL}game/custom-cards/${cardId}/set-default/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
+      const response = await apiClient.post(`game/custom-cards/${cardId}/set-default/`);
+      return response.data;
     } catch (error) {
       console.error('Error setting default card:', error);
       throw error;
@@ -155,19 +116,8 @@ export const customCardsAPI = {
   // Generate a random card
   async generateRandomCard(telegramId) {
     try {
-      const response = await fetch(`${API_BASE_URL}game/custom-cards/generate-random/?telegram_id=${telegramId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
+      const response = await apiClient.get(`game/custom-cards/generate-random-card/?telegram_id=${telegramId}`);
+      return response.data;
     } catch (error) {
       console.error('Error generating random card:', error);
       throw error;
