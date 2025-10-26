@@ -11,8 +11,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 import django
 django.setup()
 
-from users.models import User, WithdrawalRequest
-from wallet.models import Transaction
+from users.models import User
+from wallet.models import Transaction, WithdrawalRequest    
 from asgiref.sync import sync_to_async
 
 # Set up logging
