@@ -255,6 +255,8 @@ const WatchModeScreen = () => {
   // Leave watch mode
   const leaveWatchMode = () => {
     navigate('/');
+    window.location.reload();
+    toast.success('🎮 Leaving watch mode...');
   };
 
   // Manual refresh for testing
