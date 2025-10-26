@@ -14,7 +14,7 @@ from .tasks import activate_fake_players, deactivate_fake_players
 from datetime import timedelta
 from .models import Game, GameRoom, PlayerGame, GameSettings, FakePlayerSettings, CustomBingoCard
 from .tasks import charge_player,push_transaction,update_player_balance
-from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema,GameRoomSchema,GameRoomListSchema
+from .schema import BetSchema,GameSchema,NextGameSchema,WinGameSchema,GameSettingsSchema,GameRoomSchema,GameRoomListSchema,CustomCardSchema
 from ninja.errors import HttpError  # Correct import
 from django.core.exceptions import ValidationError
 
@@ -514,7 +514,7 @@ def get_detailed_games(request, limit: int = 20):
 
 
 # Custom Bingo Card API Endpoints
-@game_router.get("/custom-cards/")
+@game_router.get("/custom-cards/", auth=None)
 def get_user_custom_cards(request, telegram_id: str):
     """Get all custom cards for a user"""
     try:
@@ -558,7 +558,7 @@ def get_user_custom_cards(request, telegram_id: str):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@game_router.get("/custom-cards/default/")
+@game_router.get("/custom-cards/default/", auth=None)
 def get_user_default_card(request, telegram_id: str):
     """Get user's default custom card"""
     try:
@@ -603,11 +603,16 @@ def get_user_default_card(request, telegram_id: str):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@game_router.post("/custom-cards/create/")
-def create_custom_card(request, telegram_id: str, name: str, numbers: dict, is_default: bool = False):
+@game_router.post("/custom-cards/create/", auth=None)
+def create_custom_card(request, data: CustomCardSchema):
     """Create a new custom bingo card"""
     try:
         from django.conf import settings
+        
+        # Extract data from schema
+        telegram_id = data.telegram_id
+        numbers = data.numbers
+        is_default = data.is_default
         
         # In development mode, create a test user if it doesn't exist
         if getattr(settings, 'DEBUG', False):
@@ -629,14 +634,17 @@ def create_custom_card(request, telegram_id: str, name: str, numbers: dict, is_d
         if not isinstance(numbers, dict):
             return JsonResponse({"error": "Numbers must be a dictionary"}, status=400)
         
-        # Check if user already has a card with this name
-        if CustomBingoCard.objects.filter(user=user, name=name).exists():
-            return JsonResponse({"error": "A card with this name already exists"}, status=400)
+        # Check if user already has a card with these exact numbers
+        if CustomBingoCard.objects.filter(user=user, numbers=numbers).exists():
+            return JsonResponse({"error": "A card with these numbers already exists"}, status=400)
+        
+        # Generate a card identifier from the numbers
+        card_identifier = f"Card-{hash(str(numbers)) % 10000:04d}"
         
         # Create the card
         card = CustomBingoCard(
             user=user,
-            name=name,
+            name=card_identifier,  # Use generated identifier
             numbers=numbers,
             is_default=is_default
         )
@@ -668,7 +676,41 @@ def create_custom_card(request, telegram_id: str, name: str, numbers: dict, is_d
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@game_router.put("/custom-cards/{card_id}/")
+@game_router.get("/custom-cards/generate-random-card/", auth=None)
+def generate_random_card(request, telegram_id: str):
+    """Generate a random bingo card for preview"""
+    try:
+        import random
+        
+        # Column ranges
+        column_ranges = {
+            'B': (1, 15),
+            'I': (16, 30),
+            'N': (31, 45),
+            'G': (46, 60),
+            'O': (61, 75)
+        }
+        
+        numbers = {}
+        for column, (min_val, max_val) in column_ranges.items():
+            # Generate 5 unique random numbers for this column
+            column_numbers = []
+            while len(column_numbers) < 5:
+                num = random.randint(min_val, max_val)
+                if num not in column_numbers:
+                    column_numbers.append(num)
+            numbers[column] = sorted(column_numbers)
+        
+        return JsonResponse({
+            "numbers": numbers,
+            "message": "Random card generated successfully"
+        }, status=200)
+    except Exception as e:
+        logger.error(f"Error generating random card: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@game_router.put("/custom-cards/{card_id}/", auth=None)
 def update_custom_card(request, card_id: int, telegram_id: str, name: str = None, numbers: dict = None, is_default: bool = None):
     """Update an existing custom bingo card"""
     try:
@@ -715,7 +757,7 @@ def update_custom_card(request, card_id: int, telegram_id: str, name: str = None
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@game_router.delete("/custom-cards/{card_id}/")
+@game_router.delete("/custom-cards/{card_id}/", auth=None)
 def delete_custom_card(request, card_id: int, telegram_id: str):
     """Delete a custom bingo card"""
     try:
@@ -733,7 +775,7 @@ def delete_custom_card(request, card_id: int, telegram_id: str):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@game_router.post("/custom-cards/{card_id}/set-default/")
+@game_router.post("/custom-cards/{card_id}/set-default/", auth=None)
 def set_default_card(request, card_id: int, telegram_id: str):
     """Set a custom card as default"""
     try:
@@ -750,36 +792,4 @@ def set_default_card(request, card_id: int, telegram_id: str):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@game_router.get("/custom-cards/generate-random/")
-def generate_random_card(request, telegram_id: str):
-    """Generate a random bingo card for preview"""
-    try:
-        import random
-        
-        # Column ranges
-        column_ranges = {
-            'B': (1, 15),
-            'I': (16, 30),
-            'N': (31, 45),
-            'G': (46, 60),
-            'O': (61, 75)
-        }
-        
-        numbers = {}
-        for column, (min_val, max_val) in column_ranges.items():
-            # Generate 5 unique random numbers for this column
-            column_numbers = []
-            while len(column_numbers) < 5:
-                num = random.randint(min_val, max_val)
-                if num not in column_numbers:
-                    column_numbers.append(num)
-            numbers[column] = sorted(column_numbers)
-        
-        return JsonResponse({
-            "numbers": numbers,
-            "message": "Random card generated successfully"
-        }, status=200)
-    except Exception as e:
-        logger.error(f"Error generating random card: {e}")
-        return JsonResponse({"error": str(e)}, status=500)
    
