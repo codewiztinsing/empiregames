@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSave, faTrash, faEye, faEdit, faBars } from '@fortawesome/free-solid-svg-icons';
 import { BingoContext } from '../contexts/bingoContext';
 import { useAuth } from '../contexts/AuthContext';
+import Toaster from '../components/Toaster';
 import config from '../config/api';
 import customCardsAPI from '../api/customCards';
 import './CustomBoard.css';
@@ -12,7 +13,7 @@ import './selections.css';
 const CustomBoard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { setToast, setIsToast } = useContext(BingoContext);
+  const { toast, setToast, isToast, setIsToast } = useContext(BingoContext);
   
   // State for custom cards
   const [userCustomCards, setUserCustomCards] = useState([]);
@@ -193,9 +194,39 @@ const CustomBoard = () => {
         validationErrors: error.response?.data?.errors || error.response?.data?.error || 'No validation details'
       });
       
-      // Extract detailed error message
+      // Extract detailed error message with validation errors
       let errorMessage = 'Unknown error occurred';
-      if (error.response?.data?.errors) {
+      let validationDetails = '';
+      
+      // Handle validation_errors array from backend
+      if (error.response?.data?.validation_errors) {
+        const validationErrors = error.response.data.validation_errors;
+        console.log('❌ [SaveCard] Validation errors received:', validationErrors);
+        
+        const errorMessages = {
+          "maximum_card_limit_reached": "You already have a custom card! Delete it first to create a new one.",
+          "missing_column_B": "Column B (1-15) is missing or invalid",
+          "missing_column_I": "Column I (16-30) is missing or invalid",
+          "missing_column_N": "Column N (31-45) is missing or invalid",
+          "missing_column_G": "Column G (46-60) is missing or invalid",
+          "missing_column_O": "Column O (61-75) is missing or invalid",
+          "invalid_column_length_B": "Column B must have exactly 5 numbers",
+          "invalid_column_length_I": "Column I must have exactly 5 numbers",
+          "invalid_column_length_N": "Column N must have exactly 5 numbers",
+          "invalid_column_length_G": "Column G must have exactly 5 numbers",
+          "invalid_column_length_O": "Column O must have exactly 5 numbers",
+          "invalid_range_B": "Column B numbers must be between 1 and 15",
+          "invalid_range_I": "Column I numbers must be between 16 and 30",
+          "invalid_range_N": "Column N numbers must be between 31 and 45",
+          "invalid_range_G": "Column G numbers must be between 46 and 60",
+          "invalid_range_O": "Column O numbers must be between 61 and 75",
+          "duplicate_numbers": "You cannot have duplicate numbers in the card",
+          "validation_failed": "Card validation failed"
+        };
+        
+        validationDetails = validationErrors.map(err => errorMessages[err] || err).join('; ');
+        errorMessage = validationDetails;
+      } else if (error.response?.data?.errors) {
         // Handle validation errors object
         const errors = error.response.data.errors;
         if (typeof errors === 'object') {
@@ -213,7 +244,15 @@ const CustomBoard = () => {
       
       console.log('❌ [SaveCard] Final error message:', errorMessage);
       
-      setToast(`❌ Error saving custom card: ${errorMessage}`);
+      // Show toast with appropriate styling
+      if (errorMessage.includes('already have a custom card') || 
+          errorMessage.includes('already exists') || 
+          errorMessage.includes('maximum_card_limit_reached') ||
+          errorMessage.toLowerCase().includes('one custom card')) {
+        setToast(`⛔ ${errorMessage}`);
+      } else {
+        setToast(`❌ ${errorMessage}`);
+      }
       setIsToast(true);
     } finally {
       console.log('🏁 [SaveCard] Setting saving state to false');
@@ -421,9 +460,11 @@ const CustomBoard = () => {
   }, [user?.telegram_id]);
 
   return (
-    <div className="konjo-selections-container">
-      {/* Header */}
-      <div className="konjo-header">
+    <>
+      {isToast && <Toaster message={toast} />}
+      <div className="konjo-selections-container">
+        {/* Header */}
+        <div className="konjo-header">
         <div className="konjo-header-left">
           <button className="custom-card-btn create-btn" onClick={() => navigate('/')}>
             <FontAwesomeIcon icon={faArrowLeft} />
@@ -510,6 +551,28 @@ const CustomBoard = () => {
         <div className="card-editor-section">
           <h2>{editingCard ? 'Edit Card' : 'Create New Card'}</h2>
           
+          {/* Warning when user already has a card */}
+          {!editingCard && userCustomCards.length > 0 && (
+            <div style={{
+              backgroundColor: '#ffa500',
+              color: '#000',
+              padding: '15px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <span style={{ fontSize: '24px' }}>⛔</span>
+              <div>
+                <strong>You already have a custom card!</strong>
+                <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
+                  To create a new card, please delete your existing card first or edit it using the "Show My Cards" button above.
+                </p>
+              </div>
+            </div>
+          )}
+          
           <div className="editor-form">
             <div className="form-group">
               <label>
@@ -571,15 +634,31 @@ const CustomBoard = () => {
               <button className="cancel-btn" onClick={resetForm}>
                 Cancel
               </button>
-              <button className="save-btn" onClick={saveCustomCard} disabled={isSaving}>
+              <button 
+                className="save-btn" 
+                onClick={saveCustomCard} 
+                disabled={isSaving || (!editingCard && userCustomCards.length > 0)}
+                title={!editingCard && userCustomCards.length > 0 ? "You already have a custom card. Delete it first or use 'Show My Cards' to edit." : ""}
+              >
                 <FontAwesomeIcon icon={faSave} />
                 {isSaving ? 'Saving...' : (editingCard ? 'Update Card' : 'Save Card')}
               </button>
+              {!editingCard && userCustomCards.length > 0 && (
+                <div style={{
+                  fontSize: '12px',
+                  color: '#ff6b6b',
+                  marginTop: '5px',
+                  textAlign: 'center'
+                }}>
+                  ⚠️ Cannot create new card. You already have {userCustomCards.length} card(s).
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
     </div>
+    </>
   );
 };
 

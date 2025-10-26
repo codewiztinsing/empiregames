@@ -607,12 +607,16 @@ def get_user_default_card(request, telegram_id: str):
 def create_custom_card(request, data: CustomCardSchema):
     """Create a new custom bingo card"""
     try:
+        logger.info("🎯 [CreateCard] Starting card creation")
         from django.conf import settings
         
         # Extract data from schema
         telegram_id = data.telegram_id
         numbers = data.numbers
         is_default = data.is_default
+        
+        logger.info(f"📝 [CreateCard] Received data - telegram_id: {telegram_id}, is_default: {is_default}")
+        logger.info(f"📝 [CreateCard] Numbers type: {type(numbers)}, keys: {numbers.keys() if isinstance(numbers, dict) else 'Not a dict'}")
         
         # In development mode, create a test user if it doesn't exist
         if getattr(settings, 'DEBUG', False):
@@ -632,14 +636,109 @@ def create_custom_card(request, data: CustomCardSchema):
         
         # Validate numbers format
         if not isinstance(numbers, dict):
+            logger.error(f"❌ [CreateCard] Numbers is not a dictionary: {type(numbers)}")
             return JsonResponse({"error": "Numbers must be a dictionary"}, status=400)
+        
+        logger.info(f"✅ [CreateCard] Numbers validated as dictionary")
+        
+        # Limit one card per user
+        existing_cards_count = CustomBingoCard.objects.filter(user=user).count()
+        logger.info(f"📊 [CreateCard] User has {existing_cards_count} existing cards")
+        if existing_cards_count >= 1:
+            logger.warning(f"⚠️ [CreateCard] User already has {existing_cards_count} card(s), rejecting")
+            return JsonResponse({
+                "error": "You can only have one custom card. Please delete your existing card to create a new one.",
+                "validation_errors": ["maximum_card_limit_reached"]
+            }, status=400)
         
         # Check if user already has a card with these exact numbers
         if CustomBingoCard.objects.filter(user=user, numbers=numbers).exists():
             return JsonResponse({"error": "A card with these numbers already exists"}, status=400)
         
+        # Validate card structure before creating
+        logger.info("🔍 [CreateCard] Starting validation")
+        try:
+            # Check if all required columns are present
+            required_columns = ['B', 'I', 'N', 'G', 'O']
+            validation_errors = []
+            
+            logger.info(f"🔍 [CreateCard] Checking columns: {list(numbers.keys())}")
+            
+            for column in required_columns:
+                if column not in numbers:
+                    logger.error(f"❌ [CreateCard] Missing column: {column}")
+                    validation_errors.append(f"missing_column_{column}")
+                    continue
+                
+                if not isinstance(numbers[column], list) or len(numbers[column]) != 5:
+                    logger.error(f"❌ [CreateCard] Column {column} invalid - Type: {type(numbers[column])}, Length: {len(numbers[column]) if isinstance(numbers[column], list) else 'N/A'}")
+                    validation_errors.append(f"invalid_column_length_{column}")
+                    continue
+                
+                logger.info(f"✅ [CreateCard] Column {column} validated - 5 numbers present")
+            
+            # Validate number ranges if structure is valid
+            if not validation_errors:
+                column_ranges = {
+                    'B': (1, 15),
+                    'I': (16, 30),
+                    'N': (31, 45),
+                    'G': (46, 60),
+                    'O': (61, 75)
+                }
+                
+                all_numbers = []
+                for column, nums in numbers.items():
+                    if column not in column_ranges:
+                        continue
+                    min_val, max_val = column_ranges[column]
+                    for number in nums:
+                        if not isinstance(number, int) or number < min_val or number > max_val:
+                            validation_errors.append(f"invalid_range_{column}")
+                            break
+                        all_numbers.append(number)
+                
+                # Check for duplicates
+                if len(all_numbers) != len(set(all_numbers)):
+                    validation_errors.append("duplicate_numbers")
+            
+            # Return validation errors if any
+            if validation_errors:
+                logger.error(f"❌ [CreateCard] Validation failed with errors: {validation_errors}")
+                error_messages = {
+                    "missing_column_B": "Column B is missing",
+                    "missing_column_I": "Column I is missing",
+                    "missing_column_N": "Column N is missing",
+                    "missing_column_G": "Column G is missing",
+                    "missing_column_O": "Column O is missing",
+                    "invalid_column_length_B": "Column B must have exactly 5 numbers",
+                    "invalid_column_length_I": "Column I must have exactly 5 numbers",
+                    "invalid_column_length_N": "Column N must have exactly 5 numbers",
+                    "invalid_column_length_G": "Column G must have exactly 5 numbers",
+                    "invalid_column_length_O": "Column O must have exactly 5 numbers",
+                    "invalid_range_B": "Numbers in column B must be between 1 and 15",
+                    "invalid_range_I": "Numbers in column I must be between 16 and 30",
+                    "invalid_range_N": "Numbers in column N must be between 31 and 45",
+                    "invalid_range_G": "Numbers in column G must be between 46 and 60",
+                    "invalid_range_O": "Numbers in column O must be between 61 and 75",
+                    "duplicate_numbers": "Duplicate numbers found in the card"
+                }
+                messages = [error_messages.get(e, e) for e in validation_errors]
+                return JsonResponse({
+                    "error": "; ".join(messages),
+                    "validation_errors": validation_errors
+                }, status=400)
+                
+        except Exception as ve:
+            return JsonResponse({
+                "error": f"Validation error: {str(ve)}",
+                "validation_errors": ["validation_failed"]
+            }, status=400)
+        
         # Generate a card identifier from the numbers
         card_identifier = f"Card-{hash(str(numbers)) % 10000:04d}"
+        
+        logger.info(f"🎨 [CreateCard] Creating card with identifier: {card_identifier}")
         
         # Create the card
         card = CustomBingoCard(
@@ -651,11 +750,35 @@ def create_custom_card(request, data: CustomCardSchema):
         
         try:
             card.full_clean()  # This will call the clean() method
+            logger.info(f"✅ [CreateCard] Card validation passed, saving...")
             card.save()
+            logger.info(f"✅ [CreateCard] Card saved successfully with ID: {card.id}")
             
             # If this is set as default, unset others
             if is_default:
                 CustomBingoCard.set_default_card(user, card.id)
+            
+            # Send notification to user via Telegram (async)
+            try:
+                import asyncio
+                from telegram import Bot
+                from core.settings import TELEGRAM_BOT_TOKEN
+                
+                async def send_notification():
+                    bot = Bot(token=TELEGRAM_BOT_TOKEN)
+                    message = (
+                        f"🎉 Custom Bingo Card Created!\n\n"
+                        f"Your custom card has been saved successfully.\n"
+                        f"Card ID: {card.id}\n\n"
+                        f"Use this card in your next games!"
+                    )
+                    await bot.send_message(chat_id=int(telegram_id), text=message)
+                    logger.info(f"Sent notification to user {telegram_id}")
+                
+                # Run async notification
+                asyncio.create_task(send_notification())
+            except Exception as notify_error:
+                logger.warning(f"Failed to send notification: {notify_error}")
             
             return JsonResponse({
                 "card": {
@@ -669,10 +792,13 @@ def create_custom_card(request, data: CustomCardSchema):
                 "message": "Card created successfully"
             }, status=201)
         except ValidationError as ve:
+            logger.error(f"❌ [CreateCard] ValidationError: {str(ve)}")
             return JsonResponse({"error": str(ve)}, status=400)
             
     except Exception as e:
-        logger.error(f"Error creating custom card: {e}")
+        logger.error(f"❌ [CreateCard] Exception creating custom card: {str(e)}")
+        import traceback
+        logger.error(f"❌ [CreateCard] Traceback: {traceback.format_exc()}")
         return JsonResponse({"error": str(e)}, status=500)
 
 

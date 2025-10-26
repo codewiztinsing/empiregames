@@ -52,14 +52,22 @@ export const customCardsAPI = {
       return response.data;
     } catch (error) {
       console.error('❌ [API] Error creating custom card:', error);
-      console.error('❌ [API] Create card error details:', {
+      const errorDetails = {
         message: error.message,
         response: error.response,
         status: error.response?.status,
         data: error.response?.data,
         config: error.config,
-        validationErrors: error.response?.data?.errors || error.response?.data?.error || 'No validation details'
-      });
+        validationErrors: error.response?.data?.validation_errors || error.response?.data?.error || 'No validation details'
+      };
+      console.error('❌ [API] Create card error details:', errorDetails);
+      
+      // Enhance error with validation details
+      if (error.response?.data) {
+        error.validationErrors = error.response.data.validation_errors;
+        error.errorMessage = error.response.data.error || error.message;
+      }
+      
       throw error;
     }
   },

@@ -1197,6 +1197,7 @@ const Selections = () => {
                 </div>
                 
                 {/* Custom Card Section */}
+                {/* COMMENTED OUT - Custom Board Feature
                 <div className="sidebar-custom-cards-section">
                   <div className="sidebar-custom-cards-title">{t('navigation.customCards')}</div>
                   <div className="sidebar-item" onClick={() => {
@@ -1214,6 +1215,7 @@ const Selections = () => {
                     <span>{t('navigation.myCards')}</span>
                   </div>
                 </div>
+                */}
                 
                 <div className="sidebar-language-section">
                   <div className="sidebar-language-title">{t('navigation.language')}</div>
