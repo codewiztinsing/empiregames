@@ -51,3 +51,8 @@ class GameRoomSchema(Schema):
 
 class GameRoomListSchema(Schema):
     game_rooms: list[GameRoomSchema]
+
+class CustomCardSchema(Schema):
+    telegram_id: str
+    numbers: dict
+    is_default: bool = False
