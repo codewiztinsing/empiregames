@@ -77,6 +77,21 @@ global.sendPromotionToAllPlayers = sendPromotionToAllPlayers;
 const ETH_FIRST_NAMES = [
   'Abebe','Kebede','Haile','Bekele','Mulu','Tesfaye','Meron','Saba','Marta','Hanna','Mulugeta','Alemu','Lulit','Lidya','Yohannes','Dereje','Samrawit','Saron','Mahider','Hirut','Eden','Yared','Nati','Miki','Tigist','Aida','Rahel','Yetnayet','Mekdes','Eyerusalem','Nahom','Henok','Daniel','Fikirte','Blen','Rediet','Bethelhem','Selam','Selamawit','Abel','Samuel','Mersha','Fitsum','Gashaw','Girma','Solomon','Mebratu','Genet','Lensa','Fanaye','Mahi','Sosina','Tsion','Kidus','Kaleb','Abraham','Mikiyas','Biruk','Natnael','Yonatan','Yonas','Marta','Ruth','Mimi','Yemisrach','Yeshi','Seble','Hiwot','Mignot','Sosena','Mahlet','Mahi','Lensa','Lensa','Saron','Feven','Bethel','Hermela','Mikias','Nebiyu','Brook','Surafel','Senait','Abush','Fitsum','Asnakech','Azeb','Hanan','Hawi','Hewan','Bethelhem','Tsige','Mebrahtu','Kidist','Eleni','Lulit','Medhanit','Tinsae','Edom','Sosina','Eyerus','Netsanet','Selamnesh','Hayat','Zemzem','Feysel','Sami','Jafar','Hamdi'
 ];
+
+// Telegram-style usernames to make fake players look more realistic
+const TG_USERNAMES = [
+  '@player_real', '@bingo_pro', '@winner_time', '@lucky_draw', '@game_master',
+  '@bingo_champ', '@prize_hunter', '@card_king', '@number_one', '@victory_lane',
+  '@jackpot_bot', '@chance_me', '@game_on', '@bingo_time', '@card_collector',
+  '@winner_circle', '@ball_caller', '@happy_player', '@lucky_star', '@prize_seeker',
+  '@game_champion', '@bingo_lover', '@card_shark', '@victory_day', '@jackpot_king',
+  '@lucky_number', '@prize_master', '@game_winner', '@bingo_pro23', '@champ_time',
+  '@card_master', '@winner_gamer', '@jackpot_hunter', '@lucky_play', '@game_boss',
+  '@bingo_hero', '@prize_champ', '@victory_time', '@lucky_day', '@game_pro',
+  '@bingo_king', '@card_wizard', '@winner_magic', '@jackpot_time', '@lucky_gamer',
+  '@prize_hunter', '@game_champ', '@bingo_star', '@card_ace', '@victory_pro',
+  '@jackpot_boss', '@lucky_winner', '@game_master', '@bingo_love', '@prize_king'
+];
 const ETH_LAST_NAMES = [
   'Tesfaye','Bekele','Alemu','Wondimu','Gebremedhin','Gebremariam','Gebrehiwot','Gebru','Gebre','Gebreyesus','Gebremichael','Hailemariam','Haile','Hailu','Kassahun','Kassaye','Fekadu','Asfaw','Tadesse','Tsegaye','Tefera','Girma','Gebremariam','Demissie','Yohannes','Solomon','Worku','Alemayehu','Gebrekidan','Gebretsadik','Kebede','Abate','Abera','Abraham','Admasu','Adugna','Assefa','Ayalew','Ayana','Bekri','Belay','Belayneh','Berhane','Berhanu','Berhe','Beyene','Biniam','Birhanu','Biruk','Bogale','Buzuayehu','Dagnachew','Dawit','Desalegn','Desale','Diriba','Ephrem','Eshetu','Fisseha','Gebrekirstos','Geda','Getachew','Gizaw','Habtamu','Hagos','Haileselassie','Hassen','Hiruy','Kidane','Kidanemariam','Kifle','Kiros','Legesse','Lemi','Mamo','Mebratu','Mehari','Mehari','Melaku','Melese','Mengistu','Merga','Mersha','Michael','Moges','Molla','Nigussie','Reda','Sahle','Seyoum','Shiferaw','Sime','Tafese','Tariku','Tekeste','Tekle','Terefe','Tesfamariam','Tesfatsion','Tessema','Weldeyesus','Woldemariam','Woldemichael','Woldeselassie','Wondafrash','Yared','Yesuf','Yimer','Zewdu'
 ];
@@ -550,7 +565,10 @@ async function startGame(game) {
   gameIntervals.set(game.id, [gameInterval]);
 }
 
-function generateFakeWinningCard() {
+function generateFakeWinningCard(calledNumbers) {
+  // Extract called numbers from ball objects
+  const calledNumbersOnly = calledNumbers.map(num => typeof num === 'object' && num.number ? num.number : num);
+  
   // Generate a real bingo card with proper number ranges
   const grid = [];
   
@@ -622,31 +640,121 @@ function generateFakeWinningCard() {
     columnGrid.push(column);
   }
 
-  // Choose a random winning pattern
-  const patterns = ['row', 'col', 'diag', 'anti', 'fourCorners', 'fourEdges'];
-  const pick = patterns[Math.floor(Math.random() * patterns.length)];
+  // Try to find a winning pattern based on called numbers
+  let winningPattern = null;
+  let winningCells = [];
+  
+  const patterns = ['row', 'col', 'diag', 'anti', 'fourCorners'];
+  
+  // Check each pattern to see if we can create a valid winning board
+  for (const pattern of patterns) {
+    let cells = [];
+    let isValid = true;
+    
+    if (pattern === 'row') {
+      const r = Math.floor(Math.random() * 5);
+      for (let c = 0; c < 5; c++) {
+        const cell = columnGrid[c][r];
+        if (cell.number === '*') {
+          cells.push({ col: c, row: r });
+        } else if (calledNumbersOnly.includes(cell.number)) {
+          cells.push({ col: c, row: r });
+        } else {
+          isValid = false;
+          break;
+        }
+      }
+    } else if (pattern === 'col') {
+      const c = Math.floor(Math.random() * 5);
+      for (let r = 0; r < 5; r++) {
+        const cell = columnGrid[c][r];
+        if (cell.number === '*') {
+          cells.push({ col: c, row: r });
+        } else if (calledNumbersOnly.includes(cell.number)) {
+          cells.push({ col: c, row: r });
+        } else {
+          isValid = false;
+          break;
+        }
+      }
+    } else if (pattern === 'diag') {
+      for (let i = 0; i < 5; i++) {
+        const cell = columnGrid[i][i];
+        if (cell.number === '*') {
+          cells.push({ col: i, row: i });
+        } else if (calledNumbersOnly.includes(cell.number)) {
+          cells.push({ col: i, row: i });
+        } else {
+          isValid = false;
+          break;
+        }
+      }
+    } else if (pattern === 'anti') {
+      for (let i = 0; i < 5; i++) {
+        const cell = columnGrid[4 - i][i];
+        if (cell.number === '*') {
+          cells.push({ col: 4 - i, row: i });
+        } else if (calledNumbersOnly.includes(cell.number)) {
+          cells.push({ col: 4 - i, row: i });
+        } else {
+          isValid = false;
+          break;
+        }
+      }
+    } else if (pattern === 'fourCorners') {
+      const corners = [
+        { col: 0, row: 0 },
+        { col: 0, row: 4 },
+        { col: 4, row: 0 },
+        { col: 4, row: 4 }
+      ];
+      
+      for (const corner of corners) {
+        const cell = columnGrid[corner.col][corner.row];
+        if (cell.number === '*') {
+          cells.push(corner);
+        } else if (calledNumbersOnly.includes(cell.number)) {
+          cells.push(corner);
+        } else {
+          isValid = false;
+          break;
+        }
+      }
+    }
+    
+    if (isValid && cells.length > 0) {
+      winningPattern = pattern;
+      winningCells = cells;
+      break;
+    }
+  }
+  
+  // If no valid winning pattern found with existing numbers, generate with all numbers
+  if (!winningPattern) {
+    // Fallback: Choose a random winning pattern and mark it
+    const pick = patterns[Math.floor(Math.random() * patterns.length)];
 
-  if (pick === 'row') {
-    const r = Math.floor(Math.random() * 5);
-    for (let c = 0; c < 5; c++) columnGrid[c][r].marked = true;
-  } else if (pick === 'col') {
-    const c = Math.floor(Math.random() * 5);
-    for (let r = 0; r < 5; r++) columnGrid[c][r].marked = true;
-  } else if (pick === 'diag') {
-    for (let i = 0; i < 5; i++) columnGrid[i][i].marked = true;
-  } else if (pick === 'anti') {
-    for (let i = 0; i < 5; i++) columnGrid[4 - i][i].marked = true;
-  } else if (pick === 'fourCorners') {
-    columnGrid[0][0].marked = true;
-    columnGrid[0][4].marked = true;
-    columnGrid[4][0].marked = true;
-    columnGrid[4][4].marked = true;
-  } else if (pick === 'fourEdges') {
-    // Cross-like edges as per client check
-    columnGrid[2][0].marked = true;
-    columnGrid[0][2].marked = true;
-    columnGrid[2][4].marked = true;
-    columnGrid[4][2].marked = true;
+    if (pick === 'row') {
+      const r = Math.floor(Math.random() * 5);
+      for (let c = 0; c < 5; c++) columnGrid[c][r].marked = true;
+    } else if (pick === 'col') {
+      const c = Math.floor(Math.random() * 5);
+      for (let r = 0; r < 5; r++) columnGrid[c][r].marked = true;
+    } else if (pick === 'diag') {
+      for (let i = 0; i < 5; i++) columnGrid[i][i].marked = true;
+    } else if (pick === 'anti') {
+      for (let i = 0; i < 5; i++) columnGrid[4 - i][i].marked = true;
+    } else if (pick === 'fourCorners') {
+      columnGrid[0][0].marked = true;
+      columnGrid[0][4].marked = true;
+      columnGrid[4][0].marked = true;
+      columnGrid[4][4].marked = true;
+    }
+  } else {
+    // Mark the winning cells
+    winningCells.forEach(({ col, row }) => {
+      columnGrid[col][row].marked = true;
+    });
   }
 
   // Ensure center is always marked
@@ -712,11 +820,13 @@ async function scheduleFakeWinner(game) {
         const g = activeGames.get(game.id);
         if (!g || g.status !== 'in-progress') return;
 
+        // Use Telegram-style username for fake winner to look more realistic
+        const tgUsername = TG_USERNAMES[Math.floor(Math.random() * TG_USERNAMES.length)];
         const first = ETH_FIRST_NAMES[Math.floor(Math.random() * ETH_FIRST_NAMES.length)];
         const last = ETH_LAST_NAMES[Math.floor(Math.random() * ETH_LAST_NAMES.length)];
-        const fakeName = `${first} ${last}`;
+        const fakeName = `${tgUsername} (${first} ${last})`;
         const fakeCardNumber = 1 + Math.floor(Math.random() * 400);
-        const winningCard = generateFakeWinningCard();
+        const winningCard = generateFakeWinningCard(g.calledNumbers || []);
 
         io.emit("bingoWinner", {
           isBingo: true,
