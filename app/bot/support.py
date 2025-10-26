@@ -235,9 +235,7 @@ def get_user_by_telegram_id(telegram_id):
 def get_pending_withdrawals():
     """Get all pending withdrawal requests from Django"""
     logger.info("🔍 Fetching all pending withdrawal requests...")
-    withdrawals = list(WithdrawalRequest.objects.filter(
-        status='pending'
-    ).select_related('user'))
+    withdrawals = list(WithdrawalRequest.objects.filter(status='pending'))
     logger.info(f"📊 Found {len(withdrawals)} pending withdrawal requests")
     for w in withdrawals:
         logger.info(f"   - {w.user.username}: {w.amount} Birr (ID: {w.id})")
