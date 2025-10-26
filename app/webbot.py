@@ -1080,7 +1080,7 @@ async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "📞 **Contact Support**\n\n"
         "Need help? Our support team is here to assist you!\n\n"
-        "🔗 Contact us: https://t.me/adaa_alepo\n"
+        "🔗 Contact us: https://t.me/LiyuChawata\n"
     )
 
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
