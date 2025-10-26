@@ -231,6 +231,9 @@ const WatchModeScreen = () => {
       // Navigate back to selection screen after winner countdown
       setTimeout(() => {
         navigate('/');
+        // reload window
+        window.location.reload();
+        
         toast.success('🎮 Game refreshed! Ready for next round!');
       }, 2000);
     }
