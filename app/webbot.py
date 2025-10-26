@@ -761,7 +761,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             support_text = get_text(user_id, 'contact_support')
             await query.edit_message_text(
                 text=f"{support_text} - Contact us using support button",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📞 Support",  url='https://t.me/AkerBingo')]])
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📞 Support",  url='https://t.me/adaa_alepo')]])
             )
             return
 
@@ -1080,8 +1080,7 @@ async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "📞 **Contact Support**\n\n"
         "Need help? Our support team is here to assist you!\n\n"
-        "🔗 Contact us: https://t.me/LiyuBingo\n"
-        "📧 Email: support@liyubingo.com\n\n"
+        "🔗 Contact us: https://t.me/adaa_alepo\n"
     )
 
 async def deposit_amount(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
