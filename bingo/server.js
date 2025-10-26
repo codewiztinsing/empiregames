@@ -823,7 +823,9 @@ async function scheduleFakeWinner(game) {
         // Use Telegram-style username for fake winner to look more realistic
         const tgUsername = TG_USERNAMES[Math.floor(Math.random() * TG_USERNAMES.length)];
         const first = ETH_FIRST_NAMES[Math.floor(Math.random() * ETH_FIRST_NAMES.length)];
-        const fakeName = `${first} ${tgUsername}`;
+        // Remove @ symbol from username
+        const cleanUsername = tgUsername.replace('@', '');
+        const fakeName = `${first} ${cleanUsername}`;
         const fakeCardNumber = 1 + Math.floor(Math.random() * 400);
         const winningCard = generateFakeWinningCard(g.calledNumbers || []);
 
