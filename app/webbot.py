@@ -761,7 +761,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             support_text = get_text(user_id, 'contact_support')
             await query.edit_message_text(
                 text=f"{support_text} - Contact us using support button",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📞 Support",  url='https://t.me/adaa_alepo')]])
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📞 Support",  url='https://t.me/LiyuChawata')]])
             )
             return
 
