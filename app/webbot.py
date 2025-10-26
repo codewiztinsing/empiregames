@@ -444,13 +444,13 @@ async def get_withdraw_amount(update: Update, context: ContextTypes.DEFAULT_TYPE
         number_game_played = await numnber_of_game_played(telegram_id)
         number_game_won = await number_of_game_won(telegram_id)
 
-        if int(number_game_played) < 5:
-            await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት")
-            return WITHDRAW_AMOUNT_CONFIRM
+        # if int(number_game_played) < 5:
+        #     await update.message.reply_text(f"ከ 5 ጨወታ በላይ መጫዎት አለብዎት")
+        #     return WITHDRAW_AMOUNT_CONFIRM
 
-        if int(number_game_won) < 2:
-            await update.message.reply_text(f"2 ጨወታ ማሽነፍ አለብዎት")
-            return WITHDRAW_AMOUNT_CONFIRM
+        # if int(number_game_won) < 2:
+        #     await update.message.reply_text(f"2 ጨወታ ማሽነፍ አለብዎት")
+        #     return WITHDRAW_AMOUNT_CONFIRM
 
         # Enforce PaymentSettings min/max
         if float(amount) > max_withdrawal and max_withdrawal > 0:
@@ -535,20 +535,7 @@ async def get_withdraw_account(update: Update, context: ContextTypes.DEFAULT_TYP
                 "You will receive a notification when the processing is complete."
             )
             
-            # Trigger Celery task to process withdrawal
-            task = await trigger_withdrawal_processing(withdrawal_request.id)
-            if task:
-                logger.info(f"Withdrawal processing task triggered: {task.id}")
-                
-                # Send processing notification
-                await trigger_withdrawal_notification(
-                    user_telegram_id,
-                    'processing',
-                    withdraw_amount,
-                    withdrawal_request.id
-                )
-            else:
-                logger.error("Failed to trigger withdrawal processing task")
+            logger.info(f"Withdrawal request created: ID={withdrawal_request.id}, User={user.username}, Amount={withdraw_amount}")
                 
         else:
             await update.message.reply_text(
