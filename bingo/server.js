@@ -74,8 +74,9 @@ function sendPromotionToAllPlayers(promotionData) {
 global.sendPromotionToAllPlayers = sendPromotionToAllPlayers;
 
 // Ethiopian fake user names (first and last) for realistic winner announcements
+// Male first names only
 const ETH_FIRST_NAMES = [
-  'Abebe','Kebede','Haile','Bekele','Mulu','Tesfaye','Meron','Saba','Marta','Hanna','Mulugeta','Alemu','Lulit','Lidya','Yohannes','Dereje','Samrawit','Saron','Mahider','Hirut','Eden','Yared','Nati','Miki','Tigist','Aida','Rahel','Yetnayet','Mekdes','Eyerusalem','Nahom','Henok','Daniel','Fikirte','Blen','Rediet','Bethelhem','Selam','Selamawit','Abel','Samuel','Mersha','Fitsum','Gashaw','Girma','Solomon','Mebratu','Genet','Lensa','Fanaye','Mahi','Sosina','Tsion','Kidus','Kaleb','Abraham','Mikiyas','Biruk','Natnael','Yonatan','Yonas','Marta','Ruth','Mimi','Yemisrach','Yeshi','Seble','Hiwot','Mignot','Sosena','Mahlet','Mahi','Lensa','Lensa','Saron','Feven','Bethel','Hermela','Mikias','Nebiyu','Brook','Surafel','Senait','Abush','Fitsum','Asnakech','Azeb','Hanan','Hawi','Hewan','Bethelhem','Tsige','Mebrahtu','Kidist','Eleni','Lulit','Medhanit','Tinsae','Edom','Sosina','Eyerus','Netsanet','Selamnesh','Hayat','Zemzem','Feysel','Sami','Jafar','Hamdi'
+  'Abebe','Kebede','Haile','Bekele','Tesfaye','Mulugeta','Alemu','Yohannes','Dereje','Eden','Yared','Nati','Miki','Nahom','Henok','Daniel','Abel','Samuel','Mersha','Fitsum','Gashaw','Girma','Solomon','Mebratu','Tsion','Kidus','Kaleb','Abraham','Mikiyas','Biruk','Natnael','Yonatan','Yonas','Mikias','Nebiyu','Brook','Surafel','Abush','Fitsum','Sami','Jafar','Hamdi','Gebre','Gebremariam','Kebede','Abate','Abraham','Admasu','Adugna','Assefa','Ayalew','Berhane','Berhanu','Biniam','Birhanu','Biruk','Dawit','Desalegn','Getachew','Habtamu','Hagos','Haileselassie','Hiruy','Kidane','Kidanemariam','Mamo','Mebratu','Mehari','Melaku','Melese','Mengistu','Merga','Michael','Moges','Nigussie','Reda','Shiferaw','Sime','Tariku','Tekeste','Tekle','Terefe','Tesfamariam','Tesfatsion','Tessema','Weldeyesus','Yared','Yesuf','Yimer','Zewdu'
 ];
 
 // Telegram-style usernames to make fake players look more realistic
@@ -825,7 +826,7 @@ async function scheduleFakeWinner(game) {
         const first = ETH_FIRST_NAMES[Math.floor(Math.random() * ETH_FIRST_NAMES.length)];
         // Remove @ symbol from username
         const cleanUsername = tgUsername.replace('@', '');
-        const fakeName = `${first} ${cleanUsername}`;
+        const fakeName = `${first}`;
         const fakeCardNumber = 1 + Math.floor(Math.random() * 400);
         const winningCard = generateFakeWinningCard(g.calledNumbers || []);
 
