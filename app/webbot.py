@@ -1516,7 +1516,8 @@ async def redeem_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Add bonus to wallet
             if LOCAL_MODE:
                 wallet = await get_user_wallet(user)
-                wallet.balance += Decimal(str(bonus_amount))
+                bonus_decimal = Decimal(str(bonus_amount))
+                wallet.balance = Decimal(str(wallet.balance)) + bonus_decimal
                 await sync_to_async(wallet.save)()
                 
                 # Reset consecutive games counter

@@ -176,34 +176,37 @@
         <!-- Pagination -->
         <div class="flex items-center justify-between p-4 border-t border-dark-border">
             <div class="text-sm text-gray-400">
-                Showing 1 to {{ users.count }} of {{ users.count }} results
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ total_users }} results
             </div>
             <div class="flex items-center space-x-2">
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
+                <!-- Previous Page -->
+                {% if page_obj.has_previous %}
+                <a href="{% url 'dashboard:users' %}?page={{ page_obj.previous_page_number }}" 
+                   class="px-3 py-2 text-sm font-medium text-gray-300 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg hover:text-white transition-colors">
                     Previous
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
-                    {% if page_obj.has_previous %}
-                    href="{% url 'accounts:users' %}?page={{ page_obj.previous_page_number }}"
-                    {% endif %}
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    {% if page_obj.has_next %}
-                    href="{% url 'accounts:users' %}?page={{ page_obj.next_page_number }}"
-                    {% endif %}
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg">
-                    {% if page_obj.has_next %}
-                    href="{% url 'accounts:users' %}?page={{ page_obj.next_page_number }}"
-                    {% endif %}
-                </button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-400 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg"
-                {% if page_obj.has_next %}
-                href="{% url 'accounts:users' %}?page={{ page_obj.next_page_number }}"
+                </a>
+                {% else %}
+                <span class="px-3 py-2 text-sm font-medium text-gray-500 bg-dark-card border border-dark-border rounded-lg cursor-not-allowed">
+                    Previous
+                </span>
                 {% endif %}
-                >
+                
+                <!-- Current Page Number -->
+                <span class="px-3 py-2 text-sm font-medium text-white bg-purple-primary border border-purple-primary rounded-lg">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                
+                <!-- Next Page -->
+                {% if page_obj.has_next %}
+                <a href="{% url 'dashboard:users' %}?page={{ page_obj.next_page_number }}" 
+                   class="px-3 py-2 text-sm font-medium text-gray-300 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg hover:text-white transition-colors">
                     Next
-                </button>
+                </a>
+                {% else %}
+                <span class="px-3 py-2 text-sm font-medium text-gray-500 bg-dark-card border border-dark-border rounded-lg cursor-not-allowed">
+                    Next
+                </span>
+                {% endif %}
             </div>
         </div>
     </div>
