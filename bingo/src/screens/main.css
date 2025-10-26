@@ -1062,8 +1062,8 @@ h1 {
 .card-cell {
   background-color: #ffffff; /* Clean white background */
   border: 1px solid #ccc; /* Light gray border */
-  border-radius: 50%; /* Make circular */
-  padding: 0; /* Remove padding for circular look */
+  border-radius: 0; /* Remove border radius */
+  padding: 0; /* Remove padding for square look */
   font-size: 14px; /* Appropriate font size */
   font-weight: bold;
   color: #333; /* Dark gray text */
@@ -2349,8 +2349,7 @@ h1 {
   
   .card-cell {
     font-size: 12px; /* Smaller font for mobile */
-    width: 30px; /* Smaller size for mobile */
-    height: 30px; /* Square shape */
+
     aspect-ratio: 1;
     padding: 0; /* Remove padding for circular look */
     background-color: #ffffff; /* Maintain white background */
@@ -2541,7 +2540,6 @@ h1 {
     padding: 0; /* Remove padding for circular look */
     background-color: #ffffff; /* Maintain white background */
     border: 1px solid #ccc; /* Maintain light gray border */
-    border-radius: 50%; /* Make circular */
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05); /* Very subtle shadow */
   }
   
