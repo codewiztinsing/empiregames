@@ -235,7 +235,7 @@ def get_user_by_telegram_id(telegram_id):
 def get_pending_withdrawals():
     """Get all pending withdrawal requests from Django"""
     logger.info("🔍 Fetching all pending withdrawal requests...")
-    withdrawals = list(WithdrawalRequest.objects.filter(status='pending'))
+    withdrawals = list(WithdrawalRequest.objects.filter(status='pending').select_related('user').order_by('-created_at'))
     logger.info(f"📊 Found {len(withdrawals)} pending withdrawal requests")
     for w in withdrawals:
         logger.info(f"   - {w.user.username}: {w.amount} Birr (ID: {w.id})")
@@ -407,7 +407,9 @@ async def view_pending_requests(update: Update, context: ContextTypes.DEFAULT_TY
                 'amount': req.amount,
                 'created_at': req.created_at.strftime('%Y-%m-%d %H:%M'),
                 'status': req.status,
-                'admin_notes': req.admin_notes or 'No notes'
+                'phone_number': req.phone_number or 'Not provided',
+                'bank_name': req.bank_name or 'Not provided',
+                'failure_reason': req.failure_reason or 'No notes'
             })(request)
             
             request_msg = (
@@ -415,10 +417,11 @@ async def view_pending_requests(update: Update, context: ContextTypes.DEFAULT_TY
                 f"   📱 Phone: {request_data['phone']}\n"
                 f"   👤 Username: @{request_data['username']}\n"
                 f"   🆔 Telegram ID: {request_data['telegram_id']}\n"
-                f"   💰 Amount: {request_data['amount']} Birr\n"
+                f"   💰 Amount: {request_data['amount']} ETB\n"
                 f"   📅 Date: {request_data['created_at']}\n"
                 f"   📊 Status: {request_data['status']}\n"
-                f"   📝 Notes: {request_data['admin_notes']}"
+                f"   🏦 Bank: {request_data['bank_name']}\n"
+                f"   📞 Account: {request_data['phone_number']}"
             )
             
             # Create keyboard for this specific request
