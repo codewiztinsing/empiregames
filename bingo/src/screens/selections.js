@@ -547,7 +547,16 @@ const Selections = () => {
       
       // Generate card data using fixed card system
       const generateCard = (cardNumber) => {
-        return generateFixedCard(cardNumber);
+        const rowFormatCard = generateFixedCard(cardNumber);
+        // Transpose from row format to column format for client-side rendering
+        const columnFormatCard = [];
+        for (let col = 0; col < 5; col++) {
+          columnFormatCard[col] = [];
+          for (let row = 0; row < 5; row++) {
+            columnFormatCard[col][row] = rowFormatCard[row][col];
+          }
+        }
+        return columnFormatCard;
       };
 
       const card = generateCard(number);
