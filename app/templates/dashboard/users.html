@@ -75,44 +75,60 @@
 
     <!-- Filters and Search -->
     <div class="bg-dark-card border border-dark-border rounded-lg p-4 mb-6">
-        <div class="flex flex-wrap items-center gap-4">
-            <!-- Search -->
-            <div class="flex-1 min-w-64">
-                <div class="relative">
-                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    <input type="text" placeholder="Search by phone..." class="w-full pl-10 pr-4 py-2 bg-dark-bg border border-dark-border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent">
+        <form method="get" action="{% url 'dashboard:users' %}">
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- General Search -->
+                <div class="flex-1 min-w-64">
+                    <div class="relative">
+                        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <input type="text" name="search" value="{{ search_query }}" placeholder="Search..." class="w-full pl-10 pr-4 py-2 bg-dark-bg border border-dark-border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent">
+                    </div>
+                </div>
+
+                <!-- Username Filter -->
+                <div class="flex-1 min-w-64">
+                    <input type="text" name="username" value="{{ username_query }}" placeholder="Username..." class="w-full pl-4 pr-4 py-2 bg-dark-bg border border-dark-border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent">
+                </div>
+
+                <!-- Phone Filter -->
+                <div class="flex-1 min-w-64">
+                    <input type="text" name="phone" value="{{ phone_query }}" placeholder="Phone..." class="w-full pl-4 pr-4 py-2 bg-dark-bg border border-dark-border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent">
+                </div>
+
+                <!-- Balance Range -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-400">Balance:</label>
+                    <input type="number" name="min_balance" value="{{ min_balance }}" placeholder="Min" step="0.01" class="w-24 pl-2 pr-2 py-2 bg-dark-bg border border-dark-border text-white text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-primary">
+                    <span class="text-gray-400">-</span>
+                    <input type="number" name="max_balance" value="{{ max_balance }}" placeholder="Max" step="0.01" class="w-24 pl-2 pr-2 py-2 bg-dark-bg border border-dark-border text-white text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-primary">
+                </div>
+
+                <!-- Status Filter -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-400">Status:</label>
+                    <select name="status" class="bg-dark-bg border border-dark-border text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-primary">
+                        <option value="all" {% if status == 'all' %}selected{% endif %}>All Users</option>
+                        <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="suspended" {% if status == 'suspended' %}selected{% endif %}>Suspended</option>
+                    </select>
+                </div>
+
+                <!-- Reset and Create User Buttons -->
+                <div class="flex items-center space-x-2">
+                    <a href="{% url 'dashboard:users' %}" class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white border border-dark-border rounded-lg hover:bg-dark-bg transition-colors">
+                        Reset
+                    </a>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-purple-primary hover:bg-purple-hover rounded-lg transition-colors">
+                        Search
+                    </button>
+                    <a href="{% url 'dashboard:user_create' %}" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                        Create User
+                    </a>
                 </div>
             </div>
-
-            <!-- Status Filter -->
-            <div class="flex items-center space-x-2">
-                <label class="text-sm text-gray-400">Status:</label>
-                <select class="bg-dark-bg border border-dark-border text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-primary">
-                    <option>All Users</option>
-                    <option>Active</option>
-                    <option>Suspended</option>
-                    <option>Offline</option>
-                </select>
-            </div>
-
-            <!-- Date Range Filter -->
-            <div class="flex items-center space-x-2">
-                <label class="text-sm text-gray-400">Joined:</label>
-                <input type="date" class="bg-dark-bg border border-dark-border text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-primary">
-            </div>
-
-            <!-- Reset and Create User Buttons -->
-            <div class="flex items-center space-x-2">
-                <button class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white border border-dark-border rounded-lg hover:bg-dark-bg transition-colors">
-                    Reset
-                </button>
-                <a href="{% url 'dashboard:user_create' %}" class="px-4 py-2 text-sm font-medium text-white bg-purple-primary hover:bg-purple-hover rounded-lg transition-colors">
-                    Create User
-                </a>
-            </div>
-        </div>
+        </form>
     </div>
 
     <!-- Users Table -->
@@ -181,7 +197,7 @@
             <div class="flex items-center space-x-2">
                 <!-- Previous Page -->
                 {% if page_obj.has_previous %}
-                <a href="{% url 'dashboard:users' %}?page={{ page_obj.previous_page_number }}" 
+                <a href="{% url 'dashboard:users' %}?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if username_query %}&username={{ username_query }}{% endif %}{% if phone_query %}&phone={{ phone_query }}{% endif %}{% if min_balance %}&min_balance={{ min_balance }}{% endif %}{% if max_balance %}&max_balance={{ max_balance }}{% endif %}{% if status %}&status={{ status }}{% endif %}" 
                    class="px-3 py-2 text-sm font-medium text-gray-300 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg hover:text-white transition-colors">
                     Previous
                 </a>
@@ -198,7 +214,7 @@
                 
                 <!-- Next Page -->
                 {% if page_obj.has_next %}
-                <a href="{% url 'dashboard:users' %}?page={{ page_obj.next_page_number }}" 
+                <a href="{% url 'dashboard:users' %}?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if username_query %}&username={{ username_query }}{% endif %}{% if phone_query %}&phone={{ phone_query }}{% endif %}{% if min_balance %}&min_balance={{ min_balance }}{% endif %}{% if max_balance %}&max_balance={{ max_balance }}{% endif %}{% if status %}&status={{ status }}{% endif %}" 
                    class="px-3 py-2 text-sm font-medium text-gray-300 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-bg hover:text-white transition-colors">
                     Next
                 </a>

@@ -1,5 +1,5 @@
 from datetime import timedelta
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.core.paginator import Paginator
 from django.utils import timezone
 from decimal import Decimal
@@ -731,6 +731,70 @@ def transcations(request):
 
 def users(request):
     users = User.objects.all()
+    
+    # Get search and filter parameters
+    search_query = request.GET.get('search', '').strip()
+    phone_query = request.GET.get('phone', '').strip()
+    username_query = request.GET.get('username', '').strip()
+    min_balance = request.GET.get('min_balance', '').strip()
+    max_balance = request.GET.get('max_balance', '').strip()
+    status = request.GET.get('status', 'all').strip()
+    
+    # Apply search filters
+    if search_query:
+        users = users.filter(
+            Q(username__icontains=search_query) |
+            Q(phone__icontains=search_query) |
+            Q(telegram_id__icontains=search_query)
+        )
+    
+    if phone_query:
+        users = users.filter(phone__icontains=phone_query)
+    
+    if username_query:
+        users = users.filter(username__icontains=username_query)
+    
+    # Filter by status
+    if status == 'active':
+        users = users.filter(is_active=True)
+    elif status == 'suspended':
+        users = users.filter(is_active=False)
+    
+    # Apply balance range filter
+    if min_balance or max_balance:
+        # Get all users with their balances
+        users_with_balance = []
+        for user in users:
+            wallet_balance = 0.0
+            try:
+                wallet = Wallet.objects.get(user=user)
+                wallet_balance = wallet.balance
+            except Wallet.DoesNotExist:
+                pass
+            
+            total_balance = wallet_balance + float(user.total_referral_earnings or 0)
+            
+            # Check if balance is within range
+            if min_balance:
+                try:
+                    min_bal = float(min_balance)
+                    if total_balance < min_bal:
+                        continue
+                except ValueError:
+                    pass
+            
+            if max_balance:
+                try:
+                    max_bal = float(max_balance)
+                    if total_balance > max_bal:
+                        continue
+                except ValueError:
+                    pass
+            
+            users_with_balance.append(user)
+        
+        users = User.objects.filter(id__in=[u.id for u in users_with_balance])
+    
     paginator = Paginator(users, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -742,6 +806,8 @@ def users(request):
     for user in page_obj:
         # Get wallet balance
         wallet_balance = 0.0
+        first_gen_bonus = 0.0
+        second_gen_bonus = 0.0
         try:
             wallet = Wallet.objects.get(user=user)
             wallet_balance = wallet.balance
@@ -755,6 +821,8 @@ def users(request):
             'user': user,
             'wallet_balance': wallet_balance,
             'total_balance': total_balance,
+            'first_gen_bonus': first_gen_bonus,
+            'second_gen_bonus': second_gen_bonus,
         })
     
     # handle next and previous page
@@ -773,7 +841,13 @@ def users(request):
         'next_page': next_page,
         'previous_page': previous_page,
         'has_next': has_next,
-        'has_previous': has_previous
+        'has_previous': has_previous,
+        'search_query': search_query,
+        'phone_query': phone_query,
+        'username_query': username_query,
+        'min_balance': min_balance,
+        'max_balance': max_balance,
+        'status': status,
     }
     return render(request, 'dashboard/users.html', context)
 
@@ -919,7 +993,7 @@ def user_details(request, user_id):
         'user_obj': user,
         'wallet': wallet,
         'transactions': transactions,
-        'referral_bonuses': referral_bonuses,
+        'referral_bonuses': [],  # Empty list, this feature was removed
         'referral_withdrawals': referral_withdrawals,
         'player_games': player_games,
         'referred_users': referred_users,
