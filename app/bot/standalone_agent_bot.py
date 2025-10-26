@@ -734,7 +734,7 @@ def main():
         pass  # decouple not available, use environment variables only
     
     # Get bot token from environment variable
-    token = os.getenv('TELEGRAM_BOT_TOKEN') or "8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY"
+    token =  "8172902610:AAG10LbPjxKuZj3c2iQiBtQT0D6GwlMXYro"
     if not token:
         logger.error("TELEGRAM_BOT_TOKEN environment variable not set!")
         sys.exit(1)
