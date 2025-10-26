@@ -284,21 +284,51 @@ def get_withdrawal_by_id(withdrawal_id):
 def update_withdrawal_status(withdrawal_id, status, processed_by_id):
     """Update withdrawal request status"""
     from django.utils import timezone
+    from wallet.models import Wallet, Transaction
+    from django.db import transaction as db_transaction
+    
     try:
         withdrawal = WithdrawalRequest.objects.get(id=withdrawal_id)
+        user = withdrawal.user
+        
+        # If approved, deduct amount from user's wallet
+        if status == 'success':
+            try:
+                wallet = Wallet.objects.get(user=user)
+                
+                # Check if balance is sufficient
+                if wallet.balance < withdrawal.amount:
+                    logger.error(f"Insufficient balance for withdrawal: {wallet.balance} < {withdrawal.amount}")
+                    return False
+                
+                # Deduct amount from wallet using atomic transaction
+                with db_transaction.atomic():
+                    wallet.balance -= withdrawal.amount
+                    wallet.save()
+                    
+                    # Create transaction record
+                    Transaction.objects.create(
+                        user=user,
+                        amount=withdrawal.amount,
+                        type='WITHDRAW',
+                        status='success',
+                        reference=f'WITHDRAW_{withdrawal_id}'
+                    )
+                    
+                    logger.info(f"Deducted {withdrawal.amount} ETB from user {user.username}. New balance: {wallet.balance}")
+            except Wallet.DoesNotExist:
+                logger.error(f"Wallet not found for user {user.username}")
+                return False
+        
+        # Update withdrawal status
         withdrawal.status = status
         withdrawal.processed_at = timezone.now()
-        
-        # Get the admin user who processed it
-        try:
-            admin_user = User.objects.get(telegram_id=processed_by_id)
-            withdrawal.processed_by = admin_user
-        except User.DoesNotExist:
-            pass  # Keep processed_by as None if admin not found
-        
         withdrawal.save()
+        
+        logger.info(f"Withdrawal request {withdrawal_id} updated to status: {status}")
         return True
     except WithdrawalRequest.DoesNotExist:
+        logger.error(f"Withdrawal request {withdrawal_id} not found")
         return False
 
 async def notify_user_withdrawal_status(telegram_id, withdrawal, status, bot):
@@ -312,17 +342,29 @@ async def notify_user_withdrawal_status(telegram_id, withdrawal, status, bot):
         })()
         
         status_messages = {
-            'approved': f"✅ Your withdrawal request of {withdrawal_data['amount']} Birr has been approved!",
-            'rejected': f"❌ Your withdrawal request of {withdrawal_data['amount']} Birr has been rejected.",
-            'completed': f"🎉 Your withdrawal request of {withdrawal_data['amount']} Birr has been completed!"
+            'success': f"✅ Your withdrawal request of {withdrawal_data['amount']} ETB has been approved and processed!",
+            'approved': f"✅ Your withdrawal request of {withdrawal_data['amount']} ETB has been approved!",
+            'rejected': f"❌ Your withdrawal request of {withdrawal_data['amount']} ETB has been rejected.",
+            'failed': f"❌ Your withdrawal request of {withdrawal_data['amount']} ETB has been failed.",
+            'completed': f"🎉 Your withdrawal request of {withdrawal_data['amount']} ETB has been completed!",
+            'processing': f"⏳ Your withdrawal request of {withdrawal_data['amount']} ETB is being processed."
         }
         
         message = status_messages.get(status, f"Your withdrawal request status has been updated to: {status}")
         
         # Send notification to user
+        notification_text = (
+            f"📢 Withdrawal Update\n\n"
+            f"{message}\n\n"
+            f"📋 Request Details:\n"
+            f"Request ID: #{withdrawal_data['id']}\n"
+            f"Amount: {withdrawal_data['amount']} ETB\n"
+            f"Date: {withdrawal_data['created_at']}"
+        )
+        
         await bot.send_message(
             chat_id=telegram_id,
-            text=f"📢 Withdrawal Update\n\n{message}\n\nRequest ID: #{withdrawal_data['id']}\nAmount: {withdrawal_data['amount']} Birr\nDate: {withdrawal_data['created_at']}"
+            text=notification_text
         )
         
         logger.info(f"📤 Notification sent to user {telegram_id} for withdrawal #{withdrawal_data['id']}")
@@ -508,14 +550,18 @@ async def approve_withdrawal(update: Update, context: ContextTypes.DEFAULT_TYPE)
             await query.edit_message_text(f"❌ Withdrawal request is already {withdrawal_status}.")
             return
         
-        # Update status to approved
-        await update_withdrawal_status(withdrawal_id, 'approved', query.from_user.id)
+        # Update status to success and deduct from wallet
+        success = await update_withdrawal_status(withdrawal_id, 'success', query.from_user.id)
+        
+        if not success:
+            await query.edit_message_text(f"❌ Failed to approve withdrawal. Insufficient balance.")
+            return
         
         # Extract user telegram_id in a sync context
         user_telegram_id = await sync_to_async(lambda w: w.user.telegram_id)(withdrawal)
         
         # Notify user
-        await notify_user_withdrawal_status(user_telegram_id, withdrawal, 'approved', context.bot)
+        await notify_user_withdrawal_status(user_telegram_id, withdrawal, 'success', context.bot)
         
         await query.edit_message_text(f"✅ Withdrawal request #{withdrawal_id} approved successfully!")
         

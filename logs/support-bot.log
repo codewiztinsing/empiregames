@@ -330,3 +330,166 @@
 2025-10-26 06:01:43: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
 2025-10-26 06:01:43: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
 2025-10-26 06:01:53: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:02:03: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:02:13: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:02:23: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:02:33: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:02:43: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:02:53: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:03:03: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:03:12: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:03:13: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/answerCallbackQuery "HTTP/1.1 200 OK"
+2025-10-26 06:03:13: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/answerCallbackQuery "HTTP/1.1 200 OK"
+2025-10-26 06:03:13: INFO:__main__:🔍 Approving withdrawal request ID: 3
+2025-10-26 06:03:13: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
+2025-10-26 06:03:13: INFO:__main__:📤 Notification sent to user 1464395537 for withdrawal #3
+2025-10-26 06:03:13: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/editMessageText "HTTP/1.1 200 OK"
+2025-10-26 06:03:13: INFO:__main__:🔍 view_pending_requests called - fetching ALL pending requests
+2025-10-26 06:03:13: INFO:__main__:🔍 Fetching all pending withdrawal requests...
+2025-10-26 06:03:13: INFO:__main__:📊 Found 0 pending withdrawal requests
+2025-10-26 06:03:13: INFO:__main__:📊 Retrieved 0 total pending requests
+2025-10-26 06:03:13: INFO:__main__:📝 No requests found for current page
+2025-10-26 06:03:13: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
+2025-10-26 06:03:22: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:03:32: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:03:39: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:03:39: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
+2025-10-26 06:03:41: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:03:41: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/answerCallbackQuery "HTTP/1.1 200 OK"
+2025-10-26 06:03:41: INFO:__main__:🔍 view_pending_requests called - fetching ALL pending requests
+2025-10-26 06:03:41: INFO:__main__:🔍 Fetching all pending withdrawal requests...
+2025-10-26 06:03:41: INFO:__main__:📊 Found 0 pending withdrawal requests
+2025-10-26 06:03:41: INFO:__main__:📊 Retrieved 0 total pending requests
+2025-10-26 06:03:41: INFO:__main__:📝 No requests found for current page
+2025-10-26 06:03:41: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
+2025-10-26 06:03:51: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:04:01: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:04:11: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:04:21: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:04:31: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:04:41: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:04:49: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:04:49: INFO:telegram.ext.Application:Application is stopping. This might take a moment.
+2025-10-26 06:04:49: INFO:apscheduler.scheduler:Scheduler has been shut down
+2025-10-26 06:04:49: INFO:telegram.ext.Application:Application.stop() complete
+2025-10-26 06:04:50: python-dotenv could not parse statement starting at line 7
+2025-10-26 06:04:50: python-dotenv could not parse statement starting at line 9
+2025-10-26 06:04:50: INFO:__main__:Starting support bot...
+2025-10-26 06:04:50: /var/www/empiregames/app/bot/support.py:1126: PTBUserWarning: If 'per_message=False', 'CallbackQueryHandler' will not be tracked for every message. Read this FAQ entry to learn more about the per_* settings: https://github.com/python-telegram-bot/python-telegram-bot/wiki/Frequently-Asked-Questions#what-do-the-per_-settings-in-conversationhandler-do.
+2025-10-26 06:04:50:   search_conversation = ConversationHandler(
+2025-10-26 06:04:50: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getMe "HTTP/1.1 200 OK"
+2025-10-26 06:04:50: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/setMyCommands "HTTP/1.1 200 OK"
+2025-10-26 06:04:50: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/deleteWebhook "HTTP/1.1 200 OK"
+2025-10-26 06:04:50: INFO:apscheduler.scheduler:Scheduler started
+2025-10-26 06:04:50: INFO:telegram.ext.Application:Application started
+2025-10-26 06:05:00: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:05:10: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:05:20: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:05:30: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:05:40: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:05:50: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:06:00: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:06:09: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:06:09: INFO:telegram.ext.Application:Application is stopping. This might take a moment.
+2025-10-26 06:06:09: INFO:apscheduler.scheduler:Scheduler has been shut down
+2025-10-26 06:06:09: INFO:telegram.ext.Application:Application.stop() complete
+2025-10-26 06:06:12: python-dotenv could not parse statement starting at line 7
+2025-10-26 06:06:12: python-dotenv could not parse statement starting at line 9
+2025-10-26 06:06:13: INFO:__main__:Starting support bot...
+2025-10-26 06:06:13: /var/www/empiregames/app/bot/support.py:1126: PTBUserWarning: If 'per_message=False', 'CallbackQueryHandler' will not be tracked for every message. Read this FAQ entry to learn more about the per_* settings: https://github.com/python-telegram-bot/python-telegram-bot/wiki/Frequently-Asked-Questions#what-do-the-per_-settings-in-conversationhandler-do.
+2025-10-26 06:06:13:   search_conversation = ConversationHandler(
+2025-10-26 06:06:13: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getMe "HTTP/1.1 200 OK"
+2025-10-26 06:06:13: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/setMyCommands "HTTP/1.1 200 OK"
+2025-10-26 06:06:13: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/deleteWebhook "HTTP/1.1 200 OK"
+2025-10-26 06:06:13: INFO:apscheduler.scheduler:Scheduler started
+2025-10-26 06:06:13: INFO:telegram.ext.Application:Application started
+2025-10-26 06:06:23: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:06:33: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:06:43: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:06:46: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:06:46: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/answerCallbackQuery "HTTP/1.1 200 OK"
+2025-10-26 06:06:46: INFO:__main__:🔍 view_pending_requests called - fetching ALL pending requests
+2025-10-26 06:06:46: INFO:__main__:🔍 Fetching all pending withdrawal requests...
+2025-10-26 06:06:46: INFO:__main__:📊 Found 1 pending withdrawal requests
+2025-10-26 06:06:46: INFO:__main__:   - adaa_alepo: 100.0 Birr (ID: 4)
+2025-10-26 06:06:46: INFO:__main__:📊 Retrieved 1 total pending requests
+2025-10-26 06:06:46: INFO:__main__:📝 Building messages for 1 requests on page 1
+2025-10-26 06:06:46: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
+2025-10-26 06:06:46: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
+2025-10-26 06:06:46: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
+2025-10-26 06:06:51: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:06:51: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/answerCallbackQuery "HTTP/1.1 200 OK"
+2025-10-26 06:06:51: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/answerCallbackQuery "HTTP/1.1 200 OK"
+2025-10-26 06:06:51: INFO:__main__:🔍 Approving withdrawal request ID: 4
+2025-10-26 06:06:51: ERROR:__main__:Error approving withdrawal: Transaction() got unexpected keyword arguments: 'description'
+2025-10-26 06:06:51: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/editMessageText "HTTP/1.1 200 OK"
+2025-10-26 06:07:01: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:07:11: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:07:21: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:07:31: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:07:35: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:07:35: INFO:telegram.ext.Application:Application is stopping. This might take a moment.
+2025-10-26 06:07:35: INFO:apscheduler.scheduler:Scheduler has been shut down
+2025-10-26 06:07:35: INFO:telegram.ext.Application:Application.stop() complete
+2025-10-26 06:07:36: python-dotenv could not parse statement starting at line 7
+2025-10-26 06:07:36: python-dotenv could not parse statement starting at line 9
+2025-10-26 06:07:36: INFO:__main__:Starting support bot...
+2025-10-26 06:07:37: /var/www/empiregames/app/bot/support.py:1125: PTBUserWarning: If 'per_message=False', 'CallbackQueryHandler' will not be tracked for every message. Read this FAQ entry to learn more about the per_* settings: https://github.com/python-telegram-bot/python-telegram-bot/wiki/Frequently-Asked-Questions#what-do-the-per_-settings-in-conversationhandler-do.
+2025-10-26 06:07:37:   search_conversation = ConversationHandler(
+2025-10-26 06:07:37: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getMe "HTTP/1.1 200 OK"
+2025-10-26 06:07:37: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/setMyCommands "HTTP/1.1 200 OK"
+2025-10-26 06:07:37: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/deleteWebhook "HTTP/1.1 200 OK"
+2025-10-26 06:07:37: INFO:apscheduler.scheduler:Scheduler started
+2025-10-26 06:07:37: INFO:telegram.ext.Application:Application started
+2025-10-26 06:07:45: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:07:45: INFO:telegram.ext.Application:Application is stopping. This might take a moment.
+2025-10-26 06:07:45: INFO:apscheduler.scheduler:Scheduler has been shut down
+2025-10-26 06:07:45: INFO:telegram.ext.Application:Application.stop() complete
+2025-10-26 06:07:47: python-dotenv could not parse statement starting at line 7
+2025-10-26 06:07:47: python-dotenv could not parse statement starting at line 9
+2025-10-26 06:07:48: INFO:__main__:Starting support bot...
+2025-10-26 06:07:48: /var/www/empiregames/app/bot/support.py:1125: PTBUserWarning: If 'per_message=False', 'CallbackQueryHandler' will not be tracked for every message. Read this FAQ entry to learn more about the per_* settings: https://github.com/python-telegram-bot/python-telegram-bot/wiki/Frequently-Asked-Questions#what-do-the-per_-settings-in-conversationhandler-do.
+2025-10-26 06:07:48:   search_conversation = ConversationHandler(
+2025-10-26 06:07:48: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getMe "HTTP/1.1 200 OK"
+2025-10-26 06:07:49: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/setMyCommands "HTTP/1.1 200 OK"
+2025-10-26 06:07:49: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/deleteWebhook "HTTP/1.1 200 OK"
+2025-10-26 06:07:49: INFO:apscheduler.scheduler:Scheduler started
+2025-10-26 06:07:49: INFO:telegram.ext.Application:Application started
+2025-10-26 06:07:59: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:08:02: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:08:02: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/answerCallbackQuery "HTTP/1.1 200 OK"
+2025-10-26 06:08:02: INFO:__main__:🔍 view_pending_requests called - fetching ALL pending requests
+2025-10-26 06:08:02: INFO:__main__:🔍 Fetching all pending withdrawal requests...
+2025-10-26 06:08:02: INFO:__main__:📊 Found 1 pending withdrawal requests
+2025-10-26 06:08:02: INFO:__main__:   - adaa_alepo: 100.0 Birr (ID: 4)
+2025-10-26 06:08:02: INFO:__main__:📊 Retrieved 1 total pending requests
+2025-10-26 06:08:02: INFO:__main__:📝 Building messages for 1 requests on page 1
+2025-10-26 06:08:02: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
+2025-10-26 06:08:02: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
+2025-10-26 06:08:03: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
+2025-10-26 06:08:04: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:08:04: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/answerCallbackQuery "HTTP/1.1 200 OK"
+2025-10-26 06:08:04: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/answerCallbackQuery "HTTP/1.1 200 OK"
+2025-10-26 06:08:04: INFO:__main__:🔍 Approving withdrawal request ID: 4
+2025-10-26 06:08:04: INFO:__main__:Deducted 100.0 ETB from user adaa_alepo. New balance: 100.0
+2025-10-26 06:08:04: INFO:__main__:Withdrawal request 4 updated to status: success
+2025-10-26 06:08:04: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
+2025-10-26 06:08:04: INFO:__main__:📤 Notification sent to user 1464395537 for withdrawal #4
+2025-10-26 06:08:04: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/editMessageText "HTTP/1.1 200 OK"
+2025-10-26 06:08:04: INFO:__main__:🔍 view_pending_requests called - fetching ALL pending requests
+2025-10-26 06:08:04: INFO:__main__:🔍 Fetching all pending withdrawal requests...
+2025-10-26 06:08:04: INFO:__main__:📊 Found 0 pending withdrawal requests
+2025-10-26 06:08:04: INFO:__main__:📊 Retrieved 0 total pending requests
+2025-10-26 06:08:04: INFO:__main__:📝 No requests found for current page
+2025-10-26 06:08:04: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/sendMessage "HTTP/1.1 200 OK"
+2025-10-26 06:08:14: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:08:24: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:08:34: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:08:44: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:08:54: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:09:04: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:09:14: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:09:24: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:09:34: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:09:44: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
+2025-10-26 06:09:54: INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8154094611:AAFF2uibjzso6VHqGkgEtf17l1L7MnOZ1nY/getUpdates "HTTP/1.1 200 OK"
