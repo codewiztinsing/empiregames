@@ -570,33 +570,53 @@ function generateFakeWinningCard(calledNumbers) {
   // Extract called numbers from ball objects
   const calledNumbersOnly = calledNumbers.map(num => typeof num === 'object' && num.number ? num.number : num);
   
-  // Generate a real bingo card with proper number ranges
-  const grid = [];
+  // Group called numbers by their bingo column ranges
+  const bNumbers = calledNumbersOnly.filter(n => n >= 1 && n <= 15);
+  const iNumbers = calledNumbersOnly.filter(n => n >= 16 && n <= 30);
+  const nNumbers = calledNumbersOnly.filter(n => n >= 31 && n <= 45);
+  const gNumbers = calledNumbersOnly.filter(n => n >= 46 && n <= 60);
+  const oNumbers = calledNumbersOnly.filter(n => n >= 61 && n <= 75);
   
-  // B column: 1-15
-  const bNumbers = generateRandomNumbers(1, 15, 5);
-  // I column: 16-30
-  const iNumbers = generateRandomNumbers(16, 30, 5);
-  // N column: 31-45 (center is FREE)
-  const nNumbers = generateRandomNumbers(31, 45, 4); // Only 4 numbers, center will be FREE
-  // G column: 46-60
-  const gNumbers = generateRandomNumbers(46, 60, 5);
-  // O column: 61-75
-  const oNumbers = generateRandomNumbers(61, 75, 5);
+  // Helper to get random from array, fallback to random in range
+  const getOrGenerate = (arr, min, max, count) => {
+    if (arr.length >= count) {
+      const shuffled = [...arr].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, count);
+    }
+    // Fill with random numbers if not enough called numbers
+    const result = [...arr];
+    const universe = [];
+    for (let i = min; i <= max; i++) {
+      if (!arr.includes(i)) universe.push(i);
+    }
+    const shuffled = universe.sort(() => 0.5 - Math.random());
+    while (result.length < count && shuffled.length > 0) {
+      result.push(shuffled.pop());
+    }
+    return result;
+  };
+  
+  // Get or generate numbers for each column
+  const bNums = getOrGenerate(bNumbers, 1, 15, 5).sort((a, b) => a - b);
+  const iNums = getOrGenerate(iNumbers, 16, 30, 5).sort((a, b) => a - b);
+  const nNums = getOrGenerate(nNumbers, 31, 45, 4).sort((a, b) => a - b);
+  const gNums = getOrGenerate(gNumbers, 46, 60, 5).sort((a, b) => a - b);
+  const oNums = getOrGenerate(oNumbers, 61, 75, 5).sort((a, b) => a - b);
   
   // Create the grid structure
+  const grid = [];
   for (let row = 0; row < 5; row++) {
     const rowCells = [];
     
     // B column
     rowCells.push({
-      number: bNumbers[row],
+      number: bNums[row],
       marked: false
     });
     
     // I column
     rowCells.push({
-      number: iNumbers[row],
+      number: iNums[row],
       marked: false
     });
     
@@ -608,23 +628,22 @@ function generateFakeWinningCard(calledNumbers) {
         marked: false
       });
     } else {
-      // Use N numbers for other rows
-      const nIndex = row > 2 ? row - 1 : row; // Adjust index for center row
+      const nIndex = row > 2 ? row - 1 : row;
       rowCells.push({
-        number: nNumbers[nIndex],
+        number: nNums[nIndex],
         marked: false
       });
     }
     
     // G column
     rowCells.push({
-      number: gNumbers[row],
+      number: gNums[row],
       marked: false
     });
     
     // O column
     rowCells.push({
-      number: oNumbers[row],
+      number: oNums[row],
       marked: false
     });
     
@@ -641,125 +660,124 @@ function generateFakeWinningCard(calledNumbers) {
     columnGrid.push(column);
   }
 
-  // Try to find a winning pattern based on called numbers
-  let winningPattern = null;
-  let winningCells = [];
+  // Find a winning pattern based on called numbers
+  const patterns = [
+    { type: 'row', cells: [] },
+    { type: 'col', cells: [] },
+    { type: 'diag', cells: [] },
+    { type: 'anti', cells: [] },
+    { type: 'fourCorners', cells: [] }
+  ];
   
-  const patterns = ['row', 'col', 'diag', 'anti', 'fourCorners'];
-  
-  // Check each pattern to see if we can create a valid winning board
+  // Check each pattern to see if it would be a valid win with called numbers
   for (const pattern of patterns) {
-    let cells = [];
-    let isValid = true;
-    
-    if (pattern === 'row') {
-      const r = Math.floor(Math.random() * 5);
-      for (let c = 0; c < 5; c++) {
-        const cell = columnGrid[c][r];
-        if (cell.number === '*') {
-          cells.push({ col: c, row: r });
-        } else if (calledNumbersOnly.includes(cell.number)) {
-          cells.push({ col: c, row: r });
-        } else {
-          isValid = false;
-          break;
-        }
-      }
-    } else if (pattern === 'col') {
-      const c = Math.floor(Math.random() * 5);
+    if (pattern.type === 'row') {
+      // Check all 5 rows
       for (let r = 0; r < 5; r++) {
-        const cell = columnGrid[c][r];
-        if (cell.number === '*') {
-          cells.push({ col: c, row: r });
-        } else if (calledNumbersOnly.includes(cell.number)) {
-          cells.push({ col: c, row: r });
-        } else {
-          isValid = false;
+        let allMarked = true;
+        const cells = [];
+        for (let c = 0; c < 5; c++) {
+          const cell = columnGrid[c][r];
+          if (cell.number === '*' || calledNumbersOnly.includes(cell.number)) {
+            cells.push({ col: c, row: r });
+          } else {
+            allMarked = false;
+            break;
+          }
+        }
+        if (allMarked && cells.length === 5) {
+          pattern.cells = cells;
           break;
         }
       }
-    } else if (pattern === 'diag') {
+    } else if (pattern.type === 'col') {
+      // Check all 5 columns
+      for (let c = 0; c < 5; c++) {
+        let allMarked = true;
+        const cells = [];
+        for (let r = 0; r < 5; r++) {
+          const cell = columnGrid[c][r];
+          if (cell.number === '*' || calledNumbersOnly.includes(cell.number)) {
+            cells.push({ col: c, row: r });
+          } else {
+            allMarked = false;
+            break;
+          }
+        }
+        if (allMarked && cells.length === 5) {
+          pattern.cells = cells;
+          break;
+        }
+      }
+    } else if (pattern.type === 'diag') {
+      // Diagonal from top-left to bottom-right
+      const cells = [];
+      let allMarked = true;
       for (let i = 0; i < 5; i++) {
         const cell = columnGrid[i][i];
-        if (cell.number === '*') {
-          cells.push({ col: i, row: i });
-        } else if (calledNumbersOnly.includes(cell.number)) {
+        if (cell.number === '*' || calledNumbersOnly.includes(cell.number)) {
           cells.push({ col: i, row: i });
         } else {
-          isValid = false;
+          allMarked = false;
           break;
         }
       }
-    } else if (pattern === 'anti') {
+      if (allMarked && cells.length === 5) {
+        pattern.cells = cells;
+      }
+    } else if (pattern.type === 'anti') {
+      // Diagonal from top-right to bottom-left
+      const cells = [];
+      let allMarked = true;
       for (let i = 0; i < 5; i++) {
         const cell = columnGrid[4 - i][i];
-        if (cell.number === '*') {
-          cells.push({ col: 4 - i, row: i });
-        } else if (calledNumbersOnly.includes(cell.number)) {
+        if (cell.number === '*' || calledNumbersOnly.includes(cell.number)) {
           cells.push({ col: 4 - i, row: i });
         } else {
-          isValid = false;
+          allMarked = false;
           break;
         }
       }
-    } else if (pattern === 'fourCorners') {
+      if (allMarked && cells.length === 5) {
+        pattern.cells = cells;
+      }
+    } else if (pattern.type === 'fourCorners') {
+      // Four corners
       const corners = [
         { col: 0, row: 0 },
         { col: 0, row: 4 },
         { col: 4, row: 0 },
         { col: 4, row: 4 }
       ];
-      
+      const cells = [];
+      let allMarked = true;
       for (const corner of corners) {
         const cell = columnGrid[corner.col][corner.row];
-        if (cell.number === '*') {
-          cells.push(corner);
-        } else if (calledNumbersOnly.includes(cell.number)) {
+        if (cell.number === '*' || calledNumbersOnly.includes(cell.number)) {
           cells.push(corner);
         } else {
-          isValid = false;
+          allMarked = false;
           break;
         }
       }
-    }
-    
-    if (isValid && cells.length > 0) {
-      winningPattern = pattern;
-      winningCells = cells;
-      break;
+      if (allMarked && cells.length === 4) {
+        pattern.cells = cells;
+      }
     }
   }
   
-  // If no valid winning pattern found with existing numbers, generate with all numbers
-  if (!winningPattern) {
-    // Fallback: Choose a random winning pattern and mark it
-    const pick = patterns[Math.floor(Math.random() * patterns.length)];
-
-    if (pick === 'row') {
-      const r = Math.floor(Math.random() * 5);
-      for (let c = 0; c < 5; c++) columnGrid[c][r].marked = true;
-    } else if (pick === 'col') {
-      const c = Math.floor(Math.random() * 5);
-      for (let r = 0; r < 5; r++) columnGrid[c][r].marked = true;
-    } else if (pick === 'diag') {
-      for (let i = 0; i < 5; i++) columnGrid[i][i].marked = true;
-    } else if (pick === 'anti') {
-      for (let i = 0; i < 5; i++) columnGrid[4 - i][i].marked = true;
-    } else if (pick === 'fourCorners') {
-      columnGrid[0][0].marked = true;
-      columnGrid[0][4].marked = true;
-      columnGrid[4][0].marked = true;
-      columnGrid[4][4].marked = true;
-    }
-  } else {
-    // Mark the winning cells
-    winningCells.forEach(({ col, row }) => {
+  // Select the first valid winning pattern found
+  const winningPattern = patterns.find(p => p.cells.length > 0);
+  
+  // Mark the winning cells
+  if (winningPattern && winningPattern.cells.length > 0) {
+    winningPattern.cells.forEach(({ col, row }) => {
       columnGrid[col][row].marked = true;
     });
+  } else {
+    // Fallback: center is always a valid win option
+    columnGrid[2][2].marked = true;
   }
-
-  // Ensure center is always marked
-  columnGrid[2][2].marked = true;
 
   return columnGrid;
 }
@@ -821,12 +839,9 @@ async function scheduleFakeWinner(game) {
         const g = activeGames.get(game.id);
         if (!g || g.status !== 'in-progress') return;
 
-        // Use Telegram-style username for fake winner to look more realistic
-        const tgUsername = TG_USERNAMES[Math.floor(Math.random() * TG_USERNAMES.length)];
+        // Use only Ethiopian first name for fake winner
         const first = ETH_FIRST_NAMES[Math.floor(Math.random() * ETH_FIRST_NAMES.length)];
-        // Remove @ symbol from username
-        const cleanUsername = tgUsername.replace('@', '');
-        const fakeName = `${first}`;
+        const fakeName = first;
         const fakeCardNumber = 1 + Math.floor(Math.random() * 400);
         const winningCard = generateFakeWinningCard(g.calledNumbers || []);
 
