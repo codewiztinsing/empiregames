@@ -90,7 +90,7 @@ class Game(models.Model):
     
     id = models.BigAutoField(primary_key=True)
     # tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='games')
-    room = models.ForeignKey(GameRoom, on_delete=models.PROTECT, related_name='games')
+    room = models.ForeignKey(GameRoom, on_delete=models.PROTECT, related_name='games',default=1)
     
     # Game details
     game_number = models.PositiveIntegerField(default=1)
